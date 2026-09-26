@@ -374,3 +374,47 @@ video, end to end**.
   on the Wave 1 foundation and should not re-create it.
 - D-002 still holds: the CEO approves the publication individually. In Wave 2 that approval
   step exists and is exercised, but it gates a publish-ready artifact rather than an upload.
+
+---
+
+# Sixth round — the first video's subject
+
+Decided 2026-09-26 by the CEO, during Wave 2 (`run-3a58551ee912`), on options constrained by
+the species-level footage audit in `research/animal-niche-analysis.md` §3.3.
+
+## D-015 — First video: the honey bee waggle dance, as a coordinate-encoding mechanism
+
+**Decision.** The first video's subject is the **honey bee waggle dance** — how a returning
+forager encodes the *direction and distance* of a resource as a vector another bee can read and
+fly. Treatment is pillar 1, **Mechanism**, format **F5**: original motion graphics carry the
+argument and licensed footage illustrates it.
+
+**Why this subject cleared the constraints**, recorded so the reasoning survives the choice:
+
+- **Footage supply is real, not aggregate.** `honey bee` returns **1,213** clips on the
+  committed library (Storyblocks) — a single, distinctive, unambiguous token, so it is one of
+  the counts §3.3 classifies as trustworthy. No second library is needed, so the **+$16.50/month
+  Envato increase is not triggered and the envelope stays at the approved $77.41**.
+- **It avoids the contaminated tail.** The species is common and well-filmed, so it sits far
+  away from the rare-species results where §3.4 demonstrated that clip counts are largely
+  generative-AI assets, green-screen composites and name collisions.
+- **The originality burden lands where the channel can carry it.** Under D-006 the channel owns
+  no footage, and §2.2 Finding B establishes that licensing does not cure the reused-content
+  policy. The waggle dance is an *argument* — an angle-to-sun vector diagram, a
+  distance-to-duration encoding, an error-and-scatter distribution — and those graphics are
+  original artefacts that carry the explanation rather than decorate it. It passes the working
+  test: **the video would still stand up as an essay with every clip removed.**
+- **Made-for-kids exposure is at its lowest here.** The subject needs no named animal
+  protagonist, no invented personality and no simple-language register to be interesting, so
+  rules K-1, K-2, K-4 and K-6 are satisfied by the material rather than enforced against it.
+- **The science is attributable**, which §8.5 makes a heavier obligation in this niche than in
+  the alternative: von Frisch's decoding (Nobel Prize in Physiology or Medicine, 1973) plus the
+  modern literature on dance precision and error rates. Every claim can name a paper or an
+  institution.
+
+**Consequence.** The topic question opened at scope is closed. The remaining production
+judgments — structure, pacing, shot selection, graphics treatment, runtime within the 10-minute
+floor and 12–14 minute target — are the workforce's, not the CEO's.
+
+**Not decided by this.** Nothing here changes the niche, the budget, or the rule that Wave 2
+ends at a publish-ready artifact held at the gate. D-014 stands in full.
