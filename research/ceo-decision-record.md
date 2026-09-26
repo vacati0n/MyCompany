@@ -252,3 +252,64 @@ Wave 1 design.
 policy pass due 2026-10-26 · `RK-003` Vietnamese tax position, blocks banking not building,
 longest lead time · `RK-005` approval-minutes baseline · `RK-006` the 2027-02-01 threshold, the
 only fixed date. The channel niche and content pillars remain unchosen and block Wave 2.
+
+---
+
+# Fourth round — niche direction and tax posture
+
+Decided 2026-09-26 by the CEO.
+
+## D-011 — Tax posture: individual or household business first, company only if it works
+
+**Decision.** Operate initially as an **individual** or a **household business (hộ kinh doanh)**.
+Incorporate a company only once the channel has proven itself.
+
+**Consequence.**
+
+- Correct for the stage. It avoids incorporation and annual compliance cost during the
+  pre-revenue period, which is the period the recommendation identified as having no revenue
+  against full cost. It also matches the earlier finding that a treaty-country entity is net
+  negative at launch volumes — a UK Ltd only breaks even above 200k–617k views/month.
+- **`RK-003` is not discharged by this decision — it is narrowed.** Qualified Vietnamese
+  counsel is still required, but the question becomes specific: the household-business tax
+  regime, its revenue threshold, and the rates that apply to foreign-sourced platform income.
+  The figures previously found (a VND 100m threshold, 5% VAT + 2% PIT, from a 2021 instrument)
+  are professional-firm secondary sourcing and were **not** verified against Vietnam's 2026 tax
+  laws. Do not plan against them until counsel confirms.
+- **`RK-006`'s sibling obligation becomes more urgent, not less.** The earlier analysis found
+  that failing to submit the W-8BEN **as an individual** triggers **24% backup withholding on
+  total worldwide earnings**, which is worse than the 30% that applies only to the US-sourced
+  share. Submitting it is now a first-class precondition of the payment account, not a detail.
+- **Migration cost to record now, so it is not discovered later.** One ad-payment account is
+  permitted per payee name, and the payee is hard to change after the fact. Moving from an
+  individual or household payee to a company payee later is a payee change, not a settings
+  change. Counsel should be asked what that migration costs *before* the first account is
+  created, so the decision to start simple is taken with its exit cost known.
+
+## D-012 — Niche direction: animals, form not yet settled
+
+**Decision.** The channel's subject is **animals** — either cute and funny animals, or the
+animal world.
+
+**Status: direction accepted, format NOT yet settled.** The two readings differ enough that
+they are effectively different businesses, and one of them is foreclosed by the same policy
+regime the whole plan is built to respect:
+
+- **Compilation of cute and funny animal clips** is, in the ordinary case, assembled from other
+  people's social-media footage. That is named directly by YouTube's reused-content policy,
+  which prohibits content "compiled from other social media websites" without substantive
+  original contribution, and it is the business model the supplied intent itself ruled out:
+  re-uploading other people's videos and random social-media clips. It also conflicts with
+  D-006, which sources visuals from licensed stock and original graphics.
+- **Wildlife and animal-world content** built from licensed stock footage with an original
+  script, original narration and original motion graphics is fully compatible with D-006 and
+  with the originality regime.
+
+Analysis commissioned 2026-09-26: `research/animal-niche-analysis.md`. It must establish the
+format question, whether the committed stock libraries actually carry enough animal footage for
+13 videos a month, the RPM band for this category, the re-run break-even, and in particular the
+**made-for-kids exposure** — animal content can be classified as made for kids, which removes
+personalised advertising and sharply reduces RPM. That is potentially the largest economic risk
+in this niche and is not yet quantified.
+
+This decision blocks **Wave 2**, not Wave 1. The foundation being built now is niche-agnostic.
