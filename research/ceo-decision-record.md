@@ -283,6 +283,47 @@ only fixed date. The channel niche and content pillars remain unchosen and block
 >
 > A withdrawn identifier is never reissued on this branch. `D-011` to `D-017` mean what the
 > other space says they mean.
+>
+> **Settled 2026-09-26.** The CEO confirmed that renumbering was what he intended. This
+> renumbering **stands**; the competing prefix scheme proposed on
+> `claude/execute-prompt-txt-4a3ee4` is **withdrawn**, and that branch's `W0-D-018` became
+> `D-023`, leaving `D-018` to this branch. One flat `D-nnn` space, no prefixes.
+>
+> The reason that branch gave for not renumbering — that citations live in artifacts which
+> have already passed their gates — was checked against the facts and did not hold for these
+> five. Every bare `D-011` to `D-015` in a gated Wave 1 artifact belongs to the **technical
+> design's own `D-nnn` space**, not to this record: that design's `D-011` is *"a retry is its
+> own operation record"* and its `D-012` is *"the capability request... never names a provider
+> or a model"*. Renumbering this record touched none of them.
+
+### Identifier allocation — blocks, so the next collision cannot happen
+
+Renumbering fixed the collision that existed. It does nothing about two sessions reaching for
+the same next number tomorrow, which is how both of today's collisions happened. One flat
+`D-nnn` space is kept, divided into blocks. **A session allocates inside its own block and
+coordinates with nobody.**
+
+| Session | Block |
+|---|---|
+| Wave 0 / orchestration (`claude/execute-prompt-txt-4a3ee4`) | `D-023` – `D-099` |
+| **Wave 1 (this branch)** | **`D-100` – `D-199`** |
+| Wave 2 (`claude/trusting-shirley-90ea75`) | `D-200` – `D-299` |
+| Any later session | the next free hundred, taken without asking |
+
+**The next identifier on this branch is `D-100`.** `D-018` to `D-022` above keep the numbers
+they were given; the block applies to what comes next, not retroactively.
+
+### Still open — ambiguity by kind, which no numbering scheme fixes
+
+The technical design and this record **both** use bare `D-nnn`, for architecture decisions and
+business decisions respectively. A reader meeting `D-011` cannot tell which is meant without
+knowing which document they hold. Blocks fix ambiguity by **origin**; this is ambiguity by
+**kind**, and it survives every scheme discussed today.
+
+Resolvable by naming the document when citing across the two, or by `CEO-D-nnn` against
+`ADR-D-nnn` if it starts to bite. Recorded as open rather than fixed, because changing either
+namespace now would invalidate citations in artifacts that have genuinely passed their gates —
+which is the argument that was wrong about this record and is right about that one.
 
 Decided 2026-09-26 by the CEO, on a readiness check for Wave 3 that found `RK-003` to be the
 longest-lead item on the critical path and the only one independent of Wave 2.
