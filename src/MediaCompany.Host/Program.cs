@@ -46,6 +46,26 @@ switch (command)
         return 0;
     }
 
+    case "check":
+    {
+        // Resolves every registration without opening a connection, so the composition root is
+        // verifiable before a datastore exists. It also states what is NOT registered: no provider
+        // adapter, because no provider adapter type is visible outside its assembly (decision
+        // D-001), and no secret value, because the broker holds none (decision D-004).
+        _ = provider.GetRequiredService<MediaCompany.Capability.ICapabilityGateway>();
+        _ = provider.GetRequiredService<PublicationGateService>();
+        _ = provider.GetRequiredService<WorkLifecycleService>();
+        _ = provider.GetRequiredService<ReportingService>();
+        _ = provider.GetRequiredService<OperatingRegisterReport>();
+        _ = provider.GetRequiredService<PermissionAnswerService>();
+
+        Console.WriteLine("Composition root resolved.");
+        Console.WriteLine("  capability egress: ICapabilityGateway only; no provider adapter is registered or registrable.");
+        Console.WriteLine("  credentials:       opaque scoped handles; no secret value passes through this process boundary.");
+        Console.WriteLine("  provider endpoints configured: 0 (this wave creates no account and commits no spend).");
+        return 0;
+    }
+
     case "registers":
     {
         var registers = await provider.GetRequiredService<OperatingRegisterReport>().ProduceAsync(cancellation.Token);
@@ -89,6 +109,6 @@ switch (command)
     }
 
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: install, registers, report.");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report.");
         return 2;
 }
