@@ -5,9 +5,10 @@
 
 ---
 
-> **Cập nhật 2026-09-26, sau khi anh chọn phương án B.** Subcommand `policy-exception` đã được
-> thêm vào framework payload, block đã được gỡ qua giao diện chính thức, và **cả 6 phase của run
-> đã hoàn tất**. Chỉ còn **Closure Gate** chờ quyết định của anh. Chi tiết ở mục 6 và mục 11.
+> **Cập nhật cuối, 2026-09-26.** Run **đã đóng hoàn toàn**: 6/6 phase completed, 6/6 gate
+> approved, kể cả Closure Gate. PostgreSQL 17 đã chạy trên Docker Desktop, 15 bài kiểm chứng cơ
+> sở dữ liệu **đã chạy thật và đạt** — và chúng phát hiện một lỗi thật mà không bộ unit test nào
+> chạm tới được. **Toàn bộ 220 bài đạt, 0 fail, 0 bỏ qua.** Chi tiết ở mục 12.
 
 ## 1. Kết luận ngắn
 
@@ -243,3 +244,74 @@ nhiều thay đổi chưa commit **không phải của tôi** (~1.780 dòng tron
 | `omn_agent/_bundled_payload/runtime/framework_runtime.py` | đồng bộ |
 | `omn_agent/cli.py` | cờ `--policy-exception` |
 | `omn_agent/runner.py` | nối cờ vào subcommand, kèm approval và kiểm tra loại trừ chế độ |
+
+---
+
+## 12. Cập nhật cuối — PostgreSQL đã chạy, run đã đóng
+
+### Môi trường
+
+PostgreSQL 17.11 chạy trong Docker Desktop, cổng **55432** (cố ý tránh 5432 để không đụng
+PostgreSQL cài sẵn nếu có). Cách khởi tạo và chạy lại đã ghi trong [db/README.md](db/README.md).
+
+### ⚠️ Tìm ra một lỗi thật — và nó nghiêm trọng
+
+15 bài kiểm chứng cơ sở dữ liệu chạy lần đầu: **7 fail**. Nguyên nhân gốc là một lỗi duy nhất
+trong `NpgsqlOperationRecorder`:
+
+> Câu lệnh ghi bản ghi vận hành dùng `MAX(model_price_id)` trên cột `uuid`. **PostgreSQL không có
+> hàm `max` cho kiểu uuid** — lệnh ném lỗi `42883: function max(uuid) does not exist`.
+
+Hệ quả: **toàn bộ đường ghi chi phí không hoạt động**. Mọi thao tác có tính phí đều sẽ ném lỗi khi
+ghi. Đây chính xác là loại lỗi mà **không một bài unit test nào phát hiện được**, vì nó chỉ xuất
+hiện khi câu SQL chạm vào PostgreSQL thật. Nó đã lọt qua 205 bài test, qua vòng rà soát, và qua cả
+Review Gate lẫn Verification Gate.
+
+Đã sửa: lấy id bằng `(array_agg(... ORDER BY valid_from DESC) FILTER (...))[1]` — vừa hợp lệ, vừa
+xác định (không phụ thuộc thứ tự ngẫu nhiên nếu có hai hàng giá chồng lấn).
+
+Một lỗi này sửa xong thì **6/7 bài fail tự hết**. Bài còn lại là lỗi của chính bài test: fixture
+dùng đồng hồ cố định đặt ở 2026-10-01, trong khi `ClaimNextAsync` đọc `now()` của cơ sở dữ liệu
+(cố ý như vậy — hai worker không được phép bất đồng về thời gian). Đã sửa bài test và ghi chú lý do
+ngay trong code sản phẩm.
+
+### Kiểm chứng ngược
+
+Để chắc bài test thật sự đọc số học của cơ sở dữ liệu chứ không tự tính: nhân 0 vào số hạng
+output trong cột `GENERATED` rồi chạy lại → bài test **fail**; khôi phục → **pass**.
+
+### Kết quả cuối
+
+| Bộ | Chạy | Đạt | Bỏ qua |
+|---|---|---|---|
+| Domain | 28 | 28 | 0 |
+| Deterministic | 99 | 99 | 0 |
+| Capability + Credentials | 28 | 28 | 0 |
+| Ranh giới kiến trúc | 25 | 25 | 0 |
+| Schema (tĩnh) | 25 | 25 | 0 |
+| **PostgreSQL (tích hợp)** | **15** | **15** | **0** |
+| **Tổng** | **220** | **220** | **0** |
+
+Chạy thử dịch vụ end-to-end trên instance thật: `install` tạo schema xong, `registers` in đúng tập
+hành động đóng đã phản chiếu vào bảng vai trò, `report` in variance **do cơ sở dữ liệu trừ**
+(-77.41 USD so với envelope 77.41), và mọi chỉ số hoãn lại đều hiện "not yet available — awaiting
+..." chứ không có con số giả nào.
+
+### Trạng thái run
+
+`run_status = Completed`. 6/6 phase, 6/6 gate approved. Closure Gate ghi rõ rằng release note
+`REL-2026-0001` với `releaseVerdict: partial` và `K-001` **đúng tại thời điểm phase 6 đóng**, và
+quyết định đóng run là bản ghi những gì đã thay đổi sau đó. Artifact của các phase đã đóng là bằng
+chứng bất biến nên không sửa lại.
+
+### Còn mở — mang sang Wave 2
+
+`K-001` **đã đóng**. Năm mục còn lại vẫn mở, là mang sang chứ không phải đã chấp nhận:
+
+| Mã | Nội dung |
+|---|---|
+| `K-002` | Chưa adapter nào gặp nhà cung cấp thật |
+| `K-003` | Kho bí mật vẫn là bộ điều hợp biến môi trường, chờ quyết định chọn kho chuyên dụng |
+| `K-004` | Chưa có kiểm tra lệch giữa bảng vai trò và tập hành động đóng trong mã nguồn |
+| `K-005` | Change account `IR-2026-0001` mô tả mã nguồn trước vòng sửa của rà soát |
+| `K-006` | Phải thiết lập vị trí backup/restore **trước** khi ghi mục append-only đầu tiên ở bất kỳ môi trường thật nào |
