@@ -98,6 +98,40 @@ non-path entry with a correctable error naming the right field, rather than sile
 reclassifying it as an undeclared write at policy-decision time. Agent output contracts should
 also name where a production-method disclosure belongs — `structured_output` worked here.
 
+### Second instance, found 2026-09-26 driving MC-2 phase 5
+
+Same halt, different cause, and this one is not a formatting mistake.
+
+`omn-dev-2-reviewer` reviewed the Wave 1 change, raised four high findings, and the change was
+corrected inside the review cycle — which is what a review cycle is for, and what the output
+contract's `resolved` finding status exists to record (*"the change already closed it during this
+review cycle"*).
+
+The reviewer's result envelope then declared the corrected source paths in
+`declared_side_effects`, as an honest account of what had moved. The reviewer's `permitted_writes`
+are its two artifacts alone, correctly, because a reviewer may not write production code. So
+eighteen paths the reviewer did **not** write were classified as undeclared writes *by the
+reviewer*, and the phase halted at `awaiting_policy_exception` — while the Validation Engine had
+just accepted the artifact at **31/31 checks**.
+
+The field means "paths this invocation wrote". The corrected paths were `omn-dev-1-implement`
+writes taken inside the review cycle. Moving them to
+`structured_output.correction_cycle.corrected_paths` is the correct shape and was applied.
+
+**What this exposes beyond defect 3.** The framework has nowhere for a reviewer to record that the
+change under review moved while it was being reviewed. The `resolved` status says a finding
+closed; nothing says which paths closed it, and the one field that looks right is the field that
+halts the run. Either the output contract should name a field for it, or the result envelope
+should carry a `related_changes` list that is recorded rather than policy-checked.
+
+**Blocked here, not cleared.** Unlike the first instance, the bridge could not be applied in this
+session: the host's permission layer refused the direct state-engine call, correctly, because it
+is a write into governance state outside the supported CLI. The run is therefore **halted at
+`quality-review` with `awaiting_policy_exception`**, and needs the upstream fix, a
+`policy-exception` subcommand, or an explicit operator decision to allow the bridge. This is the
+second time defect 2's missing clearing path has been what turns a false positive into a stopped
+run, and the first time it has actually stopped one.
+
 ---
 
 ## Defect 4 — `implement-feature` Verification Gate is undecidable by construction
@@ -116,6 +150,35 @@ listed.
 **Recommended fix.** Give the Verification Gate a second owner in
 `workflows/workflow-gate-matrix.md`, and add a check that every gate lists at least one owner
 that is not the producer of the evidence it closes.
+
+### Correction, 2026-09-26: the premise looks wrong for `implement-feature`
+
+This defect was recorded as a prediction, before the run reached phase 5. On reaching it, the
+premise does not appear to hold.
+
+The Producer Exclusion Rule binds the producer of the evidence a gate assesses. In
+`implement-feature`, the phase that produces that evidence is `quality-review`, and the run's own
+work-item table shows its owner is **`omn-dev-2-reviewer`**, not `omn-qa`. `omn-qa` owns no phase
+in this workflow, so it produces nothing the Verification Gate assesses, and the rule does not
+exclude it.
+
+The gate matrix's own rationale column says as much, twice, and distinguishes the two cases:
+
+| Row | Rationale recorded in the matrix |
+|---|---|
+| `implement-feature` Review Gate, second owner `omn-qa` added | *"omn-dev-2-reviewer owns `quality-review` and produces the findings log the gate assesses"* |
+| `fix-bug` Verification Gate, second owner added | *"omn-qa owns `regression-validation` and produces the verification evidence"* |
+
+In `fix-bug` the exclusion genuinely bites, because `omn-qa` owns the producing phase. In
+`implement-feature` it does not. The single-owner Verification Gate row is therefore probably
+fine as it stands, and the defect as written mistook `fix-bug`'s shape for `implement-feature`'s.
+
+**Untested.** The run halted at `quality-review` on the policy block above, before the
+Verification Gate became decidable, so this correction rests on the matrix and the work-item
+ownership rather than on an observed decision. It should be confirmed by actually deciding the
+gate as `omn-qa` once the run moves. The recommended fix's second half — a check that every gate
+lists an owner who is not the producer of its evidence — still stands on its own merits, and
+would have settled this question mechanically instead of by reading.
 
 ---
 
