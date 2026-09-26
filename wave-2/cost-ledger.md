@@ -58,21 +58,37 @@ billed totals rather than context floors.
 | 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
 | | **Total** | | | | |
 
-**[EARLY FINDING — and it is the uncomfortable one.]** Phase 1 alone consumed **257,876 tokens**
-to produce a scope definition. The carried estimate of **~USD 1.58 for a ten-minute video**
-covers the *content* generation — script text, narration characters, images. It does not cover
-the **framework's own orchestration overhead**, which is what this row measures, and on this
-evidence that overhead is not a rounding error against the content cost. Six phases at this
-order of magnitude is a materially different number from $1.58, and the comparison the ticket
-asks for must be stated on both bases or it will mislead:
+**[FINDING, corrected 2026-09-26 — the first framing of this was wrong and the correction
+matters more than the original.]** Phase 1 consumed **257,876 tokens** to produce a scope
+definition. An earlier draft of this ledger set that against the per-video content estimate and
+implied the unit economics were in trouble. **That comparison was invalid and is withdrawn.**
+Two separate quantities were being netted against each other:
 
-- **Cost per video of the content itself** — what $1.58 estimated, and what recurs per video.
-- **Cost per video of running the governed pipeline** — the six-phase framework overhead, which
-  is what a *governed* video costs and which the estimate never included.
+| | What it is | How it recurs |
+|---|---|---|
+| **Development cost (capex)** | Framework tokens spent on the six governed phases — deciding what to build, bounding it, planning, designing, reviewing, documenting. Phase 1 is wholly this. | **Once per change**, amortised over every video the resulting pipeline ever produces. Not a per-video multiplier. |
+| **Operating cost (opex)** | Tokens the production path spends turning a subject into a finished item. | **Once per video**, 13 times a month. |
 
-The second is the number that decides whether 13 videos/month fits USD 77.41. **It is not yet
-established and must not be asserted until phase 6 closes the total.** Recorded now so the
-finding is not reverse-engineered later.
+**The per-video ledger already budgets governance**, which the earlier framing missed. Of the
+377,000 input / 33,000 output tokens per video in `artifacts/03-option-analysis.md`, the
+governance share is explicitly itemised: compliance gate pack 30,000/3,000; CEO approval package
+assembly 8,000/1,500; quality-control review 25,000/2,500; fact-check 60,000/3,000 — **123,000
+input and 9,500 output tokens, about a third of the per-video budget, already allocated to
+governance.** The concern that governance was unbudgeted per video does not survive contact with
+the ledger.
+
+**What survives, and is still worth having:** development cost is genuinely absent from every
+estimate the company holds. Nobody has costed what it takes to build and later change this
+system. That is a real gap, it should be watched across waves, and Wave 2 is the first
+measurement of it — but it is capex, and presenting it as a per-video figure would misinform the
+CEO in the direction of alarm.
+
+**The thing that would actually be alarming, and what this metering is really for.** If the
+*built* pipeline needs a per-video governed structure heavier than 377,000 input tokens — for
+instance if the compliance determinations need several adversarial passes rather than one L3
+call — then per-video cost rises and the approved ledger is wrong. **A measured per-video total
+materially above 377,000 input tokens is the finding that escalates.** That is the test this
+ledger exists to run, and it is not yet answerable.
 
 ## 2.5 The estimate this is measured against, decomposed
 
@@ -92,23 +108,25 @@ the comparison is against a decomposition rather than against a single number.
 | TTS, 8,700 chars × $0.05/1,000 | — | — | $0.4350 |
 | **ESTIMATED TOTAL** | | | **$1.5786 → ~$1.58** |
 
-**The comparison that matters, stated now so it is not constructed to fit the answer later.**
-The estimate budgets **316,500 tokens in total** for the entire content pipeline — research,
-scripting, fact-check, SEO and QC combined. **Phase 1 of this run consumed 257,876 tokens to
-produce a scope definition**, which is 81% of that whole-pipeline budget for a single governance
-phase that writes no script and no narration.
+**⚠ The comparison target is NOT USD 1.58, and both the ticket and the scope definition carry
+the stale figure.** This needs correcting before any variance is reported, because comparing
+against $1.58 would overstate an overrun that may not exist.
 
-These are not the same quantity and must not be netted against each other:
+- **$1.58** is `research/ai-capacity-dossier.md` §F.3's EXPECTED case: **295,000 input / 21,500
+  output** tokens covering research, scripting, fact-check, SEO and QC only.
+- **The CEO-approved figure is option O-002** in `artifacts/03-option-analysis.md`, which
+  supersedes it with a fuller ledger — it adds shot-list and clip selection, motion-graphic
+  briefs, caption polish, the compliance gate pack, cutaway prompts and CEO approval package
+  assembly. **377,000 input / 33,000 output tokens, USD 2.647440 per video variable, USD 42.99
+  per month standing, USD 77.41 per month total, USD 5.95 per video all-in at 13 videos/month.**
 
-- The estimate prices the **content work** — the tokens that turn a subject into a script.
-- The measurement prices the **governance work** — the tokens the framework spends deciding
-  what to build, bounding it, planning it, designing it, reviewing it and documenting it.
+The $77.41 envelope the ticket enforces is O-002's own total, so the ticket is enforcing O-002's
+budget while quoting the older, narrower per-video number beside it. `S-006` inherited the same
+figure from the ticket.
 
-Wave 2 is the first time anyone has measured the second. **The honest reading available so far
-is that the estimate was never wrong about content; it was silent about governance.** Whether
-that silence matters depends on the total, which is not yet in, and on how much of the
-governance cost is a one-off for the first video versus recurring for the thirteenth. **Both
-questions stay open until phase 6.**
+**Measured cost is therefore reported against O-002**, with $1.58 shown only as the superseded
+figure it is. Recorded as an open item for the CEO report: the ticket and `S-006` should be
+corrected so no later reader re-derives a false overrun from them.
 
 ## 3. Quantities the finished video commissions
 
