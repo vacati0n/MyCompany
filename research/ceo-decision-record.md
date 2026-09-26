@@ -313,3 +313,64 @@ personalised advertising and sharply reduces RPM. That is potentially the larges
 in this niche and is not yet quantified.
 
 This decision blocks **Wave 2**, not Wave 1. The foundation being built now is niche-agnostic.
+
+---
+
+# Fifth round — niche settled, Wave 2 authorised
+
+Decided 2026-09-26 by the CEO.
+
+## D-013 — Niche: science and the natural world, adult-framed edutainment
+
+**Decision.** The channel's subject is **broad-appeal science and natural-world edutainment,
+framed for an adult audience**. This supersedes the open format question left by D-012 and
+settles the direction the CEO first expressed as "animals".
+
+**Basis.** Scored 383/500 in `research/niche-recommendation.md`, runner-up to engineering and
+infrastructure at 424/500. The CEO selected it over the higher-scored option. Recorded so the
+trade is visible rather than implicit: this option **wins** on raw volume ceiling and RPM — which
+is the CEO's stated priority of reaching a mass audience — and **loses** on three counts the
+analysis named: made-for-kids drift, near-zero affiliate intent, and competing for attention
+against Kurzgesagt-class animation budgets on USD 77.41/month.
+
+**Consequence — production constraints that now become binding:**
+
+- **Adult framing is a hard production rule, not a style preference.** Serious narration,
+  scientific register, no cartoon styling, no child-directed language, no toy or nursery
+  imagery. A made-for-kids designation removes personalised advertising and sharply reduces
+  RPM, and it is the single largest economic risk in this subject.
+- **Compilation is foreclosed.** Content assembled from third-party clips is named directly by
+  the reused-content policy and is barred by D-006 regardless. Every item is original script
+  and original narration over licensed stock, with original motion graphics.
+- Affiliate revenue, which D-005 places in the launch model, is expected to be **weak** in this
+  subject. The pre-threshold period should be planned on the assumption that it contributes
+  little, so the ~7–14 months of full cost before advertising revenue is closer to the upper
+  end of the USD 400–900 range than the lower.
+- The moat is **treatment and scripting quality**, not subject matter. The subject is not
+  scarce; the discipline is.
+
+**Open and carried, not resolved by this decision.** `research/animal-niche-analysis.md` was
+still in flight when this decision was taken. It is scoped to quantify the made-for-kids
+exposure, test stock-footage supply at the specific-species level rather than in aggregate, and
+re-run break-even for this subject. Its findings **refine the treatment rules and may tighten
+them**; they do not reopen the niche. If it finds made-for-kids exposure inherent to the subject
+rather than manageable by treatment, that is a material finding and returns to the CEO.
+
+## D-014 — Wave 2 begins, in a separate session
+
+**Decision.** Wave 2 is authorised and runs in its **own session**, as Wave 1 did.
+
+**Scope, per the plan of record:** the complete production pipeline — Idea → Research → Script →
+Design → Production → QC → Copyright → **publish-ready output**. The goal is **one complete
+video, end to end**.
+
+**Consequence.**
+
+- **Wave 2 does not publish.** Publishing is Wave 3. The output is a publish-ready artifact
+  held at the gate. Nothing in Wave 2 creates a channel or commits spend, so `RK-003` — the
+  unverified Vietnamese tax position — does not block it.
+- Wave 1's implementation phase is complete; its `quality-review` phase is blocked on the known
+  `awaiting_policy_exception` defect and is being handled in the Wave 1 session. Wave 2 builds
+  on the Wave 1 foundation and should not re-create it.
+- D-002 still holds: the CEO approves the publication individually. In Wave 2 that approval
+  step exists and is exercised, but it gates a publish-ready artifact rather than an upload.
