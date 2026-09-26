@@ -52,11 +52,31 @@ billed totals rather than context floors.
 |---|---|---|---|---|---|
 | 1 `scope-and-acceptance` | `omn-product-owner` | **257,876** | 50 | 16 min 6 s | MEASURED |
 | 2 `execution-planning` | `planner` | **313,533** | 62 | 24 min 25 s | MEASURED |
-| 3 `solution-design-and-risk-assessment` | `architect` | | | | |
+| 3 `solution-design-and-risk-assessment` attempt 1 | `architect` | **312,889** | 67 | 26 min 16 s | MEASURED — **rejected at validation** |
+| 3 attempt 2 (repair) | `architect` (resumed) | _running_ | | | |
 | 4 `implementation` | `omn-dev-1-implement` | | | | |
 | 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
 | 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
 | | **Total** | | | | |
+
+**[FINDING — rework is a real cost line and no estimate contains it.]** Phase 3's first attempt
+consumed **312,889 tokens and was rejected by the validation engine** on two blocking checks:
+`D4.3` (a requirement expressed its trace as a range, `AC-001` to `AC-032`, which is not a
+traceable statement identifier) and `D17.6` (a decision record was emitted with a **signed**
+approval block, which the Producer Exclusion Rule forbids — signing is the gate's act, not the
+producing agent's).
+
+Both are genuine artifact defects rather than framework defects, and **the validator catching
+them is the apparatus working**. But the accounting consequence is that the phase costs attempt
+1 *plus* attempt 2, and **every cost estimate the company holds prices a single clean pass.**
+The retry budget is three attempts, so a phase's worst case is roughly three times its nominal
+cost. Recorded because a rework rate is a real parameter of what a governed pipeline costs, and
+this run is the only place it has ever been observed.
+
+**Mitigation actually used, and worth keeping:** attempt 2 resumed the *same* agent with its
+context intact and a precise statement of the two failed checks, rather than dispatching a fresh
+agent to re-read the entire input set. A fresh agent would have re-paid the whole context cost
+to fix two formatting defects.
 
 **[FINDING, corrected 2026-09-26 — the first framing of this was wrong and the correction
 matters more than the original.]** Phase 1 consumed **257,876 tokens** to produce a scope
