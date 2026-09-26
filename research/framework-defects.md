@@ -15,6 +15,12 @@ input-contract drift"*. Defects 2 to 4 were found after it was opened and are no
 
 **Severity: blocks every run of both workflows at the affected phase.**
 
+**Status on 2026-09-26: STILL OPEN.** Re-checked against the framework payload at
+`D:/Project/claude-framework/omn_agent/_bundled_payload/`. Neither `omn-context-agent` nor
+`omn-tech-lead` declares the producer identifiers in `inputs.accepted` there, so the upstream
+fix has not landed for this defect even though Defect 2 has. **All three local bridges remain
+necessary and must stay in place for now.**
+
 `upstream_inputs()` (`runtime/framework_runtime.py`, ~line 1587) offers an upstream artifact
 under **the producing agent's own output identifier**. Where the consumer's manifest does not
 declare that identifier in `inputs.accepted` or `inputs.optional`, the phase blocks at
@@ -55,9 +61,25 @@ tables would catch all of it at once — and add a regression check to
 
 ---
 
-## Defect 2 — `awaiting_policy_exception` is a terminal block with no clearing path
+## Defect 2 — `awaiting_policy_exception` had no clearing path — **FIXED UPSTREAM 2026-09-26**
 
-**Severity: halts a run permanently through the supported interface.**
+**Status: resolved.** Verified in the installed runtime on 2026-09-26. A `policy-exception`
+subcommand now exists in `runtime/framework_runtime.py` (`cmd_policy_exception`, line 4736;
+argparse registration line 5931) and is exposed by the CLI as
+`omn-agent run <KEY> --policy-exception --phase <phase> --owner-role <role> --decided-by <who>
+--rationale "<text>"`. `BLOCK_REASON_GUIDANCE` line 1879 now reads *"record a policy exception
+decision with the owning role, using `policy-exception`"* — the old "No runtime command clears
+this" wording is gone. It shipped broadly as recommended below, including recording the
+decision as first-class evidence at `runs/<run>/states/<phase>/policy-exception.json`, and it
+refuses any block reason other than `awaiting_policy_exception`, so it is safe to attempt.
+Note the runtime version string is still 0.8.0 — the fix landed without a version bump, which
+makes it easy to miss. **Use the supported command; the manual state-engine transition below is
+no longer necessary and should not be repeated.** Reported by the Wave 2 session and verified
+here independently.
+
+The original finding is kept below for the record.
+
+**Severity as originally found: halted a run permanently through the supported interface.**
 
 `BLOCK_REASON_GUIDANCE` states: *"record a policy exception decision with the owning role. **No
 runtime command clears this.**"* There is no `framework_runtime.py` subcommand for it.
@@ -100,22 +122,42 @@ also name where a production-method disclosure belongs — `structured_output` w
 
 ---
 
-## Defect 4 — `implement-feature` Verification Gate is undecidable by construction
+## Defect 4 — Verification Gate ownership — **PARTLY WITHDRAWN: misdiagnosed for `implement-feature`**
 
-**Severity: blocks phase 5 of every `implement-feature` run.**
+**Status: the `implement-feature` claim was wrong, and this note previously overstated it.**
+Raised by the Wave 2 session on 2026-09-26 and verified here independently the same day.
 
-The Verification Gate names `omn-qa` as its **only** owner, and `omn-qa` produces the evidence
-that gate assesses. The Producer Exclusion Rule forbids an agent from deciding a gate over its
-own evidence, so the gate has no eligible decider.
+**What this note originally claimed:** that `implement-feature`'s Verification Gate is
+undecidable because `omn-qa` is its only owner while `omn-qa` produces the evidence it assesses.
 
-The rule itself works correctly — it refused an attempt to approve the Scope Gate as
-`omn-product-owner` when that agent had produced the scope definition, naming
-`omn-business-analyst` as the valid alternative. The Verification Gate simply has no alternative
-listed.
+**Why that is wrong.** `workflows/implement-feature.md` line 43 shows phase `quality-review` is
+owned by **`omn-dev-2-reviewer`**, and its output artifact `review-package.md` closes **both**
+the Review Gate and the Verification Gate. The specification says so directly at lines 131–134:
+*"The Review Gate carries omn-qa as a second owner because omn-dev-2-reviewer produces the
+findings that gate assesses, and the Producer Exclusion Rule forbids approving one's own
+output."* So the producer of the Verification Gate's evidence is `omn-dev-2-reviewer`, not
+`omn-qa`. `omn-qa` is therefore **eligible**, and sole ownership is not a contradiction.
 
-**Recommended fix.** Give the Verification Gate a second owner in
-`workflows/workflow-gate-matrix.md`, and add a check that every gate lists at least one owner
-that is not the producer of the evidence it closes.
+**Where the defect was real — and it was already fixed.** In `fix-bug`, `omn-qa` owns
+`regression-validation` and genuinely does produce the verification evidence. The amendment
+table at the foot of `workflows/workflow-gate-matrix.md` records:
+*"fix-bug | Verification Gate | added omn-dev-2-reviewer as second owner | omn-qa owns
+`regression-validation` and produces the verification evidence"*. This note generalised that
+`fix-bug` case to `implement-feature`, where ownership differs.
+
+**Consequence for anyone reading this.** Do not treat the `implement-feature` Verification Gate
+as blocked in advance. Attempt it as `omn-qa`: the runtime enforces the Producer Exclusion Rule
+itself and names the valid alternative owner when it refuses, so an attempt is informative and
+costs nothing. D-010's "known obstacle" paragraph in `research/ceo-decision-record.md`, and the
+same warning carried into the Wave 1 and Wave 2 session briefs, overstate what is ahead.
+
+**Still unproven, stated honestly:** this is a reading of the workflow specification and the gate
+matrix, not a runtime result. The Wave 2 session reaches phase 5 later and will have the runtime
+adjudicate it. The remaining recommendation below stands on its own merits regardless.
+
+**Recommended fix that still applies.** Add a check that every gate lists at least one owner that
+is not the producer of the evidence it closes. That check would have caught the real `fix-bug`
+instance mechanically, and would have prevented this note from being written.
 
 ---
 
