@@ -322,3 +322,63 @@ watch hours is the planning figure.
 
 Wave 2 open questions `Q-001` (subject and angle), `Q-004` (budget for a second stock library) and
 `Q-008` (audience-drift threshold, due before first publication) remain with the CEO.
+
+## D-012 — Two-phase payee structure, and the launch channel already exists
+
+**Decision, two parts.**
+
+1. **The payee is staged, deliberately.** Channels launched now use the **CEO as an individual
+   payee**, per D-011. Later channels will be created under a **company legal entity**. This is a
+   recorded sequence, not a drift: the individual payee is the starting position, and the entity
+   is the intended end state.
+2. **The launch channel is an existing YouTube channel the CEO already holds**, rather than a
+   newly created one.
+
+**What part 1 settles.** The multi-channel isolation concern D-011 carried forward now has an
+intended answer. The plan records that genuine isolation between channels requires **distinct
+legal payees**, decided before launch, because the payment account's country and payee are hard
+to change later. Staging the entity means channel 1 and any entity-held channel will sit under
+**different payees by construction**, which is the isolation the plan asks for. What is not
+solved, and is not solvable by sequencing, is that channel 1 itself stays on the individual payee
+permanently unless it is migrated — and migration is the thing the plan records as hard.
+
+**What part 2 changes, and it is not small.** Every precondition in §21.3 was written for a
+channel that does not exist yet. An existing channel arrives with history, and history cuts both
+ways:
+
+| | Effect |
+|---|---|
+| Accumulated subscribers and qualified watch hours | count toward the Tier 2 threshold; the company may be closer to it than a standing start |
+| Account age, 2-step verification | §21.3 precondition 3 may already be satisfied in part |
+| Existing content on the channel | the inauthentic-content and reused-content policies are assessed at **channel** level, so prior uploads are inside the assessment, not outside it |
+| Any prior copyright or community-guidelines strike | inherited. §21.3 precondition 3 requires **no active community-guidelines strike**; `RK-001` records that three copyright strikes in 90 days terminate the account "along with any associated channels" |
+| Any channel-level made-for-kids designation | would contradict scope item `S-002`, which makes adult framing a hard gate condition rather than a preference |
+
+**The decisive fact, and it is a fact rather than a decision.** The re-verified dossier is explicit
+that the widely repeated "existing partners are grandfathered" framing is **misread**: the
+first-party wording is *"If you are already in YPP, your status is not impacted by this update"*,
+and that sentence covers **YPP membership only**. It does not exempt anyone from the new Shorts
+revenue floor or the new activity requirement, and — critically here — **it does not apply to a
+channel that is not already in YPP, however old that channel is.**
+
+So `RK-006` resolves one of two ways, and which one is not yet established:
+
+- **If the existing channel is already in YPP:** the 2027-02-01 threshold doubling does not apply
+  to it. `RK-006`, recorded as the only fixed date in the plan and the driver of the 8,000-watch-hour
+  planning figure, would **largely dissolve**. The remaining obligations would be accepting updated
+  terms by **2027-01-31** and staying above the activity floor.
+- **If it is not:** the channel is a new entrant for threshold purposes regardless of its age, the
+  8,000-watch-hour planning figure stands, and its accumulated audience is a head start rather
+  than an exemption.
+
+This is the largest single open item in the plan by consequence, and it is answerable by looking
+rather than by research. It is recorded here as **unestablished**, and no downstream phase may
+assume either branch.
+
+**Effect on Wave 2, which is running now.** Wave 2 publishes nothing, so it does not need the
+channel to exist. But two of its scope items are **channel-scoped, not item-scoped**, and both
+depend on which channel this is: `S-011`, which blocks publish-ready while the channel is
+unregistered on any library its assets come from; and `S-002`, whose audience-drift monitoring
+obligation and per-item audience designation are assessed against a channel that may already
+carry a designation and an audience. Wave 2 should be told which channel it is producing for
+before its implementation phase commits to an item.
