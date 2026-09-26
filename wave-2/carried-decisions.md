@@ -7,7 +7,7 @@ numbering spaces**, and Wave 2 depends on decisions recorded in both. Until that
 
 ---
 
-## 1. The decision record has forked — unresolved, surfaced to the CEO
+## 1. The decision record forked — RESOLVED, and how
 
 Two sessions have written five different decisions each under the identifiers `D-011` to
 `D-015`. Both branches descend from the same merge-base, `849835b`, and both files present
@@ -115,33 +115,38 @@ because sessions happened to be in contact. Three sessions appending to one auth
 with no way to reserve an identifier will collide again. **This is a process finding, not a
 framework one.**
 
-### Resolution — recorded as `C-004`, and Wave 2 follows it
+### How the proposal evolved — recorded because the churn is itself the finding
 
-Owned and recorded by the CEO/research session at `claude/execute-prompt-txt-4a3ee4`, commit
-`029cba1`, as correction **`C-004`**. **Cite `C-004`; this section is context, not a second
-record of the same thing.** The resolution is **additive only — nothing already written is
-renumbered or renamed:**
+`C-004` was recorded by the CEO/research session (`claude/execute-prompt-txt-4a3ee4`, commit
+`029cba1`). **Cite `C-004`; this section is context, not a second record.** Its original
+recommendation was *additive only — never renumber, namespace future identifiers by wave, keep a
+concordance*. **Two of those three did not survive.** The CEO's clarified instruction was that
+renumbering was what he meant, and the outcome is the block scheme above.
 
-1. **Nothing is renumbered, ever** — not even after a direction is chosen. Both sets keep their
-   identifiers.
-2. **Cite by `branch : identifier : title`** wherever ambiguity is possible.
-3. **Namespace future identifiers by originating wave** — `W0-D-018`, `W1-D-016`, `W2-D-018`.
-4. **Keep a concordance table** at the head of the merged record; the collision table above is
-   its first entry.
-5. **On merge the concordance merges too**, and both sets survive intact.
+**What was withdrawn, and what it cost.** The prefix scheme (`W0-`/`W1-`/`W2-`) was adopted, this
+session adopted `W2-`, and then the whole scheme was withdrawn — three numbering schemes in one
+day. No prefixed identifier now exists anywhere.
 
-**Why never renumbering is right, and better than the withdrawal-marker approach this session
-first proposed.** Existing citations live in artifacts that have **already passed their gates**.
-Renumbering invalidates them silently and creates a second, subtler instance of this same
-failure: a reader holding a gated artifact that cites `D-013` would get no signal that the
-target had moved. It is the same reasoning that left `S-006` unrewritten under `C-001` — a
-recorded correction beside a gated artifact is worth more than a clean-looking artifact carrying
-an untraceable edit. Renumbering carefully is still renumbering.
+**The argument against renumbering was not wrong, it was outweighed.** It held that existing
+citations live in artifacts that have **already passed their gates**, so renumbering invalidates
+them silently — a reader holding a gated artifact citing `D-013` gets no signal the target moved.
+That is the same reasoning that left `S-006` unrewritten under `C-001`. It was answered in
+practice rather than in principle: the Wave 1 session renumbered **with withdrawal markers
+carrying the mapping**, so the silent-invalidation failure the argument predicted does not occur
+— the marker is the signal. **A renumber that leaves a forwarding address is not the thing the
+argument objected to.**
 
-**Wave 2's own position.** `D-017` keeps its identifier. Wave 2 artifacts are unaffected in
-substance: no scope item, task or acceptance criterion cites a colliding identifier, because the
-run's own registers (`S-`, `A-`, `T-`, `R-`, `Q-`) are internal to the run and do not overlap
-this space. Any further identifier this wave originates will be namespaced `W2-`.
+**What survives from the original proposal, and it is the part that matters.** Renumbering fixed
+the collision that existed. **Block allocation fixes the next one.** Three sessions appending to
+one authoritative record with no way to reserve an identifier was the underlying defect, and only
+the reserved block addresses it. The `branch : identifier : title` citation habit also survives
+as good practice across branches.
+
+**Wave 2's position.** `D-017` keeps its identifier and is listed as unambiguous in the
+concordance. Wave 2's run artifacts are unaffected in substance: no scope item, task or
+acceptance criterion cites a colliding identifier, because the run's registers (`S-`, `A-`, `T-`,
+`R-`, `Q-`) are internal to the run and do not overlap this space. Further identifiers this wave
+originates come from `D-200`–`D-299`.
 
 ---
 
