@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Domain\MediaCompany.Domain.csproj" />
+  </ItemGroup>
+</Project>

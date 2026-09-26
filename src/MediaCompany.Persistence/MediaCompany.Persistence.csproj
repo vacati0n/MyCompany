@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Domain\MediaCompany.Domain.csproj" />
+    <ProjectReference Include="..\MediaCompany.Application\MediaCompany.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\db\**\*.sql" LinkBase="Schema" />
+  </ItemGroup>
+</Project>
