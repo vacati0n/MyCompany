@@ -1,4 +1,37 @@
-# CEO Decision Record — Framing Gate, run `run-258e0a3415d2`
+# CEO Decision Record
+
+> **READ THIS FIRST — identifiers are namespaced, and five bare identifiers are ambiguous.**
+>
+> Three sessions write to this record. Since 2026-09-26, by CEO decision `W0-D-018`, every new
+> identifier carries the wave that originated it: `W0-`, `W1-`, `W2-`. Collisions are impossible
+> by construction under that scheme.
+>
+> Identifiers allocated **before** that decision are **not renumbered**, because existing
+> citations live in artifacts that have already passed their gates and renumbering would
+> invalidate them silently. Resolve a bare pre-2026-09-26 identifier with the concordance below.
+> When in doubt, cite as `branch : identifier : title`.
+
+## Concordance — identifiers allocated twice before namespacing
+
+Both columns are real decisions. Neither is superseded, and they do not contradict each other.
+
+| Id | `claude/execute-prompt-txt-4a3ee4` (this branch) | `claude/eloquent-taussig-724cc2` (Wave 1) |
+|---|---|---|
+| `D-011` | Tax posture: individual or household business first | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | Niche direction: animals, form not yet settled | Two-phase payee structure; the launch channel already exists |
+| `D-013` | Niche: science and the natural world, adult-framed | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | Wave 2 begins, in a separate session | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
+| `D-015` | Science and natural world reframed as a deliberate experiment | The first item carries no affiliate link |
+
+Unambiguous, allocated once: `D-001`–`D-010` (shared history before the fork), `D-016`
+(this branch), `D-017` (Wave 2, the video subject), `C-001`–`C-004` (this branch), and every
+`W0-`/`W1-`/`W2-` identifier.
+
+When the branches merge, this table merges with them and both sets survive intact.
+
+---
+
+# Original record — Framing Gate, run `run-258e0a3415d2`
 
 | Field | Value |
 |---|---|
@@ -1064,3 +1097,38 @@ D-021 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` c
 Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
 and angle), `Q-004` (budget for a second stock library) and `Q-008` (audience-drift threshold)
 remain with the CEO.
+
+
+---
+
+## W0-D-018 — Identifier namespacing adopted; nothing is renumbered
+
+Decided 2026-09-26 by the CEO, approving the recommendation in `C-004`. **This is the first
+identifier issued under the scheme it adopts.**
+
+**Decision.** The resolution to the forked record is **additive only**:
+
+1. **Nothing already written is renumbered or renamed.** Both colliding sets keep their
+   identifiers.
+2. **Cite by `branch : identifier : title`** wherever ambiguity is possible. The convention
+   originated in the Wave 2 session's `wave-2/carried-decisions.md` §1 and is now the general
+   rule.
+3. **Every new identifier is namespaced by the wave that originated it** — `W0-`, `W1-`, `W2-`.
+   Collisions become impossible by construction rather than by coordination, which is the only
+   kind of fix that survives three sessions not talking to each other.
+4. **A concordance table sits at the head of this record** and resolves the five ambiguous
+   identifiers. It is now in place.
+5. **When the branches merge, the concordance merges with them** and both sets survive.
+
+**Why renumbering was rejected, recorded so the reasoning is not lost.** It is the obvious move
+and it is wrong, for the same reason `S-006` was left alone in `C-001`: existing citations live
+in artifacts that have already passed their gates. Renumbering invalidates them **silently** — a
+reader holding a gated artifact that cites `D-013` would get no signal that the target had
+moved — which is a subtler version of the problem being fixed. A third session renumbering would
+produce a third variant.
+
+**Standing obligation this creates.** The underlying defect was never the collision; it was that
+three sessions wrote to one authoritative record with **no identifier-allocation mechanism**, and
+that the first two collisions were caught only because the sessions happened to be talking. The
+namespace removes the need for that luck. Any session joining later takes its own `W<n>-` prefix
+and needs to coordinate with nobody.
