@@ -55,7 +55,9 @@ billed totals rather than context floors.
 | 3 `solution-design-and-risk-assessment` attempt 1 | `architect` | **312,889** | 67 | 26 min 16 s | MEASURED — **rejected at validation** |
 | 3 attempt 2 (repair) | `architect` (resumed) | **332,728** | 9 | 3 min 20 s | MEASURED — **78/78 PASS** |
 | | **Phase 3 total** | **645,617** | 76 | 29 min 36 s | Two attempts for one artifact |
-| 4 `implementation` | `omn-dev-1-implement` | | | | |
+| 4 `implementation` attempt 1 | `omn-dev-1-implement` | **366,193** | 98 | 36 min 17 s | MEASURED — **rejected at validation** |
+| 4 attempt 2 (repair) | `omn-dev-1-implement` (resumed) | **401,504** | 13 | 6 min 25 s | MEASURED — **32/32 PASS** |
+| | **Phase 4 total** | **767,697** | 111 | 42 min 42 s | Two attempts |
 | 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
 | 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
 | | **Total** | | | | |
@@ -204,11 +206,27 @@ Populated once the script and shot list exist.
 
 | Quantity | Count | Unit price (re-fetch date) | Cost | Basis |
 |---|---|---|---|---|
-| Narration characters | _pending script_ | $0.05 / 1,000 chars (re-verified 2026-09-26, `reverification-2026-09-26.md` U-5) | | |
-| Original motion graphics | _pending shot list_ | in-house, no marginal API cost | | |
-| Licensed stock clips | _pending shot list_ | included in the $30 Storyblocks subscription | $0.00 marginal | |
-| AI-generated video seconds | **0** | n/a | **$0.00** | **MEASURED — none commissioned.** See note below. |
-| Thumbnail images | _pending_ | $0.05268 each, gpt-image-2.5 high | | |
+| Narration characters | **11,096** (1,929 words) | $0.05 / 1,000 chars (re-verified 2026-09-26, U-5) | **$0.554800** | **MEASURED** — exact count of `wave-2/item-001/narration.txt`. 11,130 *bytes*; the difference is multi-byte punctuation and the metered unit is the character |
+| Original motion graphics | **22** (`GFX-01`–`GFX-22`) | in-house, no marginal API cost | $0.00 | **MEASURED** — enumerated |
+| Licensed stock clips | **18** (`CLIP-01`–`CLIP-18`) | included in the $30 subscription | $0.00 marginal | **MEASURED** — enumerated |
+| Thumbnail candidates | **6** (`THUMB-01`–`THUMB-06`) | $0.05268 each | **$0.316080** | **MEASURED** — enumerated |
+| AI-generated video seconds | **0** | n/a | **$0.00** | **MEASURED — none commissioned.** See note below |
+| | | | **$0.870880** | **Commissioned-media total** |
+
+**Against the approved per-item variable cost of USD 2.647440 (option O-002, per `C-001`), the
+commissioned media is 32.9%, leaving USD 1.776560 before it is breached.**
+
+**⚠ No variance is stated, and that is deliberate.** The measured figure is a **floor, not a
+total**: the token half of the per-item ledger is unmeasurable for the reasons in §1 and §2.6.
+Declaring a 67% underspend would be the same class of error as inventing a clip count — it would
+present an incomplete measurement as a complete one. What can honestly be said is that **the
+commissioned-media half came in at roughly a third of the whole per-item allowance**, and that
+the token half remains unmeasured.
+
+**Runtime: 13 min 39 s — SPECIFIED, not measured.** 1,929 words at 150 wpm plus 48 s of holds.
+Across 145–160 wpm the cut runs 12:51–14:06 — inside the 12–14 minute target at every rate and
+never near the 10-minute floor. **No rendered file exists**, because rendering requires narration
+audio (spend) and clip downloads (a subscription session), neither of which Wave 2 may do.
 
 **Why the AI-video line is zero, and why that is a decision rather than an omission.** D-006
 permits sparing AI cutaways. This video commissions none, for two reasons that are stronger
