@@ -53,7 +53,8 @@ billed totals rather than context floors.
 | 1 `scope-and-acceptance` | `omn-product-owner` | **257,876** | 50 | 16 min 6 s | MEASURED |
 | 2 `execution-planning` | `planner` | **313,533** | 62 | 24 min 25 s | MEASURED |
 | 3 `solution-design-and-risk-assessment` attempt 1 | `architect` | **312,889** | 67 | 26 min 16 s | MEASURED — **rejected at validation** |
-| 3 attempt 2 (repair) | `architect` (resumed) | _running_ | | | |
+| 3 attempt 2 (repair) | `architect` (resumed) | **332,728** | 9 | 3 min 20 s | MEASURED — **78/78 PASS** |
+| | **Phase 3 total** | **645,617** | 76 | 29 min 36 s | Two attempts for one artifact |
 | 4 `implementation` | `omn-dev-1-implement` | | | | |
 | 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
 | 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
@@ -73,10 +74,23 @@ The retry budget is three attempts, so a phase's worst case is roughly three tim
 cost. Recorded because a rework rate is a real parameter of what a governed pipeline costs, and
 this run is the only place it has ever been observed.
 
-**Mitigation actually used, and worth keeping:** attempt 2 resumed the *same* agent with its
-context intact and a precise statement of the two failed checks, rather than dispatching a fresh
-agent to re-read the entire input set. A fresh agent would have re-paid the whole context cost
-to fix two formatting defects.
+**Mitigation used — and the measurement contradicts the reasoning for it, which is worth
+recording honestly.** Attempt 2 resumed the *same* agent with its context intact and a precise
+statement of the two failed checks, on the reasoning that a fresh agent would re-pay the whole
+context cost to fix two formatting defects. **On tokens that reasoning was wrong.** The repair
+consumed **332,728 tokens against attempt 1's 312,889** — *more*, not less, because resuming
+replays an accumulated context that had grown past the original. Phase 3 therefore cost
+**645,617 tokens to produce one artifact**, slightly over twice its clean-pass cost.
+
+Where the resume did win decisively was **wall-clock and tool calls: 3 min 20 s and 9 tool calls
+against 26 min 16 s and 67**, because the agent already knew the design and only had to edit.
+So the right statement is: **resuming buys time, not tokens.** For a rework whose cost the
+company cares about in money, that distinction matters, and the intuition that "reusing context
+is cheaper" is false here.
+
+**The rework parameter, stated:** one phase of six needed a second attempt, and that phase cost
+**2.06×** its clean-pass cost. One observation is not a rate, but it is the only observation
+anyone has.
 
 **[FINDING, corrected 2026-09-26 — the first framing of this was wrong and the correction
 matters more than the original.]** Phase 1 consumed **257,876 tokens** to produce a scope
