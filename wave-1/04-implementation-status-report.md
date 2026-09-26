@@ -5,6 +5,10 @@
 
 ---
 
+> **Cập nhật 2026-09-26, sau khi anh chọn phương án B.** Subcommand `policy-exception` đã được
+> thêm vào framework payload, block đã được gỡ qua giao diện chính thức, và **cả 6 phase của run
+> đã hoàn tất**. Chỉ còn **Closure Gate** chờ quyết định của anh. Chi tiết ở mục 6 và mục 11.
+
 ## 1. Kết luận ngắn
 
 Phần code của Wave 1 **đã xây xong và chạy được**. Bốn thuộc tính cấu trúc mà thiết kế bắt buộc
@@ -102,9 +106,11 @@ Phán quyết rà soát: `approve-with-corrections`, trạng thái `provisional`
 
 ---
 
-## 6. ⚠️ Cần anh quyết định — run đang bị chặn
+## 6. ✅ Đã gỡ — chọn phương án B, sửa ở framework payload
 
-Phase 5 **không hoàn tất được**. Nguyên nhân là lỗi framework, không phải lỗi công việc:
+*(Mục này giữ nguyên mô tả sự cố; kết quả xử lý ở cuối mục.)*
+
+Phase 5 **đã không hoàn tất được**. Nguyên nhân là lỗi framework, không phải lỗi công việc:
 
 - Validation Engine đã **chấp nhận** artifact rà soát: **31/31 kiểm tra đạt**.
 - Nhưng run vẫn dừng ở `awaiting_policy_exception`, vì result envelope đã khai báo các đường dẫn mã
@@ -125,7 +131,21 @@ Phase 5 **không hoàn tất được**. Nguyên nhân là lỗi framework, khô
 | **B** | Sửa ở framework payload (`D:/Project/claude-framework`): thêm subcommand `policy-exception` | Đúng chỗ, sửa vĩnh viễn; tốn thêm một vòng việc |
 | **C** | Bỏ run hiện tại, chạy lại phase 5 trên một run mới | Mất lịch sử run; không khuyến nghị |
 
-**Khuyến nghị: B**, và dùng A như giải pháp tạm nếu anh muốn Wave 1 khép lại ngay hôm nay.
+**Đã chọn B.** Kết quả:
+
+- Thêm `cmd_policy_exception` + subparser vào `.claude/runtime/framework_runtime.py`, đồng bộ sang
+  `omn_agent/_bundled_payload/runtime/`, và thêm cờ `--policy-exception` vào `omn_agent/cli.py` +
+  `omn_agent/runner.py`. Lệnh dùng đúng transition mà state engine **vốn đã khai báo**
+  (`blocked -> pending`, trigger `blocker_cleared`) — chỉ thiếu bề mặt CLI.
+- Ghi quyết định thành bằng chứng hạng nhất tại
+  `states/<phase>/policy-exception.json`, ngang hàng với các quyết định gate.
+- **Hai lớp bảo vệ, đã thử trước khi dùng thật:** vai trò phải nằm trong danh sách envelope ghi;
+  và **agent không được tự miễn trừ cho chính mình** — thử với `omn-dev-2-reviewer` bị từ chối:
+  *"A write scope an agent can except itself from is advisory, which is what the scope is not."*
+- Đã dùng một lần, thật: `omn-orchestrator` ghi, anh là người quyết, lý do là kết luận
+  "false positive". Block gỡ xong, run chạy tiếp.
+
+Lỗi số 2 trong `research/framework-defects.md` **đã đóng**. Cầu nối cục bộ không còn cần cho nó.
 
 ---
 
@@ -142,8 +162,10 @@ với workflow `implement-feature`:
 - Chính cột lý do trong gate matrix cũng nói vậy: với `fix-bug` thì `omn-qa` *có* sở hữu phase tạo
   bằng chứng nên cần chủ sở hữu thứ hai; với `implement-feature` thì không.
 
-Chưa kiểm chứng được bằng thực nghiệm vì run đã dừng trước cổng đó. Nhưng khả năng cao **đây không
-phải trở ngại** như đã lo.
+**Đã kiểm chứng xong.** Sau khi gỡ block, Verification Gate được quyết bởi `omn-qa` và **runtime
+chấp nhận**. Quy tắc loại trừ không hề kích hoạt. **Đây không phải lỗi** — mục số 4 đã được rút
+khỏi danh sách lỗi và giữ lại như một ghi chép về sai sót: nó được viết theo hình dạng của
+`fix-bug` rồi áp nhầm sang `implement-feature`.
 
 ---
 
@@ -179,3 +201,45 @@ Code nằm trên `claude/eloquent-taussig-724cc2`, kế thừa từ `849835b`. N
 (`feature/mc-2-wave-1-company-foundation-registries-job`) cũng kế thừa từ đúng commit đó, nên nó
 **fast-forward được** sang công việc này mà không cần merge. Lý do phải làm vậy: công cụ soạn thảo
 của host từ chối ghi vào đường dẫn thuộc checkout gốc từ phiên này.
+
+---
+
+## 11. Trạng thái run sau khi gỡ block
+
+Cả 6 phase đã `completed`, 5 gate đã ghi quyết định:
+
+| # | Hạng mục | Trạng thái |
+|---|---|---|
+| 1 | `scope-and-acceptance` · Scope Gate | completed · approved by `omn-business-analyst` |
+| 2 | `execution-planning` · Planning Gate | completed · approved by `omn-tech-lead` |
+| 3 | `solution-design-and-risk-assessment` · Design Gate | completed · approved by `omn-tech-lead` |
+| 4 | `implementation` | completed |
+| 5 | `quality-review` · Review Gate · Verification Gate | completed · approved by `omn-qa` · approved by `omn-qa` |
+| 6 | `documentation-and-release-handoff` | completed |
+| 6 | **Closure Gate** | **blocked — chờ quyết định** |
+
+Release note `REL-2026-0001` đã phát hành, đạt 31/31 kiểm tra, `releaseVerdict: partial`,
+6 vấn đề đã biết (`K-001` đến `K-006`). Gọi là `partial` vì **không có gì được triển khai** và
+phần kiểm chứng chưa chạm tới hành vi cơ sở dữ liệu — không phải vì có gì hỏng.
+
+### Closure Gate — lệnh chờ anh chạy
+
+Người quyết là `omn-orchestrator` (không phải `omn-documentation`, vì vai trò đó tạo ra bằng chứng
+mà cổng này đánh giá). Tôi **không tự quyết** cổng này: đây là chữ ký khép lại cả wave, thuộc về anh.
+
+```bash
+omn-agent run MC-2 --target "D:/Project/MyCompany" --gate "Closure Gate" --decision approve --owner-role omn-orchestrator --decided-by "CEO (vuhoangcao@kms-technology.com)" --rationale "<lý do của anh>" --approve
+```
+
+### Lưu ý về framework repo
+
+Bốn file đã sửa tại `D:/Project/claude-framework` và **chưa commit**, vì repo đó đang có sẵn
+nhiều thay đổi chưa commit **không phải của tôi** (~1.780 dòng trong chính
+`framework_runtime.py`). Commit bây giờ sẽ gom cả phần đó vào. Phần của tôi:
+
+| File | Thay đổi |
+|---|---|
+| `.claude/runtime/framework_runtime.py` | `cmd_policy_exception`, subparser, `clearing_action` nêu lệnh cụ thể |
+| `omn_agent/_bundled_payload/runtime/framework_runtime.py` | đồng bộ |
+| `omn_agent/cli.py` | cờ `--policy-exception` |
+| `omn_agent/runner.py` | nối cờ vào subcommand, kèm approval và kiểm tra loại trừ chế độ |
