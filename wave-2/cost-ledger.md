@@ -128,6 +128,42 @@ figure from the ticket.
 figure it is. Recorded as an open item for the CEO report: the ticket and `S-006` should be
 corrected so no later reader re-derives a false overrun from them.
 
+## 2.6 The L3 versus L1/L2 split — NOT measurable in Wave 2, and why that matters
+
+The approved ledger assumes **290,000 input at L3 and 87,000 at L1/L2**, and the whole
+cost-control thesis — route each task to the cheapest model that holds the quality floor — rests
+on that ratio being roughly right. It is the most useful breakdown the metering could produce.
+
+**It cannot be produced in Wave 2. Recorded as a negative result rather than left blank.**
+
+**Reason, verified rather than assumed.** All twelve registered framework agents declare
+`model: inherit` in their host adapter files (`.omn-agent/agents/*.agent.md`, line 5 of each).
+Every phase therefore executes at the orchestrating session's model. There is no tier
+assignment, no routing decision and no per-task model selection anywhere in the framework as
+installed, so there is no split to measure — the denominator does not exist.
+
+**Three consequences, and the third is the one that matters.**
+
+1. **Every framework phase runs at the most capable and most expensive tier available**, because
+   `inherit` resolves to whatever the operator happens to be running. Nothing routes a cheap
+   task to a cheap model.
+2. **The measured development cost in §2.2 is therefore an upper bound**, not a representative
+   figure. A tiered framework would cost less for the same work, by an amount nobody can yet
+   state.
+3. **The cost-control thesis is untested, not merely unmeasured.** Wave 1's decision record
+   D-012 specifies that a capability request names "a capability class, a reasoning tier, a
+   quality floor… and never a provider or a model", and the resolution boundary M-001 is what
+   reads that tier and routes accordingly. **That boundary is designed but not executing**, so
+   the ratio the budget depends on has never been exercised by anything.
+
+**[FINDING for the CEO report.]** The 290k/87k split is an assumption carrying the company's
+entire cost-control argument, and Wave 2 establishes that **nothing in the system currently
+tests it**. This is not a defect in the framework — the framework builds software, it is not the
+production pipeline — but it does mean the first real evidence for or against the routing design
+arrives only when M-001 is executing and recording tier per operation. Until then the $2.647
+per-video figure rests on an unexercised assumption, and that should be said plainly rather than
+carried as though it were measured.
+
 ## 3. Quantities the finished video commissions
 
 Populated once the script and shot list exist.
