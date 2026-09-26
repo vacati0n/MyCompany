@@ -148,4 +148,32 @@ internal sealed class NpgsqlJobWriter : IJobWriter
 
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task AdvanceAsync(
+        JobId job,
+        LifecyclePosition position,
+        ClaimState state,
+        DateTimeOffset availableAt,
+        CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand(
+            """
+            UPDATE jobs
+               SET position = @position,
+                   claim_state = @state,
+                   available_at = @available_at,
+                   claimed_by = NULL,
+                   lease_expires_at = NULL
+             WHERE job_id = @job_id
+            """,
+            _connection,
+            _transaction);
+
+        command.Parameters.AddWithValue("job_id", job.Value);
+        command.Parameters.AddWithValue("position", position.ToString());
+        command.Parameters.AddWithValue("state", state.ToString());
+        command.Parameters.AddWithValue("available_at", availableAt);
+
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
 }

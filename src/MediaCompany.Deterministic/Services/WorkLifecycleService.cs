@@ -77,6 +77,7 @@ public sealed class WorkLifecycleService
     /// </summary>
     public async Task<FailureDisposition?> RecordStageOutcomeAsync(
         Job job,
+        WorkflowDefinition workflow,
         LifecyclePosition position,
         DateTimeOffset enteredAt,
         bool succeeded,
@@ -89,12 +90,21 @@ public sealed class WorkLifecycleService
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(job);
+        ArgumentNullException.ThrowIfNull(workflow);
         ArgumentNullException.ThrowIfNull(policy);
 
         var now = _clock.UtcNow;
 
         if (succeeded)
         {
+            // A stage that succeeds advances the unit to the next position its workflow declares.
+            // When there is no next position the unit is finished: it reaches a terminal claim
+            // state and is not claimed again. Without that terminal state a finished unit returns
+            // to the ready queue and is re-claimed indefinitely, and its stage history accumulates
+            // repeated rows for one position instead of resolving to the positions it passed.
+            var next = NextPosition(workflow, position);
+            var finished = next is null;
+
             await using var ok = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
             await ok.Jobs.RecordStageAsync(
                 new JobStage
@@ -108,9 +118,34 @@ public sealed class WorkLifecycleService
                     LeftAt = now,
                 },
                 cancellationToken).ConfigureAwait(false);
-            await ok.Jobs.ReleaseAsync(job.Id, ClaimState.Ready, now, cancellationToken).ConfigureAwait(false);
-            await ok.Audit.AppendAsync(Entry(job, "job.stage-succeeded", position.ToString()), cancellationToken)
-                .ConfigureAwait(false);
+
+            if (finished)
+            {
+                await ok.Jobs.AdvanceAsync(
+                    job.Id, LifecyclePosition.Completed, ClaimState.Done, now, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                await ok.Jobs.AdvanceAsync(
+                    job.Id, next!.Value, ClaimState.Ready, now, cancellationToken).ConfigureAwait(false);
+                await ok.Jobs.RecordStageAsync(
+                    new JobStage
+                    {
+                        Job = job.Id,
+                        Position = next.Value,
+                        Outcome = StageOutcome.Pending,
+                        Attempts = 0,
+                        Escalated = false,
+                        EnteredAt = now,
+                    },
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            await ok.Audit.AppendAsync(
+                Entry(job, finished ? "job.completed" : "job.stage-succeeded",
+                      finished ? $"{position} was the last position of {workflow.Name}" : $"{position} succeeded"),
+                cancellationToken).ConfigureAwait(false);
             await ok.CommitAsync(cancellationToken).ConfigureAwait(false);
             return null;
         }
@@ -122,7 +157,11 @@ public sealed class WorkLifecycleService
         {
             FailureDisposition.RetrySameRoute retry =>
                 (StageOutcome.Retried, false, now + retry.Backoff, ClaimState.Ready),
-            FailureDisposition.ReResolve => (StageOutcome.Retried, false, now, ClaimState.Ready),
+            // A re-resolution waits the declared backoff before becoming claimable again. Without
+            // it a route that is unavailable for a recorded reason is re-resolved in a tight loop
+            // until the attempt count exhausts.
+            FailureDisposition.ReResolve => (
+                StageOutcome.Retried, false, now + FailureHandling.Backoff(attemptsSoFar, policy), ClaimState.Ready),
             FailureDisposition.Escalate => (StageOutcome.Escalated, true, now, ClaimState.Dead),
             _ => throw new InvalidOperationException("Unreachable: the disposition union has three members."),
         };
@@ -148,6 +187,21 @@ public sealed class WorkLifecycleService
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         return disposition;
+    }
+
+    /// <summary>
+    /// The position that follows <paramref name="position"/> in the workflow, or null when it is
+    /// the last one the workflow declares.
+    /// </summary>
+    private static LifecyclePosition? NextPosition(WorkflowDefinition workflow, LifecyclePosition position)
+    {
+        var index = workflow.Stages.ToList().IndexOf(position);
+        if (index < 0 || index + 1 >= workflow.Stages.Count)
+        {
+            return null;
+        }
+
+        return workflow.Stages[index + 1];
     }
 
     private static AuditEntryDraft Entry(Job job, string action, string reason) => new()

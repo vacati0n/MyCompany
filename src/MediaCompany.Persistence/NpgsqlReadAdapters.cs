@@ -119,28 +119,6 @@ public sealed class NpgsqlRouteAvailabilityLedger : IRouteAvailabilityLedger
 
         return result;
     }
-
-    public async Task RecordAsync(RouteAvailability availability, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(availability);
-
-        await using var command = _dataSource.CreateCommand(
-            """
-            INSERT INTO route_availability (route_id, effective_from, state, reason, reset_or_probe_point, observed_quality)
-            VALUES (@route_id, @effective_from, @state, @reason, @reset, @observed)
-            ON CONFLICT (route_id, effective_from) DO NOTHING
-            """);
-        command.Parameters.AddWithValue("route_id", availability.Route.Value);
-        command.Parameters.AddWithValue("effective_from", availability.EffectiveFrom);
-        command.Parameters.AddWithValue("state", availability.State.ToString());
-        command.Parameters.AddWithValue("reason", availability.Reason);
-        command.Parameters.Add("reset", NpgsqlDbType.TimestampTz).Value =
-            (object?)availability.ResetOrProbePoint ?? DBNull.Value;
-        command.Parameters.Add("observed", NpgsqlDbType.Integer).Value =
-            (object?)availability.ObservedQuality?.Value ?? DBNull.Value;
-
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-    }
 }
 
 /// <summary>The operating registers (module M-011).</summary>
@@ -522,6 +500,44 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
             "SELECT COALESCE(total_cost, 0), 'USD' FROM v_cost_per_period WHERE period = @period");
         command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
         return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PeriodSummary> PeriodSummaryAsync(DateOnly period, CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT total_cost, envelope_total, envelope_metered, envelope_standing,
+                   variance_against_envelope, contains_estimates, operations
+            FROM v_cost_per_period WHERE period = @period
+            """);
+        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            // No operation was recorded in the period, so the whole envelope is unspent. The
+            // variance is still the datastore's arithmetic on the next read; here there is
+            // nothing to aggregate.
+            return new PeriodSummary(
+                period,
+                Money.Zero(),
+                ApprovedEnvelope.MonthlyTotal,
+                ApprovedEnvelope.Metered,
+                ApprovedEnvelope.Standing,
+                new Money(-ApprovedEnvelope.MonthlyTotal.Amount),
+                ContainsEstimates: false,
+                Operations: 0);
+        }
+
+        return new PeriodSummary(
+            period,
+            new Money(reader.GetDecimal(0)),
+            new Money(reader.GetDecimal(1)),
+            new Money(reader.GetDecimal(2)),
+            new Money(reader.GetDecimal(3)),
+            new Money(reader.GetDecimal(4)),
+            reader.GetBoolean(5),
+            reader.GetInt64(6));
     }
 
     public async Task<IReadOnlyDictionary<CapabilityClass, Money>> CostByCapabilityAsync(DateOnly period, CancellationToken cancellationToken)

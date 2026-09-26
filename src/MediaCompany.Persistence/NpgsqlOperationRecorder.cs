@@ -69,7 +69,11 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
     {
         ArgumentNullException.ThrowIfNull(draft);
 
-        var period = new DateOnly(draft.OccurredAt.Year, draft.OccurredAt.Month, 1);
+        // The period follows the instant, not the offset the caller expressed it in. Two
+        // operations a minute apart across a month boundary must not land in different periods
+        // because their offsets differed.
+        var utc = draft.OccurredAt.UtcDateTime;
+        var period = new DateOnly(utc.Year, utc.Month, 1);
 
         await using var command = new NpgsqlCommand(InsertSql, _connection, _transaction);
         command.Parameters.AddWithValue("operation_id", draft.Id.Value);

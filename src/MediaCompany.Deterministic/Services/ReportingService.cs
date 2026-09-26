@@ -36,22 +36,24 @@ public sealed class ReportingService
 
     public async Task<IReadOnlyList<ReportedMeasure>> MeasurableNowAsync(DateOnly period, CancellationToken cancellationToken)
     {
-        var monthly = await _costs.CostForPeriodAsync(period, cancellationToken).ConfigureAwait(false);
+        // Every money figure here is read from the datastore's own aggregation, including the
+        // variance. Nothing in this method performs money arithmetic, so the figure the report
+        // shows and the figure the record carries are one number.
+        var summary = await _costs.PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false);
         var byCapability = await _costs.CostByCapabilityAsync(period, cancellationToken).ConfigureAwait(false);
         var deterministic = await _costs.CostForDeterministicSetAsync(period, cancellationToken).ConfigureAwait(false);
 
         var lines = new List<ReportedMeasure>
         {
-            new("monthly-cost-total", monthly.ToString(), "USD",
-                "recorded operations, exact decimal aggregation", IsEstimate: true),
+            new("monthly-cost-total", summary.Total.ToString(), "USD",
+                "recorded operations, exact decimal aggregation", summary.ContainsEstimates),
 
             new("cost-variance-against-envelope",
-                $"{monthly.Amount - ApprovedEnvelope.MonthlyTotal.Amount} USD against an envelope of "
-                    + $"{ApprovedEnvelope.MonthlyTotal.Amount} (metered {ApprovedEnvelope.Metered.Amount}, "
-                    + $"standing {ApprovedEnvelope.Standing.Amount})",
+                $"{summary.VarianceAgainstEnvelope} against an envelope of {summary.EnvelopeTotal} "
+                    + $"(metered {summary.EnvelopeMetered}, standing {summary.EnvelopeStanding})",
                 "USD",
-                "recorded operations against the approved envelope",
-                IsEstimate: true),
+                "recorded operations against the approved envelope, subtracted by the datastore",
+                summary.ContainsEstimates),
 
             new("deterministic-set-ai-cost", deterministic.ToString(), "USD",
                 "recorded operations attributed to the named deterministic set", IsEstimate: false),
@@ -62,7 +64,7 @@ public sealed class ReportingService
             pair.Value.ToString(),
             "USD",
             "recorded operations, exact decimal aggregation",
-            IsEstimate: true)));
+            summary.ContainsEstimates)));
 
         return lines;
     }

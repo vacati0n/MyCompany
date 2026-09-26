@@ -233,15 +233,19 @@ public sealed class CapabilityGateway : ICapabilityGateway
         var handle = ((CredentialOutcome.Issued)issuance).Handle;
         var attempt = await adapter.InvokeAsync(provider, request, handle, cancellationToken).ConfigureAwait(false);
 
+        await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
+
         // Whatever the provider did, the attempt is accounted. A failed attempt and a retried
         // attempt each get their own record, which is how exactly-once stays well defined under
-        // retry (decision D-011).
+        // retry (decision D-011). The availability transition the failure drives is written on
+        // this same transaction, so the state a route moves to and the operation that caused the
+        // move commit together; a route cannot move for a reason the record does not hold.
         if (!attempt.Succeeded && attempt.Signal is { } signal)
         {
             var state = FailureHandling.StateFor(MapSignal(signal));
             if (state is { } availabilityState)
             {
-                await _availability.RecordAsync(
+                await transaction.Availability.RecordAsync(
                     new RouteAvailability(
                         resolved.Route.Id,
                         availabilityState,
@@ -252,10 +256,6 @@ public sealed class CapabilityGateway : ICapabilityGateway
                     cancellationToken).ConfigureAwait(false);
             }
         }
-
-        var appliedPrice = await ResolveAppliedPriceAsync(provider.Model, now, cancellationToken).ConfigureAwait(false);
-
-        await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
 
         var operation = await transaction.Operations.RecordAsync(
             new OperationDraft
@@ -268,7 +268,6 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 Model = provider.Model,
                 DeterministicTaskName = null,
                 Units = attempt.Units,
-                AppliedPrice = appliedPrice,
                 CostBasis = attempt.CostBasis,
                 Duration = attempt.Duration,
                 Outcome = attempt.Succeeded ? OperationOutcome.Succeeded : OperationOutcome.Failed,
@@ -333,7 +332,6 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 Model = null,
                 DeterministicTaskName = deterministicTaskName,
                 Units = UnitCounts.None,
-                AppliedPrice = null,
                 CostBasis = CostBasis.Measurement,
                 Duration = TimeSpan.Zero,
                 Outcome = outcome,
@@ -372,26 +370,16 @@ public sealed class CapabilityGateway : ICapabilityGateway
         CapabilityResolution.Held held,
         CancellationToken cancellationToken)
     {
-        var stamped = RouteResolver.WithEscalation(held, now, request.HoldTimeout);
         return RecordNonProviderOutcomeAsync(
             request, context, now, period, OperationOutcome.Held,
-            $"held at floor {stamped.FloorRequired}: {stamped.Reason}; routes tried: {string.Join(",", stamped.RoutesTried)}",
+            $"held at floor {held.FloorRequired}: {held.Reason}; routes tried: {string.Join(",", held.RoutesTried)}",
             null, null,
             _ => new CapabilityOutcome.Held(
-                stamped.Reason,
-                stamped.FloorRequired,
-                stamped.EscalatesAt,
-                stamped.EscalateToOwner),
+                held.Reason,
+                held.FloorRequired,
+                held.EscalatesAt,
+                held.EscalateToOwner),
             cancellationToken);
-    }
-
-    private async Task<ModelPriceId?> ResolveAppliedPriceAsync(
-        ModelId model,
-        DateTimeOffset asOf,
-        CancellationToken cancellationToken)
-    {
-        var prices = await _registers.PricesInForceAsync(asOf, cancellationToken).ConfigureAwait(false);
-        return prices.FirstOrDefault(p => p.Model.Equals(model))?.Id;
     }
 
     private static IReadOnlyDictionary<ModelId, UnitPrices> BuildPriceTable(IReadOnlyList<ModelPrice> prices)

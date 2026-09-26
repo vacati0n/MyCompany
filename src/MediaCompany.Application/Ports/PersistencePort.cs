@@ -34,7 +34,44 @@ public interface IWorkTransaction : IAsyncDisposable
 
     IBudgetEvaluator Budgets { get; }
 
+    /// <summary>
+    /// Gate state changes. They are reachable only from a transaction so that an approval, a
+    /// transition or a block and the entry that records it are one commit; a state change with no
+    /// entry explaining it, or an entry describing a change that did not commit, is the gap this
+    /// placement closes.
+    /// </summary>
+    IGateWriter Gates { get; }
+
+    /// <summary>
+    /// Route availability transitions, reachable only from a transaction for the same reason: the
+    /// state a route moves to and the operation that caused the move commit together.
+    /// </summary>
+    IRouteAvailabilityWriter Availability { get; }
+
     Task CommitAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>Gate state changes, written inside the transaction that records them.</summary>
+public interface IGateWriter
+{
+    Task RecordApprovalAsync(MediaCompany.Domain.Publication.Approval approval, CancellationToken cancellationToken);
+
+    Task RecordBlockAsync(MediaCompany.Domain.Publication.Block block, CancellationToken cancellationToken);
+
+    Task RecordTransitionAsync(
+        ItemId item,
+        ItemVersion version,
+        MediaCompany.Domain.Publication.GateState from,
+        MediaCompany.Domain.Publication.GateState to,
+        string reason,
+        DateTimeOffset at,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>Route availability transitions, written inside the transaction that records them.</summary>
+public interface IRouteAvailabilityWriter
+{
+    Task RecordAsync(MediaCompany.Domain.Capabilities.RouteAvailability availability, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -102,7 +139,6 @@ public sealed record OperationDraft
     public ModelId? Model { get; init; }
     public string? DeterministicTaskName { get; init; }
     public required UnitCounts Units { get; init; }
-    public ModelPriceId? AppliedPrice { get; init; }
     public required CostBasis CostBasis { get; init; }
     public required TimeSpan Duration { get; init; }
     public required OperationOutcome Outcome { get; init; }
@@ -126,6 +162,18 @@ public interface IJobWriter
     Task<Job?> ClaimNextAsync(string workerId, TimeSpan lease, CancellationToken cancellationToken);
 
     Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Moves a unit to its next lifecycle position and claim state together. A unit whose
+    /// workflow has no next position reaches a terminal claim state here, which is what stops a
+    /// finished unit from being claimed again.
+    /// </summary>
+    Task AdvanceAsync(
+        JobId job,
+        MediaCompany.Domain.Work.LifecyclePosition position,
+        ClaimState state,
+        DateTimeOffset availableAt,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>

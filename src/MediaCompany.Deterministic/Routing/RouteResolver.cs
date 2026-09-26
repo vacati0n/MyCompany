@@ -55,12 +55,16 @@ public static class RouteResolver
 
         var tried = new List<RouteId>();
 
-        // Step 1. The forbidden-source register, checked at resolution. This is the second and
-        // independent refusal of constraint C-001: route admission already refuses these, so an
-        // admission-time check and this one would both have to fail before a forbidden path
-        // existed. Any admitted route matching the register removes the whole candidate and the
-        // refusal ends resolution.
-        foreach (var route in inputs.AdmittedRoutes)
+        var candidates = inputs.AdmittedRoutes
+            .Where(r => r.Capability == request.Capability)
+            .ToList();
+
+        // Step 1. The forbidden-source register, checked at resolution over the routes this
+        // request could actually reach. This is the second and independent refusal of constraint
+        // C-001: route admission already refuses these, so an admission-time check and this one
+        // would both have to fail before a forbidden path existed. A match removes the whole
+        // candidate set and the refusal ends resolution.
+        foreach (var route in candidates)
         {
             var match = MatchForbidden(route, inputs.ForbiddenSources);
             if (match is not null)
@@ -72,13 +76,9 @@ public static class RouteResolver
             }
         }
 
-        var candidates = inputs.AdmittedRoutes
-            .Where(r => r.Capability == request.Capability)
-            .ToList();
-
         if (candidates.Count == 0)
         {
-            return Hold(request, RefusalReason.NoAdmittedRoute, tried);
+            return Hold(request, inputs, RefusalReason.NoAdmittedRoute, tried);
         }
 
         // Step 2. The floor and the context requirement, applied before tier ordering. A route
@@ -104,14 +104,14 @@ public static class RouteResolver
             var reason = candidates.Any(c => EffectiveQuality(c, inputs) >= request.QualityFloor)
                 ? RefusalReason.InsufficientContextCapacity
                 : RefusalReason.NoRouteAtOrAboveFloor;
-            return Hold(request, reason, tried);
+            return Hold(request, inputs, reason, tried);
         }
 
         // Step 3. Disabled or revoked accounts, and routes not in the serving state.
         var available = aboveFloor.Where(r => IsAvailable(r, inputs)).ToList();
         if (available.Count == 0)
         {
-            return Hold(request, RefusalReason.NoAvailableRoute, tried);
+            return Hold(request, inputs, RefusalReason.NoAvailableRoute, tried);
         }
 
         // Step 4. The cost ceiling and the governing budget. Both comparisons are made against an
@@ -119,10 +119,23 @@ public static class RouteResolver
         // own estimate. The authoritative cost of the operation is computed by the datastore from
         // the units the provider actually returned (decision D-006), so this step admits or
         // removes a route and never establishes what an operation cost.
+        // A route whose recorded price is not denominated in the request's currency is not
+        // comparable, so it is removed with its own recorded reason rather than raising.
+        if (available.Any(r => !Comparable(r, request, inputs)))
+        {
+            var comparable = available.Where(r => Comparable(r, request, inputs)).ToList();
+            if (comparable.Count == 0)
+            {
+                return Hold(request, inputs, RefusalReason.CurrencyMismatch, tried);
+            }
+
+            available = comparable;
+        }
+
         var affordable = available.Where(r => WithinCeilingAndBudget(r, request, inputs)).ToList();
         if (affordable.Count == 0)
         {
-            return Hold(request, RefusalReason.CostCeilingOrBudgetExceeded, tried);
+            return Hold(request, inputs, RefusalReason.CostCeilingOrBudgetExceeded, tried);
         }
 
         // Step 5. Order primary, then secondary, then emergency, and resolve to the first.
@@ -202,6 +215,19 @@ public static class RouteResolver
         return availability.State == AvailabilityState.Serving;
     }
 
+    /// <summary>
+    /// Whether the route's estimated cost can be compared with the request's ceiling and with the
+    /// remaining budget at all. Acceptance criterion AC-002 requires that no request fails without
+    /// a recorded reason, so a currency that cannot be compared is a recorded refusal rather than
+    /// an exception escaping the single egress path.
+    /// </summary>
+    private static bool Comparable(Route route, CapabilityRequest request, ResolutionInputs inputs)
+    {
+        var estimate = EstimateCost(route, request, inputs);
+        return estimate.IsComparableTo(request.CostCeiling)
+            && estimate.IsComparableTo(inputs.BudgetRemaining);
+    }
+
     private static bool WithinCeilingAndBudget(Route route, CapabilityRequest request, ResolutionInputs inputs)
     {
         var estimate = EstimateCost(route, request, inputs);
@@ -265,18 +291,21 @@ public static class RouteResolver
         return null;
     }
 
-    private static CapabilityResolution Hold(CapabilityRequest request, RefusalReason reason, List<RouteId> tried) =>
+    /// <summary>
+    /// A held request carries its floor, its reason, the routes tried and the instant it escalates
+    /// on. The instant is derived from the supplied resolution instant and the request's own hold
+    /// timeout, so a held state is complete when it is returned and no caller has to stamp it.
+    /// The function still reads no clock: the instant is an input.
+    /// </summary>
+    private static CapabilityResolution Hold(
+        CapabilityRequest request,
+        ResolutionInputs inputs,
+        RefusalReason reason,
+        List<RouteId> tried) =>
         new CapabilityResolution.Held(
             reason,
             request.QualityFloor,
             tried.ToArray(),
-            DateTimeOffset.MinValue,
+            inputs.Now + request.HoldTimeout,
             request.Criticality == Criticality.Critical);
-
-    /// <summary>
-    /// Stamps the escalation instant onto a held resolution. Kept separate from
-    /// <see cref="Resolve"/> so that the resolution function itself reads no clock.
-    /// </summary>
-    public static CapabilityResolution.Held WithEscalation(CapabilityResolution.Held held, DateTimeOffset now, TimeSpan holdTimeout) =>
-        held with { EscalatesAt = now + holdTimeout };
 }

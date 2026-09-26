@@ -32,8 +32,6 @@ public interface IRouteAvailabilityLedger
     Task<IReadOnlyDictionary<RouteId, RouteAvailability>> CurrentAsync(
         IReadOnlyCollection<RouteId> routes,
         CancellationToken cancellationToken);
-
-    Task RecordAsync(RouteAvailability availability, CancellationToken cancellationToken);
 }
 
 /// <summary>The operating registers (module M-011).</summary>
@@ -71,19 +69,6 @@ public interface IGateLedger
     Task<IReadOnlyList<Approval>> ApprovalsAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
 
     Task<GateState> CurrentStateAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
-
-    Task RecordApprovalAsync(Approval approval, CancellationToken cancellationToken);
-
-    Task RecordBlockAsync(Block block, CancellationToken cancellationToken);
-
-    Task RecordTransitionAsync(
-        ItemId item,
-        ItemVersion version,
-        GateState from,
-        GateState to,
-        string reason,
-        DateTimeOffset at,
-        CancellationToken cancellationToken);
 }
 
 /// <summary>Temporal configuration (module M-012), read without redeployment (constraint C-011).</summary>
@@ -107,6 +92,13 @@ public interface ICostRollupReader
 
     Task<Money> CostForPeriodAsync(DateOnly period, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The monthly total against the approved envelope, with the variance. Every figure is
+    /// aggregated and subtracted by the datastore in its exact decimal type, so the reported
+    /// variance and the recorded one are one number rather than two (constraint C-005).
+    /// </summary>
+    Task<PeriodSummary> PeriodSummaryAsync(DateOnly period, CancellationToken cancellationToken);
+
     Task<IReadOnlyDictionary<CapabilityClass, Money>> CostByCapabilityAsync(DateOnly period, CancellationToken cancellationToken);
 
     /// <summary>
@@ -125,3 +117,18 @@ public interface IBudgetReader
 {
     Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// One period's cost position as the datastore computes it. <see cref="ContainsEstimates"/> is
+/// true whenever any operation in the period was accounted from estimated rather than measured
+/// unit counts, which every presentation of these figures must state.
+/// </summary>
+public sealed record PeriodSummary(
+    DateOnly Period,
+    Money Total,
+    Money EnvelopeTotal,
+    Money EnvelopeMetered,
+    Money EnvelopeStanding,
+    Money VarianceAgainstEnvelope,
+    bool ContainsEstimates,
+    long Operations);

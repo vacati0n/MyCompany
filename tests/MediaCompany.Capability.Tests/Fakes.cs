@@ -62,20 +62,11 @@ internal sealed class FakeAvailabilityLedger : IRouteAvailabilityLedger
 {
     public Dictionary<RouteId, RouteAvailability> States { get; } = [];
 
-    public List<RouteAvailability> Recorded { get; } = [];
-
     public Task<IReadOnlyDictionary<RouteId, RouteAvailability>> CurrentAsync(
         IReadOnlyCollection<RouteId> routes,
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<RouteId, RouteAvailability>>(
             States.Where(kv => routes.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
-
-    public Task RecordAsync(RouteAvailability availability, CancellationToken cancellationToken)
-    {
-        Recorded.Add(availability);
-        States[availability.Route] = availability;
-        return Task.CompletedTask;
-    }
 }
 
 internal sealed class FakeRegisters : IOperatingRegisters
@@ -131,6 +122,12 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
     public int RolledBack { get; private set; }
 
+    /// <summary>Availability transitions written but not yet committed.</summary>
+    public List<RouteAvailability> PendingAvailability { get; } = [];
+
+    /// <summary>Availability transitions that became durable.</summary>
+    public List<RouteAvailability> CommittedAvailability { get; } = [];
+
     /// <summary>Set to make the next commit throw, standing in for a crash mid-transaction.</summary>
     public bool FailNextCommit { get; set; }
 
@@ -151,6 +148,8 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             Operations = new Recorder(_pendingOperations);
             Jobs = new Jobless();
             Budgets = new Budgeter(owner);
+            Gates = new Gateless();
+            Availability = new AvailabilityRecorder(owner);
         }
 
         public IAuditAppender Audit { get; }
@@ -160,6 +159,10 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         public IJobWriter Jobs { get; }
 
         public IBudgetEvaluator Budgets { get; }
+
+        public IGateWriter Gates { get; }
+
+        public IRouteAvailabilityWriter Availability { get; }
 
         public Task CommitAsync(CancellationToken cancellationToken)
         {
@@ -171,6 +174,8 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
             _owner.Operations.AddRange(_pendingOperations);
             _owner.AuditEntries.AddRange(_pendingEntries);
+            _owner.CommittedAvailability.AddRange(_owner.PendingAvailability);
+            _owner.PendingAvailability.Clear();
             _owner.Commits++;
             _committed = true;
             return Task.CompletedTask;
@@ -180,6 +185,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         {
             if (!_committed)
             {
+                _owner.PendingAvailability.Clear();
                 _owner.RolledBack++;
             }
 
@@ -246,7 +252,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                     Model = draft.Model,
                     DeterministicTaskName = draft.DeterministicTaskName,
                     Units = draft.Units,
-                    AppliedPrice = draft.AppliedPrice,
+                    AppliedPrice = null,
                     ComputedCost = Money.Zero(),
                     CostBasis = draft.CostBasis,
                     Duration = draft.Duration,
@@ -271,6 +277,36 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
             public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct) =>
                 Task.CompletedTask;
+
+            public Task AdvanceAsync(JobId job, LifecyclePosition position, ClaimState state,
+                DateTimeOffset availableAt, CancellationToken ct) => Task.CompletedTask;
+        }
+
+        private sealed class Gateless : IGateWriter
+        {
+            public Task RecordApprovalAsync(MediaCompany.Domain.Publication.Approval approval, CancellationToken ct) =>
+                Task.CompletedTask;
+
+            public Task RecordBlockAsync(MediaCompany.Domain.Publication.Block block, CancellationToken ct) =>
+                Task.CompletedTask;
+
+            public Task RecordTransitionAsync(ItemId item, ItemVersion version,
+                MediaCompany.Domain.Publication.GateState from, MediaCompany.Domain.Publication.GateState to,
+                string reason, DateTimeOffset at, CancellationToken ct) => Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Records the availability transition into the owner only on commit, which is how the
+        /// double reproduces the property that the transition and the operation that caused it
+        /// become durable together.
+        /// </summary>
+        private sealed class AvailabilityRecorder(FakeUnitOfWork owner) : IRouteAvailabilityWriter
+        {
+            public Task RecordAsync(RouteAvailability availability, CancellationToken ct)
+            {
+                owner.PendingAvailability.Add(availability);
+                return Task.CompletedTask;
+            }
         }
 
         private sealed class Budgeter(FakeUnitOfWork owner) : IBudgetEvaluator

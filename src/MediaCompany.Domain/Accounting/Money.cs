@@ -26,6 +26,14 @@ public readonly record struct Money : IComparable<Money>
 
     public static Money Zero(string currency = DefaultCurrency) => new(0m, currency);
 
+    /// <summary>
+    /// Whether two amounts are comparable at all. A caller on a path that must not throw asks
+    /// this first and records a refusal when the answer is no, rather than letting the
+    /// comparison raise.
+    /// </summary>
+    public bool IsComparableTo(Money other) =>
+        string.Equals(Currency, other.Currency, StringComparison.Ordinal);
+
     public int CompareTo(Money other)
     {
         RequireSameCurrency(other);

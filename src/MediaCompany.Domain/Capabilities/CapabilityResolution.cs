@@ -23,6 +23,13 @@ public enum RefusalReason
 
     /// <summary>Every surviving route exceeded the cost ceiling or the governing budget (resolution step 4).</summary>
     CostCeilingOrBudgetExceeded = 6,
+
+    /// <summary>
+    /// A route's recorded price is denominated in a currency the request's ceiling is not, so the
+    /// two are not comparable. The route is removed and the reason is recorded, because a request
+    /// must never fail without one.
+    /// </summary>
+    CurrencyMismatch = 7,
 }
 
 /// <summary>
