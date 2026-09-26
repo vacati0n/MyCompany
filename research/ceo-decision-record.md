@@ -455,3 +455,85 @@ which Wave 2 produces · `RK-006` confirmed at the 8,000-watch-hour branch.
 
 Two-step verification on the test channel is unconfirmed and is the remaining half of §21.3
 precondition 3. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
+
+## D-014 — The two Vietnamese disclosure gaps stay carried; affiliate disclosure becomes a standing rule
+
+**Decision, two parts.**
+
+1. **Vietnamese advertising-law disclosure obligations, and any Vietnamese rule on AI-media
+   disclosure, remain CARRIED at their recorded status.** They are not escalated, not blocking,
+   and no work waits on them.
+2. **Affiliate and paid-promotion disclosure is always made.** The company declares paid promotion
+   in the platform's own Studio control **and** discloses in-video, on every item that carries an
+   affiliate link or a sponsored placement, without first assessing whether any rule requires it.
+
+**Why part 1 is the correct disposition rather than an omission.** The re-verification records both
+gaps as *"still not established… it needs local counsel, not a fetch"*, and the language analysis
+records that for an **English-language channel aimed at Tier-1 audiences** the gap is a
+**background item**, becoming *"immediately load-bearing"* only for a Vietnamese-language channel
+aimed at Vietnamese viewers. D-008 chose English, and one of the stated reasons was precisely that
+choosing Vietnamese *"would promote an unresolved legal gap onto the critical path before launch."*
+Carrying these two is therefore the position the plan was already built to hold, not a deferral of
+something that should have been done.
+
+**Why part 2 resolves the gap that is actually load-bearing.** The re-verification names the
+platform's affiliate-link position — whether an affiliate link alone triggers the paid-promotion
+declaration — as *"the one carried gap that is directly load-bearing for the plan's revenue
+model."* It is unresolved at source: neither the paid-promotion page nor the Branded Content
+Policy addresses affiliate links.
+
+This decision does not resolve that uncertainty. It **removes the company's exposure to it**, which
+is better, because the uncertainty is not the company's to resolve:
+
+- Disclosing when no rule requires it costs nothing. The dossier confirms the declaration **does
+  not affect reach or earnings**.
+- Not disclosing when some rule does require it is a compliance failure on a channel where
+  enforcement reaches the account.
+- The asymmetry is total, so no per-item judgement is worth making. **Always disclosing is
+  correct under every branch of an uncertainty nobody has resolved.**
+
+The dossier also records, as **[INFERENCE] and explicitly not verified against a first-party
+source**, that US endorsement rules would require affiliate disclosure independently of platform
+policy — which would bear on this company, since an English Tier-1 channel means a US audience.
+This decision is deliberately **not** made on that inference. It holds whether or not the inference
+is sound, which is why it does not need to be verified before acting.
+
+**What this settles in Wave 2.** Scope item `S-008` requires five compliance determinations, one of
+which is **affiliate and paid-promotion disclosure**. That determination now has a fixed answer
+rather than a per-item judgement: where the item carries an affiliate link or a sponsored
+placement, disclosure is made both ways; where it carries neither, the determination records that
+neither is present. Either way it resolves to recorded evidence rather than to *"cannot be
+evidenced"*, which is one of the five discharged.
+
+**What this means for the build, and it is a standing rule rather than a setting.** Following the
+form the rest of the design takes, this is not a configuration value:
+
+- Wave 3's publishing agent sets platform-specific settings, and the paid-promotion declaration is
+  one of them. It is set **because the item carries an affiliate link**, not because a flag says to.
+- The publication gate refuses a releasable state for an item that carries an affiliate link with
+  no recorded disclosure, in the same way it refuses one whose assets lack a permission basis. The
+  refusal names what is missing.
+- The in-video half is a **production** obligation, not only a publishing one: an item that must
+  carry a spoken or on-screen disclosure has to be produced with it, so the obligation reaches
+  Wave 2's pipeline and not just Wave 3's upload.
+
+This sits alongside, and does not disturb, the four controls `RK-001` records as not cuttable for
+cost. It is a fifth standing rule of the same kind: adopted because it is free, kept because
+dropping it would only ever save nothing.
+
+**One question this raises, for the CEO.** Whether the **first item** carries an affiliate link at
+all is not settled. The revenue model is platform advertising plus affiliate links, but the first
+item is a pipeline experiment, and affiliate revenue is recorded as expected to be weak in this
+subject. If the first item carries no affiliate link, the determination resolves trivially and the
+in-video production obligation does not arise for it. Recorded as open rather than assumed either
+way.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` accepted at D-011, its two disclosure questions **carried by
+this decision** · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at
+the 8,000-watch-hour branch.
+
+Two-step verification on the test channel is unconfirmed. Whether the first item carries an
+affiliate link is open. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
