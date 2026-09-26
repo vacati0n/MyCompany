@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Domain\MediaCompany.Domain.csproj" />
+    <ProjectReference Include="..\MediaCompany.Application\MediaCompany.Application.csproj" />
+    <ProjectReference Include="..\MediaCompany.Deterministic\MediaCompany.Deterministic.csproj" />
+    <ProjectReference Include="..\MediaCompany.Credentials\MediaCompany.Credentials.csproj" />
+    <ProjectReference Include="..\MediaCompany.Capability\MediaCompany.Capability.csproj" />
+    <ProjectReference Include="..\MediaCompany.Persistence\MediaCompany.Persistence.csproj" />
+  </ItemGroup>
+</Project>

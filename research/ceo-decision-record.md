@@ -699,3 +699,368 @@ The recommendation above is put to the CEO; until it is decided, cite by branch,
   determinations as **positive recorded evidence** rather than as an unresolved negative, and it
   sidesteps the unverified YouTube position on whether affiliate links alone trigger the
   paid-promotion declaration.
+---
+# Fourth round — renumbered to D-018 to D-022
+
+> **WITHDRAWN IDENTIFIERS — `D-011` to `D-015` on this branch.**
+>
+> These five decisions were recorded here as `D-011` to `D-015` and are now **`D-018` to
+> `D-022`**. Nothing was deleted and no decision changed; only the identifiers moved.
+>
+> **Why.** Two numbering spaces grew from the same merge-base `849835b` without either
+> knowing of the other, and five identifiers came to name two different decisions each. The
+> other space — `claude/execute-prompt-txt-4a3ee4`, carried into the Wave 2 branch
+> `claude/trusting-shirley-90ea75` — holds `D-011` to `D-017` plus `C-001` to `C-003`. This
+> branch renumbers because that space has decisions stacked on top of the collision and is
+> still being written, while this branch's run is closed. The Wave 2 session declined to
+> renumber another session's record of the CEO's decisions, which was the right call, and the
+> CEO decided this branch would move.
+>
+> **The mapping, once, so a stale citation resolves:**
+>
+> | Recorded here as | Now | Subject |
+> |---|---|---|
+> | `D-011` | **`D-018`** | Operate as an individual creator; the CEO carries the legal position personally |
+> | `D-012` | **`D-019`** | Two-phase payee structure, and the launch channel already exists |
+> | `D-013` | **`D-020`** | The test channel is an experiment; the company's process is unchanged |
+> | `D-014` | **`D-021`** | The two Vietnamese disclosure gaps stay carried; affiliate disclosure becomes a standing rule |
+> | `D-015` | **`D-022`** | The first item carries no affiliate link |
+>
+> A withdrawn identifier is never reissued on this branch. `D-011` to `D-017` mean what the
+> other space says they mean.
+
+Decided 2026-09-26 by the CEO, on a readiness check for Wave 3 that found `RK-003` to be the
+longest-lead item on the critical path and the only one independent of Wave 2.
+
+## D-018 — Operate as an individual creator; the CEO carries the legal position personally
+
+**Decision.** The company has no budget at this stage to retain Vietnamese tax counsel. It will
+operate **as an individual person publishing content on the launch platform**, with the **CEO as
+the Vietnam-resident payee in his own name**. The CEO **personally accepts accountability** for
+tax declaration and for the legal determinations the workforce escalates.
+
+`RK-003` is therefore **accepted, not discharged**. The mitigation the risk register records —
+*"qualified local counsel before the payment account is created"* — is **superseded** by this
+decision. The risk stays open, at its recorded severity, with the CEO named as the acceptor.
+
+> **Relationship to `D-011` in the other numbering space, which is not a duplicate.**
+>
+> `claude/execute-prompt-txt-4a3ee4` records a `D-011`, *"Tax posture: individual or household
+> business first, company only if it works"*, carried into the Wave 2 branch. It is the same
+> CEO answering the same subject, and the two agree on the posture: operate as an individual
+> now, incorporate only once the channel has proven itself.
+>
+> **They disagree on one point, and this decision is the later one.** That record states
+> *"`RK-003` is not discharged by this decision — it is narrowed. Qualified Vietnamese counsel
+> is still required."* This decision states that there is **no budget to retain counsel** and
+> that the CEO **accepts the risk personally instead**. Where the two are read together, this
+> one governs on that point, because it was taken afterwards and on a fact the earlier one did
+> not have.
+>
+> **What survives from the other record, and should be read with this one.** Two consequences
+> it draws are not restated here and are not withdrawn by this decision:
+> failing to submit the **W-8BEN as an individual** triggers **24% backup withholding on total
+> worldwide earnings**, worse than the 30% that applies only to the US-sourced share, which
+> makes submitting it a first-class precondition of the payment account rather than a detail;
+> and moving from an individual or household payee to a company payee later is a **payee
+> change, not a settings change**, whose cost should be known before the first account is
+> created. The second of those is the migration cost `D-019` carries forward.
+
+**What this settles.**
+
+- **The payee position is settled.** The first of the two things §21.3 precondition 2 requires now
+  has an answer: the payee is the CEO as an individual, resident in Vietnam. The payment account
+  itself is created later; what had to be decided before the channel exists was *who the payee is*,
+  because one account is permitted per payee name and duplicates are disapproved.
+- **Open question `Q-007`, and `Q-009` from the first round, are closed.** Accountability for a
+  legal determination escalated out of the workforce — including the audience designation and the
+  disclosure judgements — rests with the CEO. The workforce escalates; it does not decide.
+- **Wave 3 loses its one blocker that was independent of Wave 2.** What remains in front of Wave 3
+  is Wave 2's own completion and the findings only Wave 2 produces.
+
+**Why the timing costs little.** The plan already recorded that `RK-003` *blocks banking, not
+building*, and that it *lands the moment revenue arrives*. Revenue is zero and stays zero until
+partner-programme entry, which needs 1,000 subscribers and 4,000 qualified watch hours first. The
+tax exposure being accepted here is therefore an exposure on an amount that does not yet exist.
+The decision can be revisited when it first costs something, and the natural review point is
+**before the first revenue**, not before the first publication.
+
+**What this decision does NOT cover, and the CEO should know it.**
+
+`RK-003` bundles four questions, and only three of them are about money:
+
+| Question | When it bites | Covered by this decision |
+|---|---|---|
+| Whether the quoted rates and the annual revenue threshold survive Vietnam's 2026 tax laws | at first revenue | yes, accepted |
+| The withholding treatment of foreign-sourced viewership earnings | at first revenue | yes, accepted |
+| Vietnamese **advertising-law disclosure** obligations | at **first publication** | **no** |
+| Whether any Vietnamese rule addresses **synthetic-media disclosure** | at **first publication** | **no** |
+
+The last two are content-compliance questions wearing a tax label. They do not wait for revenue:
+they land when the first video goes out, on a channel that publishes AI-assisted work. Nothing in
+this decision answers them, and no budget is required to *read* them — unlike the tax position,
+which needs an opinion, these are published rules that a competent reading can establish.
+
+**Consequence carried, not solved.** The payee is now a natural person, and the plan records that
+genuine isolation between channels requires **distinct legal payees**, decided before launch,
+because the payment account's country and payee are hard to change later. This decision therefore
+constrains any future multi-channel structure to sharing one payee unless it is revisited. That is
+a Wave 6 concern, recorded here so it is not discovered there.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` **accepted by the CEO**, its two disclosure questions unanswered
+and due at first publication · `RK-005` approval-minutes baseline, which Wave 2 produces ·
+`RK-006` the **2027-02-01** threshold, the only fixed date, with capture treated as lost so 8,000
+watch hours is the planning figure.
+
+Wave 2 open questions `Q-001` (subject and angle), `Q-004` (budget for a second stock library) and
+`Q-008` (audience-drift threshold, due before first publication) remain with the CEO.
+
+## D-019 — Two-phase payee structure, and the launch channel already exists
+
+**Decision, two parts.**
+
+1. **The payee is staged, deliberately.** Channels launched now use the **CEO as an individual
+   payee**, per D-018. Later channels will be created under a **company legal entity**. This is a
+   recorded sequence, not a drift: the individual payee is the starting position, and the entity
+   is the intended end state.
+2. **The launch channel is an existing YouTube channel the CEO already holds**, rather than a
+   newly created one.
+
+**What part 1 settles.** The multi-channel isolation concern D-018 carried forward now has an
+intended answer. The plan records that genuine isolation between channels requires **distinct
+legal payees**, decided before launch, because the payment account's country and payee are hard
+to change later. Staging the entity means channel 1 and any entity-held channel will sit under
+**different payees by construction**, which is the isolation the plan asks for. What is not
+solved, and is not solvable by sequencing, is that channel 1 itself stays on the individual payee
+permanently unless it is migrated — and migration is the thing the plan records as hard.
+
+**What part 2 changes, and it is not small.** Every precondition in §21.3 was written for a
+channel that does not exist yet. An existing channel arrives with history, and history cuts both
+ways:
+
+| | Effect |
+|---|---|
+| Accumulated subscribers and qualified watch hours | count toward the Tier 2 threshold; the company may be closer to it than a standing start |
+| Account age, 2-step verification | §21.3 precondition 3 may already be satisfied in part |
+| Existing content on the channel | the inauthentic-content and reused-content policies are assessed at **channel** level, so prior uploads are inside the assessment, not outside it |
+| Any prior copyright or community-guidelines strike | inherited. §21.3 precondition 3 requires **no active community-guidelines strike**; `RK-001` records that three copyright strikes in 90 days terminate the account "along with any associated channels" |
+| Any channel-level made-for-kids designation | would contradict scope item `S-002`, which makes adult framing a hard gate condition rather than a preference |
+
+**The decisive fact, and it is a fact rather than a decision.** The re-verified dossier is explicit
+that the widely repeated "existing partners are grandfathered" framing is **misread**: the
+first-party wording is *"If you are already in YPP, your status is not impacted by this update"*,
+and that sentence covers **YPP membership only**. It does not exempt anyone from the new Shorts
+revenue floor or the new activity requirement, and — critically here — **it does not apply to a
+channel that is not already in YPP, however old that channel is.**
+
+So `RK-006` resolves one of two ways, and which one is not yet established:
+
+- **If the existing channel is already in YPP:** the 2027-02-01 threshold doubling does not apply
+  to it. `RK-006`, recorded as the only fixed date in the plan and the driver of the 8,000-watch-hour
+  planning figure, would **largely dissolve**. The remaining obligations would be accepting updated
+  terms by **2027-01-31** and staying above the activity floor.
+- **If it is not:** the channel is a new entrant for threshold purposes regardless of its age, the
+  8,000-watch-hour planning figure stands, and its accumulated audience is a head start rather
+  than an exemption.
+
+This is the largest single open item in the plan by consequence, and it is answerable by looking
+rather than by research. It is recorded here as **unestablished**, and no downstream phase may
+assume either branch.
+
+**Effect on Wave 2, which is running now.** Wave 2 publishes nothing, so it does not need the
+channel to exist. But two of its scope items are **channel-scoped, not item-scoped**, and both
+depend on which channel this is: `S-011`, which blocks publish-ready while the channel is
+unregistered on any library its assets come from; and `S-002`, whose audience-drift monitoring
+obligation and per-item audience designation are assessed against a channel that may already
+carry a designation and an audience. Wave 2 should be told which channel it is producing for
+before its implementation phase commits to an item.
+
+### D-019 resolved — the branch is established, 2026-09-26
+
+The CEO confirmed the channel's standing. Every item recorded above as unestablished now has an
+answer, and the answers are uniform: **the channel is effectively blank.**
+
+| Question | Answer | Consequence |
+|---|---|---|
+| Already in YPP? | **No** — the channel exists, monetization is not enabled | The grandfathering sentence does not reach it. It is a **new entrant** for threshold purposes regardless of when it was created |
+| Subscribers and qualified watch hours | **New channel** | No head start. The 365-day watch-hour window has nothing in it because nothing has been published |
+| Existing content | **None** | The channel-level inauthentic-content and reused-content exposure the previous entry raised **does not arise**. There is no prior upload inside the assessment |
+| Active strikes | **None** | §21.3 precondition 3 is satisfied on its strike half. Two-step verification remains to be confirmed |
+| Made-for-kids at channel level | **No** | No conflict with scope item `S-002`. Adult framing starts from a clean channel designation |
+
+**`RK-006` resolves to the unfavourable branch, and nothing changes.** The channel is not in YPP,
+so the 2027-02-01 doubling applies to it: entry needs 1,000 subscribers plus 8,000 qualified watch
+hours in 365 days from that date. The plan already carries **capture treated as lost, with 8,000
+watch hours as the planning figure**, and that position is now confirmed correct rather than
+merely cautious. No recalculation follows, and the only fixed date stands where it was.
+
+The practical reading: roughly eighteen weeks remain to 2027-02-01, from zero subscribers and zero
+published minutes, on a rate that is not yet proven for a single item. Racing the earlier 4,000-hour
+threshold would mean committing to a sustained rate before Wave 2 has measured whether one item is
+affordable — which is the sequence `RK-005` and the metered-first-video constraint exist to prevent.
+The recorded position holds.
+
+**Risk removed, not deferred.** The inherited-history exposure the previous entry itemised is void
+on the facts, not postponed. A blank channel carries none of it.
+
+## D-020 — The test channel is an experiment; the company's process is unchanged
+
+**Decision.** The channel is an **initial test channel**. The company's operating process does not
+change on account of it, and will not change later. **The CEO approves channel creation.** The
+departments coordinate the remaining work among themselves.
+
+**What this confirms.** Scope item `S-012` already records the niche as *a recorded experiment to
+prove the pipeline rather than the company's final business bet*, with the subject, pillars,
+treatment conditions and library set held as **values the company can change** rather than as
+capability wired to a subject. This decision extends that standing from the niche to the channel:
+the channel is the experiment's vehicle, and re-pointing at a different channel later must not
+require rebuilding anything.
+
+**What this adds, and it is a real gap.** Channel creation becomes a **CEO-approved act**. The
+closed action set the foundation operates today carries **fifteen actions and none of them creates
+a channel** — Wave 1 excluded channel creation outright, so the capability is absent by design
+rather than merely unexercised. Making it a CEO approval therefore means Wave 3 must:
+
+- add a `ChannelCreate` action to the closed enumerated set;
+- assign it to the **Owner role and to no other**, so that "a department creates a channel" is not
+  an expressible action rather than a forbidden one, which is the form decision D-003 requires;
+- record the approval the same way the publication gate records the owner's, so that *which channel
+  was created, when, and on whose approval* is answerable from the record alone.
+
+**The boundary that must not drift.** "The departments coordinate the remaining work among
+themselves" governs **inter-departmental coordination**. It does not touch **D-002**, under which
+the CEO approves **every publication individually**, and it does not touch **D-007**, which makes
+that approval a state in the gate transition table and absent from configuration. The CEO's
+statement that the process does not change is what keeps both standing. Recorded explicitly here
+because a later reader meeting "departments work with each other" without this sentence could take
+it for a relaxation of the publication gate, and that gate is the load-bearing control in the
+entire design: it is layer two of the four least-privilege layers, it is the precondition of every
+release credential, and it is the first of the four non-cuttable controls `RK-001` names.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` accepted by the CEO at D-018, its two disclosure questions —
+Vietnamese advertising-law disclosure and whether any Vietnamese rule addresses synthetic-media
+disclosure — unanswered and due at **first publication** · `RK-005` approval-minutes baseline,
+which Wave 2 produces · `RK-006` confirmed at the 8,000-watch-hour branch.
+
+Two-step verification on the test channel is unconfirmed and is the remaining half of §21.3
+precondition 3. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
+
+## D-021 — The two Vietnamese disclosure gaps stay carried; affiliate disclosure becomes a standing rule
+
+**Decision, two parts.**
+
+1. **Vietnamese advertising-law disclosure obligations, and any Vietnamese rule on AI-media
+   disclosure, remain CARRIED at their recorded status.** They are not escalated, not blocking,
+   and no work waits on them.
+2. **Affiliate and paid-promotion disclosure is always made.** The company declares paid promotion
+   in the platform's own Studio control **and** discloses in-video, on every item that carries an
+   affiliate link or a sponsored placement, without first assessing whether any rule requires it.
+
+**Why part 1 is the correct disposition rather than an omission.** The re-verification records both
+gaps as *"still not established… it needs local counsel, not a fetch"*, and the language analysis
+records that for an **English-language channel aimed at Tier-1 audiences** the gap is a
+**background item**, becoming *"immediately load-bearing"* only for a Vietnamese-language channel
+aimed at Vietnamese viewers. D-008 chose English, and one of the stated reasons was precisely that
+choosing Vietnamese *"would promote an unresolved legal gap onto the critical path before launch."*
+Carrying these two is therefore the position the plan was already built to hold, not a deferral of
+something that should have been done.
+
+**Why part 2 resolves the gap that is actually load-bearing.** The re-verification names the
+platform's affiliate-link position — whether an affiliate link alone triggers the paid-promotion
+declaration — as *"the one carried gap that is directly load-bearing for the plan's revenue
+model."* It is unresolved at source: neither the paid-promotion page nor the Branded Content
+Policy addresses affiliate links.
+
+This decision does not resolve that uncertainty. It **removes the company's exposure to it**, which
+is better, because the uncertainty is not the company's to resolve:
+
+- Disclosing when no rule requires it costs nothing. The dossier confirms the declaration **does
+  not affect reach or earnings**.
+- Not disclosing when some rule does require it is a compliance failure on a channel where
+  enforcement reaches the account.
+- The asymmetry is total, so no per-item judgement is worth making. **Always disclosing is
+  correct under every branch of an uncertainty nobody has resolved.**
+
+The dossier also records, as **[INFERENCE] and explicitly not verified against a first-party
+source**, that US endorsement rules would require affiliate disclosure independently of platform
+policy — which would bear on this company, since an English Tier-1 channel means a US audience.
+This decision is deliberately **not** made on that inference. It holds whether or not the inference
+is sound, which is why it does not need to be verified before acting.
+
+**What this settles in Wave 2.** Scope item `S-008` requires five compliance determinations, one of
+which is **affiliate and paid-promotion disclosure**. That determination now has a fixed answer
+rather than a per-item judgement: where the item carries an affiliate link or a sponsored
+placement, disclosure is made both ways; where it carries neither, the determination records that
+neither is present. Either way it resolves to recorded evidence rather than to *"cannot be
+evidenced"*, which is one of the five discharged.
+
+**What this means for the build, and it is a standing rule rather than a setting.** Following the
+form the rest of the design takes, this is not a configuration value:
+
+- Wave 3's publishing agent sets platform-specific settings, and the paid-promotion declaration is
+  one of them. It is set **because the item carries an affiliate link**, not because a flag says to.
+- The publication gate refuses a releasable state for an item that carries an affiliate link with
+  no recorded disclosure, in the same way it refuses one whose assets lack a permission basis. The
+  refusal names what is missing.
+- The in-video half is a **production** obligation, not only a publishing one: an item that must
+  carry a spoken or on-screen disclosure has to be produced with it, so the obligation reaches
+  Wave 2's pipeline and not just Wave 3's upload.
+
+This sits alongside, and does not disturb, the four controls `RK-001` records as not cuttable for
+cost. It is a fifth standing rule of the same kind: adopted because it is free, kept because
+dropping it would only ever save nothing.
+
+**One question this raises, for the CEO.** Whether the **first item** carries an affiliate link at
+all is not settled. The revenue model is platform advertising plus affiliate links, but the first
+item is a pipeline experiment, and affiliate revenue is recorded as expected to be weak in this
+subject. If the first item carries no affiliate link, the determination resolves trivially and the
+in-video production obligation does not arise for it. Recorded as open rather than assumed either
+way.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` accepted at D-018, its two disclosure questions **carried by
+this decision** · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at
+the 8,000-watch-hour branch.
+
+Two-step verification on the test channel is unconfirmed. Whether the first item carries an
+affiliate link is open. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
+
+## D-022 — The first item carries no affiliate link
+
+**Decision.** The first item carries **no affiliate link and no sponsored placement**.
+
+**What it settles.** The open question D-021 raised is closed. Of the five compliance
+determinations scope item `S-008` requires, the **affiliate and paid-promotion** one now resolves
+for this item by recording that neither is present — recorded evidence, not a finding that it
+cannot be evidenced. The **in-video disclosure obligation does not arise**, so Wave 2 has nothing
+to produce for it and the item's treatment is unaffected.
+
+**What it does not change.** The standing rule at D-021 is untouched. It does not bind on this item
+because its condition is absent, which is not the same as being relaxed: the first item that does
+carry an affiliate link discloses both ways, with no fresh decision required.
+
+**Consequence, stated because it is easy to miss.** The first item now has **no revenue path at
+all** — none from platform advertising, which needs programme entry, and none from affiliate. It is
+a pure cost and a pure measurement. That is what Wave 2 is for, and it matches the recorded
+position that the annual licensing commitment is not signed until this wave's output has been
+metered. It also means open question `Q-006`, the per-item cost target, will be settled against
+cost alone, with no revenue side to weigh it against.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` accepted at D-018, its two disclosure questions carried at
+D-021 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at the
+8,000-watch-hour branch.
+
+Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
+and angle), `Q-004` (budget for a second stock library) and `Q-008` (audience-drift threshold)
+remain with the CEO.

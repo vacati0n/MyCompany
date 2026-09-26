@@ -77,3 +77,11 @@ desktop.ini
 # --- Claude Code ---
 .claude/worktrees/
 .claude/settings.local.json
+
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
