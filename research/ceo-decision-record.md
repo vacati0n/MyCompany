@@ -522,3 +522,54 @@ measurement**, and the Wave 2 report says so.
 
 **Development cost remains genuinely unbudgeted** in every estimate the company holds. Wave 2 is
 its first measurement. Worth tracking across waves; not a reason to doubt the unit economics.
+
+---
+
+## C-003 — The cost-control thesis is untested, not merely unmeasured
+
+Recorded 2026-09-26. Found by the Wave 2 session while attempting the L3 versus L1/L2
+measurement; **verified independently here** before recording.
+
+**What was asked for.** A measured split of L3 spend against L1/L2 spend, because the approved
+ledger assumes 290,000 input tokens at L3 and 87,000 at L1/L2, and the company's entire
+cost-control argument — *the cheapest model that reliably meets the required quality* — rests on
+that ratio being roughly right.
+
+**What was found: there is nothing to measure, because no tiering exists.** Verified here: all
+twelve registered agents declare `model: inherit` at line 5 of their host adapter files in
+`.omn-agent/agents/*.agent.md`, and a search of `config/`, `registry/` and `runtime/` returns no
+tier assignment, no routing decision and no per-task model selection anywhere in the framework
+as installed. Every phase executes at whatever model the orchestrating session is running.
+**The denominator does not exist.** Recorded as a negative result rather than left blank.
+
+**Three consequences.**
+
+1. **Every framework phase runs at the most expensive tier available**, because `inherit`
+   resolves to the operator's model. Nothing routes a cheap task to a cheap model.
+2. **The development-cost figures in the Wave 2 ledger are an upper bound**, not a
+   representative figure. A tiered framework would do the same work for less, by an amount
+   nobody can yet state. If anything, capex has been **over**-reported, not under.
+3. **The cost-control thesis has never been exercised — by anything, in any wave.** Wave 1's
+   `D-012` specifies that a capability request names a capability class, a reasoning tier and a
+   quality floor and *never* a provider or a model, and `M-001` is the boundary that reads that
+   tier and routes on it. **That boundary is designed and built, but has not executed.** So the
+   290,000/87,000 ratio carrying the company's cost argument, and the USD 2.647440 per-video
+   figure that follows from it, rest on an assumption nothing has yet tested.
+
+**This is not a framework defect.** omn-agent builds software; it is not the production
+pipeline, and `inherit` is a reasonable default for a development tool. The company's own
+pipeline is where tiering belongs, and that is where it was designed.
+
+**How this must be reported until it changes.** The 290,000/87,000 split and every figure
+derived from it — including USD 2.647440 per video and the USD 77.41 monthly envelope — are
+**assumptions, not measurements**, and are to be labelled as such in every report. The first
+real evidence for or against the routing design arrives only when `M-001` is running in the
+production pipeline and recording the tier actually used per operation. **Making `M-001` record
+tier per operation should be an explicit acceptance criterion of whichever wave first runs it**,
+because without that record the thesis stays untestable however many videos are produced.
+
+**What Wave 2 can still deliver, and it is not nothing:** per-phase totals with a stated
+capex/opex allocation and the reasoning behind it; the exact narration character count and
+graphics count from the finished item, priced at re-fetched rates; a zero on generated seconds;
+and the per-video input total against the 377,000-token escalation test in `C-001`. That test
+survives the absence of tiering intact and remains the trigger that matters most.
