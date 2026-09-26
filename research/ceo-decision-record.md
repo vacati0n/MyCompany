@@ -1,33 +1,48 @@
 # CEO Decision Record
 
-> **READ THIS FIRST — identifiers are namespaced, and five bare identifiers are ambiguous.**
+> **READ THIS FIRST - five identifiers were renumbered on 2026-09-26.**
 >
-> Three sessions write to this record. Since 2026-09-26, by CEO decision `W0-D-018`, every new
-> identifier carries the wave that originated it: `W0-`, `W1-`, `W2-`. Collisions are impossible
-> by construction under that scheme.
+> Three sessions write to this record, and two of them independently allocated `D-011` to
+> `D-015`. By CEO decision the **Wave 1 session's five were renumbered** to `D-018`-`D-022`
+> (commit `21e9882`, now on `main`), with withdrawal markers left at the old positions
+> carrying the mapping.
 >
-> Identifiers allocated **before** that decision are **not renumbered**, because existing
-> citations live in artifacts that have already passed their gates and renumbering would
-> invalidate them silently. Resolve a bare pre-2026-09-26 identifier with the concordance below.
-> When in doubt, cite as `branch : identifier : title`.
+> **A bare `D-011`-`D-015` therefore means this branch's decision, unambiguously.** No other
+> identifier was changed.
 
-## Concordance — identifiers allocated twice before namespacing
+## What moved
 
-Both columns are real decisions. Neither is superseded, and they do not contradict each other.
-
-| Id | `claude/execute-prompt-txt-4a3ee4` (this branch) | `claude/eloquent-taussig-724cc2` (Wave 1) |
+| Was | Is now | Decision, Wave 1 session |
 |---|---|---|
-| `D-011` | Tax posture: individual or household business first | Operate as an individual creator; the CEO carries the legal position personally |
-| `D-012` | Niche direction: animals, form not yet settled | Two-phase payee structure; the launch channel already exists |
-| `D-013` | Niche: science and the natural world, adult-framed | The test channel is an experiment; the company's process is unchanged |
-| `D-014` | Wave 2 begins, in a separate session | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
-| `D-015` | Science and natural world reframed as a deliberate experiment | The first item carries no affiliate link |
+| `D-011` | **`D-018`** | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | **`D-019`** | Two-phase payee structure; the launch channel already exists |
+| `D-013` | **`D-020`** | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | **`D-021`** | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
+| `D-015` | **`D-022`** | The first item carries no affiliate link |
 
-Unambiguous, allocated once: `D-001`–`D-010` (shared history before the fork), `D-016`
-(this branch), `D-017` (Wave 2, the video subject), `C-001`–`C-004` (this branch), and every
-`W0-`/`W1-`/`W2-` identifier.
+Unchanged and unambiguous: `D-001`-`D-010` (shared history before the fork), `D-011`-`D-016`
+(this branch), `D-017` (Wave 2, the video subject), `D-023` onward, and `C-001`-`C-006`.
 
-When the branches merge, this table merges with them and both sets survive intact.
+## Allocation blocks - so this cannot happen a fourth time
+
+Renumbering resolved the collision that existed. It does not prevent the next one, because
+nothing stops two sessions reaching for the same next number again. One flat `D-nnn` space is
+kept, as decided, and each session draws from **its own reserved block**:
+
+| Session | Block |
+|---|---|
+| Wave 0 and orchestration (`claude/execute-prompt-txt-4a3ee4`) | `D-023`-`D-099` |
+| Wave 1 (`claude/eloquent-taussig-724cc2`) | `D-100`-`D-199` |
+| Wave 2 (video production) | `D-200`-`D-299` |
+| Any later session | next free hundred, taken without asking |
+
+No prefixes, one space, and no coordination needed - which matters, because the first two
+collisions were caught only because the sessions happened to be talking to each other.
+
+**Still open, and no numbering scheme fixes it:** the technical design and this record both use
+bare `D-nnn`, for architecture decisions and business decisions respectively, so `D-011` is
+ambiguous *by kind* rather than by origin. Resolve by naming the document when citing across
+the two, or by adopting `CEO-D-nnn` against `ADR-D-nnn` if it starts to bite.
 
 ---
 
@@ -681,37 +696,39 @@ The recommendation above is put to the CEO; until it is decided, cite by branch,
 
 ---
 
-## W0-D-018 — Identifier namespacing adopted; nothing is renumbered
+## D-023 — Renumbering adopted, with allocation blocks to prevent recurrence
 
 Decided 2026-09-26 by the CEO, approving the recommendation in `C-004`. **This is the first
 identifier issued under the scheme it adopts.**
 
-**Decision.** The resolution to the forked record is **additive only**:
+**Supersedes the scheme briefly recorded here earlier**, which rested on a misreading: this
+session read "follow the proposal" as approving the no-renumbering option in `C-004`, and the
+CEO clarified that renumbering was what was meant. That entry was allocated as `W0-D-018` and
+is renumbered here to `D-023`, both because the prefix scheme it announced is withdrawn and
+because `D-018` now belongs to the Wave 1 session. Nothing cited it.
 
-1. **Nothing already written is renumbered or renamed.** Both colliding sets keep their
-   identifiers.
-2. **Cite by `branch : identifier : title`** wherever ambiguity is possible. The convention
-   originated in the Wave 2 session's `wave-2/carried-decisions.md` §1 and is now the general
-   rule.
-3. **Every new identifier is namespaced by the wave that originated it** — `W0-`, `W1-`, `W2-`.
-   Collisions become impossible by construction rather than by coordination, which is the only
-   kind of fix that survives three sessions not talking to each other.
-4. **A concordance table sits at the head of this record** and resolves the five ambiguous
-   identifiers. It is now in place.
-5. **When the branches merge, the concordance merges with them** and both sets survive.
+**Decision.**
 
-**Why renumbering was rejected, recorded so the reasoning is not lost.** It is the obvious move
-and it is wrong, for the same reason `S-006` was left alone in `C-001`: existing citations live
-in artifacts that have already passed their gates. Renumbering invalidates them **silently** — a
-reader holding a gated artifact that cites `D-013` would get no signal that the target had
-moved — which is a subtler version of the problem being fixed. A third session renumbering would
-produce a third variant.
+1. **The Wave 1 session's renumbering stands.** Its `D-011`-`D-015` are `D-018`-`D-022`, on
+   `main` at `21e9882`, with withdrawal markers carrying the mapping. This branch's
+   `D-011`-`D-015` are unchanged and are now unambiguous.
+2. **One flat `D-nnn` space is kept.** No wave prefixes.
+3. **Each session draws from its own reserved block**, per the table at the head of this
+   record. This is what stops a fourth collision, which renumbering alone does not, and it
+   needs no coordination between sessions.
+4. **The concordance at the head becomes a what-moved table** rather than a two-column
+   ambiguity table, since there is no longer an ambiguity to resolve.
+
+**One correction carried forward rather than buried.** `C-004` argued against renumbering
+because existing citations live in gated artifacts. The Wave 1 session checked and showed that
+for its five this was not true - those citations belonged to the technical design's separate
+`D-nnn` namespace, not to this record. The argument was general where the facts were specific,
+and the check should have preceded the argument.
 
 **Standing obligation this creates.** The underlying defect was never the collision; it was that
 three sessions wrote to one authoritative record with **no identifier-allocation mechanism**, and
-that the first two collisions were caught only because the sessions happened to be talking. The
-namespace removes the need for that luck. Any session joining later takes its own `W<n>-` prefix
-and needs to coordinate with nobody.
+that the first two collisions were caught only because the sessions happened to be talking. Renumbering fixes the past; the reserved blocks fix the future. Any session joining later takes
+the next free hundred and coordinates with nobody.
 
 ---
 
