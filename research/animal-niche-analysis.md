@@ -16,7 +16,32 @@
 
 ---
 
-<!-- SECTIONS APPENDED INCREMENTALLY BELOW AS ESTABLISHED -->
+# VERDICT
+
+**The animal niche is VIABLE — in one form only — and the evidence gathered to test it moved it *further* from the recommendation, not closer. Revised score: 326/500, down from 383/500.**
+
+**1. Is it viable? Yes.** It passes both gates. It is admissible on policy and it is admissible on visual sourcing, and it remains the **runner-up** on the board. Nothing found here makes the subject uneconomic.
+
+**2. In which format?** **Adult-framed natural-history publication — animal science and behaviour explainers where original motion graphics carry the argument (F5), wildlife documentary on well-filmed subjects (F4), and conservation/wildlife-economics reporting (F6).** Minimum 10 minutes, target 12–14. Pillars in §7.
+
+**3. What must be avoided, absolutely:**
+- **Compilation, in any form.** *"Short videos you compiled from other social media websites"* is a **named** NOT ALLOWED example **[OFFICIAL POLICY]**. And — the finding that surprised this analysis — the policy says *"even if you have their permission"* twice, which establishes that **licensing does not cure reused content**. A licensed-stock cute-animal reel fails the originality policy just as a scraped one does. **Compilation is dead. Documentary and explainer work. That is exactly the answer D-012 asked for.**
+- **Anything with anthropomorphism, named animal characters, cartoon styling, simple-register narration, songs, or "cute / funny / baby animals" metadata.** Not for taste — these are YouTube's own made-for-kids factors, and the penalty is a ~31× RPM collapse **plus** loss of the notification bell, end screens, Save-to-playlist and comments.
+- **Species-led videos about animals the library cannot show.** The committed library returns **one** clip for `pangolin` and **zero** for `saola`. Attempting them ends in AI-generated animals published as documentary footage.
+
+**4. Made-for-kids: MANAGEABLE BY TREATMENT, not inherent to the subject.** Neither YouTube's factor list nor the FTC's COPPA factor list names animals, wildlife or nature anywhere, and the FTC explicitly states content is not child-directed *"just because some children visit"*. Every trigger animal content usually carries is a production choice. **But the bar is "not targeting children at all", not "mostly adults"** — mixed-audience content counts as made for kids — and YouTube can override the designation. Nine binding treatment rules in §1.5.
+
+**5. The two findings that moved the score down, both new:**
+- **Originality (−16 pts).** Under D-006 the channel owns no footage. Licensing does not confer originality. The entire originality burden falls on the script and graphics, and a shallow library forces visual repetition across 13 videos a month.
+- **Visual sourcing (−24 pts).** The prior analysis's *"unlimited visual supply"* was measured on the **wrong library** with the **wrong query**. Storyblocks — the committed library — holds **152,288** wildlife clips, not 2.9M, and collapses to single digits at species level. A specialist wildlife library is **~123× the budget**.
+
+**6. Break-even (central, documentary format, ad + affiliate): 32,525 views/month = 2,502 views/video ≈ 2,927 watch hours/month.** The 8,000-watch-hour gate needs only ~7,400 views/month, so **watch hours are not binding — 1,000 subscribers is.** And a made-for-kids designation attacks subscribers directly by disabling the notification bell, end screens, playlists and comments. **That, not the RPM haircut, is the real made-for-kids risk.**
+
+**7. The sensitivity test the prior file set for flipping the verdict now fails.** `niche-recommendation.md` §5 said candidate E overtakes engineering if made-for-kids resolves cleanly *and* volume is re-weighted up. Made-for-kids has substantially resolved in its favour — **and it still does not flip**: 350 vs 429 under that re-weighting, because the two new findings above do not move when volume is re-weighted.
+
+**In one line for the CEO: the subject he likes works, as a serious natural-history publication and nothing else; it is the second-best option available; and choosing it now means accepting a 98-point deficit to the engineering recommendation rather than the 41-point deficit he was shown.**
+
+---
 
 ## 1. Made-for-kids exposure — the priority question, quantified
 
@@ -562,3 +587,91 @@ Engineering & infrastructure =  429 / 500
 **It still does not flip, and the reason is instructive: the prior file expected the animal option to lose only on RPM and affiliate, which a volume re-weighting neutralises. It in fact also loses on originality defensibility and on visual sourcing, and those two do not move when volume is re-weighted.** Two findings that were not available when that condition was written — the licensing-does-not-cure-originality point (§2.2) and the species-level supply collapse (§3.3) — are what hold the verdict in place.
 
 **[INFERENCE] The honest statement of this result: the CEO's preferred subject is viable, is the second-best option on the board, and is a defensible choice — but the evidence gathered to test it moved it further from the recommendation, not closer.** Choosing it is now a choice to accept a 98-point deficit for a subject the CEO prefers, which is a legitimate decision and should be made with that number in view.
+
+---
+
+## 7. If the CEO chooses this niche anyway — the form it must take
+
+**[INFERENCE] The channel is not "an animal channel". It is an adult natural-history publication that happens to be about animals.** Concretely, and designed against every constraint established above:
+
+| # | Pillar | /month | Format | Why it survives |
+|---|---|---|---|---|
+| 1 | **Mechanism** — one piece of animal biology explained: how echolocation resolves a moth wing, how a mantis shrimp's spring-latch exceeds muscle power, why a naked mole rat does not get cancer | 4 | **F5**, 10–14 min, original motion graphics carrying the argument | Graphics substitute for footage that does not exist (§3.8). Highest originality defensibility. Adult register by construction (§1.5 K-2). |
+| 2 | **The Number** — one population, trade, range or physiological statistic, sourced and unpacked in data visualisation | 3 | **F6**, 10–14 min, chart-led | No footage dependency at all. Cannot be templated — a sourced figure is the definition of *"original, authentic insights"*. |
+| 3 | **Conservation Systems** — the SEA pillar: the economics and politics around a species, not the species on screen | 2 | **F6**, 12–16 min | §5.3. Footage-feasible (habitat, markets, ports, rangers, maps). The operator's real moat. Documentary treatment only, per advertiser suitability. |
+| 4 | **Natural History** — a full documentary treatment of a well-filmed animal or system | 3 | **F4**, 12–16 min | Uses the megafauna the library *does* carry (§3.3). Mid-roll eligible. Watch-hour efficient. |
+| 5 | **Reassessment** — a widely-believed animal claim tested against the literature | 1 | **F5/F6**, 10–14 min | Argument-led, footage-light, and the single most subscriber-generating format type because it gives a reason to return. |
+
+**Format rules that are not negotiable if this niche is chosen:**
+
+1. **Minimum runtime 10 minutes; target 12–14.** Below 8 minutes there are no mid-rolls **[OFFICIAL POLICY]** <https://support.google.com/youtube/answer/6175006>, and watch-hour efficiency collapses (§4.5).
+2. **The nine made-for-kids treatment rules K-1 to K-9 (§1.5)** are gate conditions, not guidance.
+3. **No format F1, F2 or F3 as a channel identity** (§2.4).
+4. **Every clip vetted against generative-AI and green-screen contamination** before it enters a timeline (§3.4). This is a new production step and it costs operator time.
+5. **Script-to-footage order inverted**: audit what the library actually holds for a subject *before* commissioning the script (§3.8).
+6. **No persona**, per `niche-recommendation.md` §1.3 control 1 — carried unchanged. Animals are not a "sensitive topic" under the AI-persona rule, so the exposure is lower here than for the engineering candidate's economics pillar; the control costs nothing and should be kept anyway.
+
+---
+
+## 8. What would make this fail
+
+In order of how likely each is actually to happen.
+
+1. **The channel never reaches 1,000 subscribers.** Unchanged from `niche-recommendation.md` §8.1 and **worse here**: nature documentary is consumed passively, from suggested and search, by viewers with no reason to return. Watch hours will accumulate (§4.6: the 8,000-hour gate needs ~7,400 views/month, the break-even needs 32,525) while subscribers do not. **Most likely failure mode. Pillar 5 and a strong recurring editorial voice are the only mitigations, and neither is guaranteed.**
+2. **The house style converges and reads as templated.** The most likely *policy* failure, and this niche is more exposed than the recommended one for a structural reason established in §2.2: the channel owns no footage, the library is shallow at species level, and 13 videos a month drawn from the same few thousand usable megafauna clips will start to look identical. **Penalty is channel-level demonetization.**
+3. **The script cannot be illustrated and the pipeline substitutes AI-generated "wildlife".** §3.4 and §5.1. This is the failure mode unique to this niche. It ends not in an empty timeline but in a published video containing a synthetic animal presented as real — a credibility failure on a science channel and, if it recurs, an inauthentic-content exposure.
+4. **Audience skews under-18 and the channel is reclassified made for kids.** §1.4. Treatment controls reduce but cannot eliminate it, because *"empirical evidence of the video's audience"* is a live factor and animals attract young viewers. Consequence: break-even moves from ~32,500 to ~110,000–119,000 views/month **and** the subscriber machinery is switched off (§4.6). **This is the compounding one: it makes the most likely failure mode (1) far more likely at the same time.**
+5. **The biology is wrong and the audience notices.** The same risk `niche-recommendation.md` §8.3 recorded for engineering, with the mitigation removed: the operator has no biology background at all, where he does have engineering competence. **Every claim must be attributable to a named paper, institution or database. This is a heavier editorial-verification burden than the recommended niche, not a lighter one.**
+6. **The footage budget has to rise.** §3.5. Envato Elements Core at +$16.50/month takes the envelope from $77.41 to ~$93.91, a **21% cost increase** that moves every break-even number in §4.3 up by the same proportion. Not fatal, but it is a real and probable call on the budget that the recommended niche does not make.
+7. **Ad rates come in below the model.** Trigger unchanged from `language-market-analysis.md`: realised blended net RPM below $1.00 after three months means the inputs are wrong. **The risk is higher here than for the recommended niche because `A1` is less well-evidenced — there is no measured RPM for this niche at all (§4.1).**
+8. **The FTC, not YouTube, is the counterparty.** §1.4. A misdesignation is not only a revenue event; the Disney settlement establishes that the regulator pursues the uploader. For a Vietnam-resident sole operator the practical exposure is unclear and **this analysis did not establish it**; it is noted, not sized.
+
+---
+
+## 9. What this does not settle
+
+| # | Open item | Who settles it | Needed by |
+|---|---|---|---|
+| 1 | **Storyblocks' species-level depth beyond the ~40 queries captured** — the host rate-limited at HTTP 403 partway through (§3.7). The captured sample is decisive in direction; it is not exhaustive. | A manual search inside the subscription on day one | Before committing pillar 4 |
+| 2 | **The generative-AI share of any library's wildlife counts.** Demonstrated qualitatively (§3.4), not quantified; the documented Adobe filter did not change the totals. | Manual vetting at production time; a sampling study would be better | Before the first species-led script |
+| 3 | **Whether Storyblocks' licence survives cancellation.** A storyblocks.com page appears to state it does (*"anything you create and publish… forever"*) but the page is JS-rendered and the wording is **not certified verbatim** (§3.6). Carried unresolved from `ai-capacity-dossier.md`. | Confirm from inside the subscription | Before cancellation is ever contemplated |
+| 4 | **Whether the budget rises to ~$93.91 for a second footage library.** A CEO budget decision, not a research finding. | CEO | Before launch |
+| 5 | **The real under-18 audience share for adult-framed wildlife content.** No source found. It is the single largest unquantified input to the made-for-kids risk and it is only observable after launch (§1.5 K-8). | Studio demographics, month 1–3 | Standing monitoring |
+| 6 | **An RPM for this niche.** None exists in the best-sourced dataset (§4.1). `A1 = $5.00` is reasoned, not measured, and it is the weakest input in the model. | Real Studio data after 3 months | Re-run at 3 months post-launch |
+| 7 | **NatureFootage's price list, first-party.** Behind a human-verification wall, which this analysis did not attempt to bypass. The $49/$60-per-clip figures are third-party. The conclusion (two orders of magnitude out of reach) is robust to a large error in them. | Direct enquiry if ever relevant | Not blocking |
+| 8 | **Whether Amazon Associates commissions are US-source income for a non-US person.** Carried unchanged from `language-market-analysis.md` §7.4. Less material here than for the recommended niche, because the affiliate line is 5.5% of combined revenue rather than 22%. | Qualified counsel | Before affiliate revenue accumulates |
+
+---
+
+## 10. Sources
+
+**First-party [OFFICIAL POLICY] / [OFFICIAL]** — all read 2026-09-26 unless stated
+- YouTube — Determining if your content is "made for kids": <https://support.google.com/youtube/answer/9528076>
+- YouTube — FAQ about "made for kids" (mixed audience; override): <https://support.google.com/youtube/answer/9684541>
+- YouTube — Set your channel or video's audience (disabled-features list; override; revenue warning): <https://support.google.com/youtube/answer/9527654>
+- YouTube — Channel monetization policies (inauthentic content; reused content; generic/repetitive; AI personas): <https://support.google.com/youtube/answer/1311392>
+- YouTube — Mid-roll ads, 8-minute minimum: <https://support.google.com/youtube/answer/6175006>
+- YouTube — Advertiser-friendly content guidelines: <https://support.google.com/youtube/answer/6162278>
+- YouTube — Using commercial content / commercial-use rights: <https://support.google.com/youtube/answer/2490020>
+- YouTube — YPP eligibility and the 2027-02-01 change: <https://support.google.com/youtube/answer/72851>, <https://support.google.com/youtube/answer/12843009>
+- FTC — Complying with COPPA: Frequently Asked Questions: <https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions>
+- Storyblocks — pricing: <https://www.storyblocks.com/pricing>; video search result pages (counts in §3.2, §3.3, §5.1)
+- Adobe Stock — plans: <https://stock.adobe.com/plans>; licence terms: <https://stock.adobe.com/license-terms>; video search result pages and asset captions (§3.4, §5.1)
+- Envato Elements — pricing: <https://elements.envato.com/pricing>; stock-video search pages
+- Pixabay — video search (wildlife category size)
+
+**[THIRD-PARTY]**
+- AIR Media-Tech, *Which YouTube Niche Makes the Most Money in 2026* (300 channels, 3,595 monetized channel-months, May 2025–May 2026, read from Studio): <https://air.io/en/air-data-findings/which-youtube-niche-makes-the-most-money-in-2026-ranked-by-real-rpm-and-cpm>
+- Tubefilter, *Disney fined $10 million for failing to label YouTube videos as "made for kids"*, 2025-09-17: <https://www.tubefilter.com/2025/09/17/disney-ftc-fine-youtube-videos-child-safety/>
+- Gyre, *How to monetize a YouTube kids channel in 2026*: <https://gyre.pro/blog/how-to-monetize-a-youtube-kids-channel>
+- TechTimes, COPPA revenue impact: <https://www.techtimes.com/articles/320340/20260713/ai-kids-cartoon-gold-rush-has-hidden-tax-coppa-cuts-revenue-80.htm>
+- NatureFootage licensing (via search summary; first-party page behind a human-verification wall): <https://www.naturefootage.com/Licensing-101>
+- Veefly, pet-channel earnings; vidiQ, how pet creators make money — **low confidence, no stated method, not used as anchors**: <https://blog.veefly.com/youtube/how-much-pet-youtube-channels-earn/>, <https://vidiq.com/blog/post/how-pet-enthusiasts-make-money-youtube/>
+
+**Internal, reused not reinvented**
+- `research/niche-recommendation.md` — §2.2 supply method, §3.2 watch-hour efficiency, §3.4 affiliate model, §3.5/§7 break-even, §4.1 scoring method and weights
+- `research/language-market-analysis.md` — §5.1 blended-RPM / net-of-withholding model
+- `research/platform-policy-dossier.md` — §1.3, §1.4 verbatim policy text (verified 2026-09-18, re-verified here 2026-09-26)
+- `research/ai-capacity-dossier.md` — stock and music licence terms, budget composition
+- `research/reverification-2026-09-26.md` — §3 the $77.41 envelope, U-8 Storyblocks pricing
+- `research/ceo-decision-record.md` — D-005, D-006, D-007, D-008, D-012
