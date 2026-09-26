@@ -74,17 +74,65 @@ The second is the number that decides whether 13 videos/month fits USD 77.41. **
 established and must not be asserted until phase 6 closes the total.** Recorded now so the
 finding is not reverse-engineered later.
 
+## 2.5 The estimate this is measured against, decomposed
+
+From `research/ai-capacity-dossier.md` §F.3, EXPECTED case, carried unchanged. Stated here so
+the comparison is against a decomposition rather than against a single number.
+
+| Stage | Input tokens | Output tokens | Cost |
+|---|---|---|---|
+| Research | 150,000 | 8,000 | $0.3800 |
+| Scripting | 50,000 | 6,000 | $0.1600 |
+| Fact-check | 60,000 | 3,000 | $0.1500 |
+| SEO (Haiku) | 10,000 | 2,000 | $0.0200 |
+| QC (Haiku) | 25,000 | 2,500 | $0.0375 |
+| Web search (8 calls) | — | — | $0.0800 |
+| **LLM subtotal** | **295,000** | **21,500** | **$0.8275** |
+| Thumbnails, 6 × gpt-image-2.5 high | — | — | $0.3161 |
+| TTS, 8,700 chars × $0.05/1,000 | — | — | $0.4350 |
+| **ESTIMATED TOTAL** | | | **$1.5786 → ~$1.58** |
+
+**The comparison that matters, stated now so it is not constructed to fit the answer later.**
+The estimate budgets **316,500 tokens in total** for the entire content pipeline — research,
+scripting, fact-check, SEO and QC combined. **Phase 1 of this run consumed 257,876 tokens to
+produce a scope definition**, which is 81% of that whole-pipeline budget for a single governance
+phase that writes no script and no narration.
+
+These are not the same quantity and must not be netted against each other:
+
+- The estimate prices the **content work** — the tokens that turn a subject into a script.
+- The measurement prices the **governance work** — the tokens the framework spends deciding
+  what to build, bounding it, planning it, designing it, reviewing it and documenting it.
+
+Wave 2 is the first time anyone has measured the second. **The honest reading available so far
+is that the estimate was never wrong about content; it was silent about governance.** Whether
+that silence matters depends on the total, which is not yet in, and on how much of the
+governance cost is a one-off for the first video versus recurring for the thirteenth. **Both
+questions stay open until phase 6.**
+
 ## 3. Quantities the finished video commissions
 
 Populated once the script and shot list exist.
 
 | Quantity | Count | Unit price (re-fetch date) | Cost | Basis |
 |---|---|---|---|---|
-| Narration characters | _pending script_ | | | |
-| Original motion graphics | _pending shot list_ | | | |
-| Licensed stock clips | _pending shot list_ | included in subscription | $0.00 marginal | |
-| AI-generated video seconds | **0** | n/a | **$0.00** | Decided: none commissioned |
-| Thumbnail images | _pending_ | | | |
+| Narration characters | _pending script_ | $0.05 / 1,000 chars (re-verified 2026-09-26, `reverification-2026-09-26.md` U-5) | | |
+| Original motion graphics | _pending shot list_ | in-house, no marginal API cost | | |
+| Licensed stock clips | _pending shot list_ | included in the $30 Storyblocks subscription | $0.00 marginal | |
+| AI-generated video seconds | **0** | n/a | **$0.00** | **MEASURED — none commissioned.** See note below. |
+| Thumbnail images | _pending_ | $0.05268 each, gpt-image-2.5 high | | |
+
+**Why the AI-video line is zero, and why that is a decision rather than an omission.** D-006
+permits sparing AI cutaways. This video commissions none, for two reasons that are stronger
+than cost. First, §3.4 of the niche analysis established that AI-generated "wildlife" is the
+specific way this format fails — publishing a synthetic animal as documentary evidence is a
+credibility failure on a science channel, not a budget overrun. Second, it keeps the
+synthetic-media disclosure determination clean: YouTube's disclosure trigger includes *"AI
+generated extra footage of a real place"*, so commissioning zero generated footage removes the
+only element of this production that would have required disclosure on that ground. **The
+narration is synthetic but sits on the other side of the line** — it makes no real person appear
+to say anything and depicts no event that did not occur. That determination is owed as evidence
+at `A-023`, not assumed here.
 
 ## 4. Standing monthly envelope, unchanged
 
