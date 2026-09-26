@@ -374,3 +374,79 @@ video, end to end**.
   on the Wave 1 foundation and should not re-create it.
 - D-002 still holds: the CEO approves the publication individually. In Wave 2 that approval
   step exists and is exercised, but it gates a publish-ready artifact rather than an upload.
+
+---
+
+# Sixth round — the niche is an experiment, not the business bet
+
+Decided 2026-09-26 by the CEO, after the completed animal-niche analysis revised that option
+from 383 to 326 of 500 and widened the gap to the engineering candidate from 41 to 98 points.
+
+## D-015 — Science and the natural world stands, reframed as a deliberate experiment
+
+**Decision.** **D-013 stands.** The first channel is adult-framed science and natural-world
+edutainment. The CEO took this decision **with the revised score in hand**, not in ignorance of
+it, and reframed what the first channel is for:
+
+> The company is at its beginning. The first channel is an **experiment that proves the
+> pipeline**, not the bet that decides the business. In time the company's own departments must
+> find profitable niches themselves.
+
+**Why this is a coherent decision rather than a rejection of the evidence.** The analysis ranked
+niches by *expected profitability of that channel*. The CEO is optimising something different
+and longer-lived: **the machine that produces channels.** Under that objective a 98-point gap on
+one channel's economics is a smaller quantity than the value of learning the pipeline end to
+end, and the subject that keeps the operator engaged through the first hard month has a value
+the scoring model does not carry. The scoring model is not wrong; it was answering a narrower
+question than the one being decided.
+
+**Consequence.**
+
+- **The first channel is a test instrument.** Its success measure is not revenue but whether
+  the pipeline can produce a compliant, original, publish-ready video repeatedly and at a
+  metered cost. Revenue-denominated judgement of this channel should be deferred accordingly.
+- **Niche-agnostic construction is now a design requirement, not a preference.** The topic will
+  change; the machine must not have to be rebuilt when it does. Favour components that are
+  re-pointable over anything hard-wired to wildlife.
+- **The engineering and infrastructure candidate is not discarded.** It scored 429 under
+  volume-weighted scoring and remains the strongest known option. It is the natural candidate
+  for channel two, or for this channel if the experiment shows the subject cannot carry the
+  originality burden.
+- **Autonomous niche discovery becomes an explicit company capability**, not an aspiration. The
+  Strategy function must eventually do what the last three analyses did by hand: score
+  candidate niches on demand, competition, production feasibility, policy admissibility and
+  expected economics, and bring recommendations to the CEO. That is the supplied intent's
+  Wave 9 ambition, given a concrete first job.
+
+## D-016 — Budget holds at USD 77.41; the species gap is closed by topic selection
+
+**Decision.** The **+USD 16.50/month second stock library is not authorised.** The envelope
+stays at **USD 77.41**.
+
+**Consequence.** Species depth is managed by **choosing well-filmed subjects and avoiding rare
+species**, not by spending more. This costs breadth of topic, and it is recorded as a real cost
+rather than waved away. It also has an unplanned benefit: the contaminated search results the
+analysis found are concentrated in exactly the rare-species queries this constraint avoids.
+
+## Production constraints now binding on Wave 2, from the completed analysis
+
+- **Never source footage by clip count.** Rare-species results are contaminated by
+  generative AI — one library returns 84 clips for a species filmed alive a handful of times,
+  including a tropical storm of the same name. Every wildlife clip is verified against caption
+  and provenance before entering a cut, and anything unconfirmed is rejected. A pipeline that
+  publishes AI-generated animals as documentary evidence fails on credibility, not cost.
+- **Clip counts are upper bounds of unknown looseness.** Search is fuzzy: one library silently
+  answers `saola` with results for "saona", and a nonsense query returns 26 results.
+- **Licensing does not cure reused content.** "Even if you have their permission" appears twice
+  in the NOT ALLOWED list. The channel owns no footage under D-006, so the whole originality
+  burden rests on script and original graphics. Test: if the video would still stand as an
+  essay without the clips, it is on the right side of the policy; if the clips *are* the
+  content, it is not.
+- **Made-for-kids resolved in favour, conditionally.** Animals appear in neither YouTube's nor
+  the FTC's factor lists. Nine treatment rules apply as production rules. The penalty is 31× on
+  RPM and it disables the notification bell, end screens, playlists and comments — the whole
+  subscriber machinery, and subscribers are the binding gate. The FTC pursues the uploader, so
+  mis-declaring "not made for kids" is the riskier error.
+
+**Break-even for this niche (ESTIMATE):** 32,525 views/month, about 2,502 per video. If
+made-for-kids were to apply: 110,000–119,000 views/month.
