@@ -36,9 +36,43 @@ argument for doing so before volume, not after.
 
 Context-window readings from the orchestrating session, `run-3a58551ee912`. Each is a floor.
 
-| # | Point in the run | Tokens in context | Delta | Basis |
-|---|---|---|---|---|
-| T-1 | Required reading complete; phase 1 dispatched | 153,003 | — | MEASURED |
+### 2.1 Orchestration session (floor only)
+
+| # | Point in the run | Tokens in context | Basis |
+|---|---|---|---|
+| T-1 | Required reading complete; phase 1 dispatched | 153,003 | MEASURED |
+
+### 2.2 Phase agents — the real per-phase consumption
+
+**This is the measurement that matters, and it is exact.** The harness reports each dispatched
+subagent's total token consumption on completion, so unlike the orchestration line these are
+billed totals rather than context floors.
+
+| Phase | Agent | Tokens | Tool calls | Wall clock | Basis |
+|---|---|---|---|---|---|
+| 1 `scope-and-acceptance` | `omn-product-owner` | **257,876** | 50 | 16 min 6 s | MEASURED |
+| 2 `execution-planning` | `planner` | _running_ | | | |
+| 3 `solution-design-and-risk-assessment` | `architect` | | | | |
+| 4 `implementation` | `omn-dev-1-implement` | | | | |
+| 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
+| 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
+| | **Total** | | | | |
+
+**[EARLY FINDING — and it is the uncomfortable one.]** Phase 1 alone consumed **257,876 tokens**
+to produce a scope definition. The carried estimate of **~USD 1.58 for a ten-minute video**
+covers the *content* generation — script text, narration characters, images. It does not cover
+the **framework's own orchestration overhead**, which is what this row measures, and on this
+evidence that overhead is not a rounding error against the content cost. Six phases at this
+order of magnitude is a materially different number from $1.58, and the comparison the ticket
+asks for must be stated on both bases or it will mislead:
+
+- **Cost per video of the content itself** — what $1.58 estimated, and what recurs per video.
+- **Cost per video of running the governed pipeline** — the six-phase framework overhead, which
+  is what a *governed* video costs and which the estimate never included.
+
+The second is the number that decides whether 13 videos/month fits USD 77.41. **It is not yet
+established and must not be asserted until phase 6 closes the total.** Recorded now so the
+finding is not reverse-engineered later.
 
 ## 3. Quantities the finished video commissions
 
