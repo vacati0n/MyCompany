@@ -25,21 +25,32 @@ artifact.
 `D-016` (budget holds at USD 77.41) and `C-001` to `C-003` exist only on the CEO/research
 branch. `D-017` (this wave's subject) was filed by the Wave 2 session on top of that branch.
 
-### Scheme adopted — `W2-` is this wave's prefix
+### Identifier allocation — settled on the third attempt, block `D-200`–`D-299`
 
-The CEO approved the `C-004` recommendation in full (`W0-D-018`, deliberately the first
-identifier issued under the scheme it adopts). `research/ceo-decision-record.md` now carries a
-**concordance table at its head** resolving all five doubly-allocated identifiers, and states
-which are unambiguous: `D-001`–`D-010`, `D-016`, `D-017`, `C-001`–`C-004`, and everything
-namespaced.
+Three schemes were proposed in one day. **The one that stands:** a single flat `D-nnn` space, no
+prefixes, with a **reserved block per session** so allocation needs no coordination.
 
-**This wave allocates `W2-D-nnn` and coordinates with nobody** — that is the point of the
-scheme: it survives sessions not talking, which is what the first two collisions depended on.
-`D-017` keeps its bare identifier and is listed as unambiguous.
+| Session | Block |
+|---|---|
+| CEO / research (`execute-prompt-txt`) | `D-023`–`D-099` |
+| Wave 1 (`eloquent-taussig`) | `D-100`–`D-199` |
+| **Wave 2 (this session)** | **`D-200`–`D-299`** |
 
-**Reading note for this file.** Bare `D-011` to `D-015` below appear only where the *ambiguity
-itself* is the subject, and each is qualified in place as "this space's" or shown in the mapping
-table. No citation here depends on an unqualified pre-namespacing identifier.
+**This wave's next identifier is `D-200`, allocated without asking anyone.** The `W0-`/`W1-`/`W2-`
+prefix scheme recorded earlier is **withdrawn and no prefixed identifier exists anywhere**;
+`W0-D-018` was renumbered to `D-023`.
+
+**What actually resolved the collision:** the Wave 1 session's `D-011`–`D-015` were renumbered to
+**`D-018`–`D-022`** (commit `21e9882`, on `main`, with withdrawal markers carrying the mapping).
+The CEO/research space keeps `D-011`–`D-015` unchanged and is now unambiguous. **`D-017` is
+unchanged** — this wave's video subject keeps its identifier.
+
+**Why the block reservation still earns its place after renumbering.** Renumbering fixed **the
+collision that existed**; it does nothing about **the next one**. Three sessions appending to one
+record with no allocation mechanism was the underlying defect, and a reserved block is the part
+that survives sessions not talking — which is precisely what the first two collisions depended
+on. The `branch : identifier : title` citation habit remains correct when citing across branches;
+it is simply no longer *required* to resolve these five.
 
 ### RESOLVED 2026-09-26 — this branch's space stands, the Wave 1 space renumbered
 
