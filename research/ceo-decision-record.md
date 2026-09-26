@@ -252,3 +252,73 @@ Wave 1 design.
 policy pass due 2026-10-26 · `RK-003` Vietnamese tax position, blocks banking not building,
 longest lead time · `RK-005` approval-minutes baseline · `RK-006` the 2027-02-01 threshold, the
 only fixed date. The channel niche and content pillars remain unchosen and block Wave 2.
+
+---
+
+# Fourth round — payee position settled by acceptance, not by counsel
+
+Decided 2026-09-26 by the CEO, on a readiness check for Wave 3 that found `RK-003` to be the
+longest-lead item on the critical path and the only one independent of Wave 2.
+
+## D-011 — Operate as an individual creator; the CEO carries the legal position personally
+
+**Decision.** The company has no budget at this stage to retain Vietnamese tax counsel. It will
+operate **as an individual person publishing content on the launch platform**, with the **CEO as
+the Vietnam-resident payee in his own name**. The CEO **personally accepts accountability** for
+tax declaration and for the legal determinations the workforce escalates.
+
+`RK-003` is therefore **accepted, not discharged**. The mitigation the risk register records —
+*"qualified local counsel before the payment account is created"* — is **superseded** by this
+decision. The risk stays open, at its recorded severity, with the CEO named as the acceptor.
+
+**What this settles.**
+
+- **The payee position is settled.** The first of the two things §21.3 precondition 2 requires now
+  has an answer: the payee is the CEO as an individual, resident in Vietnam. The payment account
+  itself is created later; what had to be decided before the channel exists was *who the payee is*,
+  because one account is permitted per payee name and duplicates are disapproved.
+- **Open question `Q-007`, and `Q-009` from the first round, are closed.** Accountability for a
+  legal determination escalated out of the workforce — including the audience designation and the
+  disclosure judgements — rests with the CEO. The workforce escalates; it does not decide.
+- **Wave 3 loses its one blocker that was independent of Wave 2.** What remains in front of Wave 3
+  is Wave 2's own completion and the findings only Wave 2 produces.
+
+**Why the timing costs little.** The plan already recorded that `RK-003` *blocks banking, not
+building*, and that it *lands the moment revenue arrives*. Revenue is zero and stays zero until
+partner-programme entry, which needs 1,000 subscribers and 4,000 qualified watch hours first. The
+tax exposure being accepted here is therefore an exposure on an amount that does not yet exist.
+The decision can be revisited when it first costs something, and the natural review point is
+**before the first revenue**, not before the first publication.
+
+**What this decision does NOT cover, and the CEO should know it.**
+
+`RK-003` bundles four questions, and only three of them are about money:
+
+| Question | When it bites | Covered by this decision |
+|---|---|---|
+| Whether the quoted rates and the annual revenue threshold survive Vietnam's 2026 tax laws | at first revenue | yes, accepted |
+| The withholding treatment of foreign-sourced viewership earnings | at first revenue | yes, accepted |
+| Vietnamese **advertising-law disclosure** obligations | at **first publication** | **no** |
+| Whether any Vietnamese rule addresses **synthetic-media disclosure** | at **first publication** | **no** |
+
+The last two are content-compliance questions wearing a tax label. They do not wait for revenue:
+they land when the first video goes out, on a channel that publishes AI-assisted work. Nothing in
+this decision answers them, and no budget is required to *read* them — unlike the tax position,
+which needs an opinion, these are published rules that a competent reading can establish.
+
+**Consequence carried, not solved.** The payee is now a natural person, and the plan records that
+genuine isolation between channels requires **distinct legal payees**, decided before launch,
+because the payment account's country and payee are hard to change later. This decision therefore
+constrains any future multi-channel structure to sharing one payee unless it is revisited. That is
+a Wave 6 concern, recorded here so it is not discovered there.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` **accepted by the CEO**, its two disclosure questions unanswered
+and due at first publication · `RK-005` approval-minutes baseline, which Wave 2 produces ·
+`RK-006` the **2027-02-01** threshold, the only fixed date, with capture treated as lost so 8,000
+watch hours is the planning figure.
+
+Wave 2 open questions `Q-001` (subject and angle), `Q-004` (budget for a second stock library) and
+`Q-008` (audience-drift threshold, due before first publication) remain with the CEO.
