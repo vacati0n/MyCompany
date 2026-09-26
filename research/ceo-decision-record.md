@@ -382,3 +382,76 @@ unregistered on any library its assets come from; and `S-002`, whose audience-dr
 obligation and per-item audience designation are assessed against a channel that may already
 carry a designation and an audience. Wave 2 should be told which channel it is producing for
 before its implementation phase commits to an item.
+
+### D-012 resolved — the branch is established, 2026-09-26
+
+The CEO confirmed the channel's standing. Every item recorded above as unestablished now has an
+answer, and the answers are uniform: **the channel is effectively blank.**
+
+| Question | Answer | Consequence |
+|---|---|---|
+| Already in YPP? | **No** — the channel exists, monetization is not enabled | The grandfathering sentence does not reach it. It is a **new entrant** for threshold purposes regardless of when it was created |
+| Subscribers and qualified watch hours | **New channel** | No head start. The 365-day watch-hour window has nothing in it because nothing has been published |
+| Existing content | **None** | The channel-level inauthentic-content and reused-content exposure the previous entry raised **does not arise**. There is no prior upload inside the assessment |
+| Active strikes | **None** | §21.3 precondition 3 is satisfied on its strike half. Two-step verification remains to be confirmed |
+| Made-for-kids at channel level | **No** | No conflict with scope item `S-002`. Adult framing starts from a clean channel designation |
+
+**`RK-006` resolves to the unfavourable branch, and nothing changes.** The channel is not in YPP,
+so the 2027-02-01 doubling applies to it: entry needs 1,000 subscribers plus 8,000 qualified watch
+hours in 365 days from that date. The plan already carries **capture treated as lost, with 8,000
+watch hours as the planning figure**, and that position is now confirmed correct rather than
+merely cautious. No recalculation follows, and the only fixed date stands where it was.
+
+The practical reading: roughly eighteen weeks remain to 2027-02-01, from zero subscribers and zero
+published minutes, on a rate that is not yet proven for a single item. Racing the earlier 4,000-hour
+threshold would mean committing to a sustained rate before Wave 2 has measured whether one item is
+affordable — which is the sequence `RK-005` and the metered-first-video constraint exist to prevent.
+The recorded position holds.
+
+**Risk removed, not deferred.** The inherited-history exposure the previous entry itemised is void
+on the facts, not postponed. A blank channel carries none of it.
+
+## D-013 — The test channel is an experiment; the company's process is unchanged
+
+**Decision.** The channel is an **initial test channel**. The company's operating process does not
+change on account of it, and will not change later. **The CEO approves channel creation.** The
+departments coordinate the remaining work among themselves.
+
+**What this confirms.** Scope item `S-012` already records the niche as *a recorded experiment to
+prove the pipeline rather than the company's final business bet*, with the subject, pillars,
+treatment conditions and library set held as **values the company can change** rather than as
+capability wired to a subject. This decision extends that standing from the niche to the channel:
+the channel is the experiment's vehicle, and re-pointing at a different channel later must not
+require rebuilding anything.
+
+**What this adds, and it is a real gap.** Channel creation becomes a **CEO-approved act**. The
+closed action set the foundation operates today carries **fifteen actions and none of them creates
+a channel** — Wave 1 excluded channel creation outright, so the capability is absent by design
+rather than merely unexercised. Making it a CEO approval therefore means Wave 3 must:
+
+- add a `ChannelCreate` action to the closed enumerated set;
+- assign it to the **Owner role and to no other**, so that "a department creates a channel" is not
+  an expressible action rather than a forbidden one, which is the form decision D-003 requires;
+- record the approval the same way the publication gate records the owner's, so that *which channel
+  was created, when, and on whose approval* is answerable from the record alone.
+
+**The boundary that must not drift.** "The departments coordinate the remaining work among
+themselves" governs **inter-departmental coordination**. It does not touch **D-002**, under which
+the CEO approves **every publication individually**, and it does not touch **D-007**, which makes
+that approval a state in the gate transition table and absent from configuration. The CEO's
+statement that the process does not change is what keeps both standing. Recorded explicitly here
+because a later reader meeting "departments work with each other" without this sentence could take
+it for a relaxation of the publication gate, and that gate is the load-bearing control in the
+entire design: it is layer two of the four least-privilege layers, it is the precondition of every
+release credential, and it is the first of the four non-cuttable controls `RK-001` names.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` accepted by the CEO at D-011, its two disclosure questions —
+Vietnamese advertising-law disclosure and whether any Vietnamese rule addresses synthetic-media
+disclosure — unanswered and due at **first publication** · `RK-005` approval-minutes baseline,
+which Wave 2 produces · `RK-006` confirmed at the 8,000-watch-hour branch.
+
+Two-step verification on the test channel is unconfirmed and is the remaining half of §21.3
+precondition 3. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
