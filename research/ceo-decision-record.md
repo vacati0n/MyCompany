@@ -194,3 +194,61 @@ These were **not** decided and must not be treated as settled by any downstream 
 | `Q-013` | Retention and privacy expectations for research, analytics, audit and audience data | omn-product-owner | technical-discovery |
 | `Q-014` | Protection required for platform and provider account credentials | architect | technical-discovery |
 | `Q-015` | Volume, turnaround and target channel count beyond the stated rate | omn-product-owner | option-analysis |
+
+---
+
+# Third round — architecture approved, implementation authorised
+
+Decided 2026-09-26 by the CEO, after reviewing `wave-1/03-technical-design.md` and the seven
+architecture decision records in `wave-1/decision-records/`.
+
+## D-009 — The Wave 1 architecture is approved
+
+**Decision.** The technical design is **approved as written**, together with all seven
+architecture decision records D-001 to D-007, and the stack selection **O-005** (.NET runtime,
+PostgreSQL as the single datastore holding relational state, the append-only record and the
+durable job queue as a transactional claim table, one long-running service on one node, plus
+the dedicated secret store).
+
+**Consequence.**
+
+- The hold recorded at the Design Gate on 2026-09-26 is **lifted**. That hold was a deliberate
+  owner review, not a blocker, and the review is now complete.
+- `RK-004`, the only open item that blocked building, is closed at design level and the design
+  that closes it is now accepted. The consumer-subscription account pool from the supplied
+  intent's §42 does not appear in the approved design and must not be reintroduced.
+- Decision record D-002 is Accepted rather than Proposed; open question Q-001 is closed.
+- The four structural enforcement properties are now binding on implementation: capability
+  access only through the resolution boundary (D-001), least privilege by four independent
+  structural layers (D-003), credential material never in the caller's scope (D-004), and the
+  zero-AI-cost property as a dependency-direction rule verified by a build-time boundary test
+  (D-005). Each was designed to remove the alternative path rather than guard it, and an
+  implementation that reintroduces an alternative path fails the design, not merely a check.
+- Owner approval per D-002 remains a state in the gate transition table and absent from
+  configuration (D-007). It is not a setting and implementation must not make it one.
+
+## D-010 — Wave 1 implementation runs in a separate session
+
+**Decision.** Implementation is **authorised to begin**, and is to be carried out in a
+**separate working session** rather than continuing in the session that produced Wave 0 and the
+Wave 1 design.
+
+**Consequence.**
+
+- Run `run-dd80173faaad` continues from phase 4 (`implementation`) in the new session. Phases 1
+  to 3 and the Scope, Planning and Design gates are complete and are not re-run.
+- The authoritative run state stays where it is, at
+  `D:/Project/MyCompany/.omn-agent/runs/run-dd80173faaad/`. It is shared across worktrees, so
+  the new session drives the same run rather than starting its own.
+- Known obstacle, recorded so the new session does not discover it late: the `implement-feature`
+  **Verification Gate** names `omn-qa` as its only owner while `omn-qa` produces the evidence
+  that gate assesses, which the Producer Exclusion Rule forbids. The gate is undecidable as the
+  framework currently stands and needs a second owner in the framework payload. See
+  `research/framework-defects.md`, defect 4.
+
+## Still open, unchanged by this approval
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next
+policy pass due 2026-10-26 · `RK-003` Vietnamese tax position, blocks banking not building,
+longest lead time · `RK-005` approval-minutes baseline · `RK-006` the 2027-02-01 threshold, the
+only fixed date. The channel niche and content pillars remain unchosen and block Wave 2.
