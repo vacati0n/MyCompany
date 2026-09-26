@@ -25,6 +25,22 @@ artifact.
 `D-016` (budget holds at USD 77.41) and `C-001` to `C-003` exist only on the CEO/research
 branch. `D-017` (this wave's subject) was filed by the Wave 2 session on top of that branch.
 
+### Scheme adopted — `W2-` is this wave's prefix
+
+The CEO approved the `C-004` recommendation in full (`W0-D-018`, deliberately the first
+identifier issued under the scheme it adopts). `research/ceo-decision-record.md` now carries a
+**concordance table at its head** resolving all five doubly-allocated identifiers, and states
+which are unambiguous: `D-001`–`D-010`, `D-016`, `D-017`, `C-001`–`C-004`, and everything
+namespaced.
+
+**This wave allocates `W2-D-nnn` and coordinates with nobody** — that is the point of the
+scheme: it survives sessions not talking, which is what the first two collisions depended on.
+`D-017` keeps its bare identifier and is listed as unambiguous.
+
+**Reading note for this file.** Bare `D-011` to `D-015` below appear only where the *ambiguity
+itself* is the subject, and each is qualified in place as "this space's" or shown in the mapping
+table. No citation here depends on an unqualified pre-namespacing identifier.
+
 ### RESOLVED 2026-09-26 — this branch's space stands, the Wave 1 space renumbered
 
 The CEO decided the Wave 1 session's space moves, on the reasoning this session gave: that space
