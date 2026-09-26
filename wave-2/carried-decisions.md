@@ -29,16 +29,42 @@ branch. `D-017` (this wave's subject) was filed by the Wave 2 session on top of 
 decisions that happen to collide on five identifiers. Nothing is lost and nothing contradicts;
 the *content* of both sets is compatible and Wave 2 can act on all of it. What is broken is the
 **citation**: `D-013` currently names two different decisions depending on which branch a reader
-holds, and a downstream artifact citing `D-013` is no longer unambiguous.
+holds. That is a worse failure than a contradiction, because a contradiction announces itself
+and this does not.
 
-**Not resolved here, and deliberately so.** Renumbering another session's record of CEO
-decisions is not this session's call, and doing it unilaterally would produce a third variant.
-**Surfaced to the CEO for a decision on which space renumbers.** Wave 2 proceeds by title-based
-citation meanwhile, which is unambiguous under either resolution.
+**The underlying defect is the missing allocation mechanism, not the collision.** This is the
+third identifier collision in this one file in a single day, and the first two were caught only
+because sessions happened to be in contact. Three sessions appending to one authoritative record
+with no way to reserve an identifier will collide again. **This is a process finding, not a
+framework one.**
 
-**Wave 2 artifacts are unaffected in substance.** No scope item, task or acceptance criterion
-cites a colliding identifier — the run's own registers (`S-`, `A-`, `T-`, `R-`, `Q-`) are
-internal to the run and do not overlap this space.
+### Resolution — recorded as `C-004`, and Wave 2 follows it
+
+Owned and recorded by the CEO/research session at `claude/execute-prompt-txt-4a3ee4`, commit
+`029cba1`, as correction **`C-004`**. **Cite `C-004`; this section is context, not a second
+record of the same thing.** The resolution is **additive only — nothing already written is
+renumbered or renamed:**
+
+1. **Nothing is renumbered, ever** — not even after a direction is chosen. Both sets keep their
+   identifiers.
+2. **Cite by `branch : identifier : title`** wherever ambiguity is possible.
+3. **Namespace future identifiers by originating wave** — `W0-D-018`, `W1-D-016`, `W2-D-018`.
+4. **Keep a concordance table** at the head of the merged record; the collision table above is
+   its first entry.
+5. **On merge the concordance merges too**, and both sets survive intact.
+
+**Why never renumbering is right, and better than the withdrawal-marker approach this session
+first proposed.** Existing citations live in artifacts that have **already passed their gates**.
+Renumbering invalidates them silently and creates a second, subtler instance of this same
+failure: a reader holding a gated artifact that cites `D-013` would get no signal that the
+target had moved. It is the same reasoning that left `S-006` unrewritten under `C-001` — a
+recorded correction beside a gated artifact is worth more than a clean-looking artifact carrying
+an untraceable edit. Renumbering carefully is still renumbering.
+
+**Wave 2's own position.** `D-017` keeps its identifier. Wave 2 artifacts are unaffected in
+substance: no scope item, task or acceptance criterion cites a colliding identifier, because the
+run's own registers (`S-`, `A-`, `T-`, `R-`, `Q-`) are internal to the run and do not overlap
+this space. Any further identifier this wave originates will be namespaced `W2-`.
 
 ---
 
