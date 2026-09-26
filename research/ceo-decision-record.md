@@ -450,3 +450,75 @@ analysis found are concentrated in exactly the rare-species queries this constra
 
 **Break-even for this niche (ESTIMATE):** 32,525 views/month, about 2,502 per video. If
 made-for-kids were to apply: 110,000–119,000 views/month.
+
+---
+
+# Correction — the metering target in the Wave 2 ticket was wrong
+
+Recorded 2026-09-26. Found by the Wave 2 session while verifying a cost claim; verified here.
+This is a correction to an instruction, not a change of decision. Nothing the CEO approved
+changes.
+
+## C-001 — Wave 2 must meter against O-002, not against USD 1.58
+
+**The error.** Ticket MC-3 (line 34 of `tasks/MC-3/input.md`) instructs Wave 2 to meter the
+first video "against the estimate of about USD 1.58 per ten-minute video", and `S-006` of the
+approved scope definition inherited that figure from the ticket. **The ticket was written in
+this session and the figure is wrong for the purpose.**
+
+**Why it is wrong.** USD 1.58 is the capacity dossier's EXPECTED case (`research/ai-capacity-dossier.md`
+line 773): **295,000 input / 21,500 output tokens**, covering research, scripting, fact-check,
+SEO and QC only. It is a narrower scope than the company actually committed to.
+
+**What the CEO actually approved** at the Recommendation Gate is option **O-002**
+(`artifacts/03-option-analysis.md` line 58):
+
+| | O-002, approved |
+|---|---|
+| Per-video tokens | **377,000 input / 33,000 output** |
+| Per-video variable cost | **USD 2.647440** |
+| Standing licensing | USD 42.99/month |
+| Monthly total at 13 videos | **USD 77.41** |
+| All-in per video | **USD 5.95** |
+
+The difference is not an error of arithmetic but of scope: O-002 adds the tasks that decisions
+D-006 and D-002 create and that the dossier's EXPECTED case never modelled — stock shot-list and
+clip selection, motion-graphic and data-visualisation briefs, caption and chapter polish, the
+compliance gate pack, cutaway prompt authoring, and CEO approval package assembly.
+
+**Consequence if left uncorrected.** Measuring the first video against USD 1.58 would report a
+**roughly 68% overrun before a single token was counted** — an overrun that exists only because
+the wrong target was quoted. That is exactly the kind of manufactured alarm the plan's labelling
+discipline exists to prevent.
+
+**The correction.** Wave 2 reports measured cost against **O-002**, with USD 1.58 shown as
+superseded and its narrower scope named. `S-006` in the approved scope definition is **not**
+rewritten: it passed its gate, the figure is traceable to the ticket, and quietly editing a
+gated artifact would damage the audit trail more than the stale number does. The correction is
+carried here instead and referenced from the Wave 2 report.
+
+**The escalation test that replaces it.** If measured per-video input lands materially above
+**377,000 tokens**, the approved ledger is wrong and that escalates to the CEO. That is the
+trigger worth watching, and it is now the stated purpose of the metering.
+
+## C-002 — Development cost and per-video cost are separate, and phases 4 and 5 are mixed
+
+**Established while resolving the above.** The omn-agent framework is what *builds* the system;
+the .NET service being built is what runs 13 times a month. Framework token consumption is
+therefore **development capex amortised across every video the pipeline will ever produce**, not
+a per-video operating cost. Reporting it as per-video would misinform in the direction of alarm.
+
+Per-video governance is **already budgeted** and is not an unfunded addition: compliance gate
+pack 30,000/3,000, CEO approval package assembly 8,000/1,500, QC review 25,000/2,500,
+fact-check 60,000/3,000 — **123,000 input and 9,500 output, about a third of the per-video
+ledger, already allocated to governance.**
+
+**One honest qualification, flagged in advance rather than presented later as a clean
+measurement.** The Wave 2 scope has phase 4 both build the capability and run one item through
+it (`S-001` produces the item; `S-007` and `S-012` build the re-pointable mechanism). So the
+capex/opex split is clean for phases 1, 2, 3 and 6, and **phases 4 and 5 are mixed**. Separating
+item-production tokens from capability-building tokens inside them is a **judgement call, not a
+measurement**, and the Wave 2 report says so.
+
+**Development cost remains genuinely unbudgeted** in every estimate the company holds. Wave 2 is
+its first measurement. Worth tracking across waves; not a reason to doubt the unit economics.
