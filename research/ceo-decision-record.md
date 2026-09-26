@@ -537,3 +537,35 @@ the 8,000-watch-hour branch.
 
 Two-step verification on the test channel is unconfirmed. Whether the first item carries an
 affiliate link is open. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
+
+## D-015 — The first item carries no affiliate link
+
+**Decision.** The first item carries **no affiliate link and no sponsored placement**.
+
+**What it settles.** The open question D-014 raised is closed. Of the five compliance
+determinations scope item `S-008` requires, the **affiliate and paid-promotion** one now resolves
+for this item by recording that neither is present — recorded evidence, not a finding that it
+cannot be evidenced. The **in-video disclosure obligation does not arise**, so Wave 2 has nothing
+to produce for it and the item's treatment is unaffected.
+
+**What it does not change.** The standing rule at D-014 is untouched. It does not bind on this item
+because its condition is absent, which is not the same as being relaxed: the first item that does
+carry an affiliate link discloses both ways, with no fresh decision required.
+
+**Consequence, stated because it is easy to miss.** The first item now has **no revenue path at
+all** — none from platform advertising, which needs programme entry, and none from affiliate. It is
+a pure cost and a pure measurement. That is what Wave 2 is for, and it matches the recorded
+position that the annual licensing commitment is not signed until this wave's output has been
+metered. It also means open question `Q-006`, the per-item cost target, will be settled against
+cost alone, with no revenue side to weigh it against.
+
+## Still open after this decision
+
+`RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
+pass due **2026-10-26** · `RK-003` accepted at D-011, its two disclosure questions carried at
+D-014 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at the
+8,000-watch-hour branch.
+
+Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
+and angle), `Q-004` (budget for a second stock library) and `Q-008` (audience-drift threshold)
+remain with the CEO.
