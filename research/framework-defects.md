@@ -74,7 +74,11 @@ decision as first-class evidence at `runs/<run>/states/<phase>/policy-exception.
 refuses any block reason other than `awaiting_policy_exception`, so it is safe to attempt.
 Note the runtime version string is still 0.8.0 — the fix landed without a version bump, which
 makes it easy to miss. **Use the supported command; the manual state-engine transition below is
-no longer necessary and should not be repeated.** Reported by the Wave 2 session and verified
+no longer necessary and should not be repeated.** Authored by the Wave 1 session in the framework
+payload at `D:/Project/claude-framework` (runtime plus `cli.py` and `runner.py`), with two guards
+both exercised: the role must be one the envelope lists, and an agent may not except itself from
+its own write scope. Hygiene note: those four files were swept into commit `2e9e99e` "add new
+version" alongside roughly 527 unrelated files, so the fix is hard to find in history. Reported by the Wave 2 session and verified
 here independently.
 
 The original finding is kept below for the record.
@@ -115,6 +119,19 @@ awaiting_policy_exception` — while the validation engine simultaneously record
 
 Filesystem check confirmed only the two permitted paths were written. No policy was breached.
 
+**SECOND INSTANCE, 2026-09-26 — and this one is not a formatting mistake.** Reported by the Wave 1
+session. A reviewer that *honestly reports which source paths a correction cycle touched* still
+triggers the block. `omn-dev-2-reviewer` raised four high findings, the change was corrected
+inside the review cycle — which is exactly what the `resolved` finding status exists to record —
+and the result envelope declared the corrected paths. Those were `omn-dev-1-implement` writes,
+but the reviewer's permitted writes are its own two artifacts, so **eighteen paths it did not
+write were classified as undeclared writes by it**. Validation had just passed 31/31.
+
+This is a **design gap, not a misfiled note**: the framework has nowhere for a reviewer to record
+that *the change under review moved while it was being reviewed*. The first instance could be
+fixed by writing the note in the right field. This one cannot — the information is real, it is
+the reviewer's to report, and no field exists for it.
+
 **Recommended fix.** Validate `declared_side_effects` entries as paths at emission and reject a
 non-path entry with a correctable error naming the right field, rather than silently
 reclassifying it as an undeclared write at policy-decision time. Agent output contracts should
@@ -151,8 +168,13 @@ itself and names the valid alternative owner when it refuses, so an attempt is i
 costs nothing. D-010's "known obstacle" paragraph in `research/ceo-decision-record.md`, and the
 same warning carried into the Wave 1 and Wave 2 session briefs, overstate what is ahead.
 
-**Still unproven, stated honestly:** this is a reading of the workflow specification and the gate
-matrix, not a runtime result. The Wave 2 session reaches phase 5 later and will have the runtime
+**NOW PROVEN, 2026-09-26.** No longer a reading. The Wave 1 session reached the gate, decided it
+as `omn-qa`, and **the runtime accepted**. The entry is fully withdrawn for `implement-feature`.
+It was written from `fix-bug`'s shape, where `omn-qa` does own the producing phase, and applied
+to a workflow where it does not.
+
+**Superseded note:** this had been a reading of the workflow specification and the gate matrix,
+not a runtime result. The Wave 2 session reaches phase 5 later and will have the runtime
 adjudicate it. The remaining recommendation below stands on its own merits regardless.
 
 **Recommended fix that still applies.** Add a check that every gate lists at least one owner that

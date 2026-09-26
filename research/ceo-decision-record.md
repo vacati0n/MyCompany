@@ -712,3 +712,97 @@ three sessions wrote to one authoritative record with **no identifier-allocation
 that the first two collisions were caught only because the sessions happened to be talking. The
 namespace removes the need for that luck. Any session joining later takes its own `W<n>-` prefix
 and needs to coordinate with nobody.
+
+---
+
+## C-005 — Two conflicting CEO instructions on the numbering fix. NOT RESOLVED.
+
+Recorded 2026-09-26. **This session is not resolving this and has changed nothing.** A third
+session acting unilaterally would produce a third variant, which is the failure mode both other
+sessions have already declined.
+
+**The conflict.** The CEO gave two different instructions, in two sessions, to two agents:
+
+| Told to | Instruction | Acted on? |
+|---|---|---|
+| This session | approve `C-004`: **nothing is renumbered**, concordance plus `W0-`/`W1-`/`W2-` prefixes | Yes, `ad30589` |
+| Wave 1 session | option A, **that side renumbers** | Yes, `21e9882`, its `D-011`-`D-015` moved to `D-018`-`D-022` with withdrawal markers carrying the mapping. **Fast-forwarded to `main`**, verified here |
+
+Both were followed in good faith. They cannot both stand.
+
+**A correction I owe, because it undercuts my own stated reason.** `C-004` rejected renumbering
+because existing citations live in artifacts that have already passed their gates. The Wave 1
+session checked, and **for its five that is not true**: every bare `D-011`-`D-015` citation on
+its branch belongs to the *technical design's own* `D-nnn` namespace (its `D-011` is "a retry is
+its own operation record"), not to the CEO record. Renumbering the CEO record touched none of
+them. The only artifact citing its CEO `D-011`-`D-015` was Wave 2's `carried-decisions.md`,
+corrected at the time. **My general argument does not apply to their specific case.** It does
+still apply to mine, since `D-013` is cited in ticket MC-3, which `S-006` of a gated scope
+definition inherited.
+
+**Recommended resolution: take both, because they solve different problems.**
+
+The renumbering is already done, already on `main`, and it *does* resolve the existing
+collision: with their five moved, a bare `D-011`-`D-015` unambiguously means this branch's.
+Reverting buys nothing and costs a revert.
+
+But renumbering does **not** prevent the next collision. Only an allocation mechanism does. So:
+
+1. **Accept the Wave 1 renumbering as the resolution of the existing collision.** Do not revert.
+2. **Keep the namespace for everything new**, which is what stops this recurring.
+3. **Rename this session's `W0-D-018`**, which now reads confusingly beside their renumbered
+   `D-018`. Nothing cites it, so this costs nothing.
+4. **Rewrite the concordance** to record what actually happened: which identifiers moved, where
+   to, and why the table exists.
+
+**One more collision that neither scheme fixes, flagged by the Wave 1 session and it is right.**
+The technical design and the CEO record **both** use bare `D-nnn`, for architecture decisions
+and business decisions respectively. A reader meeting `D-011` cannot tell which document it
+belongs to. A *wave* prefix does not help, because the ambiguity is by **kind**, not by origin.
+The fix is a kind prefix, `CEO-D-nnn` against `ADR-D-nnn`, possibly alongside the wave prefix.
+Fold it into whichever scheme the CEO settles on, rather than meeting it later as a fourth
+collision.
+
+## C-006 — Wave 1: the router is built and verified; the thesis is untested; the instrument was broken
+
+Recorded 2026-09-26 from the Wave 1 session's report. `main` verified here at `21e9882`
+carrying 85 source and schema files.
+
+**`C-003` stands unchanged.** The router `M-001` is the **media company's** capability boundary,
+not the framework's. Wave 1 did not touch the framework's own agents, which remain
+`model: inherit`. If the question is the framework's own token spend, Wave 1 leaves it exactly
+where `C-003` found it.
+
+**What exists and is verified.** Capability requests resolve over a three-tier admitted route
+table, primary then secondary then emergency, with the **quality floor filtered before tier
+ordering**, so a below-floor route is never a candidate rather than a rejected one. Per
+operation it records route, model, capability class, the full attribution tuple, and one row per
+attempt including failures and retries. Cost is a stored generated column computed from unit
+counts and the unit prices **snapshotted onto the row**, so it stays re-derivable after a price
+is superseded. 220 tests pass against a real PostgreSQL 17.
+
+**What has never happened.** **Zero provider endpoints are configured. No live provider call has
+ever been made. The cost table has never held a row produced by a real operation.** There is
+**no measured cost from Wave 1 at all** - not a small number, none.
+
+**The finding that matters most, and it strengthens `C-003` rather than softening it.** The
+cost-recording path was **broken and nobody knew**: the insert used `MAX()` on a uuid column,
+which PostgreSQL has no function for, so it threw `42883`. That defect **passed 205 unit tests,
+a twelve-finding review, the Review Gate and the Verification Gate**, and was caught only when a
+real database was put behind it, *after* the wave had been declared verified. Seven of fifteen
+integration tests failed on that one defect.
+
+**Read it as a finding about the quality system, not about one bug.** The governed pipeline
+declared verified something that could not work. Test coverage and gate approval are not
+evidence that a mechanism functions; only exercising it against the real dependency is. So
+`C-003` is **understated**: the cost-control thesis is untested *and* the instrument built to
+test it was broken on arrival.
+
+**One cost control that is genuinely verified, and it needs no tiering.** Design decision
+`D-005` makes rule-determined work **structurally incapable** of a model call: the deterministic
+assembly holds no reference, direct or transitive, to the capability boundary or the credential
+broker, so a model call is not expressible from it. Enforced by a build-time boundary test that
+was **mutation-checked** - introducing a real cross-boundary dependency made three assertions
+fail, removing it made them pass. Thirty-one named tasks sit inside that boundary. It works by
+removing the possibility rather than by choosing a cheaper model, which is why it holds without
+any of the tiering `C-003` finds absent.
