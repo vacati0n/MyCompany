@@ -1,0 +1,101 @@
+using MediaCompany.Application.Ports;
+using MediaCompany.Capability;
+using MediaCompany.Credentials;
+using MediaCompany.Deterministic.Services;
+using MediaCompany.Persistence;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+
+namespace MediaCompany.Host;
+
+/// <summary>The system clock.</summary>
+public sealed class SystemClock : IClock
+{
+    public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+}
+
+/// <summary>What the one long-running service needs to start.</summary>
+public sealed record HostOptions
+{
+    public required string ConnectionString { get; init; }
+
+    /// <summary>
+    /// The provider endpoints the capability boundary may reach. This wave creates no account and
+    /// commits no spend (constraint C-013), so the list is empty until the owner provisions the
+    /// production accounts.
+    /// </summary>
+    public IReadOnlyList<ProviderEndpoint> ProviderEndpoints { get; init; } = [];
+
+    public SecretStoreOptions SecretStore { get; init; } = new();
+}
+
+/// <summary>
+/// The composition root of the one long-running service on one node (stack O-005).
+///
+/// Two things are worth reading here rather than in a document. First, the only capability type
+/// registered is <see cref="ICapabilityGateway"/>: no provider adapter is registered, because no
+/// provider adapter type is visible outside its assembly, so no consumer can take one as a
+/// dependency (decision D-001). Second, no credential value passes through this method: the
+/// broker is built from options and resolves secrets from the external store per use (decision
+/// D-004).
+/// </summary>
+public static class CompositionRoot
+{
+    public static ServiceProvider Build(HostOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        var services = new ServiceCollection();
+
+        services.AddSingleton(NpgsqlDataSource.Create(options.ConnectionString));
+        services.AddSingleton<IClock, SystemClock>();
+
+        // Persistence — the only path to durable state (module M-017).
+        services.AddSingleton<IUnitOfWork>(sp =>
+            new NpgsqlUnitOfWork(sp.GetRequiredService<NpgsqlDataSource>(), sp.GetRequiredService<IClock>()));
+        services.AddSingleton<IRouteRegistry>(sp => new NpgsqlRouteRegistry(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IRouteAvailabilityLedger>(sp => new NpgsqlRouteAvailabilityLedger(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IOperatingRegisters>(sp => new NpgsqlOperatingRegisters(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IAssetLedger>(sp => new NpgsqlAssetLedger(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IGateLedger>(sp => new NpgsqlGateLedger(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IConfigurationStore>(sp => new NpgsqlConfigurationStore(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton(sp => new NpgsqlCostReader(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<ICostRollupReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
+        services.AddSingleton<IBudgetReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
+
+        // The credential broker — the only module holding a dependency on the secret store.
+        services.AddSingleton(sp =>
+        {
+            var clock = sp.GetRequiredService<IClock>();
+            return CredentialBrokerFactory.Create(options.SecretStore, () => clock.UtcNow);
+        });
+        services.AddSingleton<ICredentialBroker>(sp => sp.GetRequiredService<CredentialBroker>());
+        services.AddSingleton<ICredentialExchange>(sp => sp.GetRequiredService<CredentialBroker>());
+
+        services.AddSingleton(_ => new HttpClient { Timeout = TimeSpan.FromSeconds(60) });
+
+        // The capability boundary — the single egress. Nothing below it is registered, because
+        // nothing below it is visible.
+        services.AddSingleton<ICapabilityGateway>(sp => CapabilityGatewayFactory.Create(
+            sp.GetRequiredService<IRouteRegistry>(),
+            sp.GetRequiredService<IRouteAvailabilityLedger>(),
+            sp.GetRequiredService<IOperatingRegisters>(),
+            sp.GetRequiredService<IBudgetReader>(),
+            sp.GetRequiredService<IUnitOfWork>(),
+            sp.GetRequiredService<ICredentialBroker>(),
+            sp.GetRequiredService<ICredentialExchange>(),
+            sp.GetRequiredService<IClock>(),
+            options.ProviderEndpoints,
+            sp.GetRequiredService<HttpClient>()));
+
+        // Deterministic services. None of these takes ICapabilityGateway, and none could: their
+        // assembly does not reference the one that declares it.
+        services.AddSingleton<PublicationGateService>();
+        services.AddSingleton<WorkLifecycleService>();
+        services.AddSingleton<ReportingService>();
+        services.AddSingleton<OperatingRegisterReport>();
+        services.AddSingleton<PermissionAnswerService>();
+
+        return services.BuildServiceProvider();
+    }
+}

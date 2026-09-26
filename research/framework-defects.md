@@ -100,6 +100,39 @@ that pair with the trigger `blocker_cleared`; only the CLI surface is missing. N
 `--decided-by`, `--owner-role` and `--rationale`, applying that existing transition and
 recording the decision as first-class evidence beside gate decisions.
 
+### FIXED upstream, 2026-09-26 — `policy-exception` implemented
+
+The recommended fix was implemented in the framework payload at `D:/Project/claude-framework`,
+after the CEO chose it over applying another local bridge. **This defect is closed**, and the
+local bridge is no longer needed for it.
+
+| File | Change |
+|---|---|
+| `.claude/runtime/framework_runtime.py` | `cmd_policy_exception` + its `policy-exception` subparser; `clearing_action` now names the concrete command for `awaiting_policy_exception`; the static `CLEARING_ACTION` text no longer says "No runtime command clears this" |
+| `omn_agent/_bundled_payload/runtime/framework_runtime.py` | same file, synced |
+| `omn_agent/cli.py` | `--policy-exception` flag on `run` |
+| `omn_agent/runner.py` | wires the flag to the runtime subcommand, with its own approval prompt and mode-exclusivity check |
+
+It applies the transition the state engine already declared, `blocked -> pending` under
+`blocker_cleared`, resolves the failure envelope, emits `escalation_resolved`, and writes
+`states/<phase>/policy-exception.json` as first-class evidence carrying the owner role, the
+decider, the rationale and the side effects the exception was granted over.
+
+**Two guards, both exercised before first real use:**
+
+- The decision must name a role the envelope lists, where it lists any.
+- It may not be recorded by the agent whose own writes raised the block. Attempting
+  `--owner-role omn-dev-2-reviewer` on a block raised by `omn-dev-2-reviewer` is refused:
+  *"A write scope an agent can except itself from is advisory, which is what the scope is not."*
+  This is the same principle the Producer Exclusion Rule states for gates.
+
+A phase that is not blocked replays rather than erroring, and a phase blocked on a different
+reason is refused with that reason's own clearing action quoted back.
+
+**Used once, for real**, to clear the MC-2 phase-5 block described under defect 3's second
+instance: recorded by `omn-orchestrator`, decided by the CEO, with the false-positive finding as
+the rationale. The run then completed all six phases.
+
 ---
 
 ## Defect 3 — `declared_side_effects` classifies a prose note as an undeclared write
@@ -120,12 +153,51 @@ non-path entry with a correctable error naming the right field, rather than sile
 reclassifying it as an undeclared write at policy-decision time. Agent output contracts should
 also name where a production-method disclosure belongs — `structured_output` worked here.
 
+### Second instance, found 2026-09-26 driving MC-2 phase 5
+
+Same halt, different cause, and this one is not a formatting mistake.
+
+`omn-dev-2-reviewer` reviewed the Wave 1 change, raised four high findings, and the change was
+corrected inside the review cycle — which is what a review cycle is for, and what the output
+contract's `resolved` finding status exists to record (*"the change already closed it during this
+review cycle"*).
+
+The reviewer's result envelope then declared the corrected source paths in
+`declared_side_effects`, as an honest account of what had moved. The reviewer's `permitted_writes`
+are its two artifacts alone, correctly, because a reviewer may not write production code. So
+eighteen paths the reviewer did **not** write were classified as undeclared writes *by the
+reviewer*, and the phase halted at `awaiting_policy_exception` — while the Validation Engine had
+just accepted the artifact at **31/31 checks**.
+
+The field means "paths this invocation wrote". The corrected paths were `omn-dev-1-implement`
+writes taken inside the review cycle. Moving them to
+`structured_output.correction_cycle.corrected_paths` is the correct shape and was applied.
+
+**What this exposes beyond defect 3.** The framework has nowhere for a reviewer to record that the
+change under review moved while it was being reviewed. The `resolved` status says a finding
+closed; nothing says which paths closed it, and the one field that looks right is the field that
+halts the run. Either the output contract should name a field for it, or the result envelope
+should carry a `related_changes` list that is recorded rather than policy-checked.
+
+**How it was cleared.** No bridge this time. The host's permission layer refused the direct
+state-engine call, correctly, because it is a write into governance state outside the supported
+CLI — so the missing command was built instead. The CEO chose the upstream fix over another
+bridge, `policy-exception` was implemented in the payload (see defect 2), and the block was
+cleared through the supported surface with the decision recorded as evidence. The run then
+completed all six phases.
+
+**Still a defect.** The clearing path now exists, but the cause remains: a reviewer that honestly
+reports which paths a correction cycle touched still triggers a policy block, and still needs a
+human to say it was a false positive. The fix above makes that recoverable, not unnecessary.
+
 ---
 
-## Defect 4 — Verification Gate ownership — **PARTLY WITHDRAWN: misdiagnosed for `implement-feature`**
+## Defect 4 — WITHDRAWN. `implement-feature` Verification Gate is decidable after all
 
-**Status: the `implement-feature` claim was wrong, and this note previously overstated it.**
-Raised by the Wave 2 session on 2026-09-26 and verified here independently the same day.
+**Status: not a defect. Recorded as a prediction on 2026-09-26, disproved the same day by
+actually deciding the gate. Kept for the record; see the correction at the end of this entry.**
+
+The original entry follows as written.
 
 **What this note originally claimed:** that `implement-feature`'s Verification Gate is
 undecidable because `omn-qa` is its only owner while `omn-qa` produces the evidence it assesses.
@@ -158,6 +230,43 @@ adjudicate it. The remaining recommendation below stands on its own merits regar
 **Recommended fix that still applies.** Add a check that every gate lists at least one owner that
 is not the producer of the evidence it closes. That check would have caught the real `fix-bug`
 instance mechanically, and would have prevented this note from being written.
+
+### Correction, 2026-09-26: the premise looks wrong for `implement-feature`
+
+This defect was recorded as a prediction, before the run reached phase 5. On reaching it, the
+premise does not appear to hold.
+
+The Producer Exclusion Rule binds the producer of the evidence a gate assesses. In
+`implement-feature`, the phase that produces that evidence is `quality-review`, and the run's own
+work-item table shows its owner is **`omn-dev-2-reviewer`**, not `omn-qa`. `omn-qa` owns no phase
+in this workflow, so it produces nothing the Verification Gate assesses, and the rule does not
+exclude it.
+
+The gate matrix's own rationale column says as much, twice, and distinguishes the two cases:
+
+| Row | Rationale recorded in the matrix |
+|---|---|
+| `implement-feature` Review Gate, second owner `omn-qa` added | *"omn-dev-2-reviewer owns `quality-review` and produces the findings log the gate assesses"* |
+| `fix-bug` Verification Gate, second owner added | *"omn-qa owns `regression-validation` and produces the verification evidence"* |
+
+In `fix-bug` the exclusion genuinely bites, because `omn-qa` owns the producing phase. In
+`implement-feature` it does not. The single-owner Verification Gate row is therefore probably
+fine as it stands, and the defect as written mistook `fix-bug`'s shape for `implement-feature`'s.
+
+**CONFIRMED, 2026-09-26.** Once the policy block was cleared and the run moved, the Verification
+Gate was decided as `omn-qa` and **the runtime accepted it**. The Producer Exclusion Rule did not
+fire, because `omn-qa` produces nothing in this workflow. There is no defect here.
+
+**This entry is therefore withdrawn as a defect** and kept as a record of the mistake: it was
+written from `fix-bug`'s shape, where `omn-qa` does own the producing phase, and applied to
+`implement-feature`, where it does not. A prediction recorded in the same register as three
+observed failures reads like a fourth, and cost the next session a planned workaround for an
+obstacle that was never there.
+
+The recommended fix's second half still stands on its own merits — a check that every gate lists
+an owner who is not the producer of its evidence would have settled this mechanically instead of
+by reading, and would have caught the mistake at the time it was written rather than a session
+later.
 
 ---
 

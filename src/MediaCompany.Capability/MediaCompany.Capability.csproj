@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Domain\MediaCompany.Domain.csproj" />
+    <ProjectReference Include="..\MediaCompany.Application\MediaCompany.Application.csproj" />
+    <ProjectReference Include="..\MediaCompany.Deterministic\MediaCompany.Deterministic.csproj" />
+    <ProjectReference Include="..\MediaCompany.Credentials\MediaCompany.Credentials.csproj" />
+  </ItemGroup>
+</Project>
