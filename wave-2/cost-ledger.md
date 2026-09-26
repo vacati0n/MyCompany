@@ -51,7 +51,7 @@ billed totals rather than context floors.
 | Phase | Agent | Tokens | Tool calls | Wall clock | Basis |
 |---|---|---|---|---|---|
 | 1 `scope-and-acceptance` | `omn-product-owner` | **257,876** | 50 | 16 min 6 s | MEASURED |
-| 2 `execution-planning` | `planner` | _running_ | | | |
+| 2 `execution-planning` | `planner` | **313,533** | 62 | 24 min 25 s | MEASURED |
 | 3 `solution-design-and-risk-assessment` | `architect` | | | | |
 | 4 `implementation` | `omn-dev-1-implement` | | | | |
 | 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
