@@ -450,3 +450,59 @@ analysis found are concentrated in exactly the rare-species queries this constra
 
 **Break-even for this niche (ESTIMATE):** 32,525 views/month, about 2,502 per video. If
 made-for-kids were to apply: 110,000–119,000 views/month.
+
+---
+
+# Seventh round — the first video's subject
+
+Decided 2026-09-26 by the CEO, during Wave 2 (`run-3a58551ee912`), choosing between four options
+each constrained by the species-level footage audit in `research/animal-niche-analysis.md` §3.3.
+
+*(Filed as D-017. An earlier draft of this entry used D-015; that identifier was taken
+concurrently by the decision above and the draft was withdrawn before it propagated. There is
+one numbering space for CEO decisions and this is the next free identifier in it.)*
+
+## D-017 — First video: the honey bee waggle dance, as a coordinate-encoding mechanism
+
+**Decision.** The first video's subject is the **honey bee waggle dance** — how a returning
+forager encodes the *direction and distance* of a resource as a vector another bee can read and
+fly on. Treatment is pillar 1, **Mechanism**, format **F5**: original motion graphics carry the
+argument, licensed footage illustrates it.
+
+**Why this subject cleared the constraints**, recorded so the reasoning survives the choice:
+
+- **Supply is real, not aggregate.** `honey bee` returns **1,213** clips on the committed
+  library — a single, distinctive, unambiguous token, so it is one of the counts §3.3 classifies
+  as trustworthy rather than an upper bound of unknown looseness. **No second library is needed,
+  so D-016 is satisfied by the choice rather than strained by it.**
+- **It sits away from the contaminated tail.** The species is common and well-filmed, so it is
+  far from the rare-species queries where §3.4 showed clip counts are largely generative-AI
+  assets, green-screen composites and name collisions.
+- **The originality burden lands where the channel can carry it.** The waggle dance is an
+  *argument* — an angle-to-sun vector diagram, a distance-to-duration encoding, an error
+  distribution — and those graphics are original artefacts that carry the explanation rather
+  than decorate it. It passes D-016's test outright: **the video would still stand as an essay
+  with every clip removed.**
+- **Made-for-kids exposure is at its lowest here.** The subject needs no named protagonist, no
+  invented personality and no simplified register to be interesting, so K-1, K-2, K-4 and K-6
+  are satisfied by the material rather than enforced against it.
+- **The science is attributable**, which §8.5 makes a heavier obligation in this niche than in
+  the alternative: von Frisch's decoding (Nobel Prize in Physiology or Medicine, 1973) and the
+  modern literature on dance precision and error. Every claim can name a paper or an institution.
+
+**Two cautions specific to this subject, binding on production:**
+
+1. **`waggle dance` is a multi-word phrase, so its count is an upper bound of unknown
+   looseness** under the fuzzy-matching finding. Clips labelled as the dance must be confirmed
+   by eye to show the dance itself rather than generic hive activity. The trustworthy count is
+   for `honey bee`; the count for the behaviour is not yet established and is owed at `A-024`.
+2. **Bees are a subject whose default styling is cheerful**, which is precisely the drift K-1 to
+   K-6 exist to stop. The treatment must resist it deliberately rather than by omission —
+   documentary register, no warm-whimsical score, no anthropomorphic framing of the colony.
+
+**Consequence.** The topic question the scope definition reserved to the CEO is closed. The
+remaining production judgments — structure, pacing, shot selection, graphics treatment, and
+runtime within the 10-minute floor and 12–14 minute target — are the workforce's, not the CEO's.
+
+**Not decided by this.** Nothing here changes the niche, the budget, or the rule that Wave 2
+ends at a publish-ready artifact held at the gate. D-014 and D-016 stand in full.
