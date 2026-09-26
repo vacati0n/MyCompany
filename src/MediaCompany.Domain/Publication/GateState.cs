@@ -17,6 +17,19 @@ public enum GateState
     Approved = 5,
     Published = 6,
     Withdrawn = 7,
+
+    /// <summary>
+    /// The terminal state of the twelve-stage production path (decision D-001, criterion A-002).
+    ///
+    /// It is entered only through the named precondition predicate set, and within this change no
+    /// transition leads out of it: the only thing past publish-ready would be an upload, and
+    /// exclusion X-001 removes that path entirely. An item resting here is an item held at the
+    /// owner's approval gate with nothing published, nothing spent and no account bound.
+    ///
+    /// Like <see cref="AwaitingOwnerApproval"/>, it has no representation in the configuration
+    /// surface, so it is not a setting that could be switched off.
+    /// </summary>
+    PublishReady = 8,
 }
 
 /// <summary>
@@ -32,12 +45,16 @@ public static class GateTransitionTable
         new Dictionary<GateState, FrozenSet<GateState>>
         {
             [GateState.Draft] = new[] { GateState.AwaitingRightsCheck, GateState.Withdrawn }.ToFrozenSet(),
-            [GateState.AwaitingRightsCheck] = new[] { GateState.AwaitingOwnerApproval, GateState.SentBack, GateState.Withdrawn }.ToFrozenSet(),
+            [GateState.AwaitingRightsCheck] = new[] { GateState.AwaitingOwnerApproval, GateState.PublishReady, GateState.SentBack, GateState.Withdrawn }.ToFrozenSet(),
             [GateState.AwaitingOwnerApproval] = new[] { GateState.Approved, GateState.SentBack, GateState.Withdrawn }.ToFrozenSet(),
             [GateState.SentBack] = new[] { GateState.Draft, GateState.Withdrawn }.ToFrozenSet(),
             [GateState.Approved] = new[] { GateState.Published, GateState.Withdrawn }.ToFrozenSet(),
             [GateState.Published] = FrozenSet<GateState>.Empty,
             [GateState.Withdrawn] = FrozenSet<GateState>.Empty,
+
+            // Terminal within this change (D-001). The empty set is the enforcement: there is no
+            // transition to publish, to a channel or to a spend, so no caller can take one.
+            [GateState.PublishReady] = FrozenSet<GateState>.Empty,
         }.ToFrozenDictionary();
 
     public static bool IsAllowed(GateState from, GateState to) =>

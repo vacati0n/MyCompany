@@ -55,7 +55,7 @@ billed totals rather than context floors.
 | 3 `solution-design-and-risk-assessment` attempt 1 | `architect` | **312,889** | 67 | 26 min 16 s | MEASURED — **rejected at validation** |
 | 3 attempt 2 (repair) | `architect` (resumed) | **332,728** | 9 | 3 min 20 s | MEASURED — **78/78 PASS** |
 | | **Phase 3 total** | **645,617** | 76 | 29 min 36 s | Two attempts for one artifact |
-| 4 `implementation` | `omn-dev-1-implement` | | | | |
+| 4 `implementation` | `omn-dev-1-implement` | _reported by the harness on completion_ | | | Mixed capex/opex — see `C-002` |
 | 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
 | 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
 | | **Total** | | | | |
@@ -200,15 +200,79 @@ carried as though it were measured.
 
 ## 3. Quantities the finished video commissions
 
-Populated once the script and shot list exist.
+**Populated 2026-09-26 from the committed script and shot list of item `MC3-ITEM-001`.** Every
+count below is exact and first-hand: each is a property of an artifact in `wave-2/item-001/` that
+can be recounted by anyone holding this repository.
 
 | Quantity | Count | Unit price (re-fetch date) | Cost | Basis |
 |---|---|---|---|---|
-| Narration characters | _pending script_ | $0.05 / 1,000 chars (re-verified 2026-09-26, `reverification-2026-09-26.md` U-5) | | |
-| Original motion graphics | _pending shot list_ | in-house, no marginal API cost | | |
-| Licensed stock clips | _pending shot list_ | included in the $30 Storyblocks subscription | $0.00 marginal | |
+| Narration characters | **11,096** | $0.05 / 1,000 chars (re-verified 2026-09-26, `reverification-2026-09-26.md` U-5) | **$0.554800** | **MEASURED** — exact count of `wave-2/item-001/narration.txt` |
+| Original motion graphics | **22** | in-house, no marginal API cost | **$0.00** | **MEASURED** — enumerated in `shot-list.md` §1 |
+| Licensed stock clips | **18** | included in the $30 Storyblocks subscription | **$0.00 marginal** | **MEASURED** — enumerated in `shot-list.md` §2 |
 | AI-generated video seconds | **0** | n/a | **$0.00** | **MEASURED — none commissioned.** See note below. |
-| Thumbnail images | _pending_ | $0.05268 each, gpt-image-2.5 high | | |
+| Thumbnail images | **6** | $0.05268 each, gpt-image-2.5 high (re-verified 2026-09-26, U-4) | **$0.316080** | **MEASURED** — enumerated in `shot-list.md` §4 |
+| | | **Commissioned-media subtotal** | **$0.870880** | |
+
+**Three notes on how to read these figures.**
+
+**1. The narration count is characters, not bytes.** The file is 11,130 bytes and 11,096
+characters; the difference is multi-byte punctuation. The metered unit is the character, so
+11,096 is the figure, and quoting the byte count would overstate the cost by 0.3%.
+
+**2. `$0.00` on graphics and clips is a marginal cost, not a free lunch.** The 22 graphics are
+rendered from the item's own specification, and `render` and `encode` are members of the
+rule-determined set, so they carry zero capability cost by the dependency-direction property
+rather than by assertion. The 18 clips are covered by the $30/month standing subscription in §4;
+they add nothing per item, which is exactly what a standing line is for. **No second library was
+used, so the unauthorised $16.50 Envato line is not incurred.**
+
+**3. This subtotal is the media half of the item's cost only.** The token half is not measurable
+at billed level — see §1 and §2.6 — so the item's ledger is **incomplete by construction**, and
+`A-015` is satisfied for three of its four quantities and not the fourth. That is recorded as a
+gap, not netted away.
+
+### The three quantities that could NOT be measured, recorded rather than left blank
+
+| Quantity | Why not obtained | What would obtain it |
+|---|---|---|
+| Billed input/output tokens for item production | The harness exposes context size, not cumulative billed tokens per request; and phases 4–5 mix capability-building with item production, so any split is a judgement call rather than a measurement (correction `C-002`) | Production routed through `M-001`/`M-005`, recording one operation per attempt with its applied price row |
+| Owner-approval elapsed minutes | The item has not reached the gate — it is held short of publish-ready by three stages | The item reaching publish-ready and an approval being taken on it |
+| Committed libraries' actual holdings | No clip count was obtained; an authenticated subscription is required and this role may not reach the library directly | A literal single-token query inside an authenticated session via the resolution boundary |
+
+**None of these three has been estimated, extrapolated or inferred.** An invented supply figure in
+particular would silently defeat `A-024` to `A-026`, and acting on unverified counts is the
+documented route by which this format publishes generated animals as documentary evidence.
+
+### 3.1 The comparison (`A-016`), against O-002 and not against the superseded figure
+
+Every figure labelled, as the criterion requires.
+
+| Figure | Amount | Label |
+|---|---|---|
+| Commissioned media, this item | **$0.870880** | **MEASUREMENT** — exact counts at re-verified unit prices |
+| Item token cost | **not measurable** | Absent, with its reason recorded above — not zero |
+| **Item total** | **≥ $0.870880** | **FLOOR, not a total** — the media half only |
+| Approved per-item variable cost, option O-002 | $2.647440 | ESTIMATE — 377,000 input / 33,000 output tokens |
+| Approved all-in per video at 13/month | $5.95 | ESTIMATE |
+| Monthly envelope | $77.41 | ESTIMATE — unchanged, $34.42 metered + $42.99 standing |
+| Superseded per-ten-minute figure | $1.5786 | **SUPERSEDED** — 295,000/21,500 tokens, covering research, scripting, fact-check, SEO and QC only |
+
+**The variance cannot honestly be stated.** A variance needs a total on both sides, and the
+measured side is a floor. What can be said is that the **media half alone consumes $0.870880 of
+the $2.647440 approved per-item variable cost — 32.9% of it** — which leaves $1.776560 for the
+token half before the approved figure is breached.
+
+**The escalation test stands and is not yet answerable.** The trigger that matters is measured
+per-item *input tokens* materially above 377,000. Nothing here answers it, because the token half
+is unmeasured. Note also that the 290,000/87,000 L3-to-L1/L2 split underneath the $2.647440 figure
+is itself an **assumption, not a measurement** (correction `C-003`), so both sides of this
+comparison are softer than they look and both are labelled accordingly.
+
+**Why the comparison is not run against $1.58.** Correction `C-001`: the superseded figure covers a
+narrower scope, and measuring against it would report a roughly 68% overrun that exists only
+because the wrong target was quoted. `S-006` and the ticket still carry the stale figure and are
+deliberately not rewritten, because they passed their gate and a recorded correction beside a
+gated artifact is worth more than a clean-looking artifact carrying an untraceable edit.
 
 **Why the AI-video line is zero, and why that is a decision rather than an omission.** D-006
 permits sparing AI cutaways. This video commissions none, for two reasons that are stronger

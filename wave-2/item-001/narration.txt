@@ -1,0 +1,89 @@
+A honey bee returns to her colony. She has found a stand of flowering lime roughly two kilometres away, across ground that no other bee in the hive has seen today.
+
+Inside, it is dark. There is no line of sight to the trees, no shared landmark, no way to point. And yet, within minutes, other foragers will leave the entrance on a heading that takes them to those trees, and they will stop flying at roughly the right distance.
+
+Something has been transmitted. Not a picture, and not a route. A pair of numbers.
+
+This is the honey bee waggle dance, and the reason it matters to anyone outside entomology is that it is one of the very few cases in which we can read an animal's signal the way we would read an instrument — where we can say, precisely, what quantity is encoded, in what units, and with what error.
+
+The species is Apis mellifera, the western honey bee. The behaviour was decoded by Karl von Frisch over roughly four decades of work, and the decoding was recognised with the Nobel Prize in Physiology or Medicine in nineteen seventy-three, shared with Konrad Lorenz and Nikolaas Tinbergen.
+
+What follows is an account of the encoding itself: what the dance is as a physical act, what the two variables are, how each is measured, how it is read, and — the part usually left out — how badly it performs.
+
+A returning forager climbs onto a vertical sheet of comb inside the nest. She walks a short, straight line while shaking her abdomen from side to side at around thirteen to fifteen cycles per second. At the end of that line, she turns and loops back to where she began. Then she walks the same straight line again, and loops back the other way.
+
+The looping returns trace a rough figure of eight. The straight segment down the middle carries the information. It is called the waggle run.
+
+Everything the dance encodes is in that segment: its direction on the comb, and how long it lasts. Two variables. A vector.
+
+Take direction first, because it involves a transformation that is easy to state and genuinely strange to think about.
+
+The bee found the food by flying across open ground, under the sky. Direction outdoors is referred to the sun — specifically to the sun's azimuth, the compass bearing of the point on the horizon directly below it.
+
+But the dance is not performed outdoors. It is performed on a vertical comb, in the dark, where the sun is not visible and cannot be pointed at.
+
+So the bee substitutes a different reference. On the vertical comb she uses gravity. Straight up — directly against the pull of gravity — stands for the direction of the sun.
+
+The angle of the waggle run away from vertical is then the angle of the food source away from the sun's azimuth.
+
+A run straight up the comb means: fly toward the sun. A run straight down means: fly directly away from it. A run sixty degrees to the right of vertical means: on leaving the entrance, hold a course sixty degrees to the right of the sun's bearing.
+
+Notice what that requires. The bee has taken an angle measured against a light source, in the horizontal plane outdoors — and re-expressed it against gravity, in the vertical plane, in darkness. The two frames share no physical property. The transposition is not a metaphor imposed on the animal; it is what the measurements show the animal doing.
+
+And there is a complication, which the bee also solves. The sun moves. Over a morning its azimuth shifts by tens of degrees. An angle correct at nine o'clock is wrong by noon.
+
+A bee dancing for the same patch of lime trees at different times of day does not repeat the same angle. She rotates it, tracking the sun's movement — and she does this inside the nest, where she cannot see the sun at all. She is working from an internal clock and an internal model of how the sun's bearing changes through the day at her latitude and season. Martin Lindauer's work established that this compensation continues in bees held in darkness, and that it is learned rather than fixed.
+
+So the first number is not simply "an angle". It is an angle, continuously corrected against a moving reference, by an animal that cannot see the reference while it corrects.
+
+Now the second number: distance.
+
+Distance is encoded in the duration of the waggle run. A longer waggle run means a more distant resource, and the relationship is close to linear over the range a colony ordinarily forages.
+
+The conversion factor is often quoted as roughly one second of waggling per kilometre — but that figure should be treated with care. The slope differs between subspecies and between populations. A dance that means one kilometre in one colony does not necessarily mean one kilometre in another. The dance is calibrated, not absolute.
+
+Calibrated against what? Not time in flight, and not energy burned. This was tested, and the answer is neither.
+
+The bee measures distance optically. As she flies, the image of the ground sweeps across her eyes, and she accumulates that image motion — optic flow. The waggle run duration reports how much total image motion she experienced on the way out.
+
+The cleanest demonstration of this comes from experiments in which bees were trained to fly through narrow tunnels with patterned walls. In a narrow tunnel, the walls are close, so the visual world sweeps past very fast for very little forward progress. The bees came back and danced for a distance far greater than the few metres they had actually travelled. Mandyam Srinivasan and colleagues published this result in Science in two thousand, and Harald Esch and John Burns had shown a related effect a few years earlier.
+
+The consequence is worth stating plainly. The unit of the distance signal is not the metre. It is accumulated image motion. In open terrain that quantity tracks real distance closely enough to be useful, which is why the signal works at all — but the bee is not reporting how far away the food is. She is reporting how much visual texture flowed past her on the way there.
+
+Two numbers, then: an angle against a moving celestial reference, and a duration standing for accumulated optic flow. Together they define a vector from the nest.
+
+Which raises the obvious question. Does anything actually read it?
+
+For a long stretch of the twentieth century this was genuinely contested. Correlation between dance and destination is not transmission. Recruits might simply have been following odour on the dancer's body, with the dance a side effect rather than a signal.
+
+Two lines of evidence settled it. The first was mechanical. Axel Michelsen and colleagues built a model bee — a small motorised device that could be made to perform waggle runs at a chosen angle and duration inside a real colony. Recruits attending the model left the hive and searched in the direction and at the distance the model had specified. A machine with no odour, no colony membership and no food could direct bees to a location, provided it moved correctly.
+
+The second was direct tracking. Joe Riley and colleagues, working with Randolf Menzel's group, fitted recruits with transponders and followed them with harmonic radar as they left the hive. Their paper appeared in Nature in two thousand and five. The recruits flew out along the vector the dance had specified, and on arriving at roughly the right place, began to search. They flew the vector first, then looked.
+
+That is about as close to reading the instrument as animal behaviour gets: a signal was specified, a flight path was recorded, and the two matched.
+
+So the dance transmits. Now the part usually omitted, and the most interesting thing about the system. It is not very accurate.
+
+Successive waggle runs by the same bee for the same target differ. The angles scatter. Individual runs can deviate substantially from the true bearing, and the scatter is largest for nearby targets, narrowing as distance increases. A recruit attending a handful of runs is averaging a noisy signal.
+
+The practical consequence is that recruits do not arrive at a point. They arrive within a region — and the size of that region grows with distance, because an angular error of a few degrees spans a wider area the further out you go.
+
+Whether that imprecision is a limitation or a feature has been argued both ways. One position: scatter is the noise floor of a small animal performing a rapid motor act on a crowded comb — a constraint, not a design. The competing position: the spread is useful, because a patch of flowers is not a point, and a signal delivering every recruit to a single coordinate would waste effort on a target with area.
+
+Kathryn Preece and Madeleine Beekman examined this directly, in a two thousand and fourteen paper in Animal Behaviour whose title poses the question exactly — whether the error is adaptation or constraint. The honest summary is that the case for tuned imprecision is not established, and the alternative is not excluded either.
+
+There is a further result worth knowing, because it puts the whole system in economic terms. Anna Dornhaus and Lars Chittka compared colonies that could dance with colonies whose dance information was disrupted, across different habitats. The advantage conferred by the dance was not constant. In some environments it was substantial; in others, where resources were dense and evenly spread, colonies did about as well without it.
+
+The vector is worth transmitting when the resource is patchy and hard to find. When food is everywhere, a bee that simply goes out and looks does about as well as one that was told where to go.
+
+So, to state the mechanism as a whole.
+
+A forager flies a route, and accumulates two measurements on the way: the bearing she held relative to the sun's azimuth, and the total image motion that swept across her eyes. She returns to a dark, vertical surface, and re-encodes the bearing against gravity instead of against the sun, correcting continuously for the sun's movement while unable to see it. She encodes the accumulated image motion as the duration of a straight run. Other bees, in contact with her on the comb, extract both quantities, convert them back into a heading and a flight duration, and depart.
+
+The signal is genuinely abstract. Nothing about the dance resembles a lime tree, or a direction, or two kilometres. The relation between sign and thing signified is a convention the species carries, not a resemblance — and the exchange happens in the dark, on a moving surface, in a crowd.
+
+It is also, as signalling systems go, fairly poor. It is noisy, it is calibrated in units that are not units of distance, it drifts between populations, and in many habitats it barely pays for itself.
+
+Both of those things are true at once, and holding them together is the point. The waggle dance is not remarkable because it is perfect. It is remarkable because it is a genuine coordinate system, implemented in an animal, with a measurable transfer function and a measurable error — which means it can be studied as a mechanism rather than admired as a curiosity.
+
+That is what von Frisch actually did. He did not discover that bees communicate. He worked out the units.

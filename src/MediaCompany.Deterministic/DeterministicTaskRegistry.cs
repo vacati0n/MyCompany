@@ -57,6 +57,23 @@ public static class DeterministicTaskRegistry
     // Record.
     public const string AuditLogging = "audit-logging";
 
+    // The production path's rule-determined work (plan task T-026, sequencing constraint P-004).
+    // Each is fully determined by its inputs and a rule, so each carries zero capability cost, and
+    // the property is the same dependency-direction property the set above rests on rather than a
+    // second claim about these members in particular.
+    public const string TermFidelityComparison = "term-fidelity-comparison";
+    public const string BarredTermMetadataScreen = "barred-term-metadata-screen";
+    public const string StageCompletenessCheck = "stage-completeness-check";
+    public const string PublishReadyPrecondition = "publish-ready-precondition";
+    public const string TreatmentConditionEvaluation = "treatment-condition-evaluation";
+    public const string ComplianceDetermination = "compliance-determination";
+    public const string AdvertiserSuitabilityDerivation = "advertiser-suitability-derivation";
+    public const string ClaimToSourceJoin = "claim-to-source-join";
+    public const string FootageRemovalAssessment = "footage-removal-assessment";
+    public const string ClipOriginPrecondition = "clip-origin-precondition";
+    public const string RuntimeMeasurement = "runtime-measurement";
+    public const string ItemLedgerArithmetic = "item-ledger-arithmetic";
+
     /// <summary>
     /// The complete named set. The idempotent upload the upstream recommendation also names is
     /// excluded here by constraint C-013: this wave publishes nothing, so no upload path exists.
@@ -92,6 +109,18 @@ public static class DeterministicTaskRegistry
         MetadataTemplatePopulation,
         ThumbnailVariantCompositing,
         AuditLogging,
+        TermFidelityComparison,
+        BarredTermMetadataScreen,
+        StageCompletenessCheck,
+        PublishReadyPrecondition,
+        TreatmentConditionEvaluation,
+        ComplianceDetermination,
+        AdvertiserSuitabilityDerivation,
+        ClaimToSourceJoin,
+        FootageRemovalAssessment,
+        ClipOriginPrecondition,
+        RuntimeMeasurement,
+        ItemLedgerArithmetic,
     }.ToFrozenSet(StringComparer.Ordinal);
 
     public static bool Contains(string taskName) => Names.Contains(taskName);
