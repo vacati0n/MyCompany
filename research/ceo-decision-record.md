@@ -255,12 +255,39 @@ only fixed date. The channel niche and content pillars remain unchosen and block
 
 ---
 
-# Fourth round — payee position settled by acceptance, not by counsel
+# Fourth round — renumbered to D-018 to D-022
+
+> **WITHDRAWN IDENTIFIERS — `D-011` to `D-015` on this branch.**
+>
+> These five decisions were recorded here as `D-011` to `D-015` and are now **`D-018` to
+> `D-022`**. Nothing was deleted and no decision changed; only the identifiers moved.
+>
+> **Why.** Two numbering spaces grew from the same merge-base `849835b` without either
+> knowing of the other, and five identifiers came to name two different decisions each. The
+> other space — `claude/execute-prompt-txt-4a3ee4`, carried into the Wave 2 branch
+> `claude/trusting-shirley-90ea75` — holds `D-011` to `D-017` plus `C-001` to `C-003`. This
+> branch renumbers because that space has decisions stacked on top of the collision and is
+> still being written, while this branch's run is closed. The Wave 2 session declined to
+> renumber another session's record of the CEO's decisions, which was the right call, and the
+> CEO decided this branch would move.
+>
+> **The mapping, once, so a stale citation resolves:**
+>
+> | Recorded here as | Now | Subject |
+> |---|---|---|
+> | `D-011` | **`D-018`** | Operate as an individual creator; the CEO carries the legal position personally |
+> | `D-012` | **`D-019`** | Two-phase payee structure, and the launch channel already exists |
+> | `D-013` | **`D-020`** | The test channel is an experiment; the company's process is unchanged |
+> | `D-014` | **`D-021`** | The two Vietnamese disclosure gaps stay carried; affiliate disclosure becomes a standing rule |
+> | `D-015` | **`D-022`** | The first item carries no affiliate link |
+>
+> A withdrawn identifier is never reissued on this branch. `D-011` to `D-017` mean what the
+> other space says they mean.
 
 Decided 2026-09-26 by the CEO, on a readiness check for Wave 3 that found `RK-003` to be the
 longest-lead item on the critical path and the only one independent of Wave 2.
 
-## D-011 — Operate as an individual creator; the CEO carries the legal position personally
+## D-018 — Operate as an individual creator; the CEO carries the legal position personally
 
 **Decision.** The company has no budget at this stage to retain Vietnamese tax counsel. It will
 operate **as an individual person publishing content on the launch platform**, with the **CEO as
@@ -270,6 +297,29 @@ tax declaration and for the legal determinations the workforce escalates.
 `RK-003` is therefore **accepted, not discharged**. The mitigation the risk register records —
 *"qualified local counsel before the payment account is created"* — is **superseded** by this
 decision. The risk stays open, at its recorded severity, with the CEO named as the acceptor.
+
+> **Relationship to `D-011` in the other numbering space, which is not a duplicate.**
+>
+> `claude/execute-prompt-txt-4a3ee4` records a `D-011`, *"Tax posture: individual or household
+> business first, company only if it works"*, carried into the Wave 2 branch. It is the same
+> CEO answering the same subject, and the two agree on the posture: operate as an individual
+> now, incorporate only once the channel has proven itself.
+>
+> **They disagree on one point, and this decision is the later one.** That record states
+> *"`RK-003` is not discharged by this decision — it is narrowed. Qualified Vietnamese counsel
+> is still required."* This decision states that there is **no budget to retain counsel** and
+> that the CEO **accepts the risk personally instead**. Where the two are read together, this
+> one governs on that point, because it was taken afterwards and on a fact the earlier one did
+> not have.
+>
+> **What survives from the other record, and should be read with this one.** Two consequences
+> it draws are not restated here and are not withdrawn by this decision:
+> failing to submit the **W-8BEN as an individual** triggers **24% backup withholding on total
+> worldwide earnings**, worse than the 30% that applies only to the US-sourced share, which
+> makes submitting it a first-class precondition of the payment account rather than a detail;
+> and moving from an individual or household payee to a company payee later is a **payee
+> change, not a settings change**, whose cost should be known before the first account is
+> created. The second of those is the migration cost `D-019` carries forward.
 
 **What this settles.**
 
@@ -323,18 +373,18 @@ watch hours is the planning figure.
 Wave 2 open questions `Q-001` (subject and angle), `Q-004` (budget for a second stock library) and
 `Q-008` (audience-drift threshold, due before first publication) remain with the CEO.
 
-## D-012 — Two-phase payee structure, and the launch channel already exists
+## D-019 — Two-phase payee structure, and the launch channel already exists
 
 **Decision, two parts.**
 
 1. **The payee is staged, deliberately.** Channels launched now use the **CEO as an individual
-   payee**, per D-011. Later channels will be created under a **company legal entity**. This is a
+   payee**, per D-018. Later channels will be created under a **company legal entity**. This is a
    recorded sequence, not a drift: the individual payee is the starting position, and the entity
    is the intended end state.
 2. **The launch channel is an existing YouTube channel the CEO already holds**, rather than a
    newly created one.
 
-**What part 1 settles.** The multi-channel isolation concern D-011 carried forward now has an
+**What part 1 settles.** The multi-channel isolation concern D-018 carried forward now has an
 intended answer. The plan records that genuine isolation between channels requires **distinct
 legal payees**, decided before launch, because the payment account's country and payee are hard
 to change later. Staging the entity means channel 1 and any entity-held channel will sit under
@@ -383,7 +433,7 @@ obligation and per-item audience designation are assessed against a channel that
 carry a designation and an audience. Wave 2 should be told which channel it is producing for
 before its implementation phase commits to an item.
 
-### D-012 resolved — the branch is established, 2026-09-26
+### D-019 resolved — the branch is established, 2026-09-26
 
 The CEO confirmed the channel's standing. Every item recorded above as unestablished now has an
 answer, and the answers are uniform: **the channel is effectively blank.**
@@ -411,7 +461,7 @@ The recorded position holds.
 **Risk removed, not deferred.** The inherited-history exposure the previous entry itemised is void
 on the facts, not postponed. A blank channel carries none of it.
 
-## D-013 — The test channel is an experiment; the company's process is unchanged
+## D-020 — The test channel is an experiment; the company's process is unchanged
 
 **Decision.** The channel is an **initial test channel**. The company's operating process does not
 change on account of it, and will not change later. **The CEO approves channel creation.** The
@@ -448,7 +498,7 @@ release credential, and it is the first of the four non-cuttable controls `RK-00
 ## Still open after this decision
 
 `RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
-pass due **2026-10-26** · `RK-003` accepted by the CEO at D-011, its two disclosure questions —
+pass due **2026-10-26** · `RK-003` accepted by the CEO at D-018, its two disclosure questions —
 Vietnamese advertising-law disclosure and whether any Vietnamese rule addresses synthetic-media
 disclosure — unanswered and due at **first publication** · `RK-005` approval-minutes baseline,
 which Wave 2 produces · `RK-006` confirmed at the 8,000-watch-hour branch.
@@ -456,7 +506,7 @@ which Wave 2 produces · `RK-006` confirmed at the 8,000-watch-hour branch.
 Two-step verification on the test channel is unconfirmed and is the remaining half of §21.3
 precondition 3. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
 
-## D-014 — The two Vietnamese disclosure gaps stay carried; affiliate disclosure becomes a standing rule
+## D-021 — The two Vietnamese disclosure gaps stay carried; affiliate disclosure becomes a standing rule
 
 **Decision, two parts.**
 
@@ -531,24 +581,24 @@ way.
 ## Still open after this decision
 
 `RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
-pass due **2026-10-26** · `RK-003` accepted at D-011, its two disclosure questions **carried by
+pass due **2026-10-26** · `RK-003` accepted at D-018, its two disclosure questions **carried by
 this decision** · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at
 the 8,000-watch-hour branch.
 
 Two-step verification on the test channel is unconfirmed. Whether the first item carries an
 affiliate link is open. Wave 2 open questions `Q-001`, `Q-004` and `Q-008` remain with the CEO.
 
-## D-015 — The first item carries no affiliate link
+## D-022 — The first item carries no affiliate link
 
 **Decision.** The first item carries **no affiliate link and no sponsored placement**.
 
-**What it settles.** The open question D-014 raised is closed. Of the five compliance
+**What it settles.** The open question D-021 raised is closed. Of the five compliance
 determinations scope item `S-008` requires, the **affiliate and paid-promotion** one now resolves
 for this item by recording that neither is present — recorded evidence, not a finding that it
 cannot be evidenced. The **in-video disclosure obligation does not arise**, so Wave 2 has nothing
 to produce for it and the item's treatment is unaffected.
 
-**What it does not change.** The standing rule at D-014 is untouched. It does not bind on this item
+**What it does not change.** The standing rule at D-021 is untouched. It does not bind on this item
 because its condition is absent, which is not the same as being relaxed: the first item that does
 carry an affiliate link discloses both ways, with no fresh decision required.
 
@@ -562,8 +612,8 @@ cost alone, with no revenue side to weigh it against.
 ## Still open after this decision
 
 `RK-001` controls before first publication · `RK-002` price re-fetch before any spend, next policy
-pass due **2026-10-26** · `RK-003` accepted at D-011, its two disclosure questions carried at
-D-014 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at the
+pass due **2026-10-26** · `RK-003` accepted at D-018, its two disclosure questions carried at
+D-021 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` confirmed at the
 8,000-watch-hour branch.
 
 Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
