@@ -627,3 +627,75 @@ capex/opex allocation and the reasoning behind it; the exact narration character
 graphics count from the finished item, priced at re-fetched rates; a zero on generated seconds;
 and the per-video input total against the 377,000-token escalation test in `C-001`. That test
 survives the absence of tiering intact and remains the trigger that matters most.
+
+---
+
+## C-004 — The decision record has forked: ten decisions share five identifiers
+
+Recorded 2026-09-26. Raised by the Wave 2 session; **verified independently here** (`git merge-base`
+returns `849835b`; both branches appended `D-011` to `D-015` after it).
+
+**What happened.** Three sessions have been appending to one file that describes itself as the
+authoritative record. Two of them allocated the same identifiers to different decisions:
+
+| Id | This branch, `claude/execute-prompt-txt-4a3ee4` | Wave 1 branch, `claude/eloquent-taussig-724cc2` |
+|---|---|---|
+| `D-011` | Tax posture: individual or household business first | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | Niche direction: animals, form not yet settled | Two-phase payee structure; the launch channel already exists |
+| `D-013` | Niche: science and the natural world, adult-framed | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | Wave 2 begins, in a separate session | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
+| `D-015` | Science and natural world reframed as a deliberate experiment | The first item carries no affiliate link |
+
+`D-016` and `C-001`–`C-004` exist only here. `D-017`, the video subject, sits on top of this set.
+
+**Nothing is lost and nothing contradicts.** These are ten distinct decisions that happen to
+collide, and both sets are mutually compatible — the work can proceed on all of it without
+choosing between them.
+
+**What is broken is citation, and that is worse than a contradiction would be.** A contradiction
+announces itself. This does not: "D-013" now names two different decisions depending on which
+branch the reader holds, and every downstream artifact citing it has silently stopped being
+unambiguous.
+
+**The actual defect is not the collision. It is that three sessions write to one authoritative
+record with no identifier-allocation mechanism.** This is the third collision in one day on the
+same file; the first two were caught only because the sessions happened to be talking to each
+other. A fourth is certain if nothing changes. This is a **process defect, not a framework one** —
+omn-agent never claimed to arbitrate a shared document.
+
+### Recommended resolution: do not renumber. Add a concordance and namespace going forward.
+
+Renumbering is the obvious move and it is the wrong one, for the same reason `S-006` was left
+alone in `C-001`: **existing citations live in artifacts that have already passed their gates.**
+Renumbering silently invalidates them and produces a second, worse version of this problem. A
+third session renumbering produces a third variant.
+
+1. **Nothing already written is renumbered or renamed.** Both sets keep their identifiers.
+2. **Cite by `branch : identifier : title` wherever ambiguity is possible** — the Wave 2 session
+   already adopted this in `wave-2/carried-decisions.md` §1, and it is unambiguous under any
+   later resolution.
+3. **Namespace all future identifiers by originating wave** — `W0-D-018`, `W1-D-016`, `W2-D-018`.
+   Collisions become impossible by construction rather than by coordination.
+4. **Maintain a concordance table** — the table above is its first entry — at the head of the
+   merged record, so a reader meeting a bare `D-013` can resolve it.
+5. **When the branches merge, the concordance merges with them.** Both sets survive intact.
+
+This is additive. It costs no rewriting, preserves every existing citation, and leaves the audit
+trail whole.
+
+**Not actioned unilaterally.** Renumbering or restructuring another session's record of CEO
+decisions is not this session's to do, and the Wave 2 session correctly declined the same thing.
+The recommendation above is put to the CEO; until it is decided, cite by branch, commit and title.
+
+### Two facts relayed from the Wave 1 session that bear on earlier analysis
+
+- **The launch channel already exists, is blank, and is not in YPP.** Grandfathering runs on YPP
+  *membership*, not channel age, so it does not reach this channel. The **8,000-watch-hour
+  planning figure in `C-001`'s sibling analysis is therefore confirmed correct on the facts**,
+  not merely cautious. Note this also softens the ordering constraint recorded earlier that the
+  payee position must precede channel creation — the channel exists; the binding step is the
+  AdSense payee linkage, not the channel.
+- **The first item carries no affiliate link.** This discharges one of the five compliance
+  determinations as **positive recorded evidence** rather than as an unresolved negative, and it
+  sidesteps the unverified YouTube position on whether affiliate links alone trigger the
+  paid-promotion declaration.
