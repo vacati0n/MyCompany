@@ -25,7 +25,57 @@ artifact.
 `D-016` (budget holds at USD 77.41) and `C-001` to `C-003` exist only on the CEO/research
 branch. `D-017` (this wave's subject) was filed by the Wave 2 session on top of that branch.
 
-**Assessment.** These are not competing drafts of the same decisions — they are ten distinct
+### RESOLVED 2026-09-26 — this branch's space stands, the Wave 1 space renumbered
+
+The CEO decided the Wave 1 session's space moves, on the reasoning this session gave: that space
+was closed, while this one has `D-016`, `D-017` and `C-001` to `C-004` stacked on top and is
+still being written. The Wave 1 session renumbered **`D-011`–`D-015` → `D-018`–`D-022`**, left a
+withdrawal-marker block at the old heading position rather than renaming in place, and recorded
+that a withdrawn identifier is never reissued. Committed at `21e9882`, which is what `main`
+points at.
+
+| Was | Now | Decision |
+|---|---|---|
+| `D-011` | **`D-018`** | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | **`D-019`** | Two-phase payee structure, and the launch channel already exists |
+| `D-013` | **`D-020`** | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | **`D-021`** | Vietnamese disclosure gaps carried; affiliate disclosure a standing rule |
+| `D-015` | **`D-022`** | The first item carries no affiliate link |
+
+**`D-011` to `D-017` now mean unambiguously what this branch says they mean.** The no-affiliate
+decision that discharges one compliance determination is cited hereafter as **`D-022`**.
+
+### ⚠ CORRECTION — this session's "nothing contradicts" reading was wrong on one pair
+
+This file previously asserted that the two sets were mutually compatible and that only citation
+was broken. **That was true of nine of the ten decisions and false of the `D-011` pair**, and the
+Wave 1 session was right to challenge it.
+
+- **This space's `D-011`** (tax posture) states: *"`RK-003` is not discharged by this decision —
+  it is narrowed. Qualified Vietnamese counsel is still required."*
+- **`D-018`** records a **later** CEO decision on a fact the earlier one did not have: **there is
+  no budget to retain counsel, and the CEO accepts `RK-003` personally instead.**
+
+The mitigation "qualified local counsel before the payment account is created" is therefore
+**superseded, not narrowed**. Same CEO, same subject, later decision — **`D-018` governs on that
+point.** The two postures otherwise agree (individual now, company later), so nothing else moves.
+
+**Two consequences from this space's `D-011` are carried forward and are NOT withdrawn by
+`D-018`:** the **W-8BEN** point — failing to submit it as an individual triggers **24% backup
+withholding on total worldwide earnings**, worse than the 30% on the US-sourced share, making it
+a first-class precondition of the payment account — and the **payee-migration cost**, since
+individual-to-company is a payee change rather than a settings change and its cost should be
+known before the first account is created.
+
+**Why this session got it wrong, recorded rather than quietly fixed:** the compatibility claim
+was made by comparing decision *titles* and *subjects*, which is exactly the check that a
+same-subject-later-decision defeats. Two decisions can share a subject, not contradict in
+posture, and still have one supersede the other's mitigation. **A title-level scan is not a
+conflict check**, and the resolution convention in `C-004` — cite by branch, identifier and title
+— makes citation unambiguous without making supersession visible. That is a residual gap in the
+convention, not a failure of it.
+
+**Assessment (as originally written, and still true of the other nine).** These are not competing drafts of the same decisions — they are ten distinct
 decisions that happen to collide on five identifiers. Nothing is lost and nothing contradicts;
 the *content* of both sets is compatible and Wave 2 can act on all of it. What is broken is the
 **citation**: `D-013` currently names two different decisions depending on which branch a reader
