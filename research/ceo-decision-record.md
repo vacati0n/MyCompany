@@ -1243,3 +1243,79 @@ was **mutation-checked** - introducing a real cross-boundary dependency made thr
 fail, removing it made them pass. Thirty-one named tasks sit inside that boundary. It works by
 removing the possibility rather than by choosing a cheaper model, which is why it holds without
 any of the tiering `C-003` finds absent.
+
+
+---
+
+# Wave 2 session decisions — block `D-200`–`D-299`
+
+## D-200 — The honey bee subject stands on a corrected supply premise
+
+**Decided 2026-09-26 by the CEO**, during Wave 2 (`run-3a58551ee912`), after the implementation
+phase raised the correction at its `Q-002` and the Wave 2 session verified it independently.
+**Closes `Q-002`.**
+
+### The error, stated plainly
+
+`D-017`'s supporting reasoning records **`honey bee` = 1,213 as "a single, distinctive,
+unambiguous token, so it is one of the counts §3.3 classifies as trustworthy."** That is
+**false**. `honey bee` is a **two-word query**.
+
+`research/animal-niche-analysis.md` §3.3 states the rule verbatim: *"Only single, distinctive,
+unambiguous tokens give a trustworthy read."* Its enumerated trustworthy list is nine single-token
+species — pangolin, narwhal, bowerbird, okapi, platypus, binturong, cassowary, axolotl, tapir —
+and **`honey bee` is not among them**. Seven further rows in the same table are multi-word and
+carry the same defect (`grey wolf`, `humpback whale`, `bengal tiger`, `mantis shrimp`, `snow
+leopard`, `naked mole rat`, `emperor penguin`), so the table's own header is inaccurate for eight
+of its rows.
+
+**The error was the Wave 2 session's**, made when presenting the options and repeated into
+`D-017`'s reasoning and into the implementation dispatch. The implementation agent found it by
+reading the source rule rather than accepting the instruction, and **declined to re-read the
+evidence to agree with its brief** — which is the behaviour that caught it.
+
+**It was material to the choice.** Two of the four options presented did have genuinely
+trustworthy single-token priors — **`octopus` 1,582 and `elephant` 4,131** — and the recommended
+option did not. The CEO chose on a supply claim that was wrong.
+
+### The decision
+
+**The subject stands. The supply premise is corrected, not repaired.**
+
+**Basis:**
+
+1. **`D-017`'s four other reasons are untouched** — distance from the generative-AI-contaminated
+   rare-species tail, the originality burden landing where the channel can carry it, the lowest
+   made-for-kids exposure of the options, and attributable science.
+2. **No subject has a verified count, so switching buys a better *prior*, not a better *fact*.**
+   The implementation phase audited **14 subjects and obtained zero counts** — the committed
+   library requires an authenticated subscription and this role may not reach an external system
+   directly. Changing subject would exchange one unverified position for another with a
+   better-quality dated observation behind it.
+3. **The exposure is structurally bounded, not merely accepted.** Only **three** waggle-run clips
+   are unsourced, and **no claim in the script depends on them**: `GFX-02`, `GFX-03`, `GFX-04`,
+   `GFX-15`, `GFX-16`, `GFX-17` and `GFX-18` carry those beats. If per-clip confirmation finds
+   nothing, the three drop and nothing is lost. **Substituting generic hive activity is refused
+   at the script**, which is what stops the failure mode the niche analysis warned about.
+4. **Switching costs a full phase-4 rebuild** (~366,000 tokens plus rework) for that better prior.
+
+### What is corrected, and what is not
+
+- **Corrected:** supply for this subject is **unestablished for both the species and the
+  behaviour**, not merely for the behaviour. `honey bee` = 1,213 is a **dated multi-word upper
+  bound of unknown looseness**, admissible only as a prior observation with its date, never as a
+  measurement.
+- **Not corrected, because it was already right:** `waggle dance` is a multi-word phrase whose
+  reported total is inadmissible, and supply for the behaviour must be confirmed clip by clip.
+- **Still owed at `A-024`:** a per-subject count obtained first-hand before the script is
+  committed. The script is committed; the count is not obtained. **That is a recorded gap, and it
+  is the honest state of the wave.**
+
+### The general lesson, recorded so it outlives this item
+
+**A rule that classifies evidence is only as good as the check that the evidence meets it.** The
+single-token rule was stated correctly, carried correctly into the analysis, and then applied to
+a two-word query by three successive readers — the session presenting the options, the CEO
+deciding on them, and the dispatch instructing the work — because everyone checked the *number*
+against the rule and nobody checked the *query*. It was caught by the one reader whose brief told
+it the answer and who went to the source anyway.
