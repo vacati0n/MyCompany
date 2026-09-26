@@ -270,7 +270,11 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
             await transaction.CommitAsync(CancellationToken.None);
         }
 
-        Assert.Equal([50, 75, 90, 100], raised);
+        // Sorted, because one evaluation can cross two thresholds at once and the order the
+        // insert returns them in is not specified. What the criterion asks is that each of the
+        // four is raised exactly once across the run, which is what this asserts.
+        Assert.Equal(new List<int> { 50, 75, 90, 100 }, raised.Order().ToList());
+        Assert.Equal(4, raised.Distinct().Count());
 
         // Re-evaluating raises nothing: the alert is idempotent per budget, period and threshold.
         await using (var transaction = await unitOfWork.BeginAsync(CancellationToken.None))
@@ -385,7 +389,11 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
                         Workflow = "single-item",
                         Position = MediaCompany.Domain.Work.LifecyclePosition.Queued,
                         ClaimState = MediaCompany.Domain.Work.ClaimState.Ready,
-                        AvailableAt = _clock.UtcNow.AddMinutes(-1),
+                        // Real time, not the fixture clock. The claim predicate reads the
+                        // datastore's own `now()` so that two workers cannot disagree about
+                        // when a job became available, which means an injected clock does not
+                        // move it and a seeded instant must be in the datastore's past.
+                        AvailableAt = DateTimeOffset.UtcNow.AddMinutes(-1),
                     },
                     CancellationToken.None);
             }

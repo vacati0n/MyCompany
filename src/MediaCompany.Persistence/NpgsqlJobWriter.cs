@@ -81,6 +81,13 @@ internal sealed class NpgsqlJobWriter : IJobWriter
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Claims the oldest ready job. Availability and the lease expiry are measured against the
+    /// datastore's own clock rather than an injected one, deliberately: two workers reading
+    /// different clocks could each believe a job was theirs, and a single datastore is the one
+    /// clock they already share. An injected clock therefore does not move claiming, and a test
+    /// that seeds an availability instant must seed it in the datastore's past.
+    /// </summary>
     public async Task<Job?> ClaimNextAsync(string workerId, TimeSpan lease, CancellationToken cancellationToken)
     {
         await using var command = new NpgsqlCommand(

@@ -23,7 +23,11 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
         """
         WITH price AS (
             SELECT
-                MAX(p.model_price_id) FILTER (WHERE p.unit_kind = 'InputUnit')  AS reference_id,
+                -- The applied price reference is the input-unit row in force at the instant.
+                -- `max` has no uuid form, and picking by aggregate would be arbitrary where two
+                -- rows overlap, so the most recently effective one is taken explicitly.
+                (array_agg(p.model_price_id ORDER BY p.valid_from DESC)
+                    FILTER (WHERE p.unit_kind = 'InputUnit'))[1]                AS reference_id,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'InputUnit'), 0)  AS input_price,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'OutputUnit'), 0) AS output_price,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'CachedUnit'), 0) AS cached_price,
