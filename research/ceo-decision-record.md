@@ -1533,3 +1533,146 @@ serious than a misresolution, because the artifact was judged to have exceeded i
 The insufficiency above was found by **reading the validator source and running its own regex**
 before implementing the decision, rather than adopting the scheme and discovering it at the next
 validation failure.
+
+---
+
+# Wave 4 session decisions — block `CEO-D-300`–`CEO-D-399`, corrections `CEO-C-300`–`CEO-C-399`
+
+**This session takes `CEO-D-300`–`CEO-D-399` for decisions and `CEO-C-300`–`CEO-C-399` for
+corrections**, under the allocation-block rule and the source-qualifier scheme. The previous
+session's block ran to `CEO-D-203`. Nothing is renumbered.
+
+The `CEO-C-3nn` range is taken explicitly because the token `CEO-C-001` already appears in this
+record as an illustration inside the prefix decision's validator table, and a block starting at
+300 cannot be confused with it.
+
+---
+
+## CEO-D-300 — The authorised no-spend exception does not extend to a further metered operation
+
+**Decided 2026-09-27 by the orchestrating session at the Wave 4 Scope Gate**, answering the
+blocking question the scope phase raised rather than absorbed. **Not a CEO decision — recorded
+here because it interprets one, and the CEO may overturn it.**
+
+### The question
+
+The scope agent refused to set an acceptance threshold for *observing* a served reasoning tier,
+because it could not do so without either absorbing owner-reserved spend or promising something
+the route might not deliver. It asked: if the admitted route reports no served tier, does the
+single authorised exception cover a **further** metered operation, or does the wave close with an
+absence marker and no observed tier?
+
+### The decision: no further operation
+
+**Basis, and the reason this did not need to go to the CEO.** The decision authorising the
+exception already requires *an explicit absence marker where a route cannot state a tier, so an
+untiered route is visible as untiered rather than appearing to confirm the request*. That is the
+owner having **already accepted the absence outcome as a legitimate product of the exception**.
+Reading it that way settles the question without expanding any authority.
+
+The expansive branch — spending a second operation — **remains the CEO's** and was not taken.
+
+### What actually happened, which made the question moot
+
+Nothing was spent at all. See `CEO-D-301`.
+
+---
+
+## CEO-D-301 — The served-tier obligation was met at zero cost, and the exception remains unspent
+
+**Recorded 2026-09-27 by the orchestrating session.** This is a finding, not an authorisation.
+
+### What was found
+
+Reading the delivered capability boundary showed that **the served reasoning tier is a property of
+the admitted route, not of a provider's response.** Every outcome path — hold-and-escalate,
+non-AI-substitute, missing-adapter, credential-refused **and** the provider path — writes the same
+field from the route. The two paths that reach no admitted route write null, correctly.
+
+So the evidence the exception existed to buy was obtainable by **executing the delivered boundary
+against a live record store over an admitted route**: no provider account, no endpoint, no
+credential, no purchase, no subscription, and no weakening of the empty-endpoint position. Both
+tiers were read back **out of the store**, deliberately different from each other so that a value
+copied from the request would have been visible.
+
+### The position now
+
+- **Spend committed in Wave 4: USD 0.00.** The exception is **unspent and still available.**
+- The plan criterion requiring *exactly one metered operation* is **not satisfied as written** —
+  zero were run. The obligation behind it is satisfied. Both halves are published.
+- **The assumed reasoning-tier split is untouched and still unmeasured.** One record establishes
+  the recording mechanism, not the ratio. **Third consecutive wave closing with that true.**
+- The record came from a **non-provider** path. That the provider path behaves identically rests
+  on it reading the same field — a property of the source, not an observation of a provider.
+
+### The limit that decides what this is worth today
+
+**The `routes` table declares no reasoning-tier column at all**, and the route registry constructs
+every route without one. On the **fully composed production path, every recorded served tier is
+the absence marker**, whatever route serves it. The mechanism is proven; the production path
+cannot yet feed it. Adding that column and its adapter is the highest-value single change for this
+line and is the first thing Wave 5 should weigh.
+
+---
+
+## CEO-C-300 — A hard constraint was mistaken for a wording problem, by the orchestrator
+
+**Recorded 2026-09-27. Found by the Wave 4 peer review. The error was the orchestrating
+session's.**
+
+### The error
+
+The repository has no continuous-integration workflow, and the architecture boundary suite is an
+ordinary test project. The orchestrator discovered this, and briefed both the implementing and
+reviewing roles that the claim *"the build refuses"* was **overstated wording** to be corrected.
+
+**That understated it.** The accepted design's hard constraint requires the no-model-path property
+to be **proved by a build-time check rather than asserted**; the execution plan's task criterion
+requires the check to **run as part of the build rather than on request**; and the ticket itself
+says deterministic work is **verified by the build-time boundary test**. None of the three held.
+A declared hard constraint and an accepted acceptance criterion were both **defeated**, not merely
+described loosely — and the change account had recorded the condition only as an open question
+about who should own a runner.
+
+### The correction
+
+The reviewer raised it as a high finding with a blocking correction request. As tech lead the
+orchestrator decided to **make the property hold rather than restate it**. A build target now runs
+the boundary assertions against the just-built assembly and fails the build when they fail,
+bypassable only through a named and visible property. Verified by execution, including that an
+incremental build does not skip it.
+
+Two limits are recorded rather than claimed closed: **a reference declared and never used still
+passes**, because the assertions read retained references rather than the project file, and **only
+a solution build starts the target**, not a single-project build.
+
+### The lesson, recorded so it outlives this wave
+
+**An orchestrator who discovers an inconvenient fact is the person least likely to notice that it
+defeats a constraint rather than merely complicating a sentence.** The orchestrator found this
+fact, correctly, and then filed it under the wrong heading — as a thing agents should phrase
+carefully — because that framing required nothing to change. The reviewer, reading the constraint
+and the fact side by side with no stake in either, saw at once that one negated the other.
+
+Two further orchestrator errors were caught the same way in the same run: the planner reconciled a
+file count the orchestrator had stated wrongly, and the architect corrected an approved assumption
+about what the boundary suite covered. **Every recorded objection in this programme has been
+correct. The count is now in double figures and the record is unbroken.**
+
+---
+
+## CEO-C-301 — The Wave 3 token-accounting correction is confirmed, and no longer an inference
+
+**Recorded 2026-09-27.**
+
+Wave 3 corrected Wave 2's reported token total downward by 42% on the reasoning that a **resumed
+agent's reported figure is cumulative for that agent, not incremental for the attempt**, and
+explicitly labelled that an inference from arithmetic that should be withdrawn if wrong.
+
+**It is confirmed.** Wave 4 resumed three agents and measured two independent meters that do not
+consult each other — the harness figure and the agent's own remaining-budget counter. They agree
+to within 1% in every case, and one agent described its own second figure, unprompted, as *"for
+this agent as a whole"*.
+
+**The rule stands: take each agent's final figure; the rework is the delta.** Wave 2's corrected
+total of 1,836,117 and Wave 3's 1,930,677 are the figures of record.
