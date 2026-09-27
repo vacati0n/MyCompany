@@ -1,5 +1,14 @@
 # Wave 2 — the real cost ledger
 
+> **⚠ SUPERSEDED IN PART, 2026-09-27.** The token total and the rework share below are
+> **overstated**. This file summed each resumed agent's report, but those reports appear to be
+> **cumulative for the agent**, not incremental for the attempt. **Correct total: 1,836,117
+> tokens, not 3,146,022. Correct rework share: about 7.0%, not 45.7%.** The reasoning, the
+> evidence and the confidence statement are in `wave-3/cost-ledger.md` §1. Everything else in this
+> file — the measured item quantities, the O-002 comparison, the refusal to state a variance, the
+> L3/L1-L2 negative result and the executed-evidence correction — is unaffected and stands.
+
+
 **Run `run-3a58551ee912` · MC-3 · opened 2026-09-26.** Live document: rows are added as the run
 consumes them. **Every figure here is a MEASUREMENT unless the Basis column says ESTIMATE.**
 
