@@ -60,7 +60,9 @@ billed totals rather than context floors.
 | | **Phase 4 total** | **767,697** | 111 | 42 min 42 s | Two attempts |
 | 5 `quality-review` attempt 1 | `omn-dev-2-reviewer` | *(interrupted, session paused)* | — | — | Released as `worker-loss` |
 | 5 attempt 2 | `omn-dev-2-reviewer` | **228,399** | 62 | 18 min 07 s | MEASURED — **31/31 PASS**, verdict `approve-with-corrections` |
-| 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
+| 4 attempt 3 (correction cycle, post-review) | `omn-dev-1-implement` (resumed) | **466,485** | 42 | 19 min 21 s | MEASURED — closed `CR-001`, `CR-002` and all five non-blocking findings |
+| 6 `documentation-and-release-handoff` attempt 1 | `omn-documentation` | **229,319** | 41 | 12 min 43 s | MEASURED — **31/32**, rejected on one correctable check (`R7`, version string) |
+| 6 attempt 2 (repair) | `omn-documentation` (resumed) | _running_ | | | |
 | | **Total** | | | | |
 
 **[FINDING — rework is a real cost line and no estimate contains it.]** Phase 3's first attempt
