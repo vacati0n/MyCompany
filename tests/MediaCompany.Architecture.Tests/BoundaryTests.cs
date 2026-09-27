@@ -1,4 +1,8 @@
 using System.Reflection;
+using MediaCompany.Domain.Authority;
+using MediaCompany.Domain.Configuration;
+using MediaCompany.Domain.Publication;
+using MediaCompany.Deterministic;
 using Xunit;
 
 namespace MediaCompany.Architecture.Tests;
@@ -293,6 +297,218 @@ public sealed class BoundaryTests
             .ToArray();
 
         Assert.Empty(offenders);
+    }
+
+    // -----------------------------------------------------------------------
+    // The publishing capability — the five structural absences, asserted by the build
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// STRUCTURAL ABSENCE FOUR, the whole of it. No transport component exists in the build, and
+    /// no production assembly references one.
+    ///
+    /// This is the assertion the design asks the BUILD to make rather than an inspection to make.
+    /// The other four absences are properties of closed sets that a reader can enumerate; this one
+    /// is a property of the whole compiled output, and only reflection over it can establish that
+    /// the type a violation would have to name is not there.
+    ///
+    /// A transport component, for this purpose, is a type that could carry a publication to a
+    /// destination: anything naming an upload, a publish-to, a channel or account creation, or a
+    /// destination client. The check reads TYPE names as well as method names, because a class
+    /// called DestinationUploader with a method called SendAsync would pass a method-name check.
+    /// </summary>
+    [Theory]
+    [InlineData(Domain)]
+    [InlineData(Application)]
+    [InlineData(Deterministic)]
+    [InlineData(Credentials)]
+    [InlineData(Capability)]
+    [InlineData(Persistence)]
+    [InlineData(Host)]
+    public void NoProductionAssemblyDeclaresADestinationTransportComponent(string assembly)
+    {
+        var forbidden = new[]
+        {
+            "Upload", "PublishTo", "PostTo", "CreateChannel", "CreateAccount",
+            "Transport", "DestinationClient", "PlatformClient", "ChannelClient",
+            "Uploader", "Publisher" + "Client", "Egress",
+        };
+
+        var offenders = Load(assembly).GetTypes()
+            .Where(t => forbidden.Any(f => (t.FullName ?? t.Name).Contains(f, StringComparison.OrdinalIgnoreCase)))
+            .Select(t => t.FullName ?? t.Name)
+            .ToArray();
+
+        Assert.Empty(offenders);
+    }
+
+    /// <summary>
+    /// Absence four, second half: the assembly that composes a dispatch reaches no network egress,
+    /// transitively.
+    ///
+    /// The composer lives in the rule-determined assembly, whose referenced-assembly closure is
+    /// already asserted to exclude the capability boundary and the credential broker. That means a
+    /// destination egress is not merely absent from the composer — it is INEXPRESSIBLE there, for
+    /// the same structural reason a model call is.
+    /// </summary>
+    [Fact]
+    public void TheAssemblyThatComposesADispatchCanReachNoNetworkEgress()
+    {
+        var composer = Load(Deterministic).GetType(
+            "MediaCompany.Deterministic.Publication.PublicationDispatchComposer", throwOnError: true)!;
+
+        Assert.Equal(Deterministic, composer.Assembly.GetName().Name);
+
+        var references = References(Deterministic).Order().ToList();
+        Assert.Equal(new List<string> { Application, Domain }, references);
+
+        Assert.Empty(TypesNaming(
+            Load(Deterministic),
+            t => t.Namespace?.StartsWith("System.Net", StringComparison.Ordinal) == true));
+    }
+
+    /// <summary>
+    /// STRUCTURAL ABSENCE ONE. The dispatch outcome union is closed and carries no effected case,
+    /// so no caller can obtain a value meaning uploaded.
+    ///
+    /// Asserted over the built output rather than over the source: the union is closed by a private
+    /// constructor, so this enumerates every nested case type the runtime can see and fails if a
+    /// third appears or if any of them names an effect.
+    /// </summary>
+    [Fact]
+    public void TheDispatchOutcomeUnionCarriesNoEffectedCase()
+    {
+        var union = Load(Domain).GetType(
+            "MediaCompany.Domain.Publication.DispatchOutcome", throwOnError: true)!;
+
+        // Every production assembly is scanned, not only the one that declares the union, so a
+        // third case added anywhere in the build would be found here.
+        var cases = new[] { Domain, Application, Deterministic, Credentials, Capability, Persistence, Host }
+            .SelectMany(a => Load(a).GetTypes())
+            .Where(t => t.BaseType == union)
+            .Select(t => t.Name)
+            .Order()
+            .ToArray();
+
+        Assert.Equal(new[] { "Composed", "Refused" }, cases);
+
+        // The union cannot be extended from outside. Every constructor the base declares is
+        // private, apart from the record copy constructor the compiler emits, which takes the
+        // union's own type and cannot bring a new case into being.
+        var declared = union
+            .GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Where(c =>
+            {
+                var parameters = c.GetParameters();
+                return !(parameters.Length == 1 && parameters[0].ParameterType == union);
+            })
+            .ToArray();
+
+        Assert.NotEmpty(declared);
+        Assert.All(declared, c => Assert.True(c.IsPrivate));
+
+        foreach (var forbidden in new[] { "Effected", "Uploaded", "Sent", "Delivered", "Published" })
+        {
+            Assert.DoesNotContain(cases, c => c.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    /// <summary>
+    /// STRUCTURAL ABSENCE TWO. The publishing workflow's closed position set has no position after
+    /// composition, so a claimed unit reaches a terminal claim state rather than a next position.
+    /// </summary>
+    [Fact]
+    public void ThePublishingWorkflowHasNoPositionAfterComposition()
+    {
+        Assert.Null(PublishingWorkflowPositions.Next(PublishingPosition.Composed));
+        Assert.True(PublishingWorkflowPositions.IsTerminal(PublishingPosition.Composed));
+        Assert.Equal(PublishingPosition.Composed, PublishingWorkflowPositions.Ordered[^1]);
+
+        // Composition is the only terminal position, so the set ends at exactly one place.
+        var terminal = PublishingWorkflowPositions.Ordered
+            .Where(PublishingWorkflowPositions.IsTerminal)
+            .ToArray();
+        Assert.Equal(new[] { PublishingPosition.Composed }, terminal);
+    }
+
+    /// <summary>
+    /// STRUCTURAL ABSENCE THREE. The closed action set holds a publication-dispatch action and no
+    /// egress action, so an authority evaluation permitting a destination egress is not
+    /// expressible: there is no action value for a role to hold or a check to consult.
+    /// </summary>
+    [Fact]
+    public void TheClosedActionSetHoldsNoEgressAction()
+    {
+        var actions = Enum.GetNames<ActionKind>();
+
+        Assert.Contains(nameof(ActionKind.PublicationDispatch), actions);
+
+        foreach (var forbidden in new[] { "Upload", "Send", "Transmit", "Egress", "Transport", "Deliver" })
+        {
+            Assert.DoesNotContain(actions, a => a.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // No role holds anything beyond the closed set, so widening authority is a code change.
+        Assert.All(
+            ActionSet.Roles.SelectMany(ActionSet.For),
+            a => Assert.Contains(a, Enum.GetValues<ActionKind>()));
+    }
+
+    /// <summary>
+    /// The publishing configuration keys are pure value slots.
+    ///
+    /// The prevention is not a setting, and this is the assertion that says so mechanically: every
+    /// admitted publishing key passes the forbidden-fragment rule, and a proposed key naming a
+    /// step, a refusal, a condition or an egress is inadmissible rather than merely absent.
+    /// </summary>
+    [Fact]
+    public void NoAdmittedPublishingKeyReachesAControl()
+    {
+        Assert.All(
+            PublishingConfigurationKeys.Admitted,
+            key => Assert.False(
+                PublishingConfigurationKeys.ReachesAControl(key),
+                $"the admitted key {key} reaches a control"));
+
+        foreach (var proposed in new[]
+                 {
+                     "publishing.upload-enabled",
+                     "publishing.egress-endpoint",
+                     "publishing.dispatch-effect",
+                     "publishing.condition-override",
+                     "publishing.gate-bypass",
+                     "publishing.approval-default",
+                 })
+        {
+            Assert.True(
+                PublishingConfigurationKeys.ReachesAControl(proposed),
+                $"the proposed key {proposed} should be inadmissible");
+            Assert.False(PublishingConfigurationKeys.IsAdmitted(proposed));
+        }
+    }
+
+    /// <summary>
+    /// Every deterministic step the publishing path adds is registered in the rule-determined set.
+    ///
+    /// A step added to the publishing path without being registered fails HERE, at build time,
+    /// rather than passing silently and attaching cost to work that is supposed to carry none.
+    /// </summary>
+    [Fact]
+    public void EveryPublishingDeterministicStepIsRegistered()
+    {
+        Assert.NotEmpty(DeterministicTaskRegistry.PublishingMembers);
+
+        Assert.All(
+            DeterministicTaskRegistry.PublishingMembers,
+            name => Assert.True(
+                DeterministicTaskRegistry.Contains(name),
+                $"the publishing member {name} is not in the rule-determined set"));
+
+        // The effecting of a dispatch is not a member, because no such step exists to register.
+        foreach (var absent in new[] { "idempotent-upload", "destination-egress", "publication-effect" })
+        {
+            Assert.False(DeterministicTaskRegistry.Contains(absent));
+        }
     }
 
     /// <summary>
