@@ -82,6 +82,15 @@ obtained. It is empty in every row, and that is the finding.
 
 **Subjects: 14. Counts obtained: 0. Subjects carrying a recorded reason and a remedy: 14.**
 
+**This table is bound to the script's own subject list**, which `script.md` carries between
+machine-readable markers. The binding is set equality, not a row count: a subject the script calls
+for with no row here, and a row here naming a subject the script does not call for, each fail the
+check. A row the checker cannot parse into its six columns fails it too, rather than being passed
+over. That is what criterion `A-024` means by inspecting the audit *against the script's subject
+list*, and it is what stops a row from leaving the guarded set unnoticed — a row count alone can
+be restored by adding a decoy, which is exactly how an earlier version of the control was
+defeated in review.
+
 Every row resolves under `A-024`, because the criterion is satisfied by a count **or** by a
 recorded statement of non-evidenceability naming its reason and its remedy. None resolves by a
 count.
@@ -102,8 +111,8 @@ a trustworthy single-token read:
 
 - the dispatch for this phase, which states that `honey bee` = 1,213 "is a trustworthy single-token
   prior read";
-- the subject decision itself, `claude/trusting-shirley-90ea75 : D-017 : "First video: the honey
-  bee waggle dance, as a coordinate-encoding mechanism"`, whose supporting reasoning records that
+- the subject decision itself, owner decision `D-017`, "First video: the honey bee waggle dance,
+  as a coordinate-encoding mechanism", whose supporting reasoning records that
   `honey bee` is *"a single, distinctive, unambiguous token, so it is one of the counts §3.3
   classifies as trustworthy"*.
 

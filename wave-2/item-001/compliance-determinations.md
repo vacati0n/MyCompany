@@ -124,7 +124,7 @@ present in the narration, the description, the on-screen graphics, the end card 
 set. The in-video disclosure obligation therefore does not arise for this item, and the
 paid-promotion declaration has nothing to declare.
 
-**Source.** `claude/eloquent-taussig-724cc2 : D-022 : "The first item carries no affiliate link"`.
+**Source.** Owner decision `D-022`, "The first item carries no affiliate link".
 (That decision was originally filed as `D-015` on its branch and renumbered to `D-022`; withdrawn
 identifiers are not reissued.)
 

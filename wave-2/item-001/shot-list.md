@@ -3,8 +3,8 @@
 **Item:** `MC3-ITEM-001` · **Version:** 1 · **Subject:** the honey bee waggle dance as a
 coordinate-encoding mechanism · **Pillar:** 1, Mechanism · **Format:** F5.
 
-Source decision: `claude/trusting-shirley-90ea75 : D-017 : "First video: the honey bee waggle
-dance, as a coordinate-encoding mechanism"`.
+Source decision: owner decision `D-017`, "First video: the honey bee waggle dance, as a
+coordinate-encoding mechanism".
 
 **The load-bearing property of this list.** The original graphics carry the argument; the
 licensed clips illustrate it. Every claim in `claim-to-source.md` is carried by the narration
@@ -58,24 +58,24 @@ Illustrative only. Every one is subject to the origin assessment before it is bo
 
 | ID | Shot | Placement | Origin assessment |
 |---|---|---|---|
-| `CLIP-01` | Forager landing at a hive entrance | Cold open | Required before use |
-| `CLIP-02` | Hive entrance activity, wide | Cold open | Required before use |
-| `CLIP-03` | Interior comb, bees moving, low light macro | The act | Required before use |
-| `CLIP-04` | Single bee on comb, close macro | The act | Required before use |
-| `CLIP-05` | **Waggle-run candidate A** | The act | **Must be confirmed by eye to show the dance itself** |
-| `CLIP-06` | **Waggle-run candidate B** | The act | **Must be confirmed by eye to show the dance itself** |
-| `CLIP-07` | **Waggle-run candidate C** | Decoding | **Must be confirmed by eye to show the dance itself** |
-| `CLIP-08` | Bees clustered around a dancer — attendance behaviour | Decoding | Required before use |
-| `CLIP-09` | Lime / linden blossom, mid shot | Cold open, close | Required before use |
-| `CLIP-10` | Forager on a flower, macro | Cold open | Required before use |
-| `CLIP-11` | Bee in flight, slow motion | Distance | Required before use |
-| `CLIP-12` | Open farmland, elevated wide | Distance, optic flow | Required before use |
-| `CLIP-13` | Low sun over a horizon | Direction | Required before use |
-| `CLIP-14` | Vertical comb, wide, orientation legible | Direction | Required before use |
-| `CLIP-15` | Compound eye, macro | Optic flow | Required before use |
-| `CLIP-16` | Hive frame lifted, hands only, no face | The act | Required before use; no depicted human expert |
-| `CLIP-17` | Bees fanning at the entrance | Close | Required before use |
-| `CLIP-18` | Flowering meadow, wide | Habitat density | Required before use |
+| `CLIP-01` | Forager landing at a hive entrance | Beat 1, the problem | Required before use |
+| `CLIP-02` | Hive entrance activity, wide | Beat 1, the problem | Required before use |
+| `CLIP-03` | Interior comb, bees moving, low light macro | Beat 2, why it is worth an explainer | Required before use |
+| `CLIP-04` | Single bee on comb, close macro | Beat 3, the act | Required before use |
+| `CLIP-05` | **Waggle-run candidate A** | Beat 3, the act | **Must be confirmed by eye to show the dance itself** |
+| `CLIP-06` | **Waggle-run candidate B** | Beat 9, does anything read it | **Must be confirmed by eye to show the dance itself** |
+| `CLIP-07` | **Waggle-run candidate C** | Beat 10, the error | **Must be confirmed by eye to show the dance itself** |
+| `CLIP-08` | Bees clustered around a dancer — attendance behaviour | Beat 9, does anything read it | Required before use |
+| `CLIP-09` | Lime / linden blossom, mid shot | Beat 1, the problem | Required before use |
+| `CLIP-10` | Forager on a flower, macro | Beat 1, the problem | Required before use |
+| `CLIP-11` | Bee in flight, slow motion | Beat 6, encoding two — distance | Required before use |
+| `CLIP-12` | Open farmland, elevated wide | Beat 7, the odometer | Required before use |
+| `CLIP-13` | Low sun over a horizon | Beat 4, encoding one — direction | Required before use |
+| `CLIP-14` | Vertical comb, wide, orientation legible | Beat 4, encoding one — direction | Required before use |
+| `CLIP-15` | Compound eye, macro | Beat 7, the odometer | Required before use |
+| `CLIP-16` | Hive frame lifted, hands only, no face | Beat 3, the act | Required before use; no depicted human expert |
+| `CLIP-17` | Bees fanning at the entrance | Beat 13, the mechanism whole | Required before use |
+| `CLIP-18` | Flowering meadow, wide | Beat 12, what it is worth | Required before use |
 
 **Count: 18.** Marginal cost: none — included in the committed Storyblocks subscription at
 USD 30.00 per month. No second library is used, so the unauthorised USD 16.50 line is not

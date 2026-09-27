@@ -25,6 +25,40 @@ holds no subscription session. See `item-dossier.md` §4.
 
 ---
 
+## Subject list committed to the audit
+
+The specific species, behaviours and habitats this script calls for. **The supply audit is bound
+to this list**: a subject here with no audit row, or an audit row naming a subject absent here,
+is a failure of the control rather than a discrepancy to reconcile by eye. That binding is what
+criterion `A-024` asks for when it says the audit is inspected *against the script's subject
+list*, and it is what stops a row from leaving the guarded set unnoticed.
+
+The list is delimited for machine reading. Every line between the markers must parse as a single
+backticked term; a line that does not parse fails the check rather than being skipped.
+
+<!-- subject-list:begin -->
+- `bee`
+- `honeybee`
+- `honey bee`
+- `waggle dance`
+- `beehive`
+- `honeycomb`
+- `apiary`
+- `pollination`
+- `blossom`
+- `linden`
+- `meadow`
+- `farmland`
+- `sunset`
+- `beekeeper`
+<!-- subject-list:end -->
+
+Fourteen subjects. `honey bee` and `waggle dance` are carried in the list although both are
+multi-word and therefore inadmissible as counts, because the script does call for them and
+omitting them would hide the two subjects whose supply is least established.
+
+---
+
 ## Structure
 
 | Beat | Approx. in | Narration | Graphics | Clips |
