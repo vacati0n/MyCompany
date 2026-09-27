@@ -690,6 +690,452 @@ public sealed class BoundaryTests
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Decision D-002 — where the analytics surface is declared, and what it may carry
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// The analytics namespaces, so an assembly that declares one is named rather than guessed.
+    /// </summary>
+    private const string DomainAnalytics = "MediaCompany.Domain.Analytics";
+    private const string DeterministicAnalytics = "MediaCompany.Deterministic.Analytics";
+
+    /// <summary>Every production assembly, in the order the other assertions name them.</summary>
+    private static readonly string[] ProductionAssemblies =
+        [Domain, Application, Deterministic, Credentials, Capability, Persistence, Host];
+
+    /// <summary>
+    /// The types outside the two analytics namespaces that are allowed to carry an analytics type
+    /// on a declared member, each because it is a boundary the surface is reached through rather
+    /// than a part of the surface.
+    ///
+    /// The list is what makes membership DECIDED rather than assumed. An analytics type declared
+    /// anywhere else, or carried by any other type, fails the assertion below until someone adds
+    /// it here — which is a line in a diff a reviewer reads, rather than a namespace nobody
+    /// noticed was skipped.
+    /// </summary>
+    private static readonly string[] PermittedCarriersOutsideTheAnalyticsNamespaces =
+    [
+        // The read ports. Declared with the other ports so the rule-determined assembly reaches
+        // them without a reference of its own.
+        "MediaCompany.Application.Ports.ICostRollupReader",
+        "MediaCompany.Application.Ports.IServedTierReader",
+        "MediaCompany.Application.Ports.IRevenueParameterRegister",
+
+        // The reporting surface's line type, which carries the measurement quantity in the
+        // position its free-form string value used to occupy.
+        "MediaCompany.Deterministic.Services.ReportedMeasure",
+
+        // The adapters that implement the ports, which sit below the boundary and read upward.
+        "MediaCompany.Persistence.NpgsqlCostReader",
+        "MediaCompany.Persistence.NpgsqlRevenueParameterRegister",
+
+        // The measure catalogue, which is where the six revenue-derived figures are declared as
+        // deferred measures and therefore names the closed figure set.
+        "MediaCompany.Deterministic.Reporting.MeasureCatalogue",
+    ];
+
+    /// <summary>
+    /// The string members the analytics surface and its permitted carriers are allowed to declare,
+    /// each an AUTHORED LABEL rather than a value slot: a statement this code composes, never
+    /// record content copied through.
+    ///
+    /// The list is declared rather than pattern-matched, because a pattern over member names
+    /// decides nothing — the delivered defect was a member called Value, and the next one will be
+    /// called something else. A new string member on an analytics type is refused until it is
+    /// named here, where the question "is this an authored label or a value slot?" is asked once,
+    /// by a person.
+    /// </summary>
+    private static readonly string[] PermittedAuthoredLabels =
+    [
+        "MediaCompany.Domain.Analytics.SingleRecordCaveat.Statement",
+        "MediaCompany.Domain.Analytics.RefusalReadModel.Precondition",
+        "MediaCompany.Domain.Analytics.RefusalReadModel.RecordedState",
+        "MediaCompany.Domain.Analytics.RefusalReadModel.Detail",
+        "MediaCompany.Domain.Analytics.CostReadModel.PriceBasis",
+        "MediaCompany.Domain.Analytics.StageOutcomeReadModel.Statement",
+        "MediaCompany.Domain.Analytics.CompositionStepReadModel.DispatchRecordEvidence",
+        "MediaCompany.Domain.Analytics.CompositionStepReadModel.AuditEntryEvidence",
+        "MediaCompany.Domain.Analytics.CompositionStepReadModel.Statement",
+        "MediaCompany.Domain.Analytics.SupplyAuditReadModel.Subject",
+        "MediaCompany.Domain.Analytics.SupplyAuditReadModel.Library",
+        "MediaCompany.Domain.Analytics.SupplyAuditReadModel.WhatWouldObtainIt",
+        "MediaCompany.Domain.Analytics.DeterminationOutcomeReadModel.Statement",
+        "MediaCompany.Domain.Analytics.ServedTierReadModel.ServedStatement",
+        "MediaCompany.Domain.Analytics.TierRatioReadModel.AssumptionLabel",
+        "MediaCompany.Domain.Analytics.RevenueDerivedFigureReadModel.RecordedSource",
+        "MediaCompany.Domain.Analytics.ObservedRevenueParameter.SourceObservation",
+        "MediaCompany.Domain.Analytics.RevenueParameterRecord.SourceObservation",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.PriceBasis",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.SplitAssumption",
+        "MediaCompany.Deterministic.Services.ReportedMeasure.Name",
+        "MediaCompany.Deterministic.Services.ReportedMeasure.Source",
+        "MediaCompany.Domain.Analytics.SingleRecordCaveat.Standard",
+        "MediaCompany.Deterministic.Reporting.MeasureCatalogue.RevenueDerivedNames",
+    ];
+
+    /// <summary>
+    /// D-002, the membership half, and the half that decides membership rather than assuming it.
+    ///
+    /// The delivered closure assertions decide which assemblies the rule-determined module may
+    /// reach; they decide nothing about WHERE an analytics unit is declared. This one does, in
+    /// both directions. Every type in the two analytics namespaces must be declared in the two
+    /// named assemblies, AND every type anywhere in the production build that carries an analytics
+    /// type on a declared member must itself be in those namespaces or on the permitted-carrier
+    /// list. A new analytics type declared in some third namespace is therefore refused, which is
+    /// the gap the earlier shape of this assertion left open: it scanned two namespaces and
+    /// required nothing to be in them.
+    ///
+    /// Two layers, and the difference between them matters. At the COMPILER, analytics code in the
+    /// rule-determined module with no new project reference cannot call a reasoning capability at
+    /// all, because the types are not visible to it; a project reference to the capability boundary
+    /// is stronger still and does not restore, the capability assembly already referencing the
+    /// rule-determined one. At the SUITE, a used reference to the credential broker compiles
+    /// cleanly and is refused here.
+    /// </summary>
+    [Fact]
+    public void EveryAnalyticsTypeAndEveryCarrierOfOneIsDeclaredWhereTheDesignPutsIt()
+    {
+        var misplaced = new List<string>();
+
+        foreach (var assembly in ProductionAssemblies)
+        {
+            foreach (var type in Load(assembly).GetTypes())
+            {
+                var name = type.FullName ?? type.Name;
+                if (name.Contains('<', StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var space = type.Namespace ?? string.Empty;
+                var inDomainAnalytics = space.StartsWith(DomainAnalytics, StringComparison.Ordinal);
+                var inDeterministicAnalytics = space.StartsWith(DeterministicAnalytics, StringComparison.Ordinal);
+
+                if (inDomainAnalytics && assembly != Domain)
+                {
+                    misplaced.Add($"{name} is declared in {assembly}, not in {Domain}");
+                }
+
+                if (inDeterministicAnalytics && assembly != Deterministic)
+                {
+                    misplaced.Add($"{name} is declared in {assembly}, not in {Deterministic}");
+                }
+
+                if (inDomainAnalytics || inDeterministicAnalytics || IsNested(type))
+                {
+                    continue;
+                }
+
+                if (CarriesAnAnalyticsType(type) && !PermittedCarriersOutsideTheAnalyticsNamespaces.Contains(name))
+                {
+                    misplaced.Add(
+                        $"{name} carries an analytics type but is declared outside {DomainAnalytics} and "
+                        + $"{DeterministicAnalytics} and is not a permitted carrier; declare it inside the "
+                        + "analytics surface, or name it as a boundary the surface is reached through");
+                }
+            }
+        }
+
+        Assert.Empty(misplaced);
+
+        // Both namespaces are populated, so the check is over something rather than over nothing.
+        Assert.NotEmpty(AnalyticsTypes(Domain, DomainAnalytics));
+        Assert.NotEmpty(AnalyticsTypes(Deterministic, DeterministicAnalytics));
+    }
+
+    /// <summary>
+    /// D-001 and D-002, the representation half.
+    ///
+    /// No type on the analytics surface carries a bare numeric member or a free-form value member.
+    /// The one exception is the measurement quantity union itself and its three cases, which ARE
+    /// the representation: the amount lives on the observed-value case and nowhere else, so the
+    /// only way to reach a number on the analytics surface is to resolve the case first.
+    ///
+    /// The rule reaches a numeric declared directly, a numeric reached through any generic
+    /// argument or array element at any depth, and a numeric returned by a method; and it refuses
+    /// any string member not declared as an authored label. The earlier shape reached only a
+    /// directly declared primitive and a string whose name ended in Value, which was narrower than
+    /// the property it was offered as enforcing.
+    /// </summary>
+    [Fact]
+    public void NoAnalyticsTypeCarriesABareNumericOrAnUndeclaredStringMember()
+    {
+        var offenders = new List<string>();
+
+        foreach (var (type, publicOnly) in ScannedAnalyticsTypes())
+        {
+            offenders.AddRange(BareValueMembers(type, publicOnly));
+        }
+
+        Assert.Empty(offenders);
+    }
+
+    /// <summary>
+    /// The same rule, applied to types that deliberately break it, one per way of breaking it.
+    ///
+    /// Without this the check above would pass on an empty scan, or on a rule that matched
+    /// nothing, and nobody would know. The probes are declared in the test assembly, so they are
+    /// not on the analytics surface and the check above does not see them.
+    /// </summary>
+    [Fact]
+    public void TheAnalyticsMemberRuleRefusesEveryWayAValueCanBeCarriedAndNamesTheOffender()
+    {
+        var direct = Assert.Single(BareValueMembers(typeof(ProbeCarryingABareNumericMember)));
+        Assert.Contains(nameof(ProbeCarryingABareNumericMember), direct, StringComparison.Ordinal);
+        Assert.Contains("Minutes", direct, StringComparison.Ordinal);
+        Assert.Contains("bare Decimal", direct, StringComparison.Ordinal);
+
+        var inCollection = Assert.Single(BareValueMembers(typeof(ProbeCarryingANumericInsideACollection)));
+        Assert.Contains("Amounts", inCollection, StringComparison.Ordinal);
+        Assert.Contains("bare Decimal", inCollection, StringComparison.Ordinal);
+
+        var nested = Assert.Single(BareValueMembers(typeof(ProbeCarryingANumericInsideANestedGeneric)));
+        Assert.Contains("ByPeriod", nested, StringComparison.Ordinal);
+        Assert.Contains("bare Int64", nested, StringComparison.Ordinal);
+
+        var behindMethod = Assert.Single(BareValueMembers(typeof(ProbeReturningANumericFromAMethod)));
+        Assert.Contains("Total", behindMethod, StringComparison.Ordinal);
+        Assert.Contains("bare Decimal", behindMethod, StringComparison.Ordinal);
+
+        var unnamedString = Assert.Single(BareValueMembers(typeof(ProbeCarryingAnUndeclaredStringMember)));
+        Assert.Contains("RenderedFigure", unnamedString, StringComparison.Ordinal);
+        Assert.Contains("authored label", unnamedString, StringComparison.Ordinal);
+
+        // And a read model built from the measurement quantity alone passes the same rule.
+        Assert.Empty(BareValueMembers(typeof(ProbeCarryingOnlyAMeasurementQuantity)));
+    }
+
+    /// <summary>
+    /// Every type the member rule is applied to: the two analytics namespaces and the permitted
+    /// carriers, minus the measurement representation itself.
+    /// </summary>
+    private static IReadOnlyList<(Type Type, bool PublicOnly)> ScannedAnalyticsTypes()
+    {
+        var scanned = new List<(Type, bool)>();
+
+        // On the surface itself, every declared member is scanned: a private numeric is a value a
+        // later member can expose.
+        foreach (var (assembly, space) in new[] { (Domain, DomainAnalytics), (Deterministic, DeterministicAnalytics) })
+        {
+            scanned.AddRange(AnalyticsTypes(assembly, space)
+                .Where(t => !IsTheMeasurementRepresentation(t))
+                .Select(t => (t, false)));
+        }
+
+        // A permitted carrier is a BOUNDARY: it turns a measurement into a datastore column or a
+        // report line, so it converts internally by definition. It is held to its public surface,
+        // which is what a reader can reach.
+        foreach (var assembly in ProductionAssemblies)
+        {
+            scanned.AddRange(Load(assembly).GetTypes()
+                .Where(t => PermittedCarriersOutsideTheAnalyticsNamespaces.Contains(t.FullName ?? t.Name))
+                .Select(t => (t, true)));
+        }
+
+        return scanned;
+    }
+
+    /// <summary>The types one assembly declares in one analytics namespace, compiler artefacts aside.</summary>
+    private static Type[] AnalyticsTypes(string assembly, string space) =>
+        Load(assembly).GetTypes()
+            .Where(t => (t.Namespace ?? string.Empty).StartsWith(space, StringComparison.Ordinal))
+            .Where(t => !(t.FullName ?? t.Name).Contains('<', StringComparison.Ordinal))
+            .ToArray();
+
+    /// <summary>
+    /// The measurement quantity union and its three cases. They are the declared representation,
+    /// and the observed-value case is the one place on the whole surface an amount is allowed to
+    /// live.
+    /// </summary>
+    private static bool IsTheMeasurementRepresentation(Type type)
+    {
+        var union = Load(Domain).GetType("MediaCompany.Domain.Analytics.MeasurementQuantity", throwOnError: true)!;
+        return type == union || type.BaseType == union;
+    }
+
+    private static bool IsNested(Type type) => type.IsNested;
+
+    /// <summary>Whether any declared member of a type mentions a type from the analytics namespaces.</summary>
+    private static bool CarriesAnAnalyticsType(Type type) =>
+        SignatureTypes(type).Any(t =>
+        {
+            var space = t.Namespace ?? string.Empty;
+            return space.StartsWith(DomainAnalytics, StringComparison.Ordinal)
+                || space.StartsWith(DeterministicAnalytics, StringComparison.Ordinal);
+        });
+
+    private const BindingFlags Declared =
+        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+
+    /// <summary>
+    /// The synthesized members a record carries. They are the compiler's, not the author's, and
+    /// one of them returns an integer, so scanning them would refuse every record ever written.
+    /// </summary>
+    private static readonly string[] SynthesizedRecordMembers =
+        ["GetHashCode", "Equals", "PrintMembers", "ToString", "<Clone>$", "EqualityContract"];
+
+    /// <summary>Every type named anywhere on a type's own declared members, flattened.</summary>
+    private static IEnumerable<Type> SignatureTypes(Type type)
+    {
+        foreach (var property in type.GetProperties(Declared).Where(m => m.DeclaringType == type))
+        {
+            foreach (var flattened in Flatten(property.PropertyType))
+            {
+                yield return flattened;
+            }
+        }
+
+        foreach (var field in type.GetFields(Declared).Where(m => m.DeclaringType == type))
+        {
+            foreach (var flattened in Flatten(field.FieldType))
+            {
+                yield return flattened;
+            }
+        }
+
+        foreach (var method in type.GetMethods(Declared).Where(m => m.DeclaringType == type && !m.IsSpecialName))
+        {
+            if (SynthesizedRecordMembers.Contains(method.Name))
+            {
+                continue;
+            }
+
+            foreach (var flattened in Flatten(method.ReturnType).Concat(
+                         method.GetParameters().SelectMany(p => Flatten(p.ParameterType))))
+            {
+                yield return flattened;
+            }
+        }
+    }
+
+    /// <summary>
+    /// One signature type and every type reachable inside it: array elements, by-ref and pointer
+    /// targets, and EVERY generic argument at EVERY depth. The earlier shape unwrapped only the
+    /// first generic argument once, so a numeric behind a dictionary value or a nested collection
+    /// was invisible to it.
+    /// </summary>
+    private static IEnumerable<Type> Flatten(Type type)
+    {
+        if (type.IsByRef || type.IsArray || type.IsPointer)
+        {
+            var element = type.GetElementType();
+            if (element is not null)
+            {
+                foreach (var inner in Flatten(element))
+                {
+                    yield return inner;
+                }
+            }
+
+            yield break;
+        }
+
+        var bare = Nullable.GetUnderlyingType(type) ?? type;
+        yield return bare;
+
+        if (bare.IsGenericType)
+        {
+            foreach (var argument in bare.GetGenericArguments().SelectMany(Flatten))
+            {
+                yield return argument;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Every member of one type that would let an unobserved quantity reach a reader as a number,
+    /// or let record content reach one as unclassified text. The message names the type and the
+    /// member, because a refusal that says only that something is wrong is one somebody disables.
+    /// </summary>
+    private static IReadOnlyList<string> BareValueMembers(Type type, bool publicOnly = false)
+    {
+        Type[] numeric =
+        [
+            typeof(decimal), typeof(double), typeof(float),
+            typeof(sbyte), typeof(byte), typeof(short), typeof(ushort),
+            typeof(int), typeof(uint), typeof(long), typeof(ulong),
+        ];
+
+        if (type.IsEnum)
+        {
+            return [];
+        }
+
+        var offenders = new List<string>();
+        var owner = type.FullName ?? type.Name;
+        var flags = publicOnly
+            ? BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static
+            : Declared;
+
+        void Numerics(string member, Type signature)
+        {
+            foreach (var reached in Flatten(signature).Where(numeric.Contains).Distinct())
+            {
+                offenders.Add(
+                    $"{owner}.{member} reaches a bare {reached.Name}; an analytics quantity is a "
+                    + "MeasurementQuantity, so that an unobserved quantity has no number to print");
+            }
+        }
+
+        foreach (var property in type.GetProperties(flags).Where(m => m.DeclaringType == type))
+        {
+            if (SynthesizedRecordMembers.Contains(property.Name))
+            {
+                continue;
+            }
+
+            Numerics(property.Name, property.PropertyType);
+            Strings(offenders, owner, property.Name, property.PropertyType);
+        }
+
+        foreach (var field in type.GetFields(flags).Where(m => m.DeclaringType == type))
+        {
+            // A compiler-emitted backing field mirrors the property that declares it, so reporting
+            // both would name one offence twice.
+            if (field.Name.Contains('<', StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            Numerics(field.Name, field.FieldType);
+            Strings(offenders, owner, field.Name, field.FieldType);
+        }
+
+        foreach (var method in type.GetMethods(flags)
+                     .Where(m => m.DeclaringType == type && !m.IsSpecialName)
+                     .Where(m => !SynthesizedRecordMembers.Contains(m.Name)))
+        {
+            // The return type only. A numeric PARAMETER is an input a composer is given, not a
+            // value a reader can reach, and refusing one would refuse every composer that counts.
+            Numerics(method.Name + "()", method.ReturnType);
+        }
+
+        return offenders;
+    }
+
+    /// <summary>
+    /// A string member is refused unless it is declared as an authored label. A name-suffix rule
+    /// decides nothing here: the delivered defect was a member called Value, and the next one is
+    /// called something else.
+    /// </summary>
+    private static void Strings(List<string> offenders, string owner, string member, Type signature)
+    {
+        if (!Flatten(signature).Contains(typeof(string)))
+        {
+            return;
+        }
+
+        if (PermittedAuthoredLabels.Contains($"{owner}.{member}"))
+        {
+            return;
+        }
+
+        offenders.Add(
+            $"{owner}.{member} is a string member that is not declared as an authored label; a value slot "
+            + "lets record content reach a reader unclassified, so the member is refused until it is named");
+    }
+
     /// <summary>
     /// Finds every type in an assembly that names a matching type anywhere on its own members, so
     /// a dependency hidden in a private field is found as readily as one in a public signature.
@@ -844,3 +1290,29 @@ internal sealed class ProbeClock : IClock
 
     public DateTimeOffset UtcNow => Instant;
 }
+
+/// <summary>An analytics read model as it must NOT be written: the quantity is a bare number.</summary>
+internal sealed record ProbeCarryingABareNumericMember(decimal Minutes);
+
+/// <summary>Nor like this: the number is one level down, inside a collection.</summary>
+internal sealed record ProbeCarryingANumericInsideACollection(IReadOnlyList<decimal> Amounts);
+
+/// <summary>Nor like this: the number is two levels down, inside a nested collection.</summary>
+internal sealed record ProbeCarryingANumericInsideANestedGeneric(
+    IReadOnlyList<IReadOnlyList<long>> ByPeriod);
+
+/// <summary>Nor like this: the number is behind a method rather than on a member.</summary>
+internal sealed class ProbeReturningANumericFromAMethod
+{
+    public decimal Total() => 0m;
+}
+
+/// <summary>
+/// Nor like this: a free-form string slot named anything at all. The delivered defect was a
+/// member called Value; a rule that looked for that name would pass this one.
+/// </summary>
+internal sealed record ProbeCarryingAnUndeclaredStringMember(string RenderedFigure);
+
+/// <summary>An analytics read model as it must be written.</summary>
+internal sealed record ProbeCarryingOnlyAMeasurementQuantity(
+    MediaCompany.Domain.Analytics.MeasurementQuantity Review);

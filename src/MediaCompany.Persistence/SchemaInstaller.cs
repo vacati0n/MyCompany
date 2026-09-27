@@ -25,6 +25,13 @@ public static class SchemaInstaller
         // nullable approval marks and two nullable tier columns, applied after the two
         // delivered files so every table it extends already exists.
         "MediaCompany.Persistence.Schema.003-publication.sql",
+
+        // Wave 4, the analytics surface. Additive: one register recording an observed revenue
+        // parameter with its source observation and that observation's date, applied after every
+        // resource it depends on. No delivered table, column, constraint or view is altered, and
+        // the register is created empty, so the reversal is lossless in the state this change
+        // delivers.
+        "MediaCompany.Persistence.Schema.004-analytics.sql",
     ];
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)

@@ -10,4 +10,26 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MediaCompany.Host\MediaCompany.Host.csproj" />
   </ItemGroup>
+  <!--
+    Hard constraint C-003 of the accepted design requires the no-model-path property to be PROVED
+    BY A BUILD-TIME CHECK rather than asserted, and the plan criterion resting on it requires the
+    check to run as part of the build rather than on request. An ordinary test project satisfies
+    neither: nothing starts it.
+
+    This target runs the boundary assertions against the assembly that was just built, after the
+    build that produced it, and fails the build when they fail. It calls the test runner directly
+    on the built assembly rather than re-entering MSBuild, so it cannot recurse into another build.
+
+    Set SkipBoundaryChecks=true to bypass it deliberately and visibly:
+        dotnet build MediaCompany.slnx -p:SkipBoundaryChecks=true
+  -->
+  <Target Name="RunBoundaryChecksAsPartOfTheBuild"
+          AfterTargets="Build"
+          Condition="'$(SkipBoundaryChecks)' != 'true' AND '$(BoundaryChecksRunning)' != 'true'">
+    <Message Importance="high" Text="Boundary checks: running the architecture assertions against $(TargetFileName)." />
+    <Exec Command="dotnet vstest &quot;$(TargetPath)&quot; --logger:console;verbosity=minimal"
+          EnvironmentVariables="BoundaryChecksRunning=true"
+          StandardOutputImportance="high" />
+  </Target>
+
 </Project>

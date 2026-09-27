@@ -1,3 +1,5 @@
+using MediaCompany.Domain.Analytics;
+
 namespace MediaCompany.Deterministic.Reporting;
 
 /// <summary>
@@ -58,7 +60,16 @@ public static class MeasureCatalogue
         new Measure.MeasurableNow("assets-without-verified-permission-basis", "count", "asset and rights ledger"),
         new Measure.MeasurableNow("operations-with-incomplete-attribution", "count", "recorded operations"),
 
+        // The six revenue-derived figures (decision D-003). Each is PRESENT in the delivered
+        // surface and carries no value field at all, so none can be rendered as zero, a dash or
+        // any placeholder a reader could mistake for a measurement. The only path to a value for
+        // any of them is the admission function, which takes an observed revenue parameter as a
+        // required constructed argument.
+        new Measure.Deferred("revenue", "an observed revenue figure recorded with its source observation"),
         new Measure.Deferred("revenue-per-mille", "an observed RPM from the publishing platform"),
+        new Measure.Deferred("profit-per-item", "an observed revenue figure recorded with its source observation"),
+        new Measure.Deferred("profit-per-channel", "an observed revenue figure recorded with its source observation"),
+        new Measure.Deferred("cost-per-dollar-of-revenue", "an observed revenue figure recorded with its source observation"),
         new Measure.Deferred("profit", "an observed revenue figure"),
         new Measure.Deferred("revenue-per-item", "an observed revenue figure"),
         new Measure.Deferred("return-on-cost", "an observed revenue figure"),
@@ -72,4 +83,24 @@ public static class MeasureCatalogue
 
     public static IReadOnlyList<Measure.Deferred> Deferred { get; } =
         All.OfType<Measure.Deferred>().ToArray();
+
+    /// <summary>
+    /// The catalogue name each of the six revenue-derived figures is declared under. The map is
+    /// total over the closed six-member set, so a figure that is not declared in the catalogue is
+    /// a failing check rather than a figure nobody noticed was missing.
+    /// </summary>
+    public static IReadOnlyDictionary<RevenueDerivedFigure, string> RevenueDerivedNames { get; } =
+        new Dictionary<RevenueDerivedFigure, string>
+        {
+            [RevenueDerivedFigure.Revenue] = "revenue",
+            [RevenueDerivedFigure.RevenuePerMille] = "revenue-per-mille",
+            [RevenueDerivedFigure.ProfitPerItem] = "profit-per-item",
+            [RevenueDerivedFigure.ProfitPerChannel] = "profit-per-channel",
+            [RevenueDerivedFigure.ReturnOnInvestment] = "return-on-cost",
+            [RevenueDerivedFigure.CostPerDollarOfRevenue] = "cost-per-dollar-of-revenue",
+        };
+
+    /// <summary>The deferred declaration of one revenue-derived figure.</summary>
+    public static Measure.Deferred DeclarationFor(RevenueDerivedFigure figure) =>
+        Deferred.Single(d => string.Equals(d.Name, RevenueDerivedNames[figure], StringComparison.Ordinal));
 }

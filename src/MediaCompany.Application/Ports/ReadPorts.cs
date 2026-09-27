@@ -1,4 +1,5 @@
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Configuration;
 using MediaCompany.Domain.Publication;
@@ -117,6 +118,32 @@ public interface ICostRollupReader
     /// criterion AC-017 measures this to zero.
     /// </summary>
     Task<Money> CostForDeterministicSetAsync(DateOnly period, CancellationToken cancellationToken);
+
+    // -----------------------------------------------------------------------
+    // The parallel three-state members (decision D-005).
+    //
+    // The delivered currency-returning members above keep their signatures and their behaviour, so
+    // every existing caller compiles and behaves unchanged through the coexistence period. They are
+    // removed only once the build shows no caller, which is a condition the build decides rather
+    // than a judgement somebody makes.
+    //
+    // The defect the parallel members exist to correct is concrete: a currency value cannot express
+    // the absence of an observation, so a period holding no recorded operation is returned today as
+    // a zero amount and is indistinguishable from a period that was measured and cost nothing.
+    // -----------------------------------------------------------------------
+
+    /// <summary>One item's cost in three states. Unmeasured where no operation is recorded for it.</summary>
+    Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken cancellationToken);
+
+    /// <summary>One period's cost in three states. Unmeasured where the period holds no recorded operation.</summary>
+    Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// One item's cost position as the datastore computes it, mirroring the delivered period
+    /// summary. <see cref="ItemSummary.Operations"/> is what decides the measurement state, exactly
+    /// as the period summary's count already does.
+    /// </summary>
+    Task<ItemSummary> ItemSummaryAsync(ItemId item, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -143,3 +170,41 @@ public sealed record PeriodSummary(
     Money VarianceAgainstEnvelope,
     bool ContainsEstimates,
     long Operations);
+
+/// <summary>
+/// One item's cost position as the datastore computes it, on the same shape as
+/// <see cref="PeriodSummary"/>. <see cref="Operations"/> is the count of recorded operations the
+/// total aggregates, and a count of zero is what makes the figure unmeasured rather than zero.
+/// </summary>
+public sealed record ItemSummary(
+    ItemId Item,
+    Money Total,
+    bool ContainsEstimates,
+    long Operations);
+
+/// <summary>
+/// The served reasoning tier as recorded, one entry per accounted operation in a period.
+///
+/// The served value on each record was written at the resolution boundary from the ADMITTED
+/// ROUTE's stated tier and never from the request, and a null served value is the explicit absence
+/// marker for a route that stated none. This port reads those records; it derives nothing.
+/// </summary>
+public interface IServedTierReader
+{
+    Task<IReadOnlyList<ServedTierRecord>> RecordsForPeriodAsync(DateOnly period, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The register in which an observed revenue parameter is recorded with the source observation it
+/// came from and that observation's date (decision D-003).
+///
+/// The register is created empty and this change records no row in it. A row recorded without a
+/// source observation and its date is an assumed parameter: it is readable here and it admits
+/// nothing, which is what keeps the six revenue-derived figures unlit.
+/// </summary>
+public interface IRevenueParameterRegister
+{
+    Task<IReadOnlyList<RevenueParameterRecord>> RecordedAsync(CancellationToken cancellationToken);
+
+    Task RecordAsync(RevenueParameterRecord parameter, CancellationToken cancellationToken);
+}
