@@ -1153,8 +1153,6 @@ D-021 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` c
 Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
 and angle), `Q-004` (budget for a second stock library) and `Q-008` (audience-drift threshold)
 remain with the CEO.
-<<<<<<< HEAD
-=======
 
 
 ---
@@ -1362,4 +1360,3 @@ a two-word query by three successive readers — the session presenting the opti
 deciding on them, and the dispatch instructing the work — because everyone checked the *number*
 against the rule and nobody checked the *query*. It was caught by the one reader whose brief told
 it the answer and who went to the source anyway.
->>>>>>> claude/trusting-shirley-90ea75

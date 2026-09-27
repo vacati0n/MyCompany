@@ -326,3 +326,43 @@ the frozen context slice (raised by the agent itself as an open question to `omn
 The prohibition looks deliberate, so this should be resolved by decision rather than by quietly
 widening the agent's authority: either document the supply-external-evidence-as-repository-input
 pattern, or add a research-capable role.
+
+
+---
+
+## Defect 4 — CONFIRMED WITHDRAWN by a second independent run (Wave 2, `run-3a58551ee912`)
+
+**Status: not a defect for `implement-feature`. Proven twice, by two sessions, on two runs.**
+
+The Wave 2 session predicted this from the workflow specification on 2026-09-26 and owed an
+empirical result. **That result is now in: the `implement-feature` Verification Gate was decided
+as `omn-qa` on 2026-09-27 and the runtime accepted it.** No Producer Exclusion refusal, no
+alternative owner named, no bridge applied.
+
+That is the second independent confirmation — the Wave 1 session reached the same gate and
+decided it the same way on its own run.
+
+**Why the original claim was wrong**, restated so it is not re-raised a third time. The defect
+held that the gate is undecidable because `omn-qa` is its only owner while producing the evidence
+it assesses. The second half is false for this workflow:
+
+- `workflows/implement-feature.md` line 43 — phase `quality-review` is owned by
+  **`omn-dev-2-reviewer`**, whose Output Artifact `review-package.md` closes **both** the Review
+  Gate and the Verification Gate.
+- The same file's gate-ownership notes say it outright: *"The Review Gate carries omn-qa as a
+  second owner because omn-dev-2-reviewer produces the findings that gate assesses, and the
+  Producer Exclusion Rule forbids approving one's own output."*
+
+So `omn-qa` is **not** the producer here and is eligible. The real instance is `fix-bug`, where
+`omn-qa` does own `regression-validation` and genuinely produces the verification evidence — and
+that instance was **already fixed**, by adding `omn-dev-2-reviewer` as a second owner
+(`workflows/workflow-gate-matrix.md`, amendment table). The original note generalised the
+`fix-bug` case to a workflow with different ownership.
+
+**Consequence for the record.** Any brief, ticket or decision note warning that this gate blocks
+a run is overstating what is ahead. Two runs have now passed through it normally.
+
+**The Producer Exclusion Rule itself works correctly**, and Wave 2 saw it enforced at a level
+below human attention: the design validator's check `D17.6` rejected a decision record the
+producing agent had **signed**, because signing is the gate's act and not the producer's. The
+rule is not only a gate-time check — it is embedded in artifact validation.
