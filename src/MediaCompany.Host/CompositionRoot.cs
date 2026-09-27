@@ -1,6 +1,7 @@
 using MediaCompany.Application.Ports;
 using MediaCompany.Capability;
 using MediaCompany.Credentials;
+using MediaCompany.Deterministic.Analytics;
 using MediaCompany.Deterministic.Services;
 using MediaCompany.Persistence;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +64,13 @@ public static class CompositionRoot
         services.AddSingleton<ICostRollupReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
         services.AddSingleton<IBudgetReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
 
+        // The analytics read ports. The served-tier reader is the same adapter that already reads
+        // the cost rollups, because both read the accounted-operation table; the revenue register
+        // is its own adapter over the register the appended schema resource creates empty.
+        services.AddSingleton<IServedTierReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
+        services.AddSingleton<IRevenueParameterRegister>(sp =>
+            new NpgsqlRevenueParameterRegister(sp.GetRequiredService<NpgsqlDataSource>()));
+
         // The credential broker — the only module holding a dependency on the secret store.
         services.AddSingleton(sp =>
         {
@@ -96,6 +104,11 @@ public static class CompositionRoot
         services.AddSingleton<ReportingService>();
         services.AddSingleton<OperatingRegisterReport>();
         services.AddSingleton<PermissionAnswerService>();
+
+        // The analytics surface. It takes read ports and a clock and nothing else; it could not
+        // take the capability gateway, because its assembly does not reference the one that
+        // declares it.
+        services.AddSingleton<AnalyticsReportService>();
 
         return services.BuildServiceProvider();
     }

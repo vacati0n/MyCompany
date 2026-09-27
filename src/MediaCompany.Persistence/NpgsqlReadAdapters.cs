@@ -1,5 +1,7 @@
 using MediaCompany.Application.Ports;
+using MediaCompany.Deterministic.Analytics;
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Configuration;
 using MediaCompany.Domain.Registry;
@@ -480,7 +482,7 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
 /// aggregation in the datastore's exact decimal type; this class reads results and performs no
 /// money arithmetic (constraint C-005).
 /// </summary>
-public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
+public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServedTierReader
 {
     private readonly NpgsqlDataSource _dataSource;
 
@@ -582,6 +584,86 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
         return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// One item's cost position, mirroring the delivered period summary. No row in the view means
+    /// no operation is recorded for the item, which is a different fact from a recorded cost of
+    /// zero and is reported as a count of zero operations rather than as a zero amount.
+    /// </summary>
+    public async Task<ItemSummary> ItemSummaryAsync(ItemId item, CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT total_cost, COALESCE(currency, 'USD'), contains_estimates, operations
+            FROM v_cost_per_item WHERE item_id = @item_id
+            """);
+        command.Parameters.AddWithValue("item_id", item.Value);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return new ItemSummary(item, Money.Zero(), ContainsEstimates: false, Operations: 0);
+        }
+
+        return new ItemSummary(
+            item,
+            new Money(reader.GetDecimal(0), reader.GetString(1)),
+            reader.GetBoolean(2),
+            reader.GetInt64(3));
+    }
+
+    /// <summary>
+    /// The three-state item cost. The rule that turns an aggregation into a measurement state
+    /// lives in one place, in the analytics composer, so the adapter and the surface cannot drift.
+    /// </summary>
+    public async Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken cancellationToken)
+    {
+        var summary = await ItemSummaryAsync(item, cancellationToken).ConfigureAwait(false);
+
+        return AnalyticsComposers.FromOperations(
+            summary.Operations, summary.Total, $"no operation is recorded for item {item}");
+    }
+
+    /// <summary>The three-state period cost, on the same rule.</summary>
+    public async Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken cancellationToken)
+    {
+        var summary = await PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false);
+
+        return AnalyticsComposers.FromOperations(
+            summary.Operations, summary.Total, $"no operation is recorded in period {period:yyyy-MM}");
+    }
+
+    /// <summary>
+    /// The recorded tier pair of every accounted operation in a period. Both columns are read as
+    /// recorded; a null served tier is returned as null, which is the explicit absence marker the
+    /// resolution boundary wrote, and nothing here substitutes the requested tier for it.
+    /// </summary>
+    public async Task<IReadOnlyList<ServedTierRecord>> RecordsForPeriodAsync(
+        DateOnly period,
+        CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT operation_id, period, reasoning_tier_requested, reasoning_tier_served
+            FROM agent_costs WHERE period = @period ORDER BY occurred_at, operation_id
+            """);
+        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
+
+        var records = new List<ServedTierRecord>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            records.Add(new ServedTierRecord
+            {
+                Operation = new OperationId(reader.GetGuid(0)),
+                Period = reader.GetFieldValue<DateOnly>(1),
+                Requested = reader.IsDBNull(2) ? null : Enum.Parse<ReasoningTier>(reader.GetString(2)),
+                Served = reader.IsDBNull(3) ? null : Enum.Parse<ReasoningTier>(reader.GetString(3)),
+            });
+        }
+
+        return records;
+    }
+
     private static async Task<Money> ReadMoneyAsync(NpgsqlCommand command, CancellationToken cancellationToken)
     {
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -592,4 +674,81 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
 
         return new Money(reader.GetDecimal(0), reader.GetString(1));
     }
+}
+
+/// <summary>
+/// The observed-revenue-parameter register (decision D-003).
+///
+/// The register is created empty by the appended schema resource and this change records no row in
+/// it. A row carrying no source observation, or no date for one, is returned as recorded and
+/// admits nothing: the admission rule sits in one place, in the domain type's own factory, so a
+/// redefinition of what counts as observed changes one site.
+/// </summary>
+public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
+{
+    private readonly NpgsqlDataSource _dataSource;
+
+    public NpgsqlRevenueParameterRegister(NpgsqlDataSource dataSource) => _dataSource = dataSource;
+
+    public async Task<IReadOnlyList<RevenueParameterRecord>> RecordedAsync(CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT amount, unit, source_observation, observed_on
+            FROM observed_revenue_parameters ORDER BY recorded_at, parameter_id
+            """);
+
+        var records = new List<RevenueParameterRecord>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var unit = reader.GetString(1);
+
+            records.Add(new RevenueParameterRecord
+            {
+                Observation = reader.IsDBNull(0)
+                    ? MeasurementQuantity.NotMeasured(
+                        UnmeasuredReason.NoObservationExists,
+                        "the register row records no amount")
+                    : MeasurementQuantity.Observed(reader.GetDecimal(0), unit),
+                SourceObservation = reader.IsDBNull(2) ? null : reader.GetString(2),
+                ObservedOn = reader.IsDBNull(3) ? null : reader.GetFieldValue<DateOnly>(3),
+            });
+        }
+
+        return records;
+    }
+
+    public async Task RecordAsync(RevenueParameterRecord parameter, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(parameter);
+
+        await using var command = _dataSource.CreateCommand(
+            """
+            INSERT INTO observed_revenue_parameters
+                (parameter_id, recorded_at, amount, unit, source_observation, observed_on)
+            VALUES (@parameter_id, now(), @amount, @unit, @source_observation, @observed_on)
+            """);
+
+        command.Parameters.AddWithValue("parameter_id", Guid.NewGuid());
+        command.Parameters.Add("amount", NpgsqlDbType.Numeric).Value =
+            parameter.Observation is MeasurementQuantity.ObservedValue observed
+                ? observed.Amount
+                : (object)DBNull.Value;
+        command.Parameters.AddWithValue("unit", UnitOf(parameter.Observation));
+        command.Parameters.Add("source_observation", NpgsqlDbType.Text).Value =
+            (object?)parameter.SourceObservation ?? DBNull.Value;
+        command.Parameters.Add("observed_on", NpgsqlDbType.Date).Value =
+            (object?)parameter.ObservedOn ?? DBNull.Value;
+
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>The unit an observed case carries; an unmeasured row states the unit it was sought in.</summary>
+    private static string UnitOf(MeasurementQuantity observation) => observation switch
+    {
+        MeasurementQuantity.ObservedValue value => value.Unit,
+        MeasurementQuantity.ObservedZero zero => zero.Unit,
+        _ => Money.DefaultCurrency,
+    };
 }

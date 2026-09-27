@@ -690,6 +690,192 @@ public sealed class BoundaryTests
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Decision D-002 — where the analytics surface is declared, and what it may carry
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// The analytics namespaces, so an assembly that declares one is named rather than guessed.
+    /// </summary>
+    private const string DomainAnalytics = "MediaCompany.Domain.Analytics";
+    private const string DeterministicAnalytics = "MediaCompany.Deterministic.Analytics";
+
+    /// <summary>
+    /// D-002, the membership half.
+    ///
+    /// The delivered closure assertions decide which assemblies the rule-determined module may
+    /// reach; they decide nothing about WHERE an analytics unit is declared. This one does, and it
+    /// is what makes the model-call closure hold for the analytics surface by construction: every
+    /// analytics composer and every analytics read model is declared in one of the two named
+    /// assemblies, so it inherits, unchanged, the exact reference equality the delivered assertion
+    /// above asserts — which means an analytics unit may add no project reference at all, and the
+    /// types a reasoning-model call would have to name are not referenceable from it.
+    ///
+    /// Two layers, and the difference between them matters. At the COMPILER, analytics code in the
+    /// rule-determined module with no new project reference cannot call a reasoning capability at
+    /// all, because the types are not visible to it; that is structural incapability and needs
+    /// nobody to run anything. Restoring reachability by adding the reference compiles cleanly, and
+    /// is caught HERE — which is a test run that something must choose to start, not a compile.
+    /// </summary>
+    [Fact]
+    public void EveryAnalyticsTypeIsDeclaredInOneOfTheTwoNamedAssemblies()
+    {
+        var misplaced = new List<string>();
+
+        foreach (var assembly in new[] { Domain, Application, Deterministic, Credentials, Capability, Persistence, Host })
+        {
+            foreach (var type in Load(assembly).GetTypes())
+            {
+                var space = type.Namespace ?? string.Empty;
+
+                if (space.StartsWith(DomainAnalytics, StringComparison.Ordinal) && assembly != Domain)
+                {
+                    misplaced.Add($"{type.FullName} is declared in {assembly}, not in {Domain}");
+                }
+
+                if (space.StartsWith(DeterministicAnalytics, StringComparison.Ordinal) && assembly != Deterministic)
+                {
+                    misplaced.Add($"{type.FullName} is declared in {assembly}, not in {Deterministic}");
+                }
+            }
+        }
+
+        Assert.Empty(misplaced);
+
+        // Both namespaces are populated, so the check is over something rather than over nothing.
+        Assert.NotEmpty(AnalyticsTypes(Domain, DomainAnalytics));
+        Assert.NotEmpty(AnalyticsTypes(Deterministic, DeterministicAnalytics));
+    }
+
+    /// <summary>
+    /// D-001 and D-002, the representation half.
+    ///
+    /// No type in the analytics namespaces carries a bare numeric member or a free-form value
+    /// member. The one exception is the measurement quantity union itself and its three cases,
+    /// which ARE the representation: the amount lives on the observed-value case and nowhere else,
+    /// so the only way to reach a number on the analytics surface is to resolve the case first.
+    ///
+    /// The refusal names the offending type and the offending member, because a check that says
+    /// only that something is wrong is one somebody disables.
+    /// </summary>
+    [Fact]
+    public void NoAnalyticsTypeCarriesABareNumericOrFreeFormValueMember()
+    {
+        var offenders = new List<string>();
+
+        foreach (var (assembly, space) in new[] { (Domain, DomainAnalytics), (Deterministic, DeterministicAnalytics) })
+        {
+            foreach (var type in AnalyticsTypes(assembly, space))
+            {
+                if (IsTheMeasurementRepresentation(type))
+                {
+                    continue;
+                }
+
+                offenders.AddRange(BareValueMembers(type));
+            }
+        }
+
+        Assert.Empty(offenders);
+    }
+
+    /// <summary>
+    /// The same rule, applied to types that deliberately break it.
+    ///
+    /// Without this the check above would pass on an empty scan, or on a rule that matched
+    /// nothing, and nobody would know. The probes are declared in the test assembly, so they are
+    /// not in the analytics namespaces and the check above does not see them.
+    /// </summary>
+    [Fact]
+    public void TheAnalyticsMemberRuleRefusesABareNumericAndAFreeFormValueAndNamesTheOffender()
+    {
+        var numeric = Assert.Single(BareValueMembers(typeof(ProbeCarryingABareNumericMember)));
+        Assert.Contains(nameof(ProbeCarryingABareNumericMember), numeric, StringComparison.Ordinal);
+        Assert.Contains("Minutes", numeric, StringComparison.Ordinal);
+        Assert.Contains("bare Decimal", numeric, StringComparison.Ordinal);
+
+        var freeForm = Assert.Single(BareValueMembers(typeof(ProbeCarryingAFreeFormValueMember)));
+        Assert.Contains(nameof(ProbeCarryingAFreeFormValueMember), freeForm, StringComparison.Ordinal);
+        Assert.Contains("free-form value slot", freeForm, StringComparison.Ordinal);
+
+        // And a read model built from the measurement quantity alone passes the same rule.
+        Assert.Empty(BareValueMembers(typeof(ProbeCarryingOnlyAMeasurementQuantity)));
+    }
+
+    /// <summary>
+    /// Every member of one type that would let an unobserved quantity reach a reader as a number
+    /// or as unclassified text. The message names the type and the member, because a refusal that
+    /// says only that something is wrong is one somebody disables.
+    /// </summary>
+    private static IReadOnlyList<string> BareValueMembers(Type type)
+    {
+        Type[] numeric =
+        [
+            typeof(decimal), typeof(double), typeof(float),
+            typeof(sbyte), typeof(byte), typeof(short), typeof(ushort),
+            typeof(int), typeof(uint), typeof(long), typeof(ulong),
+        ];
+
+        if (type.IsEnum)
+        {
+            return [];
+        }
+
+        const BindingFlags Declared =
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+
+        var members = type.GetProperties(Declared)
+            .Where(m => m.DeclaringType == type)
+            .Select(m => (m.Name, Type: m.PropertyType))
+            .Concat(type.GetFields(Declared)
+                .Where(m => m.DeclaringType == type)
+                // A compiler-emitted backing field mirrors the property that declares it, so
+                // reporting both would name one offence twice.
+                .Where(m => !m.Name.Contains('<', StringComparison.Ordinal))
+                .Select(m => (m.Name, Type: m.FieldType)));
+
+        var offenders = new List<string>();
+
+        foreach (var (name, memberType) in members)
+        {
+            var bare = Nullable.GetUnderlyingType(memberType) ?? memberType;
+
+            if (numeric.Contains(bare))
+            {
+                offenders.Add(
+                    $"{type.FullName}.{name} is a bare {bare.Name}; an analytics quantity is a "
+                    + "MeasurementQuantity, so that an unobserved quantity has no number to print");
+            }
+
+            if (bare == typeof(string) && name.EndsWith("Value", StringComparison.Ordinal))
+            {
+                offenders.Add(
+                    $"{type.FullName}.{name} is a free-form value slot; record content reaching a "
+                    + "reader through one arrives unclassified");
+            }
+        }
+
+        return offenders;
+    }
+
+    /// <summary>The types one assembly declares in one analytics namespace, compiler artefacts aside.</summary>
+    private static Type[] AnalyticsTypes(string assembly, string space) =>
+        Load(assembly).GetTypes()
+            .Where(t => (t.Namespace ?? string.Empty).StartsWith(space, StringComparison.Ordinal))
+            .Where(t => !(t.FullName ?? t.Name).Contains('<', StringComparison.Ordinal))
+            .ToArray();
+
+    /// <summary>
+    /// The measurement quantity union and its three cases. They are the declared representation,
+    /// and the observed-value case is the one place on the whole surface an amount is allowed to
+    /// live.
+    /// </summary>
+    private static bool IsTheMeasurementRepresentation(Type type)
+    {
+        var union = Load(Domain).GetType("MediaCompany.Domain.Analytics.MeasurementQuantity", throwOnError: true)!;
+        return type == union || type.BaseType == union;
+    }
+
     /// <summary>
     /// Finds every type in an assembly that names a matching type anywhere on its own members, so
     /// a dependency hidden in a private field is found as readily as one in a public signature.
@@ -844,3 +1030,13 @@ internal sealed class ProbeClock : IClock
 
     public DateTimeOffset UtcNow => Instant;
 }
+
+/// <summary>An analytics read model as it must NOT be written: the quantity is a bare number.</summary>
+internal sealed record ProbeCarryingABareNumericMember(decimal Minutes);
+
+/// <summary>An analytics read model as it must NOT be written: the value is free-form text.</summary>
+internal sealed record ProbeCarryingAFreeFormValueMember(string ReportedValue);
+
+/// <summary>An analytics read model as it must be written.</summary>
+internal sealed record ProbeCarryingOnlyAMeasurementQuantity(
+    MediaCompany.Domain.Analytics.MeasurementQuantity Review);

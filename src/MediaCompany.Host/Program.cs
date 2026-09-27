@@ -96,7 +96,7 @@ switch (command)
         foreach (var measure in await reporting.MeasurableNowAsync(period, cancellation.Token))
         {
             var label = measure.IsEstimate ? " [ESTIMATE — unit prices not verified first-hand]" : string.Empty;
-            Console.WriteLine($"  {measure.Name}: {measure.Value} ({measure.Source}){label}");
+            Console.WriteLine($"  {measure.Name}: {measure.Quantity.Describe()} ({measure.Source}){label}");
         }
 
         Console.WriteLine("Deferred, each naming the parameter it waits on:");
