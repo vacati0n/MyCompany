@@ -1,15 +1,25 @@
 using MediaCompany.Application.Ports;
+using MediaCompany.Deterministic.Analytics;
 using MediaCompany.Deterministic.Reporting;
 using MediaCompany.Deterministic.Rights;
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Registry;
 using MediaCompany.Domain.Rights;
 
 namespace MediaCompany.Deterministic.Services;
 
-/// <summary>One line of the measurable-now report.</summary>
-public sealed record ReportedMeasure(string Name, string Value, string Unit, string Source, bool IsEstimate);
+/// <summary>
+/// One line of the measurable-now report.
+///
+/// The figure is a <see cref="MeasurementQuantity"/> rather than a free-form string. The delivered
+/// shape carried the value as a string, which meant the rendered figure carried no measurement
+/// state at all and any string a caller composed reached the reader unclassified — both the way an
+/// unobserved quantity could arrive looking like a number, and the only route by which record
+/// content could reach a reader through this surface without being classified first.
+/// </summary>
+public sealed record ReportedMeasure(string Name, MeasurementQuantity Quantity, string Source, bool IsEstimate);
 
 /// <summary>
 /// The reporting surface (module M-016, plan task T-025).
@@ -43,26 +53,33 @@ public sealed class ReportingService
         var byCapability = await _costs.CostByCapabilityAsync(period, cancellationToken).ConfigureAwait(false);
         var deterministic = await _costs.CostForDeterministicSetAsync(period, cancellationToken).ConfigureAwait(false);
 
+        // The operation count decides the measurement state of every figure below. A period
+        // holding no recorded operation has nothing to aggregate, so its figures are UNMEASURED
+        // and never a zero amount; a period with records whose aggregation comes to zero is an
+        // observed zero, and the two render differently.
+        var absent = $"no operation is recorded in period {period:yyyy-MM}";
+
         var lines = new List<ReportedMeasure>
         {
-            new("monthly-cost-total", summary.Total.ToString(), "USD",
+            new("monthly-cost-total",
+                AnalyticsComposers.FromOperations(summary.Operations, summary.Total, absent),
                 "recorded operations, exact decimal aggregation", summary.ContainsEstimates),
 
             new("cost-variance-against-envelope",
-                $"{summary.VarianceAgainstEnvelope} against an envelope of {summary.EnvelopeTotal} "
-                    + $"(metered {summary.EnvelopeMetered}, standing {summary.EnvelopeStanding})",
-                "USD",
-                "recorded operations against the approved envelope, subtracted by the datastore",
+                AnalyticsComposers.FromOperations(summary.Operations, summary.VarianceAgainstEnvelope, absent),
+                $"recorded operations against the approved envelope of {summary.EnvelopeTotal} "
+                    + $"(metered {summary.EnvelopeMetered}, standing {summary.EnvelopeStanding}), "
+                    + "subtracted by the datastore",
                 summary.ContainsEstimates),
 
-            new("deterministic-set-ai-cost", deterministic.ToString(), "USD",
+            new("deterministic-set-ai-cost",
+                AnalyticsComposers.FromOperations(summary.Operations, deterministic, absent),
                 "recorded operations attributed to the named deterministic set", IsEstimate: false),
         };
 
         lines.AddRange(byCapability.Select(pair => new ReportedMeasure(
             $"cost-by-capability:{pair.Key}",
-            pair.Value.ToString(),
-            "USD",
+            MeasurementQuantity.Observed(pair.Value.Amount, pair.Value.Currency),
             "recorded operations, exact decimal aggregation",
             summary.ContainsEstimates)));
 

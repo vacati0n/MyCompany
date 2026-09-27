@@ -1,5 +1,7 @@
 using MediaCompany.Application.Ports;
+using MediaCompany.Deterministic.Analytics;
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Configuration;
 using MediaCompany.Domain.Registry;
@@ -480,7 +482,7 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
 /// aggregation in the datastore's exact decimal type; this class reads results and performs no
 /// money arithmetic (constraint C-005).
 /// </summary>
-public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
+public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServedTierReader
 {
     private readonly NpgsqlDataSource _dataSource;
 
@@ -582,6 +584,86 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
         return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// One item's cost position, mirroring the delivered period summary. No row in the view means
+    /// no operation is recorded for the item, which is a different fact from a recorded cost of
+    /// zero and is reported as a count of zero operations rather than as a zero amount.
+    /// </summary>
+    public async Task<ItemSummary> ItemSummaryAsync(ItemId item, CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT total_cost, COALESCE(currency, 'USD'), contains_estimates, operations
+            FROM v_cost_per_item WHERE item_id = @item_id
+            """);
+        command.Parameters.AddWithValue("item_id", item.Value);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return new ItemSummary(item, Money.Zero(), ContainsEstimates: false, Operations: 0);
+        }
+
+        return new ItemSummary(
+            item,
+            new Money(reader.GetDecimal(0), reader.GetString(1)),
+            reader.GetBoolean(2),
+            reader.GetInt64(3));
+    }
+
+    /// <summary>
+    /// The three-state item cost. The rule that turns an aggregation into a measurement state
+    /// lives in one place, in the analytics composer, so the adapter and the surface cannot drift.
+    /// </summary>
+    public async Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken cancellationToken)
+    {
+        var summary = await ItemSummaryAsync(item, cancellationToken).ConfigureAwait(false);
+
+        return AnalyticsComposers.FromOperations(
+            summary.Operations, summary.Total, $"no operation is recorded for item {item}");
+    }
+
+    /// <summary>The three-state period cost, on the same rule.</summary>
+    public async Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken cancellationToken)
+    {
+        var summary = await PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false);
+
+        return AnalyticsComposers.FromOperations(
+            summary.Operations, summary.Total, $"no operation is recorded in period {period:yyyy-MM}");
+    }
+
+    /// <summary>
+    /// The recorded tier pair of every accounted operation in a period. Both columns are read as
+    /// recorded; a null served tier is returned as null, which is the explicit absence marker the
+    /// resolution boundary wrote, and nothing here substitutes the requested tier for it.
+    /// </summary>
+    public async Task<IReadOnlyList<ServedTierRecord>> RecordsForPeriodAsync(
+        DateOnly period,
+        CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT operation_id, period, reasoning_tier_requested, reasoning_tier_served
+            FROM agent_costs WHERE period = @period ORDER BY occurred_at, operation_id
+            """);
+        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
+
+        var records = new List<ServedTierRecord>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            records.Add(new ServedTierRecord
+            {
+                Operation = new OperationId(reader.GetGuid(0)),
+                Period = reader.GetFieldValue<DateOnly>(1),
+                Requested = reader.IsDBNull(2) ? null : Enum.Parse<ReasoningTier>(reader.GetString(2)),
+                Served = reader.IsDBNull(3) ? null : Enum.Parse<ReasoningTier>(reader.GetString(3)),
+            });
+        }
+
+        return records;
+    }
+
     private static async Task<Money> ReadMoneyAsync(NpgsqlCommand command, CancellationToken cancellationToken)
     {
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
@@ -592,4 +674,115 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader
 
         return new Money(reader.GetDecimal(0), reader.GetString(1));
     }
+}
+
+/// <summary>
+/// The observed-revenue-parameter register (decision D-003).
+///
+/// The register is created empty by the appended schema resource and this change records no row in
+/// it. A row carrying no source observation, or no date for one, is returned as recorded and
+/// admits nothing: the admission rule sits in one place, in the domain type's own factory, so a
+/// redefinition of what counts as observed changes one site.
+/// </summary>
+public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
+{
+    private readonly NpgsqlDataSource _dataSource;
+
+    public NpgsqlRevenueParameterRegister(NpgsqlDataSource dataSource) => _dataSource = dataSource;
+
+    public async Task<IReadOnlyList<RevenueParameterRecord>> RecordedAsync(CancellationToken cancellationToken)
+    {
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT amount, unit, unmeasured_reason, unmeasured_detail, source_observation, observed_on
+            FROM observed_revenue_parameters ORDER BY recorded_at, parameter_id
+            """);
+
+        var records = new List<RevenueParameterRecord>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            records.Add(new RevenueParameterRecord
+            {
+                Observation = ReadMeasurement(reader),
+                SourceObservation = reader.IsDBNull(4) ? null : reader.GetString(4),
+                ObservedOn = reader.IsDBNull(5) ? null : reader.GetFieldValue<DateOnly>(5),
+            });
+        }
+
+        return records;
+    }
+
+    /// <summary>
+    /// Reads the measurement case the row was written in, rather than deducing it from whether a
+    /// number is present.
+    ///
+    /// An amount of exactly zero is an OBSERVED ZERO and comes back as one: the factory routes it
+    /// to that case, so the distinction between a quantity observed to be zero and a quantity
+    /// never observed survives the round trip. The earlier shape of this adapter wrote an observed
+    /// zero as a null amount and read it back as unmeasured, which collapsed the two in the only
+    /// delivered path that persists a measurement quantity.
+    /// </summary>
+    private static MeasurementQuantity ReadMeasurement(NpgsqlDataReader reader)
+    {
+        if (!reader.IsDBNull(0))
+        {
+            return MeasurementQuantity.Observed(reader.GetDecimal(0), reader.GetString(1));
+        }
+
+        // The table check admits no row carrying neither an amount nor a reason, so the reason and
+        // the detail are present here by construction; a store that somehow held one anyway would
+        // be reported as unmeasured for the reason it states rather than for one assumed here.
+        return MeasurementQuantity.NotMeasured(
+            Enum.Parse<UnmeasuredReason>(reader.GetString(2)),
+            reader.GetString(3));
+    }
+
+    public async Task RecordAsync(RevenueParameterRecord parameter, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(parameter);
+
+        await using var command = _dataSource.CreateCommand(
+            """
+            INSERT INTO observed_revenue_parameters
+                (parameter_id, recorded_at, amount, unit, unmeasured_reason, unmeasured_detail,
+                 source_observation, observed_on)
+            VALUES (@parameter_id, now(), @amount, @unit, @unmeasured_reason, @unmeasured_detail,
+                    @source_observation, @observed_on)
+            """);
+
+        command.Parameters.AddWithValue("parameter_id", Guid.NewGuid());
+
+        // The case decides the row shape, and the three cases are written apart. An observed zero
+        // is written as an amount of zero with its unit, NOT as a null amount: a null amount is
+        // the unmeasured shape, and writing a measured zero into it is what turned a measured zero
+        // into a never-measured one on the way back out.
+        var (amount, unit, reason, detail) = Encode(parameter.Observation);
+
+        command.Parameters.Add("amount", NpgsqlDbType.Numeric).Value = (object?)amount ?? DBNull.Value;
+        command.Parameters.Add("unit", NpgsqlDbType.Text).Value = (object?)unit ?? DBNull.Value;
+        command.Parameters.Add("unmeasured_reason", NpgsqlDbType.Text).Value = (object?)reason ?? DBNull.Value;
+        command.Parameters.Add("unmeasured_detail", NpgsqlDbType.Text).Value = (object?)detail ?? DBNull.Value;
+        command.Parameters.Add("source_observation", NpgsqlDbType.Text).Value =
+            (object?)parameter.SourceObservation ?? DBNull.Value;
+        command.Parameters.Add("observed_on", NpgsqlDbType.Date).Value =
+            (object?)parameter.ObservedOn ?? DBNull.Value;
+
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The row shape for one measurement case. The match is exhaustive over the closed union, so a
+    /// fourth case would not compile rather than falling into an observed or an unmeasured shape
+    /// by default.
+    /// </summary>
+    private static (decimal? Amount, string? Unit, string? Reason, string? Detail) Encode(
+        MeasurementQuantity observation) => observation switch
+    {
+        MeasurementQuantity.ObservedValue value => (value.Amount, value.Unit, null, null),
+        MeasurementQuantity.ObservedZero zero => (0m, zero.Unit, null, null),
+        MeasurementQuantity.Unmeasured unmeasured =>
+            (null, null, unmeasured.Reason.ToString(), unmeasured.Detail),
+        _ => throw new InvalidOperationException("Unreachable: the measurement union has three cases."),
+    };
 }

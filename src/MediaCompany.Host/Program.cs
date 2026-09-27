@@ -1,3 +1,5 @@
+using MediaCompany.Application.Ports;
+using MediaCompany.Deterministic.Analytics;
 using MediaCompany.Deterministic.Services;
 using MediaCompany.Host;
 using MediaCompany.Persistence;
@@ -59,10 +61,18 @@ switch (command)
         _ = provider.GetRequiredService<OperatingRegisterReport>();
         _ = provider.GetRequiredService<PermissionAnswerService>();
 
+        // The analytics surface and the two read ports registered beside it. A registration
+        // defect here would otherwise surface only against a datastore, which is the one thing
+        // this command exists to make unnecessary.
+        _ = provider.GetRequiredService<AnalyticsReportService>();
+        _ = provider.GetRequiredService<IServedTierReader>();
+        _ = provider.GetRequiredService<IRevenueParameterRegister>();
+
         Console.WriteLine("Composition root resolved.");
         Console.WriteLine("  capability egress: ICapabilityGateway only; no provider adapter is registered or registrable.");
         Console.WriteLine("  credentials:       opaque scoped handles; no secret value passes through this process boundary.");
         Console.WriteLine("  provider endpoints configured: 0 (this wave creates no account and commits no spend).");
+        Console.WriteLine("  analytics surface:  resolved, with its read ports; it writes nothing and reaches no capability.");
         return 0;
     }
 
@@ -96,7 +106,7 @@ switch (command)
         foreach (var measure in await reporting.MeasurableNowAsync(period, cancellation.Token))
         {
             var label = measure.IsEstimate ? " [ESTIMATE — unit prices not verified first-hand]" : string.Empty;
-            Console.WriteLine($"  {measure.Name}: {measure.Value} ({measure.Source}){label}");
+            Console.WriteLine($"  {measure.Name}: {measure.Quantity.Describe()} ({measure.Source}){label}");
         }
 
         Console.WriteLine("Deferred, each naming the parameter it waits on:");
