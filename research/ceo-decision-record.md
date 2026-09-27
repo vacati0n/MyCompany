@@ -1,4 +1,52 @@
-# CEO Decision Record — Framing Gate, run `run-258e0a3415d2`
+# CEO Decision Record
+
+> **READ THIS FIRST - five identifiers were renumbered on 2026-09-26.**
+>
+> Three sessions write to this record, and two of them independently allocated `D-011` to
+> `D-015`. By CEO decision the **Wave 1 session's five were renumbered** to `D-018`-`D-022`
+> (commit `21e9882`, now on `main`), with withdrawal markers left at the old positions
+> carrying the mapping.
+>
+> **A bare `D-011`-`D-015` therefore means this branch's decision, unambiguously.** No other
+> identifier was changed.
+
+## What moved
+
+| Was | Is now | Decision, Wave 1 session |
+|---|---|---|
+| `D-011` | **`D-018`** | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | **`D-019`** | Two-phase payee structure; the launch channel already exists |
+| `D-013` | **`D-020`** | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | **`D-021`** | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
+| `D-015` | **`D-022`** | The first item carries no affiliate link |
+
+Unchanged and unambiguous: `D-001`-`D-010` (shared history before the fork), `D-011`-`D-016`
+(this branch), `D-017` (Wave 2, the video subject), `D-023` onward, and `C-001`-`C-006`.
+
+## Allocation blocks - so this cannot happen a fourth time
+
+Renumbering resolved the collision that existed. It does not prevent the next one, because
+nothing stops two sessions reaching for the same next number again. One flat `D-nnn` space is
+kept, as decided, and each session draws from **its own reserved block**:
+
+| Session | Block |
+|---|---|
+| Wave 0 and orchestration (`claude/execute-prompt-txt-4a3ee4`) | `D-023`-`D-099` |
+| Wave 1 (`claude/eloquent-taussig-724cc2`) | `D-100`-`D-199` |
+| Wave 2 (video production) | `D-200`-`D-299` |
+| Any later session | next free hundred, taken without asking |
+
+No prefixes, one space, and no coordination needed - which matters, because the first two
+collisions were caught only because the sessions happened to be talking to each other.
+
+**Still open, and no numbering scheme fixes it:** the technical design and this record both use
+bare `D-nnn`, for architecture decisions and business decisions respectively, so `D-011` is
+ambiguous *by kind* rather than by origin. Resolve by naming the document when citing across
+the two, or by adopting `CEO-D-nnn` against `ADR-D-nnn` if it starts to bite.
+
+---
+
+# Original record — Framing Gate, run `run-258e0a3415d2`
 
 | Field | Value |
 |---|---|
@@ -728,6 +776,47 @@ The recommendation above is put to the CEO; until it is decided, cite by branch,
 >
 > A withdrawn identifier is never reissued on this branch. `D-011` to `D-017` mean what the
 > other space says they mean.
+>
+> **Settled 2026-09-26.** The CEO confirmed that renumbering was what he intended. This
+> renumbering **stands**; the competing prefix scheme proposed on
+> `claude/execute-prompt-txt-4a3ee4` is **withdrawn**, and that branch's `W0-D-018` became
+> `D-023`, leaving `D-018` to this branch. One flat `D-nnn` space, no prefixes.
+>
+> The reason that branch gave for not renumbering — that citations live in artifacts which
+> have already passed their gates — was checked against the facts and did not hold for these
+> five. Every bare `D-011` to `D-015` in a gated Wave 1 artifact belongs to the **technical
+> design's own `D-nnn` space**, not to this record: that design's `D-011` is *"a retry is its
+> own operation record"* and its `D-012` is *"the capability request... never names a provider
+> or a model"*. Renumbering this record touched none of them.
+
+### Identifier allocation — blocks, so the next collision cannot happen
+
+Renumbering fixed the collision that existed. It does nothing about two sessions reaching for
+the same next number tomorrow, which is how both of today's collisions happened. One flat
+`D-nnn` space is kept, divided into blocks. **A session allocates inside its own block and
+coordinates with nobody.**
+
+| Session | Block |
+|---|---|
+| Wave 0 / orchestration (`claude/execute-prompt-txt-4a3ee4`) | `D-023` – `D-099` |
+| **Wave 1 (this branch)** | **`D-100` – `D-199`** |
+| Wave 2 (`claude/trusting-shirley-90ea75`) | `D-200` – `D-299` |
+| Any later session | the next free hundred, taken without asking |
+
+**The next identifier on this branch is `D-100`.** `D-018` to `D-022` above keep the numbers
+they were given; the block applies to what comes next, not retroactively.
+
+### Still open — ambiguity by kind, which no numbering scheme fixes
+
+The technical design and this record **both** use bare `D-nnn`, for architecture decisions and
+business decisions respectively. A reader meeting `D-011` cannot tell which is meant without
+knowing which document they hold. Blocks fix ambiguity by **origin**; this is ambiguity by
+**kind**, and it survives every scheme discussed today.
+
+Resolvable by naming the document when citing across the two, or by `CEO-D-nnn` against
+`ADR-D-nnn` if it starts to bite. Recorded as open rather than fixed, because changing either
+namespace now would invalidate citations in artifacts that have genuinely passed their gates —
+which is the argument that was wrong about this record and is right about that one.
 
 Decided 2026-09-26 by the CEO, on a readiness check for Wave 3 that found `RK-003` to be the
 longest-lead item on the critical path and the only one independent of Wave 2.
@@ -1064,3 +1153,213 @@ D-021 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` c
 Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
 and angle), `Q-004` (budget for a second stock library) and `Q-008` (audience-drift threshold)
 remain with the CEO.
+<<<<<<< HEAD
+=======
+
+
+---
+
+## D-023 — Renumbering adopted, with allocation blocks to prevent recurrence
+
+Decided 2026-09-26 by the CEO, approving the recommendation in `C-004`. **This is the first
+identifier issued under the scheme it adopts.**
+
+**Supersedes the scheme briefly recorded here earlier**, which rested on a misreading: this
+session read "follow the proposal" as approving the no-renumbering option in `C-004`, and the
+CEO clarified that renumbering was what was meant. That entry was allocated as `W0-D-018` and
+is renumbered here to `D-023`, both because the prefix scheme it announced is withdrawn and
+because `D-018` now belongs to the Wave 1 session. Nothing cited it.
+
+**Decision.**
+
+1. **The Wave 1 session's renumbering stands.** Its `D-011`-`D-015` are `D-018`-`D-022`, on
+   `main` at `21e9882`, with withdrawal markers carrying the mapping. This branch's
+   `D-011`-`D-015` are unchanged and are now unambiguous.
+2. **One flat `D-nnn` space is kept.** No wave prefixes.
+3. **Each session draws from its own reserved block**, per the table at the head of this
+   record. This is what stops a fourth collision, which renumbering alone does not, and it
+   needs no coordination between sessions.
+4. **The concordance at the head becomes a what-moved table** rather than a two-column
+   ambiguity table, since there is no longer an ambiguity to resolve.
+
+**One correction carried forward rather than buried.** `C-004` argued against renumbering
+because existing citations live in gated artifacts. The Wave 1 session checked and showed that
+for its five this was not true - those citations belonged to the technical design's separate
+`D-nnn` namespace, not to this record. The argument was general where the facts were specific,
+and the check should have preceded the argument.
+
+**Standing obligation this creates.** The underlying defect was never the collision; it was that
+three sessions wrote to one authoritative record with **no identifier-allocation mechanism**, and
+that the first two collisions were caught only because the sessions happened to be talking. Renumbering fixes the past; the reserved blocks fix the future. Any session joining later takes
+the next free hundred and coordinates with nobody.
+
+---
+
+## C-005 — Two conflicting CEO instructions on the numbering fix. NOT RESOLVED.
+
+Recorded 2026-09-26. **This session is not resolving this and has changed nothing.** A third
+session acting unilaterally would produce a third variant, which is the failure mode both other
+sessions have already declined.
+
+**The conflict.** The CEO gave two different instructions, in two sessions, to two agents:
+
+| Told to | Instruction | Acted on? |
+|---|---|---|
+| This session | approve `C-004`: **nothing is renumbered**, concordance plus `W0-`/`W1-`/`W2-` prefixes | Yes, `ad30589` |
+| Wave 1 session | option A, **that side renumbers** | Yes, `21e9882`, its `D-011`-`D-015` moved to `D-018`-`D-022` with withdrawal markers carrying the mapping. **Fast-forwarded to `main`**, verified here |
+
+Both were followed in good faith. They cannot both stand.
+
+**A correction I owe, because it undercuts my own stated reason.** `C-004` rejected renumbering
+because existing citations live in artifacts that have already passed their gates. The Wave 1
+session checked, and **for its five that is not true**: every bare `D-011`-`D-015` citation on
+its branch belongs to the *technical design's own* `D-nnn` namespace (its `D-011` is "a retry is
+its own operation record"), not to the CEO record. Renumbering the CEO record touched none of
+them. The only artifact citing its CEO `D-011`-`D-015` was Wave 2's `carried-decisions.md`,
+corrected at the time. **My general argument does not apply to their specific case.** It does
+still apply to mine, since `D-013` is cited in ticket MC-3, which `S-006` of a gated scope
+definition inherited.
+
+**Recommended resolution: take both, because they solve different problems.**
+
+The renumbering is already done, already on `main`, and it *does* resolve the existing
+collision: with their five moved, a bare `D-011`-`D-015` unambiguously means this branch's.
+Reverting buys nothing and costs a revert.
+
+But renumbering does **not** prevent the next collision. Only an allocation mechanism does. So:
+
+1. **Accept the Wave 1 renumbering as the resolution of the existing collision.** Do not revert.
+2. **Keep the namespace for everything new**, which is what stops this recurring.
+3. **Rename this session's `W0-D-018`**, which now reads confusingly beside their renumbered
+   `D-018`. Nothing cites it, so this costs nothing.
+4. **Rewrite the concordance** to record what actually happened: which identifiers moved, where
+   to, and why the table exists.
+
+**One more collision that neither scheme fixes, flagged by the Wave 1 session and it is right.**
+The technical design and the CEO record **both** use bare `D-nnn`, for architecture decisions
+and business decisions respectively. A reader meeting `D-011` cannot tell which document it
+belongs to. A *wave* prefix does not help, because the ambiguity is by **kind**, not by origin.
+The fix is a kind prefix, `CEO-D-nnn` against `ADR-D-nnn`, possibly alongside the wave prefix.
+Fold it into whichever scheme the CEO settles on, rather than meeting it later as a fourth
+collision.
+
+## C-006 — Wave 1: the router is built and verified; the thesis is untested; the instrument was broken
+
+Recorded 2026-09-26 from the Wave 1 session's report. `main` verified here at `21e9882`
+carrying 85 source and schema files.
+
+**`C-003` stands unchanged.** The router `M-001` is the **media company's** capability boundary,
+not the framework's. Wave 1 did not touch the framework's own agents, which remain
+`model: inherit`. If the question is the framework's own token spend, Wave 1 leaves it exactly
+where `C-003` found it.
+
+**What exists and is verified.** Capability requests resolve over a three-tier admitted route
+table, primary then secondary then emergency, with the **quality floor filtered before tier
+ordering**, so a below-floor route is never a candidate rather than a rejected one. Per
+operation it records route, model, capability class, the full attribution tuple, and one row per
+attempt including failures and retries. Cost is a stored generated column computed from unit
+counts and the unit prices **snapshotted onto the row**, so it stays re-derivable after a price
+is superseded. 220 tests pass against a real PostgreSQL 17.
+
+**What has never happened.** **Zero provider endpoints are configured. No live provider call has
+ever been made. The cost table has never held a row produced by a real operation.** There is
+**no measured cost from Wave 1 at all** - not a small number, none.
+
+**The finding that matters most, and it strengthens `C-003` rather than softening it.** The
+cost-recording path was **broken and nobody knew**: the insert used `MAX()` on a uuid column,
+which PostgreSQL has no function for, so it threw `42883`. That defect **passed 205 unit tests,
+a twelve-finding review, the Review Gate and the Verification Gate**, and was caught only when a
+real database was put behind it, *after* the wave had been declared verified. Seven of fifteen
+integration tests failed on that one defect.
+
+**Read it as a finding about the quality system, not about one bug.** The governed pipeline
+declared verified something that could not work. Test coverage and gate approval are not
+evidence that a mechanism functions; only exercising it against the real dependency is. So
+`C-003` is **understated**: the cost-control thesis is untested *and* the instrument built to
+test it was broken on arrival.
+
+**One cost control that is genuinely verified, and it needs no tiering.** Design decision
+`D-005` makes rule-determined work **structurally incapable** of a model call: the deterministic
+assembly holds no reference, direct or transitive, to the capability boundary or the credential
+broker, so a model call is not expressible from it. Enforced by a build-time boundary test that
+was **mutation-checked** - introducing a real cross-boundary dependency made three assertions
+fail, removing it made them pass. Thirty-one named tasks sit inside that boundary. It works by
+removing the possibility rather than by choosing a cheaper model, which is why it holds without
+any of the tiering `C-003` finds absent.
+
+
+---
+
+# Wave 2 session decisions — block `D-200`–`D-299`
+
+## D-200 — The honey bee subject stands on a corrected supply premise
+
+**Decided 2026-09-26 by the CEO**, during Wave 2 (`run-3a58551ee912`), after the implementation
+phase raised the correction at its `Q-002` and the Wave 2 session verified it independently.
+**Closes `Q-002`.**
+
+### The error, stated plainly
+
+`D-017`'s supporting reasoning records **`honey bee` = 1,213 as "a single, distinctive,
+unambiguous token, so it is one of the counts §3.3 classifies as trustworthy."** That is
+**false**. `honey bee` is a **two-word query**.
+
+`research/animal-niche-analysis.md` §3.3 states the rule verbatim: *"Only single, distinctive,
+unambiguous tokens give a trustworthy read."* Its enumerated trustworthy list is nine single-token
+species — pangolin, narwhal, bowerbird, okapi, platypus, binturong, cassowary, axolotl, tapir —
+and **`honey bee` is not among them**. Seven further rows in the same table are multi-word and
+carry the same defect (`grey wolf`, `humpback whale`, `bengal tiger`, `mantis shrimp`, `snow
+leopard`, `naked mole rat`, `emperor penguin`), so the table's own header is inaccurate for eight
+of its rows.
+
+**The error was the Wave 2 session's**, made when presenting the options and repeated into
+`D-017`'s reasoning and into the implementation dispatch. The implementation agent found it by
+reading the source rule rather than accepting the instruction, and **declined to re-read the
+evidence to agree with its brief** — which is the behaviour that caught it.
+
+**It was material to the choice.** Two of the four options presented did have genuinely
+trustworthy single-token priors — **`octopus` 1,582 and `elephant` 4,131** — and the recommended
+option did not. The CEO chose on a supply claim that was wrong.
+
+### The decision
+
+**The subject stands. The supply premise is corrected, not repaired.**
+
+**Basis:**
+
+1. **`D-017`'s four other reasons are untouched** — distance from the generative-AI-contaminated
+   rare-species tail, the originality burden landing where the channel can carry it, the lowest
+   made-for-kids exposure of the options, and attributable science.
+2. **No subject has a verified count, so switching buys a better *prior*, not a better *fact*.**
+   The implementation phase audited **14 subjects and obtained zero counts** — the committed
+   library requires an authenticated subscription and this role may not reach an external system
+   directly. Changing subject would exchange one unverified position for another with a
+   better-quality dated observation behind it.
+3. **The exposure is structurally bounded, not merely accepted.** Only **three** waggle-run clips
+   are unsourced, and **no claim in the script depends on them**: `GFX-02`, `GFX-03`, `GFX-04`,
+   `GFX-15`, `GFX-16`, `GFX-17` and `GFX-18` carry those beats. If per-clip confirmation finds
+   nothing, the three drop and nothing is lost. **Substituting generic hive activity is refused
+   at the script**, which is what stops the failure mode the niche analysis warned about.
+4. **Switching costs a full phase-4 rebuild** (~366,000 tokens plus rework) for that better prior.
+
+### What is corrected, and what is not
+
+- **Corrected:** supply for this subject is **unestablished for both the species and the
+  behaviour**, not merely for the behaviour. `honey bee` = 1,213 is a **dated multi-word upper
+  bound of unknown looseness**, admissible only as a prior observation with its date, never as a
+  measurement.
+- **Not corrected, because it was already right:** `waggle dance` is a multi-word phrase whose
+  reported total is inadmissible, and supply for the behaviour must be confirmed clip by clip.
+- **Still owed at `A-024`:** a per-subject count obtained first-hand before the script is
+  committed. The script is committed; the count is not obtained. **That is a recorded gap, and it
+  is the honest state of the wave.**
+
+### The general lesson, recorded so it outlives this item
+
+**A rule that classifies evidence is only as good as the check that the evidence meets it.** The
+single-token rule was stated correctly, carried correctly into the analysis, and then applied to
+a two-word query by three successive readers — the session presenting the options, the CEO
+deciding on them, and the dispatch instructing the work — because everyone checked the *number*
+against the rule and nobody checked the *query*. It was caught by the one reader whose brief told
+it the answer and who went to the source anyway.
+>>>>>>> claude/trusting-shirley-90ea75

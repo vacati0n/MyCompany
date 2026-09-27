@@ -55,8 +55,11 @@ billed totals rather than context floors.
 | 3 `solution-design-and-risk-assessment` attempt 1 | `architect` | **312,889** | 67 | 26 min 16 s | MEASURED — **rejected at validation** |
 | 3 attempt 2 (repair) | `architect` (resumed) | **332,728** | 9 | 3 min 20 s | MEASURED — **78/78 PASS** |
 | | **Phase 3 total** | **645,617** | 76 | 29 min 36 s | Two attempts for one artifact |
-| 4 `implementation` | `omn-dev-1-implement` | _reported by the harness on completion_ | | | Mixed capex/opex — see `C-002` |
-| 5 `quality-review` | `omn-dev-2-reviewer` | | | | |
+| 4 `implementation` attempt 1 | `omn-dev-1-implement` | **366,193** | 98 | 36 min 17 s | MEASURED — **rejected at validation** |
+| 4 attempt 2 (repair) | `omn-dev-1-implement` (resumed) | **401,504** | 13 | 6 min 25 s | MEASURED — **32/32 PASS** |
+| | **Phase 4 total** | **767,697** | 111 | 42 min 42 s | Two attempts |
+| 5 `quality-review` attempt 1 | `omn-dev-2-reviewer` | *(interrupted, session paused)* | — | — | Released as `worker-loss` |
+| 5 attempt 2 | `omn-dev-2-reviewer` | **228,399** | 62 | 18 min 07 s | MEASURED — **31/31 PASS**, verdict `approve-with-corrections` |
 | 6 `documentation-and-release-handoff` | `omn-documentation` | | | | |
 | | **Total** | | | | |
 
@@ -123,6 +126,32 @@ instance if the compliance determinations need several adversarial passes rather
 call — then per-video cost rises and the approved ledger is wrong. **A measured per-video total
 materially above 377,000 input tokens is the finding that escalates.** That is the test this
 ledger exists to run, and it is not yet answerable.
+
+## 2.4 ⚠ CORRECTION to the executed-evidence figure
+
+This session reported phase 4's evidence as **"343 executed checks, 343 passed."** The peer
+review could reproduce **328 of them**, and the difference must be stated rather than smoothed
+over.
+
+`dotnet test` in the review environment returned **315 total, 300 passed, 0 failed, 15 skipped** —
+no container runtime was available and ports 55432 and 5432 were closed. The 15 are the
+**datastore integration demonstrations**, which execute only against a live instance.
+
+**The two accounts are consistent, not contradictory.** The reviewer counted test cases from
+source independently — 205 at the merge, 300 at head, **delta exactly 95**, matching the claimed
+95 new tests — and both absolutes differ from 220/315 by precisely those 15 conditional tests.
+
+**What is properly established:** 328 of 343 checks independently reproduced. The remaining 15
+are **claimed by the implementer and not independently confirmed**, because confirming them
+requires a datastore the reviewer could not reach.
+
+**[FINDING.]** "0 skipped against a live instance" is an **environment-dependent claim presented
+as an unconditional one**. It is not false — it is unverifiable from the artifact alone, and a
+later reader running the suite without a container would get 15 skips and conclude the record was
+wrong. This matters more than the number does: the Wave 1 session's `MAX()`/`uuid` defect was
+found *only* by the datastore suite, after passing 205 unit tests, a review and two gates. **The
+15 tests nobody can reproduce without a container are the same 15 that caught the worst defect
+found so far.** A correction has been issued to make the condition explicit.
 
 ## 2.5 The estimate this is measured against, decomposed
 
