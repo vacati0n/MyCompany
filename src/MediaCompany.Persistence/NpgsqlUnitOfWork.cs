@@ -55,6 +55,7 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
         Budgets = new NpgsqlBudgetEvaluator(connection, transaction);
         Gates = new NpgsqlGateWriter(connection, transaction);
         Availability = new NpgsqlRouteAvailabilityWriter(connection, transaction);
+        Dispatches = new NpgsqlDispatchWriter(connection, transaction);
     }
 
     public IAuditAppender Audit { get; }
@@ -68,6 +69,8 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
     public IGateWriter Gates { get; }
 
     public IRouteAvailabilityWriter Availability { get; }
+
+    public IDispatchWriter Dispatches { get; }
 
     public async Task CommitAsync(CancellationToken cancellationToken)
     {

@@ -22,6 +22,15 @@ public sealed record CredentialRequest
 
     /// <summary>Required for <see cref="CredentialClass.Release"/>: the count of open blocks on the item.</summary>
     public int OpenBlockCount { get; init; }
+
+    /// <summary>
+    /// The three conditions of first publication, required for <see cref="CredentialClass.Release"/>.
+    ///
+    /// Null is NOT a way past the check: a release request carrying no register is refused exactly
+    /// as one carrying an unsatisfied register is. An empty register refuses all three by name,
+    /// which is the correct reading of no recorded observation.
+    /// </summary>
+    public FirstPublicationConditionRegister? FirstPublicationConditions { get; init; }
 }
 
 /// <summary>
@@ -137,6 +146,21 @@ public sealed class CredentialBroker : ICredentialBroker, ICredentialExchange
                 return Record(request, new CredentialOutcome.Refused(
                     CredentialRefusal.BlockStanding,
                     $"{request.OpenBlockCount} block(s) stand against item {request.GatePass.Item}."));
+            }
+
+            // The issuance predicate ADDITIONALLY requires all three conditions of first
+            // publication. None of them is discharged, so no release credential is issuable at
+            // all, and this holds whatever the gate, the blocks and the role say.
+            //
+            // An absent register refuses: it is read as no recorded observation, which folds to
+            // unknown and therefore to not satisfied, never as nothing to check.
+            var conditions = request.FirstPublicationConditions ?? FirstPublicationConditionRegister.Empty;
+            var unsatisfied = conditions.Unsatisfied();
+            if (unsatisfied.Count > 0)
+            {
+                return Record(request, new CredentialOutcome.Refused(
+                    CredentialRefusal.FirstPublicationConditionUnmet,
+                    string.Join(" ", unsatisfied.Select(s => s.Describe()))));
             }
         }
 

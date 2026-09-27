@@ -27,7 +27,9 @@ public sealed record Approval
         ApprovalVerdict verdict,
         string reason,
         DateTimeOffset presentedAt,
-        DateTimeOffset decidedAt)
+        DateTimeOffset decidedAt,
+        DateTimeOffset? queuedAt = null,
+        DateTimeOffset? reworkOf = null)
     {
         if (string.IsNullOrWhiteSpace(gate))
         {
@@ -44,6 +46,12 @@ public sealed record Approval
             throw new ArgumentException("An approval cannot be decided before it was presented.", nameof(decidedAt));
         }
 
+        if (queuedAt is not null && queuedAt > presentedAt)
+        {
+            throw new ArgumentException(
+                "An approval cannot be queued after it was presented.", nameof(queuedAt));
+        }
+
         Item = item;
         ItemVersion = itemVersion;
         Gate = gate;
@@ -52,6 +60,8 @@ public sealed record Approval
         Reason = reason;
         PresentedAt = presentedAt;
         DecidedAt = decidedAt;
+        QueuedAt = queuedAt;
+        ReworkOf = reworkOf;
     }
 
     public ItemId Item { get; }
@@ -62,6 +72,21 @@ public sealed record Approval
     public string Reason { get; }
     public DateTimeOffset PresentedAt { get; }
     public DateTimeOffset DecidedAt { get; }
+
+    /// <summary>
+    /// The queued mark: when the item became available for review, which is earlier than when it
+    /// was presented whenever it waited. Optional at the type level so the delivered approval
+    /// still constructs; an approval lacking it resolves as UNMEASURED at the measurement level,
+    /// which is where the obligation actually binds.
+    /// </summary>
+    public DateTimeOffset? QueuedAt { get; }
+
+    /// <summary>
+    /// The rework link: the presentation mark of the approval this one re-presents after a
+    /// send-back. Null means a first pass, which is a measured zero rework rather than a missing
+    /// quantity.
+    /// </summary>
+    public DateTimeOffset? ReworkOf { get; }
 
     /// <summary>
     /// Derived from the two recorded timestamps, never entered. This is the baseline measure the

@@ -48,6 +48,16 @@ public interface IWorkTransaction : IAsyncDisposable
     /// </summary>
     IRouteAvailabilityWriter Availability { get; }
 
+    /// <summary>
+    /// Publication dispatch records and attempt records (module M-023).
+    ///
+    /// Reachable ONLY from a transaction, exactly as every other writer is, and that is where
+    /// exactly-once lives: the dispatch row, the queue entry and the gate state change commit
+    /// together or none of them does, so an interruption between them leaves neither a dispatch
+    /// without a queue entry nor a queue entry without a dispatch.
+    /// </summary>
+    IDispatchWriter Dispatches { get; }
+
     Task CommitAsync(CancellationToken cancellationToken);
 }
 
@@ -66,6 +76,45 @@ public interface IGateWriter
         string reason,
         DateTimeOffset at,
         CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Publication dispatch and attempt records, written inside the transaction that writes the gate
+/// state change and the queue entry (module M-023, module M-017).
+/// </summary>
+public interface IDispatchWriter
+{
+    /// <summary>
+    /// Writes the dispatch record for one item version, or resolves to the record that already
+    /// exists for it.
+    ///
+    /// The key is DERIVED from the item and its exact version, so a retry arrives at the same key
+    /// and therefore at the same row. Uniqueness is the datastore's, which makes a second record
+    /// impossible rather than detectable; this method returns whether the row it resolved to was
+    /// written now or already existed, so a caller can tell a first dispatch from a retry without
+    /// either of them producing two.
+    /// </summary>
+    Task<DispatchWriteOutcome> RecordDispatchAsync(
+        MediaCompany.Domain.Publication.DispatchRecord record,
+        CancellationToken cancellationToken);
+
+    /// <summary>Appends one attempt, refused attempts included, with its five audit answers.</summary>
+    Task RecordAttemptAsync(
+        MediaCompany.Domain.Publication.AttemptRecord attempt,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Whether a dispatch write created the record or resolved to the one already there. Both are
+/// success; exactly one record exists either way.
+/// </summary>
+public enum DispatchWriteOutcome
+{
+    /// <summary>This call wrote the record. The first dispatch of this item version.</summary>
+    Created = 1,
+
+    /// <summary>A record for this item version already existed. A retry, and still exactly one.</summary>
+    AlreadyRecorded = 2,
 }
 
 /// <summary>Route availability transitions, written inside the transaction that records them.</summary>
@@ -145,6 +194,15 @@ public sealed record OperationDraft
     public required DateTimeOffset OccurredAt { get; init; }
     public required int Attempt { get; init; }
     public string? FailureReason { get; init; }
+
+    /// <summary>The reasoning tier the request asked for.</summary>
+    public MediaCompany.Domain.Capabilities.ReasoningTier? ReasoningTierRequested { get; init; }
+
+    /// <summary>
+    /// The reasoning tier the ADMITTING ROUTE stated it served. Null is the explicit absence
+    /// marker: the route could not state one. It is never populated from the request.
+    /// </summary>
+    public MediaCompany.Domain.Capabilities.ReasoningTier? ReasoningTierServed { get; init; }
 }
 
 /// <summary>The durable job queue as a transactional claim table (module M-013 over M-017).</summary>

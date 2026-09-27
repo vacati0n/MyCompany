@@ -23,6 +23,16 @@ public enum ActionKind
     RouteAdmit = 13,
     JobDispatch = 14,
     ReportRead = 15,
+
+    /// <summary>
+    /// Composing, validating and persisting a publication dispatch descriptor.
+    ///
+    /// STRUCTURAL ABSENCE THREE. This set is closed and holds NO action naming a destination
+    /// egress, so an authority evaluation permitting one is not expressible: there is no action
+    /// value to hold, to grant or to check. The dispatch action reaches the stopping surface and
+    /// no further.
+    /// </summary>
+    PublicationDispatch = 16,
 }
 
 /// <summary>

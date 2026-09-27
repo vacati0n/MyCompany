@@ -74,6 +74,22 @@ public static class DeterministicTaskRegistry
     public const string RuntimeMeasurement = "runtime-measurement";
     public const string ItemLedgerArithmetic = "item-ledger-arithmetic";
 
+    // The publishing path's rule-determined work. Each joins the SAME named set rather than
+    // forming a second one, so the delivered boundary check covers them without a second
+    // mechanism: the property is a dependency direction of the enclosing assembly, and a member
+    // added here inherits it by construction.
+    //
+    // The idempotent dispatch is a member because deriving a key from an item and its version is
+    // arithmetic over its inputs. The EFFECTING of a dispatch is not a member, because no such
+    // step exists anywhere in the build to register.
+    public const string PublishedFacingSurfaceProduction = "published-facing-surface-production";
+    public const string PublicationTimingArithmetic = "publication-timing-arithmetic";
+    public const string DispatchKeyDerivation = "dispatch-key-derivation";
+    public const string DispatchDescriptorComposition = "dispatch-descriptor-composition";
+    public const string FirstPublicationConditionEvaluation = "first-publication-condition-evaluation";
+    public const string ApprovalQuantitySeparation = "approval-quantity-separation";
+    public const string AttemptAnswerCompleteness = "attempt-answer-completeness";
+
     /// <summary>
     /// The complete named set. The idempotent upload the upstream recommendation also names is
     /// excluded here by constraint C-013: this wave publishes nothing, so no upload path exists.
@@ -121,6 +137,29 @@ public static class DeterministicTaskRegistry
         ClipOriginPrecondition,
         RuntimeMeasurement,
         ItemLedgerArithmetic,
+        PublishedFacingSurfaceProduction,
+        PublicationTimingArithmetic,
+        DispatchKeyDerivation,
+        DispatchDescriptorComposition,
+        FirstPublicationConditionEvaluation,
+        ApprovalQuantitySeparation,
+        AttemptAnswerCompleteness,
+    }.ToFrozenSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The members the publishing path adds, named so the boundary check can assert that each one
+    /// is registered. A deterministic step added to the publishing path without being named here
+    /// fails that check rather than passing silently.
+    /// </summary>
+    public static readonly FrozenSet<string> PublishingMembers = new[]
+    {
+        PublishedFacingSurfaceProduction,
+        PublicationTimingArithmetic,
+        DispatchKeyDerivation,
+        DispatchDescriptorComposition,
+        FirstPublicationConditionEvaluation,
+        ApprovalQuantitySeparation,
+        AttemptAnswerCompleteness,
     }.ToFrozenSet(StringComparer.Ordinal);
 
     public static bool Contains(string taskName) => Names.Contains(taskName);

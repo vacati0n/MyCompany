@@ -349,6 +349,12 @@ public sealed class GateBlockPlacementTests
 
         public Task<GateState> CurrentStateAsync(ItemId item, ItemVersion version, CancellationToken ct) =>
             Task.FromResult(state);
+
+        // The empty register. All three conditions of first publication resolve ABSENT and refuse,
+        // which is the real recorded position: none of the three is discharged.
+        public Task<FirstPublicationConditionRegister> FirstPublicationConditionsAsync(
+            ChannelId channel, CancellationToken ct) =>
+            Task.FromResult(FirstPublicationConditionRegister.Empty);
     }
 
     private sealed class StubAssetLedger(IReadOnlyList<Asset> assets, IReadOnlyList<LibraryRegistration> registrations)

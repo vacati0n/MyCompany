@@ -98,6 +98,15 @@ public static class ProductionConfigurationKeys
         "publish-ready",
         "capability",
         "block",
+
+        // The publishing vocabulary. "condition" is deliberately NOT here: the admitted key
+        // production.treatment-conditions legitimately carries the treatment conditions as a
+        // value, and a tightening that invalidated an existing admitted key would not be additive.
+        // The publishing key surface, which has no such key, bars it there instead.
+        "egress",
+        "upload",
+        "dispatch",
+        "transport",
     ];
 
     public static bool IsAdmitted(string key) => Admitted.Contains(key);

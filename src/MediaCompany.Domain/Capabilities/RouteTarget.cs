@@ -43,7 +43,8 @@ public sealed record Route
         QualityRating ratedQuality,
         ContextCapacity contextCapacity,
         string termsBasis,
-        DateOnly termsVerifiedOn)
+        DateOnly termsVerifiedOn,
+        ReasoningTier? statedReasoningTier = null)
     {
         ArgumentNullException.ThrowIfNull(target);
         if (string.IsNullOrWhiteSpace(termsBasis))
@@ -59,6 +60,7 @@ public sealed record Route
         ContextCapacity = contextCapacity;
         TermsBasis = termsBasis;
         TermsVerifiedOn = termsVerifiedOn;
+        StatedReasoningTier = statedReasoningTier;
     }
 
     public RouteId Id { get; }
@@ -69,6 +71,17 @@ public sealed record Route
     public ContextCapacity ContextCapacity { get; }
     public string TermsBasis { get; }
     public DateOnly TermsVerifiedOn { get; }
+
+    /// <summary>
+    /// The reasoning tier this route STATES it serves.
+    ///
+    /// Optional, and its absence means the route CANNOT STATE ONE — not that the tier is unknown
+    /// and not that it is standard. An untiered route therefore stays visible as untiered instead
+    /// of being silently counted at an assumed tier. The served value on an operation record is
+    /// read from here, at the resolution boundary, and is never copied from the request: the
+    /// request states what was asked for, and only the admitting route can say what was served.
+    /// </summary>
+    public ReasoningTier? StatedReasoningTier { get; }
 
     /// <summary>
     /// A route whose terms basis is past the re-verification cadence is not admitted, which is

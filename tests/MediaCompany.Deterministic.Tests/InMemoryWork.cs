@@ -35,6 +35,12 @@ internal sealed class InMemoryWork : IUnitOfWork
 
     public List<(GateState From, GateState To)> Transitions { get; } = [];
 
+    /// <summary>Dispatch records that became durable, keyed as the datastore keys them.</summary>
+    public List<DispatchRecord> Dispatches { get; } = [];
+
+    /// <summary>Attempt records that became durable, refused attempts included.</summary>
+    public List<AttemptRecord> Attempts { get; } = [];
+
     public int Commits { get; private set; }
 
     public Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken) =>
@@ -55,6 +61,7 @@ internal sealed class InMemoryWork : IUnitOfWork
             Budgets = new NoBudgets();
             Gates = new GateWriter(_pending, owner);
             Availability = new NoAvailability();
+            Dispatches = new DispatchWriter(_pending, owner);
         }
 
         public IAuditAppender Audit { get; }
@@ -68,6 +75,8 @@ internal sealed class InMemoryWork : IUnitOfWork
         public IGateWriter Gates { get; }
 
         public IRouteAvailabilityWriter Availability { get; }
+
+        public IDispatchWriter Dispatches { get; }
 
         public Task CommitAsync(CancellationToken cancellationToken)
         {
@@ -233,6 +242,29 @@ internal sealed class InMemoryWork : IUnitOfWork
         private sealed class NoAvailability : IRouteAvailabilityWriter
         {
             public Task RecordAsync(RouteAvailability availability, CancellationToken ct) => Task.CompletedTask;
+        }
+    }
+
+    private sealed class DispatchWriter(List<Action> pending, InMemoryWork owner) : IDispatchWriter
+    {
+        public Task<DispatchWriteOutcome> RecordDispatchAsync(
+            DispatchRecord record, CancellationToken cancellationToken)
+        {
+            // Resolved against what is already durable, so a retry inside a fresh transaction sees
+            // the committed record exactly as the datastore's unique key would.
+            if (owner.Dispatches.Any(d => d.Item.Equals(record.Item) && d.Version.Equals(record.Version)))
+            {
+                return Task.FromResult(DispatchWriteOutcome.AlreadyRecorded);
+            }
+
+            pending.Add(() => owner.Dispatches.Add(record));
+            return Task.FromResult(DispatchWriteOutcome.Created);
+        }
+
+        public Task RecordAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
+        {
+            pending.Add(() => owner.Attempts.Add(attempt));
+            return Task.CompletedTask;
         }
     }
 }

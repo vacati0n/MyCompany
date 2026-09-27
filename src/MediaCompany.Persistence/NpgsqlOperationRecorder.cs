@@ -44,7 +44,8 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             route_id, model_id, deterministic_task,
             input_units, output_units, cached_units, other_units,
             applied_price_id, applied_input_price, applied_output_price, applied_cached_price, currency,
-            cost_basis, duration_ms, outcome, failure_reason)
+            cost_basis, duration_ms, outcome, failure_reason,
+            reasoning_tier_requested, reasoning_tier_served)
         SELECT
             @operation_id, @run_id, @occurred_at, @attempt,
             @item_id, @channel_id, @department_id, @agent_id, @capability_class, @period,
@@ -55,7 +56,8 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             CASE WHEN @deterministic_task IS NULL THEN price.output_price  ELSE 0 END,
             CASE WHEN @deterministic_task IS NULL THEN price.cached_price  ELSE 0 END,
             price.currency,
-            @cost_basis, @duration_ms, @outcome, @failure_reason
+            @cost_basis, @duration_ms, @outcome, @failure_reason,
+            @tier_requested, @tier_served
         FROM price
         RETURNING computed_cost, currency, applied_price_id
         """;
@@ -102,6 +104,13 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
         command.Parameters.AddWithValue("outcome", draft.Outcome.ToString());
         AddNullable(command, "failure_reason", NpgsqlDbType.Text, draft.FailureReason);
 
+        // The served value comes from the draft, which the resolution boundary populated from the
+        // ADMITTING ROUTE. A null is the explicit absence marker and is stored as such; nothing
+        // here falls back to the requested tier, because that would manufacture the very evidence
+        // the column exists to measure.
+        AddNullable(command, "tier_requested", NpgsqlDbType.Text, draft.ReasoningTierRequested?.ToString());
+        AddNullable(command, "tier_served", NpgsqlDbType.Text, draft.ReasoningTierServed?.ToString());
+
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -131,6 +140,8 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             OccurredAt = draft.OccurredAt,
             Attempt = draft.Attempt,
             FailureReason = draft.FailureReason,
+            ReasoningTierRequested = draft.ReasoningTierRequested,
+            ReasoningTierServed = draft.ReasoningTierServed,
         };
     }
 

@@ -155,8 +155,13 @@ public sealed class PublicationGateService
         var registrations = await _assets.RegistrationsAsync(channel, cancellationToken).ConfigureAwait(false);
         var rights = ReleasableRightsPrecondition.Evaluate(assets, registrations, today);
 
+        // Read at evaluation time from recorded observations. An unreadable or absent register
+        // yields the empty one, which refuses all three by name rather than passing them.
+        var conditions = await _gates
+            .FirstPublicationConditionsAsync(channel, cancellationToken).ConfigureAwait(false);
+
         var verdict = GatePredicates.EvaluatePublish(
-            item, version, state, actor, blocks, approvals, rights.Releasable, now);
+            item, version, state, actor, blocks, approvals, rights.Releasable, now, conditions);
 
         await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
 

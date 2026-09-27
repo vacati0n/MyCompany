@@ -23,6 +23,25 @@ public enum GateRefusal
 
     /// <summary>An asset lacks a verified permission basis, or the channel is unregistered.</summary>
     RightsPreconditionUnmet = 6,
+
+    /// <summary>
+    /// The channel is not registered on every music and stock library its assets come from. One of
+    /// the three conditions of first publication, decided from a recorded observation.
+    /// </summary>
+    FirstPublicationLibraryRegistrationUnmet = 7,
+
+    /// <summary>The payment account does not exist. A condition of first publication.</summary>
+    FirstPublicationPaymentAccountUnmet = 8,
+
+    /// <summary>Two-step verification is unconfirmed or disabled. A condition of first publication.</summary>
+    FirstPublicationTwoStepVerificationUnmet = 9,
+
+    /// <summary>
+    /// The dispatch is presented against a version other than the one its approval binds to.
+    /// Evaluated AT DISPATCH TIME, so a retry of an attempt recorded against an earlier version
+    /// cannot ride the approval that version carried.
+    /// </summary>
+    DispatchVersionChanged = 10,
 }
 
 /// <summary>The verdict of the gate on one item version.</summary>
@@ -72,10 +91,17 @@ public static class GatePredicates
         IReadOnlyList<Block> openBlocks,
         IReadOnlyList<Approval> approvals,
         bool rightsPreconditionMet,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        FirstPublicationConditionRegister firstPublicationConditions)
     {
         ArgumentNullException.ThrowIfNull(openBlocks);
         ArgumentNullException.ThrowIfNull(approvals);
+
+        // Required, not optional. A caller cannot omit the condition set and thereby skip the
+        // three conditions of first publication: there is no overload without it, so "no register
+        // supplied" is not a state the predicate can be in. An EMPTY register is expressible and
+        // refuses all three, which is the correct reading of no recorded observation.
+        ArgumentNullException.ThrowIfNull(firstPublicationConditions);
 
         if (!ActionSet.Holds(actor, ActionKind.Publish))
         {
@@ -132,7 +158,71 @@ public static class GatePredicates
                 $"No owner approval is recorded for item {item} version {version}.");
         }
 
+        // The three conditions of first publication, evaluated LAST so every delivered refusal
+        // keeps the precedence it had, and evaluated from recorded state read at this moment
+        // rather than from a default or a value fixed when this code was built.
+        //
+        // The register is total over the closed three-member set, so an absent observation
+        // produces an ABSENT standing that refuses. Unknown and absent both fold to not satisfied
+        // here, at evaluation, and both stay visible in the refusal detail: a reader can tell an
+        // unverifiable condition from one observed to be false, which matters because they are
+        // discharged by different acts.
+        var unsatisfied = firstPublicationConditions.Unsatisfied();
+        if (unsatisfied.Count > 0)
+        {
+            var first = unsatisfied[0];
+            return new GateVerdict.Refused(
+                RefusalFor(first.Condition),
+                string.Join(" ", unsatisfied.Select(s => s.Describe())));
+        }
+
         return new GateVerdict.Passed(new GatePassToken(item, version, OwnerApprovalGate, now));
+    }
+
+    /// <summary>
+    /// The named refusal for each condition of first publication. The mapping is total over the
+    /// closed three-member set, so a fourth condition is a compile error rather than a silent
+    /// fall-through to a generic refusal.
+    /// </summary>
+    public static GateRefusal RefusalFor(FirstPublicationCondition condition) => condition switch
+    {
+        FirstPublicationCondition.LibraryRegistration => GateRefusal.FirstPublicationLibraryRegistrationUnmet,
+        FirstPublicationCondition.PaymentAccount => GateRefusal.FirstPublicationPaymentAccountUnmet,
+        FirstPublicationCondition.TwoStepVerification => GateRefusal.FirstPublicationTwoStepVerificationUnmet,
+        _ => throw new ArgumentOutOfRangeException(
+            nameof(condition), condition, "The condition set is closed at three members."),
+    };
+
+    /// <summary>
+    /// Re-evaluates the approval binding against the exact version being dispatched.
+    ///
+    /// Called at DISPATCH time rather than only at gate time. A retry that carries an attempt
+    /// recorded against an earlier version is refused by its own name, so it cannot ride the
+    /// approval that earlier version carried.
+    /// </summary>
+    public static GateVerdict.Refused? RefuseOnVersionDrift(
+        GatePassToken gatePass,
+        ItemId item,
+        ItemVersion versionBeingDispatched)
+    {
+        ArgumentNullException.ThrowIfNull(gatePass);
+
+        if (!gatePass.Item.Equals(item))
+        {
+            return new GateVerdict.Refused(
+                GateRefusal.DispatchVersionChanged,
+                $"The gate pass names item {gatePass.Item}, but item {item} is being dispatched.");
+        }
+
+        if (!gatePass.ItemVersion.Equals(versionBeingDispatched))
+        {
+            return new GateVerdict.Refused(
+                GateRefusal.DispatchVersionChanged,
+                $"The gate pass binds to version {gatePass.ItemVersion}, but version "
+                + $"{versionBeingDispatched} is being dispatched; the approval does not carry over.");
+        }
+
+        return null;
     }
 
     /// <summary>
