@@ -31,8 +31,12 @@ internal sealed class NpgsqlGateWriter : IGateWriter
 
         await using var command = new NpgsqlCommand(
             """
-            INSERT INTO approvals (item_id, item_version, gate, approver, verdict, reason, presented_at, decided_at)
-            VALUES (@item_id, @version, @gate, @approver, @verdict, @reason, @presented_at, @decided_at)
+            INSERT INTO approvals (
+                item_id, item_version, gate, approver, verdict, reason, presented_at, decided_at,
+                queued_at, rework_of)
+            VALUES (
+                @item_id, @version, @gate, @approver, @verdict, @reason, @presented_at, @decided_at,
+                @queued_at, @rework_of)
             """,
             _connection,
             _transaction);
@@ -45,6 +49,13 @@ internal sealed class NpgsqlGateWriter : IGateWriter
         command.Parameters.AddWithValue("reason", approval.Reason);
         command.Parameters.AddWithValue("presented_at", approval.PresentedAt);
         command.Parameters.AddWithValue("decided_at", approval.DecidedAt);
+
+        // Null rather than a substituted zero. A null queued mark resolves as UNMEASURED at the
+        // measurement level, which is a different fact from a measured zero wait.
+        command.Parameters.Add("queued_at", NpgsqlDbType.TimestampTz).Value =
+            (object?)approval.QueuedAt ?? DBNull.Value;
+        command.Parameters.Add("rework_of", NpgsqlDbType.TimestampTz).Value =
+            (object?)approval.ReworkOf ?? DBNull.Value;
 
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }

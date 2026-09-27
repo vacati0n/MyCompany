@@ -150,6 +150,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             Budgets = new Budgeter(owner);
             Gates = new Gateless();
             Availability = new AvailabilityRecorder(owner);
+            Dispatches = new Dispatchless();
         }
 
         public IAuditAppender Audit { get; }
@@ -163,6 +164,8 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         public IGateWriter Gates { get; }
 
         public IRouteAvailabilityWriter Availability { get; }
+
+        public IDispatchWriter Dispatches { get; }
 
         public Task CommitAsync(CancellationToken cancellationToken)
         {
@@ -260,6 +263,12 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                     OccurredAt = draft.OccurredAt,
                     Attempt = draft.Attempt,
                     FailureReason = draft.FailureReason,
+
+                    // Carried through exactly as the draft holds them. The served value is the one
+                    // the boundary read from the admitting route, and a null stays null: a fake
+                    // that filled it in from the request would hide the very thing under test.
+                    ReasoningTierRequested = draft.ReasoningTierRequested,
+                    ReasoningTierServed = draft.ReasoningTierServed,
                 };
                 sink.Add(record);
                 return Task.FromResult(record);
@@ -315,5 +324,18 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                 Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct) =>
                 Task.FromResult<IReadOnlyList<BudgetAlert>>(owner.Alerts.ToArray());
         }
+    }
+
+    private sealed class Dispatchless : IDispatchWriter
+    {
+        public Task<DispatchWriteOutcome> RecordDispatchAsync(
+            MediaCompany.Domain.Publication.DispatchRecord record, CancellationToken cancellationToken) =>
+            throw new NotSupportedException(
+                "The resolution boundary writes no publication dispatch; this fake exists to prove it is never called.");
+
+        public Task RecordAttemptAsync(
+            MediaCompany.Domain.Publication.AttemptRecord attempt, CancellationToken cancellationToken) =>
+            throw new NotSupportedException(
+                "The resolution boundary records no publication attempt.");
     }
 }

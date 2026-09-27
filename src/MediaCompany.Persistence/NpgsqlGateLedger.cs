@@ -45,7 +45,8 @@ public sealed class NpgsqlGateLedger : IGateLedger
     {
         await using var command = _dataSource.CreateCommand(
             """
-            SELECT item_id, item_version, gate, approver, verdict, reason, presented_at, decided_at
+            SELECT item_id, item_version, gate, approver, verdict, reason, presented_at, decided_at,
+                   queued_at, rework_of
             FROM approvals WHERE item_id = @item_id ORDER BY presented_at
             """);
         command.Parameters.AddWithValue("item_id", item.Value);
@@ -62,10 +63,45 @@ public sealed class NpgsqlGateLedger : IGateLedger
                 Enum.Parse<ApprovalVerdict>(reader.GetString(4)),
                 reader.GetString(5),
                 reader.GetFieldValue<DateTimeOffset>(6),
-                reader.GetFieldValue<DateTimeOffset>(7)));
+                reader.GetFieldValue<DateTimeOffset>(7),
+
+                // Null stays null. It resolves as UNMEASURED at the measurement level, and
+                // substituting a zero here would turn an unmeasured approval into a measured one.
+                reader.IsDBNull(8) ? null : reader.GetFieldValue<DateTimeOffset>(8),
+                reader.IsDBNull(9) ? null : reader.GetFieldValue<DateTimeOffset>(9)));
         }
 
         return approvals;
+    }
+
+    public async Task<FirstPublicationConditionRegister> FirstPublicationConditionsAsync(
+        ChannelId channel,
+        CancellationToken cancellationToken)
+    {
+        // Every observation is read and the register picks the latest per condition. A channel
+        // with no rows yields a register in which all three resolve ABSENT and therefore refuse;
+        // there is no code path here that returns "nothing to check".
+        await using var command = _dataSource.CreateCommand(
+            """
+            SELECT condition, state, evidence, observed_on
+            FROM first_publication_conditions
+            WHERE channel_id = @channel_id
+            ORDER BY observed_on
+            """);
+        command.Parameters.AddWithValue("channel_id", channel.Value);
+
+        var observations = new List<ConditionObservation>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            observations.Add(new ConditionObservation(
+                Enum.Parse<FirstPublicationCondition>(reader.GetString(0)),
+                Enum.Parse<ConditionState>(reader.GetString(1)),
+                reader.GetString(2),
+                reader.GetFieldValue<DateOnly>(3)));
+        }
+
+        return new FirstPublicationConditionRegister(observations);
     }
 
     public async Task<GateState> CurrentStateAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken)

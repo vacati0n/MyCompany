@@ -77,4 +77,22 @@ public sealed record ModelPrice(
     string Source,
     DateOnly VerifiedOn,
     DateTimeOffset ValidFrom,
-    DateTimeOffset? ValidTo);
+    DateTimeOffset? ValidTo)
+{
+    /// <summary>
+    /// The date this price was re-fetched from its source (decision D-010, criterion A-017).
+    ///
+    /// Nullable, and deliberately so: a price lacking a re-fetch date resolves as ABSENT rather
+    /// than as current, and the absence must be representable in order to be refused. Making it
+    /// required at construction would hide the very condition the criterion measures.
+    /// </summary>
+    public DateOnly? RefetchedOn { get; init; }
+
+    /// <summary>
+    /// Whether this price may be applied to an operation that occurred on a given date. A price is
+    /// current only when it was re-fetched no earlier than the operation it prices; an unverified
+    /// price cannot silently enter the ledger.
+    /// </summary>
+    public bool IsApplicableTo(DateOnly operationOn) =>
+        RefetchedOn is not null && RefetchedOn.Value >= operationOn;
+}

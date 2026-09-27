@@ -97,6 +97,17 @@ public enum CredentialRefusal
 
     /// <summary>The provider account holds no credential for this channel.</summary>
     NoHolder = 8,
+
+    /// <summary>
+    /// At least one of the three conditions of first publication is not satisfied, so no release
+    /// credential is issuable.
+    ///
+    /// STRUCTURAL ABSENCE FIVE. None of the three is discharged, and none can be discharged by
+    /// this system: each needs the owner to sign in, verify an identity or open an account. A
+    /// hypothetical transport would therefore hold nothing to present, independently of the other
+    /// four absences.
+    /// </summary>
+    FirstPublicationConditionUnmet = 9,
 }
 
 /// <summary>The outcome of an issuance or a presentation. A refusal carries its ground and is recorded.</summary>

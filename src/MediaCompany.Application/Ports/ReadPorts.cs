@@ -69,6 +69,17 @@ public interface IGateLedger
     Task<IReadOnlyList<Approval>> ApprovalsAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
 
     Task<GateState> CurrentStateAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The three conditions of first publication, as recorded observations for one channel.
+    ///
+    /// Returns a register that is TOTAL over the closed three-member set whatever the store holds,
+    /// so a channel with no observations yields a register in which all three resolve absent and
+    /// therefore refuse. There is no return value meaning "nothing to check".
+    /// </summary>
+    Task<FirstPublicationConditionRegister> FirstPublicationConditionsAsync(
+        ChannelId channel,
+        CancellationToken cancellationToken);
 }
 
 /// <summary>Temporal configuration (module M-012), read without redeployment (constraint C-011).</summary>

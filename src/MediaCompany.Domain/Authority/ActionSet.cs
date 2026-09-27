@@ -35,6 +35,7 @@ public static class ActionSet
             [WorkforceRole.Publisher] = new[]
             {
                 ActionKind.Publish,
+                ActionKind.PublicationDispatch,
                 ActionKind.ReleaseCredentialRequest,
                 ActionKind.ApprovalPresent,
                 ActionKind.ReportRead,

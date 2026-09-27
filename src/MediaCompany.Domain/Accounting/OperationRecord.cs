@@ -66,4 +66,27 @@ public sealed record OperationRecord
     public required int Attempt { get; init; }
 
     public string? FailureReason { get; init; }
+
+    /// <summary>
+    /// The reasoning tier the request asked for (decision D-006), written at the resolution
+    /// boundary in the same transaction as the work.
+    /// </summary>
+    public ReasoningTier? ReasoningTierRequested { get; init; }
+
+    /// <summary>
+    /// The reasoning tier the admitted route actually served.
+    ///
+    /// Null is an EXPLICIT ABSENCE MARKER, not an unset field: it records that the admitted route
+    /// could not state a tier, so a consumer never reads an inferred value. Without this attribute
+    /// the routing argument that carries the company's cost thesis stays untestable however many
+    /// items are produced, which is why it is recorded per operation rather than derived later.
+    /// </summary>
+    public ReasoningTier? ReasoningTierServed { get; init; }
+
+    /// <summary>
+    /// Whether the tier evidence is present for this record. A record where the request named a
+    /// tier and the route stated one is testable; anything else is recorded as absent and says so.
+    /// </summary>
+    public bool CarriesTierEvidence =>
+        ReasoningTierRequested is not null && ReasoningTierServed is not null;
 }

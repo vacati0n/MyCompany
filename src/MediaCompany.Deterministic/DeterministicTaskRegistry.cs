@@ -57,6 +57,39 @@ public static class DeterministicTaskRegistry
     // Record.
     public const string AuditLogging = "audit-logging";
 
+    // The production path's rule-determined work (plan task T-026, sequencing constraint P-004).
+    // Each is fully determined by its inputs and a rule, so each carries zero capability cost, and
+    // the property is the same dependency-direction property the set above rests on rather than a
+    // second claim about these members in particular.
+    public const string TermFidelityComparison = "term-fidelity-comparison";
+    public const string BarredTermMetadataScreen = "barred-term-metadata-screen";
+    public const string StageCompletenessCheck = "stage-completeness-check";
+    public const string PublishReadyPrecondition = "publish-ready-precondition";
+    public const string TreatmentConditionEvaluation = "treatment-condition-evaluation";
+    public const string ComplianceDetermination = "compliance-determination";
+    public const string AdvertiserSuitabilityDerivation = "advertiser-suitability-derivation";
+    public const string ClaimToSourceJoin = "claim-to-source-join";
+    public const string FootageRemovalAssessment = "footage-removal-assessment";
+    public const string ClipOriginPrecondition = "clip-origin-precondition";
+    public const string RuntimeMeasurement = "runtime-measurement";
+    public const string ItemLedgerArithmetic = "item-ledger-arithmetic";
+
+    // The publishing path's rule-determined work. Each joins the SAME named set rather than
+    // forming a second one, so the delivered boundary check covers them without a second
+    // mechanism: the property is a dependency direction of the enclosing assembly, and a member
+    // added here inherits it by construction.
+    //
+    // The idempotent dispatch is a member because deriving a key from an item and its version is
+    // arithmetic over its inputs. The EFFECTING of a dispatch is not a member, because no such
+    // step exists anywhere in the build to register.
+    public const string PublishedFacingSurfaceProduction = "published-facing-surface-production";
+    public const string PublicationTimingArithmetic = "publication-timing-arithmetic";
+    public const string DispatchKeyDerivation = "dispatch-key-derivation";
+    public const string DispatchDescriptorComposition = "dispatch-descriptor-composition";
+    public const string FirstPublicationConditionEvaluation = "first-publication-condition-evaluation";
+    public const string ApprovalQuantitySeparation = "approval-quantity-separation";
+    public const string AttemptAnswerCompleteness = "attempt-answer-completeness";
+
     /// <summary>
     /// The complete named set. The idempotent upload the upstream recommendation also names is
     /// excluded here by constraint C-013: this wave publishes nothing, so no upload path exists.
@@ -92,7 +125,32 @@ public static class DeterministicTaskRegistry
         MetadataTemplatePopulation,
         ThumbnailVariantCompositing,
         AuditLogging,
+        TermFidelityComparison,
+        BarredTermMetadataScreen,
+        StageCompletenessCheck,
+        PublishReadyPrecondition,
+        TreatmentConditionEvaluation,
+        ComplianceDetermination,
+        AdvertiserSuitabilityDerivation,
+        ClaimToSourceJoin,
+        FootageRemovalAssessment,
+        ClipOriginPrecondition,
+        RuntimeMeasurement,
+        ItemLedgerArithmetic,
+        PublishedFacingSurfaceProduction,
+        PublicationTimingArithmetic,
+        DispatchKeyDerivation,
+        DispatchDescriptorComposition,
+        FirstPublicationConditionEvaluation,
+        ApprovalQuantitySeparation,
+        AttemptAnswerCompleteness,
     }.ToFrozenSet(StringComparer.Ordinal);
+
+    // There is deliberately no second list of the publishing members here. A list restating
+    // what Names already holds can only be compared against itself: a step absent from both
+    // would satisfy the comparison, which is the one case the check exists to catch. The
+    // build-time check instead discovers the steps from the types that realize them and
+    // asserts each declared name is in Names above.
 
     public static bool Contains(string taskName) => Names.Contains(taskName);
 }

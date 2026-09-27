@@ -1,4 +1,52 @@
-# CEO Decision Record — Framing Gate, run `run-258e0a3415d2`
+# CEO Decision Record
+
+> **READ THIS FIRST - five identifiers were renumbered on 2026-09-26.**
+>
+> Three sessions write to this record, and two of them independently allocated `D-011` to
+> `D-015`. By CEO decision the **Wave 1 session's five were renumbered** to `D-018`-`D-022`
+> (commit `21e9882`, now on `main`), with withdrawal markers left at the old positions
+> carrying the mapping.
+>
+> **A bare `D-011`-`D-015` therefore means this branch's decision, unambiguously.** No other
+> identifier was changed.
+
+## What moved
+
+| Was | Is now | Decision, Wave 1 session |
+|---|---|---|
+| `D-011` | **`D-018`** | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | **`D-019`** | Two-phase payee structure; the launch channel already exists |
+| `D-013` | **`D-020`** | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | **`D-021`** | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
+| `D-015` | **`D-022`** | The first item carries no affiliate link |
+
+Unchanged and unambiguous: `D-001`-`D-010` (shared history before the fork), `D-011`-`D-016`
+(this branch), `D-017` (Wave 2, the video subject), `D-023` onward, and `C-001`-`C-006`.
+
+## Allocation blocks - so this cannot happen a fourth time
+
+Renumbering resolved the collision that existed. It does not prevent the next one, because
+nothing stops two sessions reaching for the same next number again. One flat `D-nnn` space is
+kept, as decided, and each session draws from **its own reserved block**:
+
+| Session | Block |
+|---|---|
+| Wave 0 and orchestration (`claude/execute-prompt-txt-4a3ee4`) | `D-023`-`D-099` |
+| Wave 1 (`claude/eloquent-taussig-724cc2`) | `D-100`-`D-199` |
+| Wave 2 (video production) | `D-200`-`D-299` |
+| Any later session | next free hundred, taken without asking |
+
+No prefixes, one space, and no coordination needed - which matters, because the first two
+collisions were caught only because the sessions happened to be talking to each other.
+
+**Still open, and no numbering scheme fixes it:** the technical design and this record both use
+bare `D-nnn`, for architecture decisions and business decisions respectively, so `D-011` is
+ambiguous *by kind* rather than by origin. Resolve by naming the document when citing across
+the two, or by adopting `CEO-D-nnn` against `ADR-D-nnn` if it starts to bite.
+
+---
+
+# Original record — Framing Gate, run `run-258e0a3415d2`
 
 | Field | Value |
 |---|---|
@@ -255,6 +303,451 @@ only fixed date. The channel niche and content pillars remain unchosen and block
 
 ---
 
+# Fourth round — niche direction and tax posture
+
+Decided 2026-09-26 by the CEO.
+
+## D-011 — Tax posture: individual or household business first, company only if it works
+
+**Decision.** Operate initially as an **individual** or a **household business (hộ kinh doanh)**.
+Incorporate a company only once the channel has proven itself.
+
+**Consequence.**
+
+- Correct for the stage. It avoids incorporation and annual compliance cost during the
+  pre-revenue period, which is the period the recommendation identified as having no revenue
+  against full cost. It also matches the earlier finding that a treaty-country entity is net
+  negative at launch volumes — a UK Ltd only breaks even above 200k–617k views/month.
+- **`RK-003` is not discharged by this decision — it is narrowed.** Qualified Vietnamese
+  counsel is still required, but the question becomes specific: the household-business tax
+  regime, its revenue threshold, and the rates that apply to foreign-sourced platform income.
+  The figures previously found (a VND 100m threshold, 5% VAT + 2% PIT, from a 2021 instrument)
+  are professional-firm secondary sourcing and were **not** verified against Vietnam's 2026 tax
+  laws. Do not plan against them until counsel confirms.
+- **`RK-006`'s sibling obligation becomes more urgent, not less.** The earlier analysis found
+  that failing to submit the W-8BEN **as an individual** triggers **24% backup withholding on
+  total worldwide earnings**, which is worse than the 30% that applies only to the US-sourced
+  share. Submitting it is now a first-class precondition of the payment account, not a detail.
+- **Migration cost to record now, so it is not discovered later.** One ad-payment account is
+  permitted per payee name, and the payee is hard to change after the fact. Moving from an
+  individual or household payee to a company payee later is a payee change, not a settings
+  change. Counsel should be asked what that migration costs *before* the first account is
+  created, so the decision to start simple is taken with its exit cost known.
+
+## D-012 — Niche direction: animals, form not yet settled
+
+**Decision.** The channel's subject is **animals** — either cute and funny animals, or the
+animal world.
+
+**Status: direction accepted, format NOT yet settled.** The two readings differ enough that
+they are effectively different businesses, and one of them is foreclosed by the same policy
+regime the whole plan is built to respect:
+
+- **Compilation of cute and funny animal clips** is, in the ordinary case, assembled from other
+  people's social-media footage. That is named directly by YouTube's reused-content policy,
+  which prohibits content "compiled from other social media websites" without substantive
+  original contribution, and it is the business model the supplied intent itself ruled out:
+  re-uploading other people's videos and random social-media clips. It also conflicts with
+  D-006, which sources visuals from licensed stock and original graphics.
+- **Wildlife and animal-world content** built from licensed stock footage with an original
+  script, original narration and original motion graphics is fully compatible with D-006 and
+  with the originality regime.
+
+Analysis commissioned 2026-09-26: `research/animal-niche-analysis.md`. It must establish the
+format question, whether the committed stock libraries actually carry enough animal footage for
+13 videos a month, the RPM band for this category, the re-run break-even, and in particular the
+**made-for-kids exposure** — animal content can be classified as made for kids, which removes
+personalised advertising and sharply reduces RPM. That is potentially the largest economic risk
+in this niche and is not yet quantified.
+
+This decision blocks **Wave 2**, not Wave 1. The foundation being built now is niche-agnostic.
+
+---
+
+# Fifth round — niche settled, Wave 2 authorised
+
+Decided 2026-09-26 by the CEO.
+
+## D-013 — Niche: science and the natural world, adult-framed edutainment
+
+**Decision.** The channel's subject is **broad-appeal science and natural-world edutainment,
+framed for an adult audience**. This supersedes the open format question left by D-012 and
+settles the direction the CEO first expressed as "animals".
+
+**Basis.** Scored 383/500 in `research/niche-recommendation.md`, runner-up to engineering and
+infrastructure at 424/500. The CEO selected it over the higher-scored option. Recorded so the
+trade is visible rather than implicit: this option **wins** on raw volume ceiling and RPM — which
+is the CEO's stated priority of reaching a mass audience — and **loses** on three counts the
+analysis named: made-for-kids drift, near-zero affiliate intent, and competing for attention
+against Kurzgesagt-class animation budgets on USD 77.41/month.
+
+**Consequence — production constraints that now become binding:**
+
+- **Adult framing is a hard production rule, not a style preference.** Serious narration,
+  scientific register, no cartoon styling, no child-directed language, no toy or nursery
+  imagery. A made-for-kids designation removes personalised advertising and sharply reduces
+  RPM, and it is the single largest economic risk in this subject.
+- **Compilation is foreclosed.** Content assembled from third-party clips is named directly by
+  the reused-content policy and is barred by D-006 regardless. Every item is original script
+  and original narration over licensed stock, with original motion graphics.
+- Affiliate revenue, which D-005 places in the launch model, is expected to be **weak** in this
+  subject. The pre-threshold period should be planned on the assumption that it contributes
+  little, so the ~7–14 months of full cost before advertising revenue is closer to the upper
+  end of the USD 400–900 range than the lower.
+- The moat is **treatment and scripting quality**, not subject matter. The subject is not
+  scarce; the discipline is.
+
+**Open and carried, not resolved by this decision.** `research/animal-niche-analysis.md` was
+still in flight when this decision was taken. It is scoped to quantify the made-for-kids
+exposure, test stock-footage supply at the specific-species level rather than in aggregate, and
+re-run break-even for this subject. Its findings **refine the treatment rules and may tighten
+them**; they do not reopen the niche. If it finds made-for-kids exposure inherent to the subject
+rather than manageable by treatment, that is a material finding and returns to the CEO.
+
+## D-014 — Wave 2 begins, in a separate session
+
+**Decision.** Wave 2 is authorised and runs in its **own session**, as Wave 1 did.
+
+**Scope, per the plan of record:** the complete production pipeline — Idea → Research → Script →
+Design → Production → QC → Copyright → **publish-ready output**. The goal is **one complete
+video, end to end**.
+
+**Consequence.**
+
+- **Wave 2 does not publish.** Publishing is Wave 3. The output is a publish-ready artifact
+  held at the gate. Nothing in Wave 2 creates a channel or commits spend, so `RK-003` — the
+  unverified Vietnamese tax position — does not block it.
+- Wave 1's implementation phase is complete; its `quality-review` phase is blocked on the known
+  `awaiting_policy_exception` defect and is being handled in the Wave 1 session. Wave 2 builds
+  on the Wave 1 foundation and should not re-create it.
+- D-002 still holds: the CEO approves the publication individually. In Wave 2 that approval
+  step exists and is exercised, but it gates a publish-ready artifact rather than an upload.
+
+---
+
+# Sixth round — the niche is an experiment, not the business bet
+
+Decided 2026-09-26 by the CEO, after the completed animal-niche analysis revised that option
+from 383 to 326 of 500 and widened the gap to the engineering candidate from 41 to 98 points.
+
+## D-015 — Science and the natural world stands, reframed as a deliberate experiment
+
+**Decision.** **D-013 stands.** The first channel is adult-framed science and natural-world
+edutainment. The CEO took this decision **with the revised score in hand**, not in ignorance of
+it, and reframed what the first channel is for:
+
+> The company is at its beginning. The first channel is an **experiment that proves the
+> pipeline**, not the bet that decides the business. In time the company's own departments must
+> find profitable niches themselves.
+
+**Why this is a coherent decision rather than a rejection of the evidence.** The analysis ranked
+niches by *expected profitability of that channel*. The CEO is optimising something different
+and longer-lived: **the machine that produces channels.** Under that objective a 98-point gap on
+one channel's economics is a smaller quantity than the value of learning the pipeline end to
+end, and the subject that keeps the operator engaged through the first hard month has a value
+the scoring model does not carry. The scoring model is not wrong; it was answering a narrower
+question than the one being decided.
+
+**Consequence.**
+
+- **The first channel is a test instrument.** Its success measure is not revenue but whether
+  the pipeline can produce a compliant, original, publish-ready video repeatedly and at a
+  metered cost. Revenue-denominated judgement of this channel should be deferred accordingly.
+- **Niche-agnostic construction is now a design requirement, not a preference.** The topic will
+  change; the machine must not have to be rebuilt when it does. Favour components that are
+  re-pointable over anything hard-wired to wildlife.
+- **The engineering and infrastructure candidate is not discarded.** It scored 429 under
+  volume-weighted scoring and remains the strongest known option. It is the natural candidate
+  for channel two, or for this channel if the experiment shows the subject cannot carry the
+  originality burden.
+- **Autonomous niche discovery becomes an explicit company capability**, not an aspiration. The
+  Strategy function must eventually do what the last three analyses did by hand: score
+  candidate niches on demand, competition, production feasibility, policy admissibility and
+  expected economics, and bring recommendations to the CEO. That is the supplied intent's
+  Wave 9 ambition, given a concrete first job.
+
+## D-016 — Budget holds at USD 77.41; the species gap is closed by topic selection
+
+**Decision.** The **+USD 16.50/month second stock library is not authorised.** The envelope
+stays at **USD 77.41**.
+
+**Consequence.** Species depth is managed by **choosing well-filmed subjects and avoiding rare
+species**, not by spending more. This costs breadth of topic, and it is recorded as a real cost
+rather than waved away. It also has an unplanned benefit: the contaminated search results the
+analysis found are concentrated in exactly the rare-species queries this constraint avoids.
+
+## Production constraints now binding on Wave 2, from the completed analysis
+
+- **Never source footage by clip count.** Rare-species results are contaminated by
+  generative AI — one library returns 84 clips for a species filmed alive a handful of times,
+  including a tropical storm of the same name. Every wildlife clip is verified against caption
+  and provenance before entering a cut, and anything unconfirmed is rejected. A pipeline that
+  publishes AI-generated animals as documentary evidence fails on credibility, not cost.
+- **Clip counts are upper bounds of unknown looseness.** Search is fuzzy: one library silently
+  answers `saola` with results for "saona", and a nonsense query returns 26 results.
+- **Licensing does not cure reused content.** "Even if you have their permission" appears twice
+  in the NOT ALLOWED list. The channel owns no footage under D-006, so the whole originality
+  burden rests on script and original graphics. Test: if the video would still stand as an
+  essay without the clips, it is on the right side of the policy; if the clips *are* the
+  content, it is not.
+- **Made-for-kids resolved in favour, conditionally.** Animals appear in neither YouTube's nor
+  the FTC's factor lists. Nine treatment rules apply as production rules. The penalty is 31× on
+  RPM and it disables the notification bell, end screens, playlists and comments — the whole
+  subscriber machinery, and subscribers are the binding gate. The FTC pursues the uploader, so
+  mis-declaring "not made for kids" is the riskier error.
+
+**Break-even for this niche (ESTIMATE):** 32,525 views/month, about 2,502 per video. If
+made-for-kids were to apply: 110,000–119,000 views/month.
+
+---
+
+# Seventh round — the first video's subject
+
+Decided 2026-09-26 by the CEO, during Wave 2 (`run-3a58551ee912`), choosing between four options
+each constrained by the species-level footage audit in `research/animal-niche-analysis.md` §3.3.
+
+*(Filed as D-017. An earlier draft of this entry used D-015; that identifier was taken
+concurrently by the decision above and the draft was withdrawn before it propagated. There is
+one numbering space for CEO decisions and this is the next free identifier in it.)*
+
+## D-017 — First video: the honey bee waggle dance, as a coordinate-encoding mechanism
+
+**Decision.** The first video's subject is the **honey bee waggle dance** — how a returning
+forager encodes the *direction and distance* of a resource as a vector another bee can read and
+fly on. Treatment is pillar 1, **Mechanism**, format **F5**: original motion graphics carry the
+argument, licensed footage illustrates it.
+
+**Why this subject cleared the constraints**, recorded so the reasoning survives the choice:
+
+- **Supply is real, not aggregate.** `honey bee` returns **1,213** clips on the committed
+  library — a single, distinctive, unambiguous token, so it is one of the counts §3.3 classifies
+  as trustworthy rather than an upper bound of unknown looseness. **No second library is needed,
+  so D-016 is satisfied by the choice rather than strained by it.**
+- **It sits away from the contaminated tail.** The species is common and well-filmed, so it is
+  far from the rare-species queries where §3.4 showed clip counts are largely generative-AI
+  assets, green-screen composites and name collisions.
+- **The originality burden lands where the channel can carry it.** The waggle dance is an
+  *argument* — an angle-to-sun vector diagram, a distance-to-duration encoding, an error
+  distribution — and those graphics are original artefacts that carry the explanation rather
+  than decorate it. It passes D-016's test outright: **the video would still stand as an essay
+  with every clip removed.**
+- **Made-for-kids exposure is at its lowest here.** The subject needs no named protagonist, no
+  invented personality and no simplified register to be interesting, so K-1, K-2, K-4 and K-6
+  are satisfied by the material rather than enforced against it.
+- **The science is attributable**, which §8.5 makes a heavier obligation in this niche than in
+  the alternative: von Frisch's decoding (Nobel Prize in Physiology or Medicine, 1973) and the
+  modern literature on dance precision and error. Every claim can name a paper or an institution.
+
+**Two cautions specific to this subject, binding on production:**
+
+1. **`waggle dance` is a multi-word phrase, so its count is an upper bound of unknown
+   looseness** under the fuzzy-matching finding. Clips labelled as the dance must be confirmed
+   by eye to show the dance itself rather than generic hive activity. The trustworthy count is
+   for `honey bee`; the count for the behaviour is not yet established and is owed at `A-024`.
+2. **Bees are a subject whose default styling is cheerful**, which is precisely the drift K-1 to
+   K-6 exist to stop. The treatment must resist it deliberately rather than by omission —
+   documentary register, no warm-whimsical score, no anthropomorphic framing of the colony.
+
+**Consequence.** The topic question the scope definition reserved to the CEO is closed. The
+remaining production judgments — structure, pacing, shot selection, graphics treatment, and
+runtime within the 10-minute floor and 12–14 minute target — are the workforce's, not the CEO's.
+
+**Not decided by this.** Nothing here changes the niche, the budget, or the rule that Wave 2
+ends at a publish-ready artifact held at the gate. D-014 and D-016 stand in full.
+---
+# Correction — the metering target in the Wave 2 ticket was wrong
+
+Recorded 2026-09-26. Found by the Wave 2 session while verifying a cost claim; verified here.
+This is a correction to an instruction, not a change of decision. Nothing the CEO approved
+changes.
+
+## C-001 — Wave 2 must meter against O-002, not against USD 1.58
+
+**The error.** Ticket MC-3 (line 34 of `tasks/MC-3/input.md`) instructs Wave 2 to meter the
+first video "against the estimate of about USD 1.58 per ten-minute video", and `S-006` of the
+approved scope definition inherited that figure from the ticket. **The ticket was written in
+this session and the figure is wrong for the purpose.**
+
+**Why it is wrong.** USD 1.58 is the capacity dossier's EXPECTED case (`research/ai-capacity-dossier.md`
+line 773): **295,000 input / 21,500 output tokens**, covering research, scripting, fact-check,
+SEO and QC only. It is a narrower scope than the company actually committed to.
+
+**What the CEO actually approved** at the Recommendation Gate is option **O-002**
+(`artifacts/03-option-analysis.md` line 58):
+
+| | O-002, approved |
+|---|---|
+| Per-video tokens | **377,000 input / 33,000 output** |
+| Per-video variable cost | **USD 2.647440** |
+| Standing licensing | USD 42.99/month |
+| Monthly total at 13 videos | **USD 77.41** |
+| All-in per video | **USD 5.95** |
+
+The difference is not an error of arithmetic but of scope: O-002 adds the tasks that decisions
+D-006 and D-002 create and that the dossier's EXPECTED case never modelled — stock shot-list and
+clip selection, motion-graphic and data-visualisation briefs, caption and chapter polish, the
+compliance gate pack, cutaway prompt authoring, and CEO approval package assembly.
+
+**Consequence if left uncorrected.** Measuring the first video against USD 1.58 would report a
+**roughly 68% overrun before a single token was counted** — an overrun that exists only because
+the wrong target was quoted. That is exactly the kind of manufactured alarm the plan's labelling
+discipline exists to prevent.
+
+**The correction.** Wave 2 reports measured cost against **O-002**, with USD 1.58 shown as
+superseded and its narrower scope named. `S-006` in the approved scope definition is **not**
+rewritten: it passed its gate, the figure is traceable to the ticket, and quietly editing a
+gated artifact would damage the audit trail more than the stale number does. The correction is
+carried here instead and referenced from the Wave 2 report.
+
+**The escalation test that replaces it.** If measured per-video input lands materially above
+**377,000 tokens**, the approved ledger is wrong and that escalates to the CEO. That is the
+trigger worth watching, and it is now the stated purpose of the metering.
+
+## C-002 — Development cost and per-video cost are separate, and phases 4 and 5 are mixed
+
+**Established while resolving the above.** The omn-agent framework is what *builds* the system;
+the .NET service being built is what runs 13 times a month. Framework token consumption is
+therefore **development capex amortised across every video the pipeline will ever produce**, not
+a per-video operating cost. Reporting it as per-video would misinform in the direction of alarm.
+
+Per-video governance is **already budgeted** and is not an unfunded addition: compliance gate
+pack 30,000/3,000, CEO approval package assembly 8,000/1,500, QC review 25,000/2,500,
+fact-check 60,000/3,000 — **123,000 input and 9,500 output, about a third of the per-video
+ledger, already allocated to governance.**
+
+**One honest qualification, flagged in advance rather than presented later as a clean
+measurement.** The Wave 2 scope has phase 4 both build the capability and run one item through
+it (`S-001` produces the item; `S-007` and `S-012` build the re-pointable mechanism). So the
+capex/opex split is clean for phases 1, 2, 3 and 6, and **phases 4 and 5 are mixed**. Separating
+item-production tokens from capability-building tokens inside them is a **judgement call, not a
+measurement**, and the Wave 2 report says so.
+
+**Development cost remains genuinely unbudgeted** in every estimate the company holds. Wave 2 is
+its first measurement. Worth tracking across waves; not a reason to doubt the unit economics.
+
+---
+
+## C-003 — The cost-control thesis is untested, not merely unmeasured
+
+Recorded 2026-09-26. Found by the Wave 2 session while attempting the L3 versus L1/L2
+measurement; **verified independently here** before recording.
+
+**What was asked for.** A measured split of L3 spend against L1/L2 spend, because the approved
+ledger assumes 290,000 input tokens at L3 and 87,000 at L1/L2, and the company's entire
+cost-control argument — *the cheapest model that reliably meets the required quality* — rests on
+that ratio being roughly right.
+
+**What was found: there is nothing to measure, because no tiering exists.** Verified here: all
+twelve registered agents declare `model: inherit` at line 5 of their host adapter files in
+`.omn-agent/agents/*.agent.md`, and a search of `config/`, `registry/` and `runtime/` returns no
+tier assignment, no routing decision and no per-task model selection anywhere in the framework
+as installed. Every phase executes at whatever model the orchestrating session is running.
+**The denominator does not exist.** Recorded as a negative result rather than left blank.
+
+**Three consequences.**
+
+1. **Every framework phase runs at the most expensive tier available**, because `inherit`
+   resolves to the operator's model. Nothing routes a cheap task to a cheap model.
+2. **The development-cost figures in the Wave 2 ledger are an upper bound**, not a
+   representative figure. A tiered framework would do the same work for less, by an amount
+   nobody can yet state. If anything, capex has been **over**-reported, not under.
+3. **The cost-control thesis has never been exercised — by anything, in any wave.** Wave 1's
+   `D-012` specifies that a capability request names a capability class, a reasoning tier and a
+   quality floor and *never* a provider or a model, and `M-001` is the boundary that reads that
+   tier and routes on it. **That boundary is designed and built, but has not executed.** So the
+   290,000/87,000 ratio carrying the company's cost argument, and the USD 2.647440 per-video
+   figure that follows from it, rest on an assumption nothing has yet tested.
+
+**This is not a framework defect.** omn-agent builds software; it is not the production
+pipeline, and `inherit` is a reasonable default for a development tool. The company's own
+pipeline is where tiering belongs, and that is where it was designed.
+
+**How this must be reported until it changes.** The 290,000/87,000 split and every figure
+derived from it — including USD 2.647440 per video and the USD 77.41 monthly envelope — are
+**assumptions, not measurements**, and are to be labelled as such in every report. The first
+real evidence for or against the routing design arrives only when `M-001` is running in the
+production pipeline and recording the tier actually used per operation. **Making `M-001` record
+tier per operation should be an explicit acceptance criterion of whichever wave first runs it**,
+because without that record the thesis stays untestable however many videos are produced.
+
+**What Wave 2 can still deliver, and it is not nothing:** per-phase totals with a stated
+capex/opex allocation and the reasoning behind it; the exact narration character count and
+graphics count from the finished item, priced at re-fetched rates; a zero on generated seconds;
+and the per-video input total against the 377,000-token escalation test in `C-001`. That test
+survives the absence of tiering intact and remains the trigger that matters most.
+
+---
+
+## C-004 — The decision record has forked: ten decisions share five identifiers
+
+Recorded 2026-09-26. Raised by the Wave 2 session; **verified independently here** (`git merge-base`
+returns `849835b`; both branches appended `D-011` to `D-015` after it).
+
+**What happened.** Three sessions have been appending to one file that describes itself as the
+authoritative record. Two of them allocated the same identifiers to different decisions:
+
+| Id | This branch, `claude/execute-prompt-txt-4a3ee4` | Wave 1 branch, `claude/eloquent-taussig-724cc2` |
+|---|---|---|
+| `D-011` | Tax posture: individual or household business first | Operate as an individual creator; the CEO carries the legal position personally |
+| `D-012` | Niche direction: animals, form not yet settled | Two-phase payee structure; the launch channel already exists |
+| `D-013` | Niche: science and the natural world, adult-framed | The test channel is an experiment; the company's process is unchanged |
+| `D-014` | Wave 2 begins, in a separate session | Vietnamese disclosure gaps carried; affiliate disclosure becomes a standing rule |
+| `D-015` | Science and natural world reframed as a deliberate experiment | The first item carries no affiliate link |
+
+`D-016` and `C-001`–`C-004` exist only here. `D-017`, the video subject, sits on top of this set.
+
+**Nothing is lost and nothing contradicts.** These are ten distinct decisions that happen to
+collide, and both sets are mutually compatible — the work can proceed on all of it without
+choosing between them.
+
+**What is broken is citation, and that is worse than a contradiction would be.** A contradiction
+announces itself. This does not: "D-013" now names two different decisions depending on which
+branch the reader holds, and every downstream artifact citing it has silently stopped being
+unambiguous.
+
+**The actual defect is not the collision. It is that three sessions write to one authoritative
+record with no identifier-allocation mechanism.** This is the third collision in one day on the
+same file; the first two were caught only because the sessions happened to be talking to each
+other. A fourth is certain if nothing changes. This is a **process defect, not a framework one** —
+omn-agent never claimed to arbitrate a shared document.
+
+### Recommended resolution: do not renumber. Add a concordance and namespace going forward.
+
+Renumbering is the obvious move and it is the wrong one, for the same reason `S-006` was left
+alone in `C-001`: **existing citations live in artifacts that have already passed their gates.**
+Renumbering silently invalidates them and produces a second, worse version of this problem. A
+third session renumbering produces a third variant.
+
+1. **Nothing already written is renumbered or renamed.** Both sets keep their identifiers.
+2. **Cite by `branch : identifier : title` wherever ambiguity is possible** — the Wave 2 session
+   already adopted this in `wave-2/carried-decisions.md` §1, and it is unambiguous under any
+   later resolution.
+3. **Namespace all future identifiers by originating wave** — `W0-D-018`, `W1-D-016`, `W2-D-018`.
+   Collisions become impossible by construction rather than by coordination.
+4. **Maintain a concordance table** — the table above is its first entry — at the head of the
+   merged record, so a reader meeting a bare `D-013` can resolve it.
+5. **When the branches merge, the concordance merges with them.** Both sets survive intact.
+
+This is additive. It costs no rewriting, preserves every existing citation, and leaves the audit
+trail whole.
+
+**Not actioned unilaterally.** Renumbering or restructuring another session's record of CEO
+decisions is not this session's to do, and the Wave 2 session correctly declined the same thing.
+The recommendation above is put to the CEO; until it is decided, cite by branch, commit and title.
+
+### Two facts relayed from the Wave 1 session that bear on earlier analysis
+
+- **The launch channel already exists, is blank, and is not in YPP.** Grandfathering runs on YPP
+  *membership*, not channel age, so it does not reach this channel. The **8,000-watch-hour
+  planning figure in `C-001`'s sibling analysis is therefore confirmed correct on the facts**,
+  not merely cautious. Note this also softens the ordering constraint recorded earlier that the
+  payee position must precede channel creation — the channel exists; the binding step is the
+  AdSense payee linkage, not the channel.
+- **The first item carries no affiliate link.** This discharges one of the five compliance
+  determinations as **positive recorded evidence** rather than as an unresolved negative, and it
+  sidesteps the unverified YouTube position on whether affiliate links alone trigger the
+  paid-promotion declaration.
+---
 # Fourth round — renumbered to D-018 to D-022
 
 > **WITHDRAWN IDENTIFIERS — `D-011` to `D-015` on this branch.**
@@ -283,6 +776,47 @@ only fixed date. The channel niche and content pillars remain unchosen and block
 >
 > A withdrawn identifier is never reissued on this branch. `D-011` to `D-017` mean what the
 > other space says they mean.
+>
+> **Settled 2026-09-26.** The CEO confirmed that renumbering was what he intended. This
+> renumbering **stands**; the competing prefix scheme proposed on
+> `claude/execute-prompt-txt-4a3ee4` is **withdrawn**, and that branch's `W0-D-018` became
+> `D-023`, leaving `D-018` to this branch. One flat `D-nnn` space, no prefixes.
+>
+> The reason that branch gave for not renumbering — that citations live in artifacts which
+> have already passed their gates — was checked against the facts and did not hold for these
+> five. Every bare `D-011` to `D-015` in a gated Wave 1 artifact belongs to the **technical
+> design's own `D-nnn` space**, not to this record: that design's `D-011` is *"a retry is its
+> own operation record"* and its `D-012` is *"the capability request... never names a provider
+> or a model"*. Renumbering this record touched none of them.
+
+### Identifier allocation — blocks, so the next collision cannot happen
+
+Renumbering fixed the collision that existed. It does nothing about two sessions reaching for
+the same next number tomorrow, which is how both of today's collisions happened. One flat
+`D-nnn` space is kept, divided into blocks. **A session allocates inside its own block and
+coordinates with nobody.**
+
+| Session | Block |
+|---|---|
+| Wave 0 / orchestration (`claude/execute-prompt-txt-4a3ee4`) | `D-023` – `D-099` |
+| **Wave 1 (this branch)** | **`D-100` – `D-199`** |
+| Wave 2 (`claude/trusting-shirley-90ea75`) | `D-200` – `D-299` |
+| Any later session | the next free hundred, taken without asking |
+
+**The next identifier on this branch is `D-100`.** `D-018` to `D-022` above keep the numbers
+they were given; the block applies to what comes next, not retroactively.
+
+### Still open — ambiguity by kind, which no numbering scheme fixes
+
+The technical design and this record **both** use bare `D-nnn`, for architecture decisions and
+business decisions respectively. A reader meeting `D-011` cannot tell which is meant without
+knowing which document they hold. Blocks fix ambiguity by **origin**; this is ambiguity by
+**kind**, and it survives every scheme discussed today.
+
+Resolvable by naming the document when citing across the two, or by `CEO-D-nnn` against
+`ADR-D-nnn` if it starts to bite. Recorded as open rather than fixed, because changing either
+namespace now would invalidate citations in artifacts that have genuinely passed their gates —
+which is the argument that was wrong about this record and is right about that one.
 
 Decided 2026-09-26 by the CEO, on a readiness check for Wave 3 that found `RK-003` to be the
 longest-lead item on the critical path and the only one independent of Wave 2.
@@ -619,3 +1153,383 @@ D-021 · `RK-005` approval-minutes baseline, which Wave 2 produces · `RK-006` c
 Two-step verification on the test channel is unconfirmed. Wave 2 open questions `Q-001` (subject
 and angle), `Q-004` (budget for a second stock library) and `Q-008` (audience-drift threshold)
 remain with the CEO.
+
+
+---
+
+## D-023 — Renumbering adopted, with allocation blocks to prevent recurrence
+
+Decided 2026-09-26 by the CEO, approving the recommendation in `C-004`. **This is the first
+identifier issued under the scheme it adopts.**
+
+**Supersedes the scheme briefly recorded here earlier**, which rested on a misreading: this
+session read "follow the proposal" as approving the no-renumbering option in `C-004`, and the
+CEO clarified that renumbering was what was meant. That entry was allocated as `W0-D-018` and
+is renumbered here to `D-023`, both because the prefix scheme it announced is withdrawn and
+because `D-018` now belongs to the Wave 1 session. Nothing cited it.
+
+**Decision.**
+
+1. **The Wave 1 session's renumbering stands.** Its `D-011`-`D-015` are `D-018`-`D-022`, on
+   `main` at `21e9882`, with withdrawal markers carrying the mapping. This branch's
+   `D-011`-`D-015` are unchanged and are now unambiguous.
+2. **One flat `D-nnn` space is kept.** No wave prefixes.
+3. **Each session draws from its own reserved block**, per the table at the head of this
+   record. This is what stops a fourth collision, which renumbering alone does not, and it
+   needs no coordination between sessions.
+4. **The concordance at the head becomes a what-moved table** rather than a two-column
+   ambiguity table, since there is no longer an ambiguity to resolve.
+
+**One correction carried forward rather than buried.** `C-004` argued against renumbering
+because existing citations live in gated artifacts. The Wave 1 session checked and showed that
+for its five this was not true - those citations belonged to the technical design's separate
+`D-nnn` namespace, not to this record. The argument was general where the facts were specific,
+and the check should have preceded the argument.
+
+**Standing obligation this creates.** The underlying defect was never the collision; it was that
+three sessions wrote to one authoritative record with **no identifier-allocation mechanism**, and
+that the first two collisions were caught only because the sessions happened to be talking. Renumbering fixes the past; the reserved blocks fix the future. Any session joining later takes
+the next free hundred and coordinates with nobody.
+
+---
+
+## C-005 — Two conflicting CEO instructions on the numbering fix. NOT RESOLVED.
+
+Recorded 2026-09-26. **This session is not resolving this and has changed nothing.** A third
+session acting unilaterally would produce a third variant, which is the failure mode both other
+sessions have already declined.
+
+**The conflict.** The CEO gave two different instructions, in two sessions, to two agents:
+
+| Told to | Instruction | Acted on? |
+|---|---|---|
+| This session | approve `C-004`: **nothing is renumbered**, concordance plus `W0-`/`W1-`/`W2-` prefixes | Yes, `ad30589` |
+| Wave 1 session | option A, **that side renumbers** | Yes, `21e9882`, its `D-011`-`D-015` moved to `D-018`-`D-022` with withdrawal markers carrying the mapping. **Fast-forwarded to `main`**, verified here |
+
+Both were followed in good faith. They cannot both stand.
+
+**A correction I owe, because it undercuts my own stated reason.** `C-004` rejected renumbering
+because existing citations live in artifacts that have already passed their gates. The Wave 1
+session checked, and **for its five that is not true**: every bare `D-011`-`D-015` citation on
+its branch belongs to the *technical design's own* `D-nnn` namespace (its `D-011` is "a retry is
+its own operation record"), not to the CEO record. Renumbering the CEO record touched none of
+them. The only artifact citing its CEO `D-011`-`D-015` was Wave 2's `carried-decisions.md`,
+corrected at the time. **My general argument does not apply to their specific case.** It does
+still apply to mine, since `D-013` is cited in ticket MC-3, which `S-006` of a gated scope
+definition inherited.
+
+**Recommended resolution: take both, because they solve different problems.**
+
+The renumbering is already done, already on `main`, and it *does* resolve the existing
+collision: with their five moved, a bare `D-011`-`D-015` unambiguously means this branch's.
+Reverting buys nothing and costs a revert.
+
+But renumbering does **not** prevent the next collision. Only an allocation mechanism does. So:
+
+1. **Accept the Wave 1 renumbering as the resolution of the existing collision.** Do not revert.
+2. **Keep the namespace for everything new**, which is what stops this recurring.
+3. **Rename this session's `W0-D-018`**, which now reads confusingly beside their renumbered
+   `D-018`. Nothing cites it, so this costs nothing.
+4. **Rewrite the concordance** to record what actually happened: which identifiers moved, where
+   to, and why the table exists.
+
+**One more collision that neither scheme fixes, flagged by the Wave 1 session and it is right.**
+The technical design and the CEO record **both** use bare `D-nnn`, for architecture decisions
+and business decisions respectively. A reader meeting `D-011` cannot tell which document it
+belongs to. A *wave* prefix does not help, because the ambiguity is by **kind**, not by origin.
+The fix is a kind prefix, `CEO-D-nnn` against `ADR-D-nnn`, possibly alongside the wave prefix.
+Fold it into whichever scheme the CEO settles on, rather than meeting it later as a fourth
+collision.
+
+## C-006 — Wave 1: the router is built and verified; the thesis is untested; the instrument was broken
+
+Recorded 2026-09-26 from the Wave 1 session's report. `main` verified here at `21e9882`
+carrying 85 source and schema files.
+
+**`C-003` stands unchanged.** The router `M-001` is the **media company's** capability boundary,
+not the framework's. Wave 1 did not touch the framework's own agents, which remain
+`model: inherit`. If the question is the framework's own token spend, Wave 1 leaves it exactly
+where `C-003` found it.
+
+**What exists and is verified.** Capability requests resolve over a three-tier admitted route
+table, primary then secondary then emergency, with the **quality floor filtered before tier
+ordering**, so a below-floor route is never a candidate rather than a rejected one. Per
+operation it records route, model, capability class, the full attribution tuple, and one row per
+attempt including failures and retries. Cost is a stored generated column computed from unit
+counts and the unit prices **snapshotted onto the row**, so it stays re-derivable after a price
+is superseded. 220 tests pass against a real PostgreSQL 17.
+
+**What has never happened.** **Zero provider endpoints are configured. No live provider call has
+ever been made. The cost table has never held a row produced by a real operation.** There is
+**no measured cost from Wave 1 at all** - not a small number, none.
+
+**The finding that matters most, and it strengthens `C-003` rather than softening it.** The
+cost-recording path was **broken and nobody knew**: the insert used `MAX()` on a uuid column,
+which PostgreSQL has no function for, so it threw `42883`. That defect **passed 205 unit tests,
+a twelve-finding review, the Review Gate and the Verification Gate**, and was caught only when a
+real database was put behind it, *after* the wave had been declared verified. Seven of fifteen
+integration tests failed on that one defect.
+
+**Read it as a finding about the quality system, not about one bug.** The governed pipeline
+declared verified something that could not work. Test coverage and gate approval are not
+evidence that a mechanism functions; only exercising it against the real dependency is. So
+`C-003` is **understated**: the cost-control thesis is untested *and* the instrument built to
+test it was broken on arrival.
+
+**One cost control that is genuinely verified, and it needs no tiering.** Design decision
+`D-005` makes rule-determined work **structurally incapable** of a model call: the deterministic
+assembly holds no reference, direct or transitive, to the capability boundary or the credential
+broker, so a model call is not expressible from it. Enforced by a build-time boundary test that
+was **mutation-checked** - introducing a real cross-boundary dependency made three assertions
+fail, removing it made them pass. Thirty-one named tasks sit inside that boundary. It works by
+removing the possibility rather than by choosing a cheaper model, which is why it holds without
+any of the tiering `C-003` finds absent.
+
+
+---
+
+# Wave 2 session decisions — block `D-200`–`D-299`
+
+## D-200 — The honey bee subject stands on a corrected supply premise
+
+**Decided 2026-09-26 by the CEO**, during Wave 2 (`run-3a58551ee912`), after the implementation
+phase raised the correction at its `Q-002` and the Wave 2 session verified it independently.
+**Closes `Q-002`.**
+
+### The error, stated plainly
+
+`D-017`'s supporting reasoning records **`honey bee` = 1,213 as "a single, distinctive,
+unambiguous token, so it is one of the counts §3.3 classifies as trustworthy."** That is
+**false**. `honey bee` is a **two-word query**.
+
+`research/animal-niche-analysis.md` §3.3 states the rule verbatim: *"Only single, distinctive,
+unambiguous tokens give a trustworthy read."* Its enumerated trustworthy list is nine single-token
+species — pangolin, narwhal, bowerbird, okapi, platypus, binturong, cassowary, axolotl, tapir —
+and **`honey bee` is not among them**. Seven further rows in the same table are multi-word and
+carry the same defect (`grey wolf`, `humpback whale`, `bengal tiger`, `mantis shrimp`, `snow
+leopard`, `naked mole rat`, `emperor penguin`), so the table's own header is inaccurate for eight
+of its rows.
+
+**The error was the Wave 2 session's**, made when presenting the options and repeated into
+`D-017`'s reasoning and into the implementation dispatch. The implementation agent found it by
+reading the source rule rather than accepting the instruction, and **declined to re-read the
+evidence to agree with its brief** — which is the behaviour that caught it.
+
+**It was material to the choice.** Two of the four options presented did have genuinely
+trustworthy single-token priors — **`octopus` 1,582 and `elephant` 4,131** — and the recommended
+option did not. The CEO chose on a supply claim that was wrong.
+
+### The decision
+
+**The subject stands. The supply premise is corrected, not repaired.**
+
+**Basis:**
+
+1. **`D-017`'s four other reasons are untouched** — distance from the generative-AI-contaminated
+   rare-species tail, the originality burden landing where the channel can carry it, the lowest
+   made-for-kids exposure of the options, and attributable science.
+2. **No subject has a verified count, so switching buys a better *prior*, not a better *fact*.**
+   The implementation phase audited **14 subjects and obtained zero counts** — the committed
+   library requires an authenticated subscription and this role may not reach an external system
+   directly. Changing subject would exchange one unverified position for another with a
+   better-quality dated observation behind it.
+3. **The exposure is structurally bounded, not merely accepted.** Only **three** waggle-run clips
+   are unsourced, and **no claim in the script depends on them**: `GFX-02`, `GFX-03`, `GFX-04`,
+   `GFX-15`, `GFX-16`, `GFX-17` and `GFX-18` carry those beats. If per-clip confirmation finds
+   nothing, the three drop and nothing is lost. **Substituting generic hive activity is refused
+   at the script**, which is what stops the failure mode the niche analysis warned about.
+4. **Switching costs a full phase-4 rebuild** (~366,000 tokens plus rework) for that better prior.
+
+### What is corrected, and what is not
+
+- **Corrected:** supply for this subject is **unestablished for both the species and the
+  behaviour**, not merely for the behaviour. `honey bee` = 1,213 is a **dated multi-word upper
+  bound of unknown looseness**, admissible only as a prior observation with its date, never as a
+  measurement.
+- **Not corrected, because it was already right:** `waggle dance` is a multi-word phrase whose
+  reported total is inadmissible, and supply for the behaviour must be confirmed clip by clip.
+- **Still owed at `A-024`:** a per-subject count obtained first-hand before the script is
+  committed. The script is committed; the count is not obtained. **That is a recorded gap, and it
+  is the honest state of the wave.**
+
+### The general lesson, recorded so it outlives this item
+
+**A rule that classifies evidence is only as good as the check that the evidence meets it.** The
+single-token rule was stated correctly, carried correctly into the analysis, and then applied to
+a two-word query by three successive readers — the session presenting the options, the CEO
+deciding on them, and the dispatch instructing the work — because everyone checked the *number*
+against the rule and nobody checked the *query*. It was caught by the one reader whose brief told
+it the answer and who went to the source anyway.
+
+
+---
+
+## D-201 — Wave 3 exercises the approval surface on the held item; the real series waits
+
+**Decided 2026-09-27 by the CEO**, answering the blocking question `Q-001` of Wave 3's scope
+definition (`run-ad369fe67ded`). **Closes `Q-001`.**
+
+### The problem, which was an error in the ticket
+
+MC-4 named "the real approval-minutes series" as a proof obligation of Wave 3. That obligation is
+**unsatisfiable under Wave 3's own boundary**, and the scope agent blocked rather than absorbing
+it:
+
+> approval occurs at the publication gate → the gate is reached only by a publish-ready item →
+> publish-ready requires a rendered cut → rendering requires commissioned narration audio and
+> downloaded licensed clips → **both are spend, which Wave 3 does not commit.**
+
+The ticket asked a wave to prove something its own constraint forecloses. **The error was in the
+ticket, not in the boundary**, and the boundary is not moved to fix it.
+
+### The decision
+
+**Approvals are exercised against the built surface using the held item.** Every such approval is
+measured, with review, queue and rework time separated.
+
+**They are recorded as "approval-surface exercise", never as the real approval-minutes series.**
+The distinction is load-bearing and must survive into every downstream artifact.
+
+### Why this and not the alternatives
+
+- **It tests what Wave 3 actually builds.** The value is in the *surface* — the gate transition
+  table, the version binding, the refusal of a configuration bypass, the refusal of an approval
+  bound to a different version, the refusal under retry, and the instrument itself. All of that
+  is exercisable on a held item, and a defect found here is cheap to fix.
+- **It costs nothing** and keeps the boundary the CEO set when authorising Wave 3 intact.
+- **Dropping the obligation** would be honest but would leave the approval surface untested until
+  the wave that publishes, where a defect is expensive.
+- **Authorising the render** would move the boundary. Not chosen.
+
+### The limit, stated so no later reader over-reads the figures
+
+These measurements are of the **same weak class** as Wave 2's single data point: an owner
+approving an item that **cannot ship**, who already knows its contents, with no queue time. They
+establish that the instrument and the surface work. **They do not establish steady-state review
+cost, and the clean-record threshold that would relax per-publication approval must not be
+derived from them** — `D-002` requires that threshold to be proposed, not assumed, and `Q-008` of
+the Wave 3 scope holds it open until a series exists that includes at least one approval which
+returned a change request.
+
+---
+
+## D-202 — One metered operation may run through the resolution boundary, as a deliberate carve-out
+
+**Decided 2026-09-27 by the CEO**, answering `Q-006` of Wave 3's scope definition.
+
+### The decision
+
+**At least one real operation may be run through the capability-resolution path during Wave 3, so
+that a served reasoning tier is recorded.** This is a **narrow, named exception** to Wave 3's
+no-spend constraint, not a relaxation of it.
+
+**Everything else in the no-spend boundary stands unchanged:** no upload, no channel creation, no
+account creation, no purchase, no subscription session, no render.
+
+### Why it is worth an exception
+
+`C-003` established that **the company's entire cost-control argument rests on a ratio nothing has
+ever tested.** The approved budget assumes 290,000 input tokens at the high reasoning tier against
+87,000 at the lower ones; `M-001` is the boundary designed to read a requested tier and route on
+it; **it has never executed.** Every figure derived from that split — USD 2.647440 per item and
+the USD 77.41 envelope — is therefore an assumption rather than a measurement.
+
+Wave 3 is the first wave in a position to run it. The cost of doing so is negligible — well under
+one cent for a single operation. **The cost of not doing so is another wave of sunk effort resting
+on an untested assumption**, and the same question arriving later with more behind it.
+
+### What this must produce
+
+- **At least one operation record carrying both the tier requested and the tier actually served**,
+  with the served tier read from the admitted route and **never inferred from the request**.
+- **An explicit absence marker** where a route cannot state a tier, so an untiered route is
+  visible as untiered rather than appearing to confirm the request.
+- The applied unit price carrying a re-fetch date no earlier than the operation it priced
+  (`RK-002`).
+
+**This does not settle the 290,000/87,000 ratio.** One operation establishes that the mechanism
+records what it claims to record. The ratio needs a production series. **Say that plainly rather
+than presenting the first record as vindication of the budget.**
+
+
+---
+
+## CEO-D-203 — Source-qualified identifier prefixes, adopted for documents and NOT sufficient for framework artifacts
+
+**Decided 2026-09-27 by the CEO**, after the by-kind ambiguity bit a third time. **This is the
+first identifier issued under the scheme it adopts.**
+
+### The decision
+
+**New identifiers carry a source qualifier:**
+
+| Family | Prefix | Meaning |
+|---|---|---|
+| Business decisions in this record | **`CEO-D-nnn`** | The owner's decisions |
+| Architecture decisions in a technical design | **`ADR-D-nnn`** | Design decisions |
+| Corrections in this record | **`CEO-C-nnn`** | Corrections to instructions or prior records |
+| Change-set entries in an implementation report | `C-nnn`, unprefixed | Local to that report, never cited elsewhere |
+
+**New identifiers only. Nothing already written is renumbered or renamed**, on the same reasoning
+that settled the earlier fork: citations live in artifacts that have passed their gates, and a
+silent move is worse than a visible mixed period.
+
+### ⚠ IT DOES NOT DO WHAT IT APPEARS TO DO INSIDE FRAMEWORK ARTIFACTS
+
+**Recorded prominently because the decision was taken expecting it would, and it will not.**
+
+The validators scan with `` + prefix + `-\d{3}`. **A hyphen is a word boundary**, so a
+qualifier in front of the token does not hide the token. Tested directly against the validator's
+own pattern:
+
+```
+SD7   prefix 'C' MATCHES 'CEO-C-001'      <- still an authority-boundary failure
+C6.2  family 'D' MATCHES 'CEO-D-203'      <- still an undefined-identifier failure
+C6.2  family 'D' MATCHES 'ADR-D-001'      <- still an undefined-identifier failure
+```
+
+Worse, **`ADR-` is itself one of the three prefixes the authority check already scans**, so that
+qualifier sits inside a namespace the framework has reserved for something else.
+
+### What therefore holds
+
+- **In repository documents** — this record, research files, ledgers, reports, plans — **the
+  prefix works and is adopted.** It resolves the by-kind ambiguity for every human reader and for
+  every cross-document join. That is a real gain and it is why the decision stands.
+- **Inside framework artifacts** — anything under a run's `artifacts/` — **descriptive citation
+  with no foreign identifier token of any family remains mandatory.** The prefix changes nothing
+  there. An artifact citing `CEO-D-203` fails exactly as one citing `D-203` does.
+
+### The cost this leaves unpaid, stated rather than hidden
+
+The Wave 3 scope agent argued that descriptive citation **degrades as documents accumulate**: a
+reader checking that a scope decision faithfully carries the owner's carve-out must currently find
+it by description, which works while one obvious match exists and stops working once the record
+holds several decisions on the same subject. **That argument is correct and this decision does not
+answer it for framework artifacts.** It answers it only for documents.
+
+### The fix that would actually close it — upstream, and now specified
+
+Either:
+
+1. **A declared `external_references` block** in the artifact contract, which `C6.2` and the
+   authority checks both exempt — so a cross-document citation becomes *expressible* rather than
+   merely undetectable; **or**
+2. **Namespace-aware resolution**: have both checks resolve a citation's namespace before judging
+   it, rather than pattern-matching the bare token.
+
+Option 1 is the smaller change and the one to propose. **Until one ships, the split rule above is
+the working answer**, and it should be stated in the agent output contracts so every agent does
+not rediscover it by failing validation.
+
+### How this was established
+
+The ambiguity was recorded as open on 2026-09-26 with the note that it would be resolved by
+prefixes *"if it starts to bite"*. It bit three times: twice in Wave 2 as citations resolving
+silently to the wrong definition, and once in Wave 3 as a **legitimate upstream correction being
+read as a downstream change-set entry, failing an authority-boundary check** — one level more
+serious than a misresolution, because the artifact was judged to have exceeded its authority.
+
+The insufficiency above was found by **reading the validator source and running its own regex**
+before implementing the decision, rather than adopting the scheme and discovering it at the next
+validation failure.

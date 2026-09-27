@@ -192,17 +192,12 @@ public sealed class WorkLifecycleService
     /// <summary>
     /// The position that follows <paramref name="position"/> in the workflow, or null when it is
     /// the last one the workflow declares.
+    ///
+    /// Delegates to the workflow definition, so the engine and every assertion about where a
+    /// workflow ends read one implementation over one declaration.
     /// </summary>
-    private static LifecyclePosition? NextPosition(WorkflowDefinition workflow, LifecyclePosition position)
-    {
-        var index = workflow.Stages.ToList().IndexOf(position);
-        if (index < 0 || index + 1 >= workflow.Stages.Count)
-        {
-            return null;
-        }
-
-        return workflow.Stages[index + 1];
-    }
+    private static LifecyclePosition? NextPosition(WorkflowDefinition workflow, LifecyclePosition position) =>
+        workflow.Next(position);
 
     private static AuditEntryDraft Entry(Job job, string action, string reason) => new()
     {

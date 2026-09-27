@@ -130,7 +130,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
             CapabilityResolution.Refused refused =>
                 await RecordNonProviderOutcomeAsync(
                     request, context, now, period, OperationOutcome.Refused,
-                    $"{refused.Reason}: {refused.Detail}", null, null,
+                    $"{refused.Reason}: {refused.Detail}", null, null, null,
                     _ => new CapabilityOutcome.Refused(refused.Reason, refused.Detail),
                     cancellationToken).ConfigureAwait(false),
 
@@ -159,7 +159,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 // so the operation carries zero AI cost and is recorded as held.
                 return await RecordNonProviderOutcomeAsync(
                     request, context, now, period, OperationOutcome.Held,
-                    hold.Reason, resolved.Route.Id, null,
+                    hold.Reason, resolved.Route.Id, resolved.Route.StatedReasoningTier, null,
                     _ => new CapabilityOutcome.Held(
                         RefusalReason.NoAvailableRoute,
                         resolved.EffectiveFloorApplied,
@@ -173,6 +173,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 return await RecordNonProviderOutcomeAsync(
                     request, context, now, period, OperationOutcome.Succeeded,
                     $"non-AI substitute: {substitute.DeterministicTaskName}", resolved.Route.Id,
+                    resolved.Route.StatedReasoningTier,
                     substitute.DeterministicTaskName,
                     op => new CapabilityOutcome.Substituted(substitute.DeterministicTaskName, op),
                     cancellationToken).ConfigureAwait(false);
@@ -200,7 +201,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
             return await RecordNonProviderOutcomeAsync(
                 request, context, now, period, OperationOutcome.Failed,
                 $"no adapter is registered for provider account {provider.ProviderAccount}",
-                resolved.Route.Id, null,
+                resolved.Route.Id, resolved.Route.StatedReasoningTier, null,
                 _ => new CapabilityOutcome.Refused(
                     RefusalReason.NoAvailableRoute,
                     $"No adapter is registered for provider account {provider.ProviderAccount}."),
@@ -225,7 +226,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
             return await RecordNonProviderOutcomeAsync(
                 request, context, now, period, OperationOutcome.Refused,
                 $"credential refused: {credentialRefused.Reason} — {credentialRefused.Detail}",
-                resolved.Route.Id, null,
+                resolved.Route.Id, resolved.Route.StatedReasoningTier, null,
                 _ => new CapabilityOutcome.Refused(RefusalReason.NoAvailableRoute, credentialRefused.Detail),
                 cancellationToken).ConfigureAwait(false);
         }
@@ -274,6 +275,11 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 OccurredAt = now,
                 Attempt = context.Attempt,
                 FailureReason = attempt.FailureReason,
+                ReasoningTierRequested = request.ReasoningTier,
+
+                // Read from the ADMITTED ROUTE, never from the request. A route that states no
+                // tier yields the explicit absence marker rather than an inferred value.
+                ReasoningTierServed = resolved.Route.StatedReasoningTier,
             },
             cancellationToken).ConfigureAwait(false);
 
@@ -315,6 +321,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
         OperationOutcome outcome,
         string reason,
         RouteId? route,
+        MediaCompany.Domain.Capabilities.ReasoningTier? servedTier,
         string? deterministicTaskName,
         Func<OperationRecord, CapabilityOutcome> project,
         CancellationToken cancellationToken)
@@ -338,6 +345,8 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 OccurredAt = now,
                 Attempt = context.Attempt,
                 FailureReason = outcome is OperationOutcome.Succeeded ? null : reason,
+                ReasoningTierRequested = request.ReasoningTier,
+                ReasoningTierServed = servedTier,
             },
             cancellationToken).ConfigureAwait(false);
 
@@ -373,7 +382,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
         return RecordNonProviderOutcomeAsync(
             request, context, now, period, OperationOutcome.Held,
             $"held at floor {held.FloorRequired}: {held.Reason}; routes tried: {string.Join(",", held.RoutesTried)}",
-            null, null,
+            null, null, null,
             _ => new CapabilityOutcome.Held(
                 held.Reason,
                 held.FloorRequired,

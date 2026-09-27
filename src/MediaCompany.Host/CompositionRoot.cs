@@ -92,6 +92,7 @@ public static class CompositionRoot
         // assembly does not reference the one that declares it.
         services.AddSingleton<PublicationGateService>();
         services.AddSingleton<WorkLifecycleService>();
+        services.AddSingleton<PublicationDispatchService>();
         services.AddSingleton<ReportingService>();
         services.AddSingleton<OperatingRegisterReport>();
         services.AddSingleton<PermissionAnswerService>();

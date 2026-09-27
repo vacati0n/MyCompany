@@ -320,13 +320,25 @@ public sealed class GatePredicateTests
         Item, version, GatePredicates.OwnerApprovalGate, WorkforceRole.Owner,
         ApprovalVerdict.Approved, "approved", Now.AddMinutes(-30), Now.AddMinutes(-10));
 
+    /// <summary>
+    /// A register in which all three conditions of first publication are satisfied.
+    ///
+    /// Supplied so each delivered refusal test still isolates the refusal it names: the conditions
+    /// are evaluated last, so a satisfied register leaves every earlier refusal exactly as it was.
+    /// It is a UNIT-TEST FIXTURE and says nothing about the real channel, where none of the three
+    /// is discharged; the tests alongside assert that real position separately.
+    /// </summary>
+    private static FirstPublicationConditionRegister AllConditionsSatisfied =>
+        new(Enum.GetValues<FirstPublicationCondition>().Select(c => new ConditionObservation(
+            c, ConditionState.Satisfied, $"fixture: {c} satisfied for this unit test", new DateOnly(2026, 9, 27))));
+
     /// <summary>All preconditions met: the gate passes and issues a token naming the exact version.</summary>
     [Fact]
     public void TheGatePassesWhenEveryPreconditionIsMet()
     {
         var verdict = GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Publisher,
-            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now);
+            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now, AllConditionsSatisfied);
 
         var passed = Assert.IsType<GateVerdict.Passed>(verdict);
         Assert.Equal(Version, passed.Token.ItemVersion);
@@ -341,7 +353,7 @@ public sealed class GatePredicateTests
 
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Publisher,
-            openBlocks: [block], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now));
+            openBlocks: [block], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.BlockStanding, refused.Reason);
         Assert.Contains("licence unverified", refused.Detail);
@@ -353,7 +365,7 @@ public sealed class GatePredicateTests
     {
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Publisher,
-            openBlocks: [], approvals: [], rightsPreconditionMet: true, Now));
+            openBlocks: [], approvals: [], rightsPreconditionMet: true, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.ApprovalSetIncomplete, refused.Reason);
     }
@@ -364,7 +376,7 @@ public sealed class GatePredicateTests
     {
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Publisher,
-            openBlocks: [], approvals: [OwnerApproval(new ItemVersion(6))], rightsPreconditionMet: true, Now));
+            openBlocks: [], approvals: [OwnerApproval(new ItemVersion(6))], rightsPreconditionMet: true, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.ApprovalVersionMismatch, refused.Reason);
     }
@@ -379,7 +391,7 @@ public sealed class GatePredicateTests
 
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Publisher,
-            openBlocks: [], approvals: [sentBack], rightsPreconditionMet: true, Now));
+            openBlocks: [], approvals: [sentBack], rightsPreconditionMet: true, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.ApprovalSetIncomplete, refused.Reason);
     }
@@ -390,7 +402,7 @@ public sealed class GatePredicateTests
     {
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Publisher,
-            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: false, Now));
+            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: false, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.RightsPreconditionUnmet, refused.Reason);
     }
@@ -401,7 +413,7 @@ public sealed class GatePredicateTests
     {
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.Approved, WorkforceRole.Copyright,
-            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now));
+            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.ActorHoldsNoAction, refused.Reason);
     }
@@ -412,7 +424,7 @@ public sealed class GatePredicateTests
     {
         var refused = Assert.IsType<GateVerdict.Refused>(GatePredicates.EvaluatePublish(
             Item, Version, GateState.AwaitingOwnerApproval, WorkforceRole.Publisher,
-            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now));
+            openBlocks: [], approvals: [OwnerApproval(Version)], rightsPreconditionMet: true, Now, AllConditionsSatisfied));
 
         Assert.Equal(GateRefusal.TransitionNotInTable, refused.Reason);
     }

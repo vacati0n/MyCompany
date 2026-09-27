@@ -35,6 +35,7 @@ public sealed class RequiresPostgresFactAttribute : FactAttribute
 /// These are written against the schema as built and run unchanged the moment a datastore is
 /// available; they are recorded as not-run in this implementation.
 /// </summary>
+[Collection(DatastoreCollection.Name)]
 public sealed class PostgresIntegrationTests : IAsyncLifetime
 {
     internal static string? ConnectionString =>

@@ -20,6 +20,11 @@ public static class SchemaInstaller
     [
         "MediaCompany.Persistence.Schema.001-schema.sql",
         "MediaCompany.Persistence.Schema.002-rollups.sql",
+
+        // Wave 3, the publishing capability. Additive throughout: three new tables, two
+        // nullable approval marks and two nullable tier columns, applied after the two
+        // delivered files so every table it extends already exists.
+        "MediaCompany.Persistence.Schema.003-publication.sql",
     ];
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)
