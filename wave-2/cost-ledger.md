@@ -62,7 +62,44 @@ billed totals rather than context floors.
 | 5 attempt 2 | `omn-dev-2-reviewer` | **228,399** | 62 | 18 min 07 s | MEASURED — **31/31 PASS**, verdict `approve-with-corrections` |
 | 4 attempt 3 (correction cycle, post-review) | `omn-dev-1-implement` (resumed) | **466,485** | 42 | 19 min 21 s | MEASURED — closed `CR-001`, `CR-002` and all five non-blocking findings |
 | 6 `documentation-and-release-handoff` attempt 1 | `omn-documentation` | **229,319** | 41 | 12 min 43 s | MEASURED — **31/32**, rejected on one correctable check (`R7`, version string) |
-| 6 attempt 2 (repair) | `omn-documentation` (resumed) | _running_ | | | |
+| 6 attempt 2 (repair) | `omn-documentation` (resumed) | **237,096** | 4 | 1 min 40 s | MEASURED — **60/60 PASS** |
+| | **RUN TOTAL** | **3,146,022** | 496 | ~3 h 27 m | Six phases, ten agent invocations |
+
+### 2.3 The rework share — the finding nobody had a number for
+
+| | Tokens | Share |
+|---|---|---|
+| Clean-pass work (first attempt of each phase) | **1,708,209** | 54.3% |
+| **Rework** (three validation repairs + one post-review correction cycle) | **1,437,813** | **45.7%** |
+| **Total** | **3,146,022** | 100% |
+
+**Nearly half the governance cost of this run was rework.** Four of the ten agent invocations
+were repairs: phase 3 rejected on two citation defects, phase 4 rejected on two more, phase 6
+rejected on a single correctable field, and one post-review correction cycle closing the two
+blocking findings.
+
+**Three observations, in decreasing order of how confident this measurement makes them.**
+
+1. **Every rejection was a genuine defect. None was a false positive.** The validators found a
+   signed decision record the producer should not have signed, requirement traces expressed as
+   ranges, vendor names leaked in through a citation convention, plan identifiers undefined in a
+   local register, and a version field carrying a ticket label. The apparatus was right every
+   time. **Rework at 45.7% is the price of the artifacts being correct, not evidence of waste.**
+2. **The most expensive single invocation was the correction cycle — 466,485 tokens**, more than
+   any clean phase in the run, triggered by a peer review that found two real defects. That is
+   the cost of the review *working*. A review that confirmed everything would have been cheaper
+   and worth nothing.
+3. **Resuming an agent buys time, not tokens.** Confirmed three times: each repair cost *more*
+   tokens than the attempt it repaired (332,728 vs 312,889; 401,504 vs 366,193; 237,096 vs
+   229,319) because resuming replays an accumulated context, while costing far less wall-clock
+   (3 min vs 26; 6 min vs 36; 2 min vs 13). The intuition that reusing context is cheaper is
+   **false**, and anyone optimising this should optimise for the defect not happening rather than
+   for the repair being cheap.
+
+**What this does NOT mean.** This is **development capex** under `C-002`, incurred once for a
+change, not per video. It is **not** a per-item figure and must not be divided by one item. The
+per-item question is answered in §3 and remains partly open because the token half of the
+production path is unmeasurable until the resolution boundary runs.
 | | **Total** | | | | |
 
 **[FINDING — rework is a real cost line and no estimate contains it.]** Phase 3's first attempt
