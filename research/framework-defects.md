@@ -547,3 +547,54 @@ withdrawal of Defect 4 stands; this finding is the other edge of it.
 role with no phase in the routed workflow cannot be assigned a task, or have the plan validator
 fail a task whose owner maps to no phase in the routed Phase Model. The second is the smaller
 change and would have caught the Wave 3 instance before it cost a wave.
+
+---
+
+## Finding 9 — `omn-documentation`'s output contract and its validator disagree on fenced blocks
+
+**Found 2026-09-27 by the Wave 4 documentation agent (`run-5d5e6bd74c36`, phase 6), raised rather
+than worked around.**
+
+**Severity: low. An artifact written to the contract can fail the validator.**
+
+`agents/omn-documentation/output.md` permits **at most four** fenced code blocks in a release note.
+`validation/release_note_validator.py` declares `max_fenced_blocks` at its **default of 1**.
+
+An agent that reads its output contract and uses its stated allowance emits an artifact the
+validator rejects. The agent emitted one block and passed, so nothing failed here — but only
+because it chose to be more conservative than its contract allowed.
+
+**Recommended fix.** Make the validator read the allowance from the contract, or correct one of the
+two numbers. Either is small; leaving them divergent means the contract cannot be trusted as
+written, which is the more expensive condition.
+
+---
+
+## Finding 10 — the release-note `withheld` verdict is unreachable
+
+**Found 2026-09-27 by the Wave 4 documentation agent, same phase.**
+
+**Severity: low, but it is the kind of gap that makes a verdict look chosen rather than derived.**
+
+The agent's Stage 8 adjudication table yields `withheld` or `blocked` from the **deployment status**
+row. Two things prevent that row ever being taken:
+
+1. **No supplied artifact states a deployment status.** Nothing upstream in `implement-feature`
+   carries one, so the row's input never exists.
+2. **The release-note register and the validator enum permit only** `released`, `partial` and
+   `rolled-back`. Even were the row reachable, its verdict could not be written.
+
+The agent took the row the evidence actually matched — part of scope delivered and part not, so
+`partial` — and recorded the basis in its envelope rather than letting the verdict appear to have
+been picked. That is the right handling and it is why this is recorded as a framework gap rather
+than as an artifact defect.
+
+**Related, and worth fixing at the same time.** No supplied artifact states a **version** for the
+change either. The agent derived `1.1.0` from the previous release record's `1.0.0` by advancing
+one minor, **published the derivation as a known issue routed to `omn-tech-lead`**, and declined to
+assert a version the evidence did not establish. The repository declares no version anywhere
+(`Directory.Build.props` has none). A workflow whose closing phase must state a version should
+carry one, or name the role that sets it.
+
+**Recommended fix.** Either supply a deployment status and a version into the closing phase, or
+remove the unreachable row and let the register's three values be the whole verdict space.
