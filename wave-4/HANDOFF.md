@@ -18,10 +18,21 @@ need to reconstruct them.
 **Always pass `--target "D:/Project/MyCompany"`.** Framework state lives there, is untracked, and
 is shared across worktrees.
 
-**Branch.** All work is on `claude/trusting-shirley-90ea75`. Wave 3's feature branch is merged;
-nothing is outstanding. Implementation will refuse to dispatch without a bound feature branch —
-create it with `omn-agent branch MC-5 --target "D:/Project/MyCompany" --base claude/trusting-shirley-90ea75`.
-**Pass `--base` explicitly.** It defaults to `main`, which does not carry Waves 2–4.
+**Branch.** Waves 2 and 3 were **merged to `main`** on 2026-09-27 via pull request #2, merge commit
+`cc99a0f`. **Branch from `main`** — it now carries everything, including this file. The working
+branch `claude/trusting-shirley-90ea75` is fully merged and no longer needed.
+
+Implementation will refuse to dispatch without a bound feature branch:
+
+```
+omn-agent branch MC-5 --target "D:/Project/MyCompany"
+```
+
+That defaults to `main`, which is now correct. **But check that `main` actually carries the prior
+wave before you rely on the default.** Before the merge above it did not, and a feature worktree
+created off a stale `main` **silently loses the foundation the wave is supposed to build on** —
+that happened in Wave 2 and was caught mid-flight only by chance. If `main` is behind, pass
+`--base` explicitly.
 
 ---
 
