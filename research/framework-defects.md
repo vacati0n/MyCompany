@@ -469,3 +469,81 @@ and nobody would have known.
 task**, so at least two survive. **Recommended fix unchanged and still right:** anchor the field
 pattern so it cannot span a newline, and add a validator fixture with a single-bullet field —
 plus, now, a fixture asserting that a two-bullet field yields two.
+
+---
+
+## Finding 7 — a gate decision's rationale reaches no downstream phase
+
+**Found 2026-09-27 by the Wave 4 planner (`run-5d5e6bd74c36`, phase 2), raised as an objection
+rather than complied with. Verified independently by the orchestrator.**
+
+**Severity: a phase plans or builds against a question the orchestrator has already answered,
+without being able to see the answer.**
+
+The Scope Gate of this run carried a blocking question the scope agent correctly refused to
+absorb: whether the single authorised metered exception extends to a further operation if the
+admitted route reports no served tier. The orchestrator answered it in the gate rationale —
+conservatively, no further spend — and approved the gate.
+
+**The planner could not see that answer, and said so.** What a downstream phase is pointed at:
+
+| Where the answer is | Named by a dispatch prompt? |
+|---|---|
+| `runs/<run>/run-ledger.json` | no |
+| `runs/<run>/events.jsonl` | no |
+| `runs/<run>/state.json` | no |
+| `runs/<run>/gates/<gate>/failure-envelope.json` | no — and it carries only the one-line `resolution`, never the rationale |
+| the upstream `result-envelope.json` | named, but it still records the question as **standing** |
+
+So a dispatch prompt lists upstream **artifacts** and says nothing about **gate decisions**. The
+rationale is the only place an orchestrator's answer to a blocking question is written down, and
+it is write-only with respect to the phases that need it.
+
+**The planner handled it exactly right**, which is the part worth keeping: it recorded the answer
+as an assumption with a matching risk and a routed question, built for the narrow branch as
+instructed, and noted that if the answer was in fact recorded the assumption confirms at no cost,
+while if it was not, the plan had not spent an authority nobody granted. **That is the correct
+shape for acting on an unverifiable instruction** and it cost nothing.
+
+**Recommended fix.** Either surface resolved gate decisions — decider, decision and rationale — in
+the dispatch prompt of every subsequent phase, or write them into an artifact the Input column can
+name. Until then, **an orchestrator answering a blocking question at a gate must also restate the
+answer in the next phase's dispatch briefing**, and should expect a careful agent to treat it as
+an assumption rather than as established, because from where that agent stands it is one.
+
+---
+
+## Finding 8 — `omn-qa` owns no phase in `implement-feature`, so a task assigned to it is never dispatched
+
+**Found 2026-09-27 by the Wave 4 planner (`run-5d5e6bd74c36`, phase 2). Recorded rather than
+worked around silently.**
+
+**Severity: a planned task silently never runs. This is the shape of the failure that left the
+authorised carve-out unspent in Wave 3.**
+
+The planner's own decomposition rule (`agents/planner/reasoning.md`, rule R6) names **`omn-qa`**
+as the owner of test-design, verification and evidence tasks. The routed workflow's Phase Model
+(`workflows/implement-feature.md`) gives `omn-qa` **no phase**. A task owned by `omn-qa` therefore
+maps to no executing phase, and **nothing dispatches it** — it is not refused, not blocked and not
+reported; it simply never runs.
+
+The planner assigned all six verification tasks to `omn-dev-2-reviewer`, which owns
+`quality-review`, and recorded the deviation as an assumption, a risk and a question to
+`omn-orchestrator` rather than making it quietly. The orchestrator confirmed it at the Planning
+Gate.
+
+**Why this is not the withdrawn Defect 4, and must not be confused with it.** Defect 4 claimed the
+`implement-feature` **Verification Gate** is undecidable because `omn-qa` owns it while producing
+the evidence it assesses. That is false and has now been disproved on three runs: `omn-qa` is
+**not** the producer here — `omn-dev-2-reviewer` produces `review-package.md` — so `omn-qa` is an
+eligible gate owner and the gate is decided normally.
+
+**These are opposite facts about the same role and both are true.** `omn-qa` is eligible to
+**decide** the Review and Verification Gates precisely *because* it owns no phase that produces
+their evidence — and that same absence is what makes it unusable as a **task owner**. The
+withdrawal of Defect 4 stands; this finding is the other edge of it.
+
+**Recommended fix.** Either give the decomposition rule a workflow-aware owner resolution, so a
+role with no phase in the routed workflow cannot be assigned a task, or have the plan validator
+fail a task whose owner maps to no phase in the routed Phase Model. The second is the smaller
+change and would have caught the Wave 3 instance before it cost a wave.
