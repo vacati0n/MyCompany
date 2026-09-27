@@ -1360,3 +1360,93 @@ a two-word query by three successive readers — the session presenting the opti
 deciding on them, and the dispatch instructing the work — because everyone checked the *number*
 against the rule and nobody checked the *query*. It was caught by the one reader whose brief told
 it the answer and who went to the source anyway.
+
+
+---
+
+## D-201 — Wave 3 exercises the approval surface on the held item; the real series waits
+
+**Decided 2026-09-27 by the CEO**, answering the blocking question `Q-001` of Wave 3's scope
+definition (`run-ad369fe67ded`). **Closes `Q-001`.**
+
+### The problem, which was an error in the ticket
+
+MC-4 named "the real approval-minutes series" as a proof obligation of Wave 3. That obligation is
+**unsatisfiable under Wave 3's own boundary**, and the scope agent blocked rather than absorbing
+it:
+
+> approval occurs at the publication gate → the gate is reached only by a publish-ready item →
+> publish-ready requires a rendered cut → rendering requires commissioned narration audio and
+> downloaded licensed clips → **both are spend, which Wave 3 does not commit.**
+
+The ticket asked a wave to prove something its own constraint forecloses. **The error was in the
+ticket, not in the boundary**, and the boundary is not moved to fix it.
+
+### The decision
+
+**Approvals are exercised against the built surface using the held item.** Every such approval is
+measured, with review, queue and rework time separated.
+
+**They are recorded as "approval-surface exercise", never as the real approval-minutes series.**
+The distinction is load-bearing and must survive into every downstream artifact.
+
+### Why this and not the alternatives
+
+- **It tests what Wave 3 actually builds.** The value is in the *surface* — the gate transition
+  table, the version binding, the refusal of a configuration bypass, the refusal of an approval
+  bound to a different version, the refusal under retry, and the instrument itself. All of that
+  is exercisable on a held item, and a defect found here is cheap to fix.
+- **It costs nothing** and keeps the boundary the CEO set when authorising Wave 3 intact.
+- **Dropping the obligation** would be honest but would leave the approval surface untested until
+  the wave that publishes, where a defect is expensive.
+- **Authorising the render** would move the boundary. Not chosen.
+
+### The limit, stated so no later reader over-reads the figures
+
+These measurements are of the **same weak class** as Wave 2's single data point: an owner
+approving an item that **cannot ship**, who already knows its contents, with no queue time. They
+establish that the instrument and the surface work. **They do not establish steady-state review
+cost, and the clean-record threshold that would relax per-publication approval must not be
+derived from them** — `D-002` requires that threshold to be proposed, not assumed, and `Q-008` of
+the Wave 3 scope holds it open until a series exists that includes at least one approval which
+returned a change request.
+
+---
+
+## D-202 — One metered operation may run through the resolution boundary, as a deliberate carve-out
+
+**Decided 2026-09-27 by the CEO**, answering `Q-006` of Wave 3's scope definition.
+
+### The decision
+
+**At least one real operation may be run through the capability-resolution path during Wave 3, so
+that a served reasoning tier is recorded.** This is a **narrow, named exception** to Wave 3's
+no-spend constraint, not a relaxation of it.
+
+**Everything else in the no-spend boundary stands unchanged:** no upload, no channel creation, no
+account creation, no purchase, no subscription session, no render.
+
+### Why it is worth an exception
+
+`C-003` established that **the company's entire cost-control argument rests on a ratio nothing has
+ever tested.** The approved budget assumes 290,000 input tokens at the high reasoning tier against
+87,000 at the lower ones; `M-001` is the boundary designed to read a requested tier and route on
+it; **it has never executed.** Every figure derived from that split — USD 2.647440 per item and
+the USD 77.41 envelope — is therefore an assumption rather than a measurement.
+
+Wave 3 is the first wave in a position to run it. The cost of doing so is negligible — well under
+one cent for a single operation. **The cost of not doing so is another wave of sunk effort resting
+on an untested assumption**, and the same question arriving later with more behind it.
+
+### What this must produce
+
+- **At least one operation record carrying both the tier requested and the tier actually served**,
+  with the served tier read from the admitted route and **never inferred from the request**.
+- **An explicit absence marker** where a route cannot state a tier, so an untiered route is
+  visible as untiered rather than appearing to confirm the request.
+- The applied unit price carrying a re-fetch date no earlier than the operation it priced
+  (`RK-002`).
+
+**This does not settle the 290,000/87,000 ratio.** One operation establishes that the mechanism
+records what it claims to record. The ratio needs a production series. **Say that plainly rather
+than presenting the first record as vindication of the budget.**
