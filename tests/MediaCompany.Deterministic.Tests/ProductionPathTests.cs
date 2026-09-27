@@ -829,12 +829,66 @@ public sealed class ProductionPathTests
         Assert.Equal(TimeSpan.FromMinutes(10), PublishReadyPredicate.RuntimeFloor);
     }
 
+    /// <summary>
+    /// An unrecorded runtime is refused under its OWN name, not under the too-short name. The two
+    /// conditions have different remedies — measure, against re-cut — so a record that conflated
+    /// them would send a reader to the wrong repair.
+    /// </summary>
     [Fact]
-    public void AnUnrecordedRuntimeRefusesPublishReady()
+    public void AnUnrecordedRuntimeIsRefusedAsNotRecordedAndNotAsBelowTheFloor()
     {
         var dossier = CompleteDossier() with { Runtime = null };
 
-        Assert.Contains(Evaluate(dossier).Refusals, r => r.Refusal == PublishReadyRefusal.RuntimeBelowFloor);
+        var refusals = Evaluate(dossier).Refusals;
+
+        Assert.Contains(refusals, r => r.Refusal == PublishReadyRefusal.RuntimeNotRecorded);
+        Assert.DoesNotContain(refusals, r => r.Refusal == PublishReadyRefusal.RuntimeBelowFloor);
+    }
+
+    /// <summary>The converse: a measured short runtime is refused as too short, never as unrecorded.</summary>
+    [Fact]
+    public void AShortRuntimeIsRefusedAsBelowTheFloorAndNotAsUnrecorded()
+    {
+        var dossier = CompleteDossier() with { Runtime = TimeSpan.FromMinutes(7) };
+
+        var refusals = Evaluate(dossier).Refusals;
+
+        Assert.Contains(refusals, r => r.Refusal == PublishReadyRefusal.RuntimeBelowFloor);
+        Assert.DoesNotContain(refusals, r => r.Refusal == PublishReadyRefusal.RuntimeNotRecorded);
+    }
+
+    /// <summary>
+    /// The two refusals carry different recorded reasons, so the record distinguishes them to a
+    /// reader and not merely to a switch statement.
+    /// </summary>
+    [Fact]
+    public void TheTwoRuntimeRefusalsCarryDifferentRecordedReasons()
+    {
+        var unrecorded = Evaluate(CompleteDossier() with { Runtime = null })
+            .Refusals.Single(r => r.Refusal == PublishReadyRefusal.RuntimeNotRecorded).Detail;
+        var tooShort = Evaluate(CompleteDossier() with { Runtime = TimeSpan.FromMinutes(7) })
+            .Refusals.Single(r => r.Refusal == PublishReadyRefusal.RuntimeBelowFloor).Detail;
+
+        Assert.NotEqual(unrecorded, tooShort);
+        Assert.Contains("not recorded", unrecorded, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("below", tooShort, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("below", unrecorded, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// The general property design constraint 014 states, asserted over the whole enum rather than
+    /// over the one member that was found conflated: no two refusal members share a name, and the
+    /// runtime pair in particular is two members rather than one.
+    /// </summary>
+    [Fact]
+    public void EveryRefusalMemberIsDistinctAndTheRuntimeConditionsAreTwoOfThem()
+    {
+        var members = Enum.GetValues<PublishReadyRefusal>();
+
+        Assert.Equal(members.Length, members.Distinct().Count());
+        Assert.Equal(members.Length, members.Select(m => m.ToString()).Distinct().Count());
+        Assert.Contains(PublishReadyRefusal.RuntimeBelowFloor, members);
+        Assert.Contains(PublishReadyRefusal.RuntimeNotRecorded, members);
     }
 
     // ------------------------------------------------------------------

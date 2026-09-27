@@ -28,6 +28,14 @@ public enum PublishReadyRefusal
     LibraryUnregistered = 14,
     RuntimeBelowFloor = 15,
     TransitionNotInTable = 16,
+
+    /// <summary>
+    /// The finished runtime was never recorded. Distinct from <see cref="RuntimeBelowFloor"/>,
+    /// which asserts a measured runtime that is too short: an unrecorded runtime asserts nothing
+    /// about length, and conflating the two makes the record say the cut is too short when the
+    /// real condition is that nobody measured it.
+    /// </summary>
+    RuntimeNotRecorded = 17,
 }
 
 /// <summary>A refusal with the name of the condition and the subject that failed it.</summary>
@@ -324,15 +332,31 @@ public static class PublishReadyPredicate
         }
     }
 
+    /// <summary>
+    /// Two distinct conditions, refused under two distinct names.
+    ///
+    /// An unrecorded runtime and a runtime below the floor are not the same failure and do not
+    /// have the same remedy: the first is answered by measuring, the second by re-cutting. A
+    /// single refusal covering both would make the record assert that a cut is too short in the
+    /// case where its length is simply unknown, which is what design constraint 014 forbids when
+    /// it requires a refusal to name the condition it failed.
+    /// </summary>
     private static void EvaluateRuntime(ItemDossier dossier, List<PublishReadyRefusalDetail> refusals)
     {
-        if (dossier.Runtime is null || dossier.Runtime.Value < RuntimeFloor)
+        if (dossier.Runtime is null)
+        {
+            refusals.Add(new PublishReadyRefusalDetail(
+                PublishReadyRefusal.RuntimeNotRecorded,
+                "The finished runtime is not recorded, so no comparison against the "
+                + RuntimeFloor + " floor is possible."));
+            return;
+        }
+
+        if (dossier.Runtime.Value < RuntimeFloor)
         {
             refusals.Add(new PublishReadyRefusalDetail(
                 PublishReadyRefusal.RuntimeBelowFloor,
-                dossier.Runtime is null
-                    ? "The finished runtime is not recorded."
-                    : "Runtime " + dossier.Runtime.Value + " is below the " + RuntimeFloor + " floor."));
+                "Runtime " + dossier.Runtime.Value + " is below the " + RuntimeFloor + " floor."));
         }
     }
 }

@@ -12,7 +12,7 @@ item. Every blocking condition is read from here.
 
 | # | Stage | Outcome | Evidence |
 |---|---|---|---|
-| 1 | Idea | Succeeded | Subject settled by `claude/trusting-shirley-90ea75 : D-017 : "First video: the honey bee waggle dance, as a coordinate-encoding mechanism"` |
+| 1 | Idea | Succeeded | Subject settled by owner decision `D-017`, "First video: the honey bee waggle dance, as a coordinate-encoding mechanism" |
 | 2 | Idea scoring | Succeeded | Scored against the five pillar criteria; pillar 1, format F5. Supply criterion scored **conditional**, not satisfied — see §4 |
 | 3 | Research | Succeeded | 23 claims, each attributed — `claim-to-source.md` |
 | 4 | Script | Succeeded | `script.md`, `narration.txt`; committed after the supply audit |
@@ -107,7 +107,7 @@ Stating 13 min 39 s as a measurement would be the same class of error as inventi
 
 ---
 
-## 5. The three blocking reasons, which are one reason
+## 5. The four blocking reasons, which are one reason
 
 The item is held short of publish-ready. The terminal predicate would refuse it, and the refusals
 name these conditions:
@@ -117,7 +117,7 @@ name these conditions:
 | `StageOutcomeMissing` | Production, Audio, Copyright check recorded `Held` | Each requires an action this change is forbidden or unable to take |
 | `ClipUnassessed` | 18 clips specified, 0 obtained, 0 assessed | No subscription session |
 | `LibraryUnregistered` | Storyblocks registration not performed for this channel | A channel-level action not yet taken |
-| `RuntimeBelowFloor` | Runtime specified, not measured | No rendered file to measure |
+| `RuntimeNotRecorded` | Runtime specified, never measured | No rendered file to measure. The specified 13 min 39 s is above the floor; the condition failed is that no measurement exists, not that the cut is short |
 
 **All four trace to the same boundary:** this change commits no spend, creates no account, holds no
 subscription session and publishes nothing. Those are the constraints the change was given, not
