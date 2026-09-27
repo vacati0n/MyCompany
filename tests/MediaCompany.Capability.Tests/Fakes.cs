@@ -263,6 +263,12 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                     OccurredAt = draft.OccurredAt,
                     Attempt = draft.Attempt,
                     FailureReason = draft.FailureReason,
+
+                    // Carried through exactly as the draft holds them. The served value is the one
+                    // the boundary read from the admitting route, and a null stays null: a fake
+                    // that filled it in from the request would hide the very thing under test.
+                    ReasoningTierRequested = draft.ReasoningTierRequested,
+                    ReasoningTierServed = draft.ReasoningTierServed,
                 };
                 sink.Add(record);
                 return Task.FromResult(record);
