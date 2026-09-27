@@ -88,9 +88,25 @@ public sealed class AnalyticsRepresentationTests
         // A negative observation is a real observation: the variance against the envelope is one.
         Assert.IsType<MeasurementQuantity.ObservedValue>(MeasurementQuantity.Observed(-77.41m, "USD"));
 
-        Assert.All(
-            Cases(),
-            c => Assert.Empty(c.GetConstructors(BindingFlags.Public | BindingFlags.Instance)));
+        // Every case constructor is PRIVATE, so no caller anywhere -- outside this assembly or
+        // inside it -- can reach one. The only path in is the case's own factory.
+        Assert.All(Cases(), c =>
+        {
+            Assert.Empty(c.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
+            Assert.All(
+                c.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(ctor => ctor.GetParameters() is not [{ } only] || only.ParameterType != c),
+                ctor => Assert.True(ctor.IsPrivate, $"{c.Name} exposes a constructor that is not private"));
+        });
+
+        // And the factory the observed-value case does expose refuses a zero amount outright,
+        // which is what makes "an observed value carrying zero is unconstructible" true rather
+        // than true-in-practice. The factory is internal, so it is exercised through the union.
+        var of = typeof(MeasurementQuantity.ObservedValue)
+            .GetMethod("Of", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        var thrown = Assert.Throws<TargetInvocationException>(() => of.Invoke(null, [0m, "USD"]));
+        Assert.IsType<ArgumentOutOfRangeException>(thrown.InnerException);
     }
 
     /// <summary>The three render differently from one another, everywhere either can appear.</summary>

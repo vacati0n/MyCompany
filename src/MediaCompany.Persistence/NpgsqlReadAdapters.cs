@@ -694,7 +694,7 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
     {
         await using var command = _dataSource.CreateCommand(
             """
-            SELECT amount, unit, source_observation, observed_on
+            SELECT amount, unit, unmeasured_reason, unmeasured_detail, source_observation, observed_on
             FROM observed_revenue_parameters ORDER BY recorded_at, parameter_id
             """);
 
@@ -702,21 +702,40 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            var unit = reader.GetString(1);
-
             records.Add(new RevenueParameterRecord
             {
-                Observation = reader.IsDBNull(0)
-                    ? MeasurementQuantity.NotMeasured(
-                        UnmeasuredReason.NoObservationExists,
-                        "the register row records no amount")
-                    : MeasurementQuantity.Observed(reader.GetDecimal(0), unit),
-                SourceObservation = reader.IsDBNull(2) ? null : reader.GetString(2),
-                ObservedOn = reader.IsDBNull(3) ? null : reader.GetFieldValue<DateOnly>(3),
+                Observation = ReadMeasurement(reader),
+                SourceObservation = reader.IsDBNull(4) ? null : reader.GetString(4),
+                ObservedOn = reader.IsDBNull(5) ? null : reader.GetFieldValue<DateOnly>(5),
             });
         }
 
         return records;
+    }
+
+    /// <summary>
+    /// Reads the measurement case the row was written in, rather than deducing it from whether a
+    /// number is present.
+    ///
+    /// An amount of exactly zero is an OBSERVED ZERO and comes back as one: the factory routes it
+    /// to that case, so the distinction between a quantity observed to be zero and a quantity
+    /// never observed survives the round trip. The earlier shape of this adapter wrote an observed
+    /// zero as a null amount and read it back as unmeasured, which collapsed the two in the only
+    /// delivered path that persists a measurement quantity.
+    /// </summary>
+    private static MeasurementQuantity ReadMeasurement(NpgsqlDataReader reader)
+    {
+        if (!reader.IsDBNull(0))
+        {
+            return MeasurementQuantity.Observed(reader.GetDecimal(0), reader.GetString(1));
+        }
+
+        // The table check admits no row carrying neither an amount nor a reason, so the reason and
+        // the detail are present here by construction; a store that somehow held one anyway would
+        // be reported as unmeasured for the reason it states rather than for one assumed here.
+        return MeasurementQuantity.NotMeasured(
+            Enum.Parse<UnmeasuredReason>(reader.GetString(2)),
+            reader.GetString(3));
     }
 
     public async Task RecordAsync(RevenueParameterRecord parameter, CancellationToken cancellationToken)
@@ -726,16 +745,24 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
         await using var command = _dataSource.CreateCommand(
             """
             INSERT INTO observed_revenue_parameters
-                (parameter_id, recorded_at, amount, unit, source_observation, observed_on)
-            VALUES (@parameter_id, now(), @amount, @unit, @source_observation, @observed_on)
+                (parameter_id, recorded_at, amount, unit, unmeasured_reason, unmeasured_detail,
+                 source_observation, observed_on)
+            VALUES (@parameter_id, now(), @amount, @unit, @unmeasured_reason, @unmeasured_detail,
+                    @source_observation, @observed_on)
             """);
 
         command.Parameters.AddWithValue("parameter_id", Guid.NewGuid());
-        command.Parameters.Add("amount", NpgsqlDbType.Numeric).Value =
-            parameter.Observation is MeasurementQuantity.ObservedValue observed
-                ? observed.Amount
-                : (object)DBNull.Value;
-        command.Parameters.AddWithValue("unit", UnitOf(parameter.Observation));
+
+        // The case decides the row shape, and the three cases are written apart. An observed zero
+        // is written as an amount of zero with its unit, NOT as a null amount: a null amount is
+        // the unmeasured shape, and writing a measured zero into it is what turned a measured zero
+        // into a never-measured one on the way back out.
+        var (amount, unit, reason, detail) = Encode(parameter.Observation);
+
+        command.Parameters.Add("amount", NpgsqlDbType.Numeric).Value = (object?)amount ?? DBNull.Value;
+        command.Parameters.Add("unit", NpgsqlDbType.Text).Value = (object?)unit ?? DBNull.Value;
+        command.Parameters.Add("unmeasured_reason", NpgsqlDbType.Text).Value = (object?)reason ?? DBNull.Value;
+        command.Parameters.Add("unmeasured_detail", NpgsqlDbType.Text).Value = (object?)detail ?? DBNull.Value;
         command.Parameters.Add("source_observation", NpgsqlDbType.Text).Value =
             (object?)parameter.SourceObservation ?? DBNull.Value;
         command.Parameters.Add("observed_on", NpgsqlDbType.Date).Value =
@@ -744,11 +771,18 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>The unit an observed case carries; an unmeasured row states the unit it was sought in.</summary>
-    private static string UnitOf(MeasurementQuantity observation) => observation switch
+    /// <summary>
+    /// The row shape for one measurement case. The match is exhaustive over the closed union, so a
+    /// fourth case would not compile rather than falling into an observed or an unmeasured shape
+    /// by default.
+    /// </summary>
+    private static (decimal? Amount, string? Unit, string? Reason, string? Detail) Encode(
+        MeasurementQuantity observation) => observation switch
     {
-        MeasurementQuantity.ObservedValue value => value.Unit,
-        MeasurementQuantity.ObservedZero zero => zero.Unit,
-        _ => Money.DefaultCurrency,
+        MeasurementQuantity.ObservedValue value => (value.Amount, value.Unit, null, null),
+        MeasurementQuantity.ObservedZero zero => (0m, zero.Unit, null, null),
+        MeasurementQuantity.Unmeasured unmeasured =>
+            (null, null, unmeasured.Reason.ToString(), unmeasured.Detail),
+        _ => throw new InvalidOperationException("Unreachable: the measurement union has three cases."),
     };
 }

@@ -403,11 +403,24 @@ public sealed class AnalyticsSurfaceTests
             Record(ReasoningTier.Deep, null),
         ]);
 
+        // One period, ONE served-tier count, across every output that carries the caveat. Two of
+        // the two records are in the period and one of them carries a served tier, and the caveat
+        // counts served-tier records, so both outputs say one.
         Assert.All(models, m =>
         {
             Assert.Contains("does not settle", m.Caveat.Statement, StringComparison.Ordinal);
-            Assert.Equal("2 served-tier records", m.Caveat.ServedTierRecords.Describe());
+            Assert.Equal("1 served-tier records", m.Caveat.ServedTierRecords.Describe());
         });
+
+        var ratioOverTheSameRecords = AnalyticsComposers.TierRatio(Period,
+        [
+            Record(ReasoningTier.Deep, ReasoningTier.Light),
+            Record(ReasoningTier.Deep, null),
+        ]);
+
+        Assert.Equal(
+            models[0].Caveat.ServedTierRecords.Describe(),
+            ratioOverTheSameRecords.Caveat.ServedTierRecords.Describe());
 
         var observed = models.Single(m => m.Served is not null);
         Assert.Equal(ReasoningTier.Light, observed.Served);
@@ -622,12 +635,22 @@ public sealed class AnalyticsSurfaceTests
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// The surface populated with NO observation at all. Every quantity resolves to exactly one of
-    /// the three states, every unmeasured one names which reason applies, and no never-observed
-    /// quantity renders as a number anywhere.
+    /// The surface populated with NO observation at all.
+    ///
+    /// The claim this decides, stated exactly: every quantity resolves to the unmeasured case,
+    /// every one names which of the two closed reasons applies, and NO RENDERING CARRIES A VALUE —
+    /// the rendering is the type's own unmeasured prefix followed by the stated detail and nothing
+    /// else, and the prefix carries no amount, no unit and no digit of any kind.
+    ///
+    /// The detail MAY carry digits, by design: it states what was looked for and where, and that
+    /// statement legitimately names a record count or a period. Those digits belong to the stated
+    /// detail and never to a value, and the assertion below draws the line where the type does
+    /// rather than asserting an absence of digits the surface does not actually hold. The earlier
+    /// shape of this check asserted only the prefix and a non-blank reason, which decided rather
+    /// less than the claim it was offered for.
     /// </summary>
     [Fact]
-    public void TheWholeSurfaceWithNoObservationRendersNoNumberAnywhere()
+    public void TheWholeSurfaceWithNoObservationCarriesNoValueInAnyRendering()
     {
         var quantities = new List<MeasurementQuantity>();
 
@@ -651,6 +674,8 @@ public sealed class AnalyticsSurfaceTests
 
         Assert.NotEmpty(quantities);
 
+        var someDetailCarriesADigit = false;
+
         foreach (var quantity in quantities)
         {
             var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(quantity);
@@ -658,9 +683,41 @@ public sealed class AnalyticsSurfaceTests
             Assert.Contains(unmeasured.Reason, Enum.GetValues<UnmeasuredReason>());
             Assert.False(string.IsNullOrWhiteSpace(unmeasured.Detail));
 
-            // The rendering names which reason applies, and shows no figure.
+            var prefix = MeasurementQuantity.UnmeasuredPrefix(unmeasured.Reason);
             var rendered = unmeasured.Describe();
-            Assert.StartsWith("unmeasured (", rendered, StringComparison.Ordinal);
+
+            // The whole rendering is the prefix and the stated detail, and nothing else: there is
+            // no third part in which an amount or a unit could appear.
+            Assert.Equal(prefix + unmeasured.Detail, rendered);
+
+            // The part the type composes carries no digit at all, so no figure is rendered.
+            Assert.DoesNotContain(prefix, char.IsDigit);
+
+            someDetailCarriesADigit |= unmeasured.Detail.Any(char.IsDigit);
         }
+
+        // Stated rather than implied: a detail does carry digits, and this is the exemption the
+        // claim above draws the line around. A check that asserted no digit anywhere would fail
+        // here, and narrowing the surface to make it pass would cost the reader the count and the
+        // period that make an absence diagnosable.
+        Assert.True(
+            someDetailCarriesADigit,
+            "no unmeasured detail carried a digit, so the exemption this check states is untested");
+    }
+
+    /// <summary>
+    /// The unmeasured prefix is the boundary between what the type says and what the detail says,
+    /// and it carries no digit for either reason. The check above rests on that.
+    /// </summary>
+    [Theory]
+    [InlineData(UnmeasuredReason.NoObservationExists)]
+    [InlineData(UnmeasuredReason.SourceCannotStateOne)]
+    public void TheUnmeasuredPrefixCarriesNoDigitForEitherReason(UnmeasuredReason reason)
+    {
+        var prefix = MeasurementQuantity.UnmeasuredPrefix(reason);
+
+        Assert.DoesNotContain(prefix, char.IsDigit);
+        Assert.StartsWith("unmeasured (", prefix, StringComparison.Ordinal);
+        Assert.EndsWith(": ", prefix, StringComparison.Ordinal);
     }
 }

@@ -28,8 +28,14 @@ public enum UnmeasuredReason
 /// Second, <see cref="ObservedZero"/> is its OWN CASE rather than an <see cref="ObservedValue"/>
 /// whose amount is zero. A reader resolves the three apart without inspecting a number, so the
 /// difference between "the company measured this and it was zero" and "the company never measured
-/// this" survives every rendering. <see cref="Observed"/> routes a zero amount to that case, which
-/// is why no observed value carrying zero can be constructed at all.
+/// this" survives every rendering.
+///
+/// Each case's constructor is PRIVATE, and the only way to reach one is that case's own factory.
+/// Outside this assembly no case is constructible at all, because neither the constructors nor the
+/// case factories are visible; inside it, <see cref="ObservedValue.Of"/> refuses a zero amount, so
+/// an observed value carrying zero cannot be produced from anywhere, by any route, rather than
+/// being merely discouraged. An earlier shape made the constructors internal, which left the claim
+/// true in practice and overstated as written.
 /// </summary>
 public abstract record MeasurementQuantity
 {
@@ -46,7 +52,7 @@ public abstract record MeasurementQuantity
     /// <summary>An observation with a non-zero amount, in the unit it was observed in.</summary>
     public sealed record ObservedValue : MeasurementQuantity
     {
-        internal ObservedValue(decimal amount, string unit)
+        private ObservedValue(decimal amount, string unit)
         {
             Amount = amount;
             Unit = unit;
@@ -56,6 +62,18 @@ public abstract record MeasurementQuantity
         public decimal Amount { get; }
 
         public string Unit { get; }
+
+        /// <summary>
+        /// The only construction path. A zero amount is refused here rather than routed, because
+        /// this is the site the unconstructibility claim names: an observed value carrying zero
+        /// does not come into being, whatever the caller intended.
+        /// </summary>
+        internal static ObservedValue Of(decimal amount, string unit) =>
+            amount == 0m
+                ? throw new ArgumentOutOfRangeException(
+                    nameof(amount),
+                    "An observed value carries a non-zero amount; an observation of zero is an observed zero, which is a different case.")
+                : new ObservedValue(amount, RequireUnit(unit));
     }
 
     /// <summary>
@@ -64,9 +82,11 @@ public abstract record MeasurementQuantity
     /// </summary>
     public sealed record ObservedZero : MeasurementQuantity
     {
-        internal ObservedZero(string unit) => Unit = unit;
+        private ObservedZero(string unit) => Unit = unit;
 
         public string Unit { get; }
+
+        internal static ObservedZero Of(string unit) => new(RequireUnit(unit));
     }
 
     /// <summary>
@@ -75,7 +95,7 @@ public abstract record MeasurementQuantity
     /// </summary>
     public sealed record Unmeasured : MeasurementQuantity
     {
-        internal Unmeasured(UnmeasuredReason reason, string detail)
+        private Unmeasured(UnmeasuredReason reason, string detail)
         {
             Reason = reason;
             Detail = detail;
@@ -85,17 +105,25 @@ public abstract record MeasurementQuantity
 
         /// <summary>What was looked for and where. Blank is refused at construction.</summary>
         public string Detail { get; }
+
+        internal static Unmeasured Of(UnmeasuredReason reason, string detail) =>
+            string.IsNullOrWhiteSpace(detail)
+                ? throw new ArgumentException(
+                    "An unmeasured quantity states what was looked for and where; without it the absence is not diagnosable.",
+                    nameof(detail))
+                : new Unmeasured(reason, detail);
     }
 
     /// <summary>
-    /// An observed quantity. An amount of zero yields <see cref="ObservedZero"/>, which is what
-    /// makes an observed value carrying zero unconstructible rather than merely discouraged.
+    /// An observed quantity. An amount of zero yields <see cref="ObservedZero"/>, which together
+    /// with the refusal in <see cref="ObservedValue.Of"/> is what makes an observed value carrying
+    /// zero unreachable rather than merely discouraged.
     /// </summary>
     public static MeasurementQuantity Observed(decimal amount, string unit) =>
-        amount == 0m ? new ObservedZero(RequireUnit(unit)) : new ObservedValue(amount, RequireUnit(unit));
+        amount == 0m ? ObservedZero.Of(unit) : ObservedValue.Of(amount, unit);
 
     /// <summary>An observation of zero, stated as such.</summary>
-    public static MeasurementQuantity Zero(string unit) => new ObservedZero(RequireUnit(unit));
+    public static MeasurementQuantity Zero(string unit) => ObservedZero.Of(unit);
 
     /// <summary>
     /// No measurement, with the reason and the detail. A blank detail is refused, following the
@@ -103,11 +131,7 @@ public abstract record MeasurementQuantity
     /// establish: an unmeasured quantity that cannot say what was looked for is not diagnosable.
     /// </summary>
     public static MeasurementQuantity NotMeasured(UnmeasuredReason reason, string detail) =>
-        string.IsNullOrWhiteSpace(detail)
-            ? throw new ArgumentException(
-                "An unmeasured quantity states what was looked for and where; without it the absence is not diagnosable.",
-                nameof(detail))
-            : new Unmeasured(reason, detail);
+        Unmeasured.Of(reason, detail);
 
     /// <summary>
     /// A count of records, which is an observation whenever the counting happened. Zero recorded
@@ -119,19 +143,29 @@ public abstract record MeasurementQuantity
     /// <summary>
     /// The rendering. The three cases render differently from one another by construction, and the
     /// unmeasured rendering names which of the two reasons applies.
+    ///
+    /// The unmeasured rendering carries NO AMOUNT AND NO UNIT. It may carry digits, because the
+    /// detail states what was looked for and where, and that statement legitimately names a count
+    /// or a period; those digits belong to the stated detail and never to a value. The boundary
+    /// between the two is <see cref="UnmeasuredPrefix"/>, which is the part of the rendering the
+    /// type itself composes.
     /// </summary>
     public string Describe() => this switch
     {
         ObservedValue observed => $"{observed.Amount} {observed.Unit}",
         ObservedZero zero => $"observed zero {zero.Unit}",
-        Unmeasured unmeasured => $"unmeasured ({Describe(unmeasured.Reason)}): {unmeasured.Detail}",
+        Unmeasured unmeasured => UnmeasuredPrefix(unmeasured.Reason) + unmeasured.Detail,
         _ => throw new InvalidOperationException("Unreachable: the measurement union has three cases."),
     };
 
-    private static string Describe(UnmeasuredReason reason) => reason switch
+    /// <summary>
+    /// Everything an unmeasured rendering says before its stated detail begins. It carries no
+    /// amount, no unit and no digit of any kind, which is the part of the claim a check can decide.
+    /// </summary>
+    public static string UnmeasuredPrefix(UnmeasuredReason reason) => reason switch
     {
-        UnmeasuredReason.NoObservationExists => "no observation exists",
-        UnmeasuredReason.SourceCannotStateOne => "the source cannot state one",
+        UnmeasuredReason.NoObservationExists => "unmeasured (no observation exists): ",
+        UnmeasuredReason.SourceCannotStateOne => "unmeasured (the source cannot state one): ",
         _ => throw new InvalidOperationException("Unreachable: the reason set has two members."),
     };
 }

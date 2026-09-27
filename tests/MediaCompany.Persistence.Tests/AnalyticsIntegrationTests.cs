@@ -288,6 +288,115 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         Assert.Equal("USD", revenue.Unit);
     }
 
+    /// <summary>
+    /// THE ROUND TRIP. A measurement quantity written to the register and read back resolves to
+    /// the case it was written in, for all three cases.
+    ///
+    /// The observed zero is the one this exists for. The first shape of the adapter bound the
+    /// amount column from the observed-value case alone, so an observed zero went in as a null
+    /// amount and came back as unmeasured: a quantity the company measured and found to be zero
+    /// became a quantity it had never measured, across the only delivered path that persists a
+    /// measurement quantity. No check crossed the write and the read together, which is why the
+    /// defect survived a suite that asserted the distinction everywhere else.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AMeasurementWrittenToTheRegisterReadsBackInTheCaseItWasWrittenIn()
+    {
+        var register = new NpgsqlRevenueParameterRegister(Source);
+
+        await register.RecordAsync(
+            new RevenueParameterRecord { Observation = MeasurementQuantity.Observed(2.50m, "USD") },
+            CancellationToken.None);
+
+        await register.RecordAsync(
+            new RevenueParameterRecord { Observation = MeasurementQuantity.Zero("USD") },
+            CancellationToken.None);
+
+        await register.RecordAsync(
+            new RevenueParameterRecord
+            {
+                Observation = MeasurementQuantity.NotMeasured(
+                    UnmeasuredReason.SourceCannotStateOne,
+                    "the platform statement does not break revenue out by channel"),
+            },
+            CancellationToken.None);
+
+        var recorded = await register.RecordedAsync(CancellationToken.None);
+
+        Assert.Equal(3, recorded.Count);
+
+        var value = Assert.IsType<MeasurementQuantity.ObservedValue>(recorded[0].Observation);
+        Assert.Equal(2.50m, value.Amount);
+        Assert.Equal("USD", value.Unit);
+
+        // The one the defect collapsed: it comes back as an observed zero, not as unmeasured.
+        var zero = Assert.IsType<MeasurementQuantity.ObservedZero>(recorded[1].Observation);
+        Assert.Equal("USD", zero.Unit);
+
+        // And the two still render differently from one another after the round trip.
+        Assert.NotEqual(recorded[1].Observation.Describe(), recorded[2].Observation.Describe());
+
+        // The unmeasured case keeps its reason and its stated detail, so the absence stays
+        // diagnosable rather than becoming a generic one on the way through the store.
+        var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(recorded[2].Observation);
+        Assert.Equal(UnmeasuredReason.SourceCannotStateOne, unmeasured.Reason);
+        Assert.Equal("the platform statement does not break revenue out by channel", unmeasured.Detail);
+    }
+
+    /// <summary>
+    /// A revenue parameter observed to be zero, recorded with its source and its date, still
+    /// lights none of the six.
+    ///
+    /// It is a real observation and it is reported as one; it simply cannot serve as the divisor
+    /// the six are derived through. The admitting view excludes it in the datastore and the
+    /// admission rule excludes it in the domain, so the two agree.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AParameterObservedToBeZeroIsRecordedAsZeroAndLightsNoneOfTheSix()
+    {
+        var register = new NpgsqlRevenueParameterRegister(Source);
+
+        await register.RecordAsync(
+            new RevenueParameterRecord
+            {
+                Observation = MeasurementQuantity.Zero("USD"),
+                SourceObservation = "a platform revenue statement reporting no revenue",
+                ObservedOn = new DateOnly(2026, 10, 1),
+            },
+            CancellationToken.None);
+
+        var recorded = await register.RecordedAsync(CancellationToken.None);
+
+        Assert.IsType<MeasurementQuantity.ObservedZero>(Assert.Single(recorded).Observation);
+        Assert.Empty(AnalyticsComposers.Visible(recorded));
+
+        // The datastore's own admitting view agrees with the domain's admission rule.
+        await using var command = Source.CreateCommand("SELECT COUNT(*) FROM v_observed_revenue_parameters");
+        Assert.Equal(0L, (long)(await command.ExecuteScalarAsync())!);
+    }
+
+    /// <summary>
+    /// The row shape is the case, and the table admits no other shape. A row carrying neither an
+    /// amount nor an unmeasured reason is refused, so a writer cannot create a row whose case a
+    /// reader would have to guess at.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task TheRegisterRefusesARowThatIsInNoMeasurementCase()
+    {
+        await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
+            """
+            INSERT INTO observed_revenue_parameters (parameter_id, recorded_at, unit)
+            VALUES (gen_random_uuid(), now(), 'USD')
+            """));
+
+        await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
+            """
+            INSERT INTO observed_revenue_parameters
+                (parameter_id, recorded_at, amount, unit, unmeasured_reason, unmeasured_detail)
+            VALUES (gen_random_uuid(), now(), 2.50, 'USD', 'NoObservationExists', 'both shapes at once')
+            """));
+    }
+
     /// <summary>The register refuses a source recorded without the date of the observation.</summary>
     [RequiresPostgresFact]
     public async Task TheRegisterRefusesASourceRecordedWithoutItsObservationDate()

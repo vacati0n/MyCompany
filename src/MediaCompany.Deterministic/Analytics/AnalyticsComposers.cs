@@ -365,7 +365,11 @@ public static class AnalyticsComposers
     {
         ArgumentNullException.ThrowIfNull(records);
 
-        var caveat = SingleRecordCaveat.For(MeasurementQuantity.Count(records.Count, "served-tier records"));
+        // The caveat counts SERVED-TIER records, so it counts the records that carry a served tier
+        // and not every record in the period. Counting the period made one period report two
+        // different counts across two outputs carrying the same caveat, and a reader comparing them
+        // could not tell which count the caveat answered for.
+        var caveat = SingleRecordCaveat.For(ServedTierCount(records));
 
         return records.Select(record => new ServedTierReadModel
         {
@@ -393,7 +397,7 @@ public static class AnalyticsComposers
         ArgumentNullException.ThrowIfNull(records);
 
         var served = records.Where(r => r.Served is not null).ToArray();
-        var caveat = SingleRecordCaveat.For(MeasurementQuantity.Count(served.Length, "served-tier records"));
+        var caveat = SingleRecordCaveat.For(ServedTierCount(records));
 
         if (served.Length < 2)
         {
@@ -419,6 +423,17 @@ public static class AnalyticsComposers
     // -----------------------------------------------------------------------
     // The six revenue-derived figures (plan task T-007)
     // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// How many of a record set carry a served tier. One definition, used by every output that
+    /// carries the caveat, so one period reports one count.
+    /// </summary>
+    public static MeasurementQuantity ServedTierCount(IReadOnlyList<ServedTierRecord> records)
+    {
+        ArgumentNullException.ThrowIfNull(records);
+
+        return MeasurementQuantity.Count(records.Count(r => r.Served is not null), "served-tier records");
+    }
 
     /// <summary>The closed set of six. Present in the surface, and visible in no view while unlit.</summary>
     public static IReadOnlyList<RevenueDerivedFigure> RevenueDerived { get; } =
