@@ -476,21 +476,40 @@ public sealed class PublicationTimingTests
         Assert.Contains("read by nothing", planned.Computation);
     }
 
-    /// <summary>The computation commits neither a publication date nor a publication pattern.</summary>
+    /// <summary>
+    /// The computation commits neither a publication date nor a publication pattern.
+    ///
+    /// Asserted against what the type actually carries, rather than against a property hardcoded to
+    /// false: a held time is a single instant and its computation record, with no recurrence, no
+    /// commitment and no state beyond that. A pattern would have to be a member here to exist, and
+    /// a member added to carry one fails this.
+    /// </summary>
     [Fact]
     public void TheComputationCommitsNoPublicationDateOrPattern()
     {
         var planned = PublicationTiming.Compute(Item, Version, PublishingFixture.Now, Policy);
 
-        Assert.False(planned.CommitsAPublicationDate);
-        Assert.False(planned.IsRead);
+        var members = planned.GetType()
+            .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+            .Select(m => m.Name)
+            .Order()
+            .ToArray();
+
+        Assert.Equal(new[] { "Computation", "Item", "PlannedAt", "Version" }, members);
+
+        foreach (var forbidden in new[] { "Recurrence", "Pattern", "Cadence", "Cron", "Repeat", "Committed" })
+        {
+            Assert.DoesNotContain(members, m => m.Contains(forbidden, StringComparison.OrdinalIgnoreCase));
+        }
     }
 
     /// <summary>
     /// A planned time that has elapsed produces no dispatch, because nothing reads a due time.
     ///
     /// The demonstration is the absence of a reader: the planned time is an attribute of the
-    /// descriptor, and no component in the build selects anything by it.
+    /// descriptor, and no component in the build selects anything by it. Composing after the
+    /// planned time has passed still comes to rest at the descriptor, because there is no case
+    /// past composition to reach.
     /// </summary>
     [Fact]
     public void AnElapsedPlannedTimeProducesNoDispatch()
@@ -499,17 +518,18 @@ public sealed class PublicationTimingTests
             Item, Version, PublishingFixture.Now.AddYears(-1), Policy);
 
         Assert.True(elapsed.PlannedAt < PublishingFixture.Now);
-        Assert.False(elapsed.IsRead);
 
-        // Composing after the planned time has passed still comes to rest at the descriptor: the
-        // elapsed time changes nothing, because there is no case past composition to reach.
         var outcome = PublicationDispatchComposer.Compose(
             WorkforceRole.Publisher, PublishingFixture.Passed(Item, Version), Item, Version,
             PublishingFixture.Destination, PublishingFixture.Settings,
             PublishingFixture.Surfaces(Item, Version),
             elapsed.PlannedAt, PublishingFixture.Now);
 
-        Assert.IsType<DispatchOutcome.Composed>(outcome);
+        var composed = Assert.IsType<DispatchOutcome.Composed>(outcome);
+
+        // The elapsed instant is carried as an attribute and changes nothing: the outcome is the
+        // same composed descriptor at rest that a future instant would have produced.
+        Assert.Equal(elapsed.PlannedAt, composed.Descriptor.PlannedAt);
     }
 
     /// <summary>The arithmetic is pure: the same inputs always give the same answer.</summary>

@@ -132,6 +132,16 @@ public sealed record ApprovalMeasurement
         {
             missing.Add("queue time (no queued mark was recorded)");
         }
+        else if (approval.QueuedAt > approval.PresentedAt)
+        {
+            // Unmeasured, not a clamped zero, and for the same reason the rework case is: an
+            // interval whose marks are inverted was not measured, and a zero standing in for it
+            // would understate the cost of per-publication approval exactly as a substituted zero
+            // queue time would. The constructor and a datastore check both bar this today, so the
+            // branch is unreachable by any supported route; it is here because the rule is that a
+            // component that was not measured resolves as unmeasured, without exception.
+            missing.Add("queue time (the queued mark is later than the presentation)");
+        }
 
         // Rework time is derivable when the approval declares a predecessor and that predecessor
         // was supplied. A first-pass approval has no rework, which is a measured zero rather than
@@ -168,6 +178,8 @@ public sealed record ApprovalMeasurement
                 label);
         }
 
+        // Both intervals are non-negative here: an inverted queue mark resolved as unmeasured
+        // above, and the approval type refuses a decision earlier than its presentation.
         var queue = approval.PresentedAt - approval.QueuedAt!.Value;
         var review = approval.DecidedAt - approval.PresentedAt;
 
@@ -176,7 +188,7 @@ public sealed record ApprovalMeasurement
             approval.ItemVersion,
             ApprovalMeasurementResolution.Measured,
             review,
-            queue < TimeSpan.Zero ? TimeSpan.Zero : queue,
+            queue,
             rework,
             string.Empty,
             label);

@@ -227,4 +227,50 @@ public sealed class SchemaStaticTests
         Assert.Contains("Publisher:Publish", expected);
         Assert.DoesNotContain("Publisher:BlockClear", expected);
     }
+
+    /// <summary>
+    /// Nothing reads the planned publication time as a DUE time.
+    ///
+    /// The column is defined and never selected on: a due-time reader would have to filter or order
+    /// by it, and neither appears anywhere in the schema. This is a check that can fail, which the
+    /// two hardcoded properties it replaces could not.
+    /// </summary>
+    [Fact]
+    public void TheSchemaNeverSelectsOnThePlannedTime()
+    {
+        var sql = SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.003-publication.sql");
+
+        Assert.Contains("planned_at", sql);
+
+        foreach (var line in sql.Split('\n'))
+        {
+            var text = line.Trim();
+            if (text.StartsWith("--", StringComparison.Ordinal)
+                || !text.Contains("planned_at", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            Assert.DoesNotContain("WHERE", text, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("ORDER BY", text, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>
+    /// The publishing migration is additive: it creates and it extends, and it drops nothing a
+    /// delivered reader depends on.
+    /// </summary>
+    [Fact]
+    public void ThePublishingMigrationIsAdditive()
+    {
+        var sql = SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.003-publication.sql");
+
+        Assert.DoesNotContain("DROP TABLE", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DROP COLUMN", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ALTER COLUMN", sql, StringComparison.OrdinalIgnoreCase);
+
+        Assert.Contains("CREATE TABLE publication_dispatches", sql);
+        Assert.Contains("CREATE TABLE publication_attempts", sql);
+        Assert.Contains("CREATE TABLE first_publication_conditions", sql);
+    }
 }

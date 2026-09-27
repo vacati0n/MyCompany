@@ -22,6 +22,12 @@ namespace MediaCompany.Deterministic.Publication;
 /// </summary>
 public static class PublishedFacingSurfaces
 {
+    /// <summary>The rule-determined step this type realizes, discovered by the build-time check.</summary>
+    public static readonly IReadOnlyList<string> TaskNames =
+    [
+        DeterministicTaskRegistry.PublishedFacingSurfaceProduction,
+    ];
+
     /// <summary>
     /// Produces all five surfaces for an item version, screening each one BEFORE it is held.
     ///

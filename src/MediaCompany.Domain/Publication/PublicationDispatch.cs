@@ -1,4 +1,3 @@
-using System.Collections.Frozen;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -204,64 +203,3 @@ public abstract record DispatchOutcome
     ];
 }
 
-/// <summary>
-/// The positions the publishing workflow declares (module M-013).
-///
-/// STRUCTURAL ABSENCE TWO. The set is closed and ENDS AT COMPOSITION: there is no position after
-/// <see cref="Composed"/>. A claimed unit that finishes composition reaches a terminal claim state,
-/// because the delivered lifecycle moves a unit to the next position its workflow declares and this
-/// workflow declares none. There is no position to move to, so there is nothing to add a transport
-/// behind.
-/// </summary>
-public enum PublishingPosition
-{
-    /// <summary>The unit is queued for publishing work.</summary>
-    Queued = 1,
-
-    /// <summary>The published-facing surfaces are produced and screened.</summary>
-    SurfaceProduction = 2,
-
-    /// <summary>The planned publication time is computed and held.</summary>
-    TimingComputation = 3,
-
-    /// <summary>The gate verdict and the three conditions of first publication are evaluated.</summary>
-    GateEvaluation = 4,
-
-    /// <summary>
-    /// The dispatch descriptor is composed, keyed and persisted with its queue entry. THE LAST
-    /// POSITION. Nothing follows it in this set.
-    /// </summary>
-    Composed = 5,
-}
-
-/// <summary>The closed publishing position set, and the assertion that composition is terminal.</summary>
-public static class PublishingWorkflowPositions
-{
-    /// <summary>The ordered closed set. Composition is last, and the order is the declaration order.</summary>
-    public static readonly IReadOnlyList<PublishingPosition> Ordered =
-    [
-        PublishingPosition.Queued,
-        PublishingPosition.SurfaceProduction,
-        PublishingPosition.TimingComputation,
-        PublishingPosition.GateEvaluation,
-        PublishingPosition.Composed,
-    ];
-
-    public static readonly FrozenSet<PublishingPosition> All = Ordered.ToFrozenSet();
-
-    /// <summary>The workflow name, as the job record carries it.</summary>
-    public const string WorkflowName = "publishing";
-
-    /// <summary>
-    /// The position that follows, or null when there is none. Composition returns null, which is
-    /// what makes a unit finishing composition reach a terminal claim state rather than move on.
-    /// </summary>
-    public static PublishingPosition? Next(PublishingPosition position)
-    {
-        var index = Ordered.ToList().IndexOf(position);
-        return index < 0 || index + 1 >= Ordered.Count ? null : Ordered[index + 1];
-    }
-
-    /// <summary>Whether the position is terminal in this workflow. True only for composition.</summary>
-    public static bool IsTerminal(PublishingPosition position) => Next(position) is null;
-}

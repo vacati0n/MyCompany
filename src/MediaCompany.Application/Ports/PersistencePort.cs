@@ -115,6 +115,16 @@ public enum DispatchWriteOutcome
 
     /// <summary>A record for this item version already existed. A retry, and still exactly one.</summary>
     AlreadyRecorded = 2,
+
+    /// <summary>
+    /// No dispatch record was written and none exists, because the attempt was refused before a
+    /// descriptor was composed.
+    ///
+    /// Distinct from <see cref="AlreadyRecorded"/>, which asserts a record IS there. Reporting a
+    /// refusal as "already recorded" would tell a reader a dispatch exists for this item version
+    /// when none does, and the two are not the same fact.
+    /// </summary>
+    NoRecordWritten = 3,
 }
 
 /// <summary>Route availability transitions, written inside the transaction that records them.</summary>

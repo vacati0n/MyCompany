@@ -146,21 +146,11 @@ public static class DeterministicTaskRegistry
         AttemptAnswerCompleteness,
     }.ToFrozenSet(StringComparer.Ordinal);
 
-    /// <summary>
-    /// The members the publishing path adds, named so the boundary check can assert that each one
-    /// is registered. A deterministic step added to the publishing path without being named here
-    /// fails that check rather than passing silently.
-    /// </summary>
-    public static readonly FrozenSet<string> PublishingMembers = new[]
-    {
-        PublishedFacingSurfaceProduction,
-        PublicationTimingArithmetic,
-        DispatchKeyDerivation,
-        DispatchDescriptorComposition,
-        FirstPublicationConditionEvaluation,
-        ApprovalQuantitySeparation,
-        AttemptAnswerCompleteness,
-    }.ToFrozenSet(StringComparer.Ordinal);
+    // There is deliberately no second list of the publishing members here. A list restating
+    // what Names already holds can only be compared against itself: a step absent from both
+    // would satisfy the comparison, which is the one case the check exists to catch. The
+    // build-time check instead discovers the steps from the types that realize them and
+    // asserts each declared name is in Names above.
 
     public static bool Contains(string taskName) => Names.Contains(taskName);
 }

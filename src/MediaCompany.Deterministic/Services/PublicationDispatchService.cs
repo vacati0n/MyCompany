@@ -69,7 +69,7 @@ public sealed class PublicationDispatchService
                 cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-            return new DispatchPersistResult(DispatchWriteOutcome.AlreadyRecorded, Refused: true, attempt);
+            return new DispatchPersistResult(DispatchWriteOutcome.NoRecordWritten, Refused: true, attempt);
         }
 
         var composed = (DispatchOutcome.Composed)outcome;
@@ -123,12 +123,19 @@ public sealed class PublicationDispatchService
 
             if (job is { } jobId)
             {
-                // The queue entry. Composition is the LAST position the publishing workflow
-                // declares, so the unit reaches a terminal claim state rather than a next
-                // position: there is nothing after this for a worker to claim.
+                // The queue entry, DERIVED from the publishing workflow definition rather than
+                // hardcoded. Composition is the last position that definition declares, so the
+                // engine's own successor lookup returns none and the unit reaches a terminal claim
+                // state; were a stage ever added after composition this would advance to it
+                // instead, which is exactly what the build-time boundary check refuses.
+                var next = PublishingWorkflow.Definition.Next(LifecyclePosition.PublishingComposed);
+
                 await transaction.Jobs.AdvanceAsync(
-                    jobId, LifecyclePosition.Completed, ClaimState.Done, now, cancellationToken)
-                    .ConfigureAwait(false);
+                    jobId,
+                    next ?? LifecyclePosition.Completed,
+                    next is null ? ClaimState.Done : ClaimState.Ready,
+                    now,
+                    cancellationToken).ConfigureAwait(false);
             }
         }
 

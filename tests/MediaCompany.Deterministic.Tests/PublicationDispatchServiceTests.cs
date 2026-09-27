@@ -102,6 +102,10 @@ public sealed class PublicationDispatchServiceTests
             new string('b', 64), null, null, CancellationToken.None);
 
         Assert.True(result.Refused);
+
+        // Not "already recorded": no dispatch record exists for this item version, and saying one
+        // does would tell a reader the opposite of the truth.
+        Assert.Equal(DispatchWriteOutcome.NoRecordWritten, result.Write);
         Assert.Empty(work.Dispatches);
         Assert.Single(work.Attempts);
         Assert.True(work.Attempts[0].Refused);

@@ -77,6 +77,19 @@ public abstract record GateVerdict
 /// </summary>
 public static class GatePredicates
 {
+    /// <summary>
+    /// The rule-determined steps this type realizes. Declared here, beside the code, so the
+    /// build-time check discovers them from the type rather than from a list maintained elsewhere:
+    /// a step realized here and registered nowhere fails that check.
+    /// </summary>
+    public static readonly IReadOnlyList<string> TaskNames =
+    [
+        DeterministicTaskRegistry.GateBlocking,
+        DeterministicTaskRegistry.GateRelease,
+        DeterministicTaskRegistry.ApprovalTokenVerification,
+        DeterministicTaskRegistry.FirstPublicationConditionEvaluation,
+    ];
+
     public const string OwnerApprovalGate = "publication";
 
     /// <summary>

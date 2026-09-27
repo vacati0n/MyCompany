@@ -18,6 +18,14 @@ namespace MediaCompany.Deterministic.Publication;
 /// </summary>
 public static class PublicationDispatchComposer
 {
+    /// <summary>The rule-determined steps this type realizes, discovered by the build-time check.</summary>
+    public static readonly IReadOnlyList<string> TaskNames =
+    [
+        DeterministicTaskRegistry.DispatchDescriptorComposition,
+        DeterministicTaskRegistry.DispatchKeyDerivation,
+        DeterministicTaskRegistry.AttemptAnswerCompleteness,
+    ];
+
     /// <summary>
     /// Composes a dispatch for one item version, or refuses with the structural reason.
     ///

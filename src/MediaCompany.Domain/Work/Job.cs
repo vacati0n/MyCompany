@@ -12,6 +12,20 @@ public enum LifecyclePosition
     OwnerReview = 7,
     Completed = 8,
     Abandoned = 9,
+
+    // The publishing path's positions, added to the DELIVERED lifecycle rather than held in a set
+    // of their own. The engine advances a unit over this enumeration through the workflow
+    // definition it is given, so a publishing position that is not in here is not a position the
+    // engine can move a unit to.
+    PublishingSurfaceProduction = 10,
+    PublishingTimingComputation = 11,
+    PublishingGateEvaluation = 12,
+
+    /// <summary>
+    /// The last position the publishing workflow declares. Nothing follows it, so a unit that
+    /// finishes it reaches a terminal claim state rather than a next position.
+    /// </summary>
+    PublishingComposed = 13,
 }
 
 /// <summary>The outcome recorded at each stage. No stage ends without one.</summary>
@@ -86,4 +100,30 @@ public sealed record FailurePolicy
 }
 
 /// <summary>A workflow definition: its ordered stages and the failure policy they run under.</summary>
-public sealed record WorkflowDefinition(string Name, IReadOnlyList<LifecyclePosition> Stages, FailurePolicy FailurePolicy);
+public sealed record WorkflowDefinition(string Name, IReadOnlyList<LifecyclePosition> Stages, FailurePolicy FailurePolicy)
+{
+    /// <summary>
+    /// The position that follows <paramref name="position"/>, or null when the workflow declares
+    /// none.
+    ///
+    /// This is the ONE implementation. The lifecycle engine advances a unit by asking this, and
+    /// every assertion about where a workflow ends reads the same method over the same declaration,
+    /// so a claim that a workflow has no successor to a position is a claim about the engine rather
+    /// than about a set declared beside it.
+    /// </summary>
+    public LifecyclePosition? Next(LifecyclePosition position)
+    {
+        for (var i = 0; i < Stages.Count - 1; i++)
+        {
+            if (Stages[i] == position)
+            {
+                return Stages[i + 1];
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Whether the workflow declares no position after <paramref name="position"/>.</summary>
+    public bool IsTerminal(LifecyclePosition position) => Next(position) is null;
+}

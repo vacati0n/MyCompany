@@ -17,6 +17,12 @@ namespace MediaCompany.Deterministic.Publication;
 /// </summary>
 public static class PublicationTiming
 {
+    /// <summary>The rule-determined step this type realizes, discovered by the build-time check.</summary>
+    public static readonly IReadOnlyList<string> TaskNames =
+    [
+        DeterministicTaskRegistry.PublicationTimingArithmetic,
+    ];
+
     /// <summary>
     /// The timing policy as a VALUE, so re-pointing the cadence is a configuration change and not
     /// a rebuild. It commits no publication date and no publication pattern: it describes how a
@@ -38,19 +44,6 @@ public static class PublicationTiming
         public required ItemVersion Version { get; init; }
         public required DateTimeOffset PlannedAt { get; init; }
         public required string Computation { get; init; }
-
-        /// <summary>
-        /// Always false, and it is a field rather than a comment so a reader can assert it. Nothing
-        /// in this build commits a publication date or a publication pattern.
-        /// </summary>
-        public bool CommitsAPublicationDate => false;
-
-        /// <summary>
-        /// Always false. No component reads a due time, so an elapsed planned time dispatches
-        /// nothing. The demonstration that lets a planned time elapse asserts against this and
-        /// against the absence of any reader.
-        /// </summary>
-        public bool IsRead => false;
     }
 
     /// <summary>
