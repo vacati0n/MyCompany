@@ -366,3 +366,64 @@ a run is overstating what is ahead. Two runs have now passed through it normally
 below human attention: the design validator's check `D17.6` rejected a decision record the
 producing agent had **signed**, because signing is the gate's act and not the producer's. The
 rule is not only a gate-time check — it is embedded in artifact validation.
+
+
+---
+
+## Finding 6 — cross-document identifier citation is unsafe inside framework artifacts, in BOTH directions
+
+**Severity: blocks a phase whenever an artifact cites an identifier from another document. Found
+twice in two runs; the second time it failed the artifact two different ways at once.**
+
+An artifact that cites an identifier belonging to another document fails validation, and there is
+**no form of the citation that succeeds**:
+
+| Case | Check | Why it fails |
+|---|---|---|
+| The foreign identifier has no local definition | `C6.2` — *"Every referenced identifier is defined in its declaring section"* | Resolution is against the artifact's **own** register. A foreign `D-201` is simply undefined. |
+| The foreign identifier collides with a register another role owns | `SD7` — *"The artifact issues no task, change, or design identifier owned downstream"* | Citing the owner record's corrections `C-001`–`C-003` was read as the scope phase **issuing implementation change-set identifiers**, i.e. acting outside its authority. |
+
+**Both checks scan the token. Qualifying the citation in prose does not help** — "owner decision
+`D-201` of the business decision record" fails exactly as bare `D-201` does.
+
+**The two failure modes are mutually exclusive as fixes.** Defining the foreign identifier locally
+to satisfy `C6.2` would make the artifact *issue* it, which is what `SD7` forbids. There is no
+token form that passes both.
+
+### The only safe form is descriptive citation with no token
+
+Refer to foreign material by **what it says**, never by its number: "the owner's decision that
+approvals are exercised against the built surface on the held item" rather than `D-201`.
+Provenance is preserved by the rationale stating who decided it, which is what a reader needs.
+
+### ⚠ This refines the `branch : identifier : title` convention adopted as `C-004`
+
+That convention — invented in the Wave 2 session and adopted as the general citation rule — **puts
+the identifier token in the text.** It is correct for **repository documents**, which no validator
+scans, and **wrong for framework artifacts**, which every validator does.
+
+**The rule should be split by destination:**
+
+- **Repository documents** (decision records, research, ledgers, reports): cite by identifier,
+  qualified by document. Unambiguous and checkable by a human reader.
+- **Framework artifacts** (anything under a run's `artifacts/`): **cite descriptively, with no
+  foreign identifier token of any family.** The artifact's registers are its own and nothing else
+  may appear in them.
+
+### How this was found, which is the part worth keeping
+
+The Wave 3 scope agent's **first** emission carried zero foreign `D-` identifiers and passed
+**53/53**. The orchestrator then instructed it to cite `D-201` and `D-202` by token. The agent
+complied but **recorded the deviation in its envelope's `C4` note rather than leaving it silent**,
+stating that these were the only identifiers in the artifact not defined in its own sections. The
+validator then failed it on exactly that, and additionally on the `C-00n` collision the
+instruction had not anticipated.
+
+**The agent was right, the instruction was wrong, and the disagreement was recoverable only
+because the agent wrote it down instead of quietly obeying.** That is the second time in this
+programme an agent's recorded objection has turned out to be the correct position.
+
+**Recommended fix upstream.** Either give artifacts a declared `external_references` section that
+`C6.2` and `SD7` both exempt, or have both checks resolve a citation's *namespace* before judging
+it. Until then, descriptive citation is the working answer and should be stated in the agent
+output contracts, because every agent will otherwise rediscover this the same way.
