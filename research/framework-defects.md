@@ -427,3 +427,45 @@ programme an agent's recorded objection has turned out to be the correct positio
 `C6.2` and `SD7` both exempt, or have both checks resolve a citation's *namespace* before judging
 it. Until then, descriptive citation is the working answer and should be stated in the agent
 output contracts, because every agent will otherwise rediscover this the same way.
+
+
+---
+
+## Defect 5 — CORRECTED. The recorded remedy was itself insufficient.
+
+**The original entry understated the defect and recommended a fix that does not fully work.**
+Established 2026-09-27 by reading the parser source rather than re-applying the workaround.
+
+**The mechanism, exactly.** The task-field pattern is
+`^\s*[-*]\s*Acceptance Criteria\s*:\s*(.*)$`. The `\s*` after the colon is **greedy and spans
+the newline and the following indent**, so `(.*)` swallows the **first nested bullet** into the
+field's value.
+
+**Therefore the arithmetic is one worse than recorded:**
+
+| Written criteria | Surviving the parse | Result |
+|---|---|---|
+| 1 | **0** | Fails `V4.1` and `V4.8` |
+| 2 | **1** | Passes, with **zero margin** |
+| 3 | 2 | Passes with a real second criterion |
+
+**The original note said the workaround was "giving each a genuinely distinct second criterion".
+That yields ONE surviving criterion.** It clears the blocking checks — which is why it appeared to
+work — but it leaves the task with a single assessable criterion, which is not what the author
+intended and not what the gate reviewer sees.
+
+**Observed live.** The Wave 3 planner's first draft had **seven tasks at two written criteria
+each**, all of which would have parsed to one. It added a genuinely distinct **third** condition
+to each — never padding; each a separately verifiable condition, for example a queue time of zero
+recorded as zero rather than omitted, an attempt whose record cannot be written leaving no
+attempt, and a step added without registration failing the build-time check rather than passing
+silently.
+
+**Also worth recording:** the Wave 2 execution plan passed at 70/70 with **20 of its 45 tasks at
+exactly two written criteria**. Those twenty each carried one surviving criterion. Nothing failed,
+and nobody would have known.
+
+**Corrected guidance until the parser is fixed: write at least THREE acceptance criteria per
+task**, so at least two survive. **Recommended fix unchanged and still right:** anchor the field
+pattern so it cannot span a newline, and add a validator fixture with a single-bullet field —
+plus, now, a fixture asserting that a two-bullet field yields two.
