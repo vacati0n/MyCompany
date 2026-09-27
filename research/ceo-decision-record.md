@@ -1450,3 +1450,86 @@ on an untested assumption**, and the same question arriving later with more behi
 **This does not settle the 290,000/87,000 ratio.** One operation establishes that the mechanism
 records what it claims to record. The ratio needs a production series. **Say that plainly rather
 than presenting the first record as vindication of the budget.**
+
+
+---
+
+## CEO-D-203 — Source-qualified identifier prefixes, adopted for documents and NOT sufficient for framework artifacts
+
+**Decided 2026-09-27 by the CEO**, after the by-kind ambiguity bit a third time. **This is the
+first identifier issued under the scheme it adopts.**
+
+### The decision
+
+**New identifiers carry a source qualifier:**
+
+| Family | Prefix | Meaning |
+|---|---|---|
+| Business decisions in this record | **`CEO-D-nnn`** | The owner's decisions |
+| Architecture decisions in a technical design | **`ADR-D-nnn`** | Design decisions |
+| Corrections in this record | **`CEO-C-nnn`** | Corrections to instructions or prior records |
+| Change-set entries in an implementation report | `C-nnn`, unprefixed | Local to that report, never cited elsewhere |
+
+**New identifiers only. Nothing already written is renumbered or renamed**, on the same reasoning
+that settled the earlier fork: citations live in artifacts that have passed their gates, and a
+silent move is worse than a visible mixed period.
+
+### ⚠ IT DOES NOT DO WHAT IT APPEARS TO DO INSIDE FRAMEWORK ARTIFACTS
+
+**Recorded prominently because the decision was taken expecting it would, and it will not.**
+
+The validators scan with `` + prefix + `-\d{3}`. **A hyphen is a word boundary**, so a
+qualifier in front of the token does not hide the token. Tested directly against the validator's
+own pattern:
+
+```
+SD7   prefix 'C' MATCHES 'CEO-C-001'      <- still an authority-boundary failure
+C6.2  family 'D' MATCHES 'CEO-D-203'      <- still an undefined-identifier failure
+C6.2  family 'D' MATCHES 'ADR-D-001'      <- still an undefined-identifier failure
+```
+
+Worse, **`ADR-` is itself one of the three prefixes the authority check already scans**, so that
+qualifier sits inside a namespace the framework has reserved for something else.
+
+### What therefore holds
+
+- **In repository documents** — this record, research files, ledgers, reports, plans — **the
+  prefix works and is adopted.** It resolves the by-kind ambiguity for every human reader and for
+  every cross-document join. That is a real gain and it is why the decision stands.
+- **Inside framework artifacts** — anything under a run's `artifacts/` — **descriptive citation
+  with no foreign identifier token of any family remains mandatory.** The prefix changes nothing
+  there. An artifact citing `CEO-D-203` fails exactly as one citing `D-203` does.
+
+### The cost this leaves unpaid, stated rather than hidden
+
+The Wave 3 scope agent argued that descriptive citation **degrades as documents accumulate**: a
+reader checking that a scope decision faithfully carries the owner's carve-out must currently find
+it by description, which works while one obvious match exists and stops working once the record
+holds several decisions on the same subject. **That argument is correct and this decision does not
+answer it for framework artifacts.** It answers it only for documents.
+
+### The fix that would actually close it — upstream, and now specified
+
+Either:
+
+1. **A declared `external_references` block** in the artifact contract, which `C6.2` and the
+   authority checks both exempt — so a cross-document citation becomes *expressible* rather than
+   merely undetectable; **or**
+2. **Namespace-aware resolution**: have both checks resolve a citation's namespace before judging
+   it, rather than pattern-matching the bare token.
+
+Option 1 is the smaller change and the one to propose. **Until one ships, the split rule above is
+the working answer**, and it should be stated in the agent output contracts so every agent does
+not rediscover it by failing validation.
+
+### How this was established
+
+The ambiguity was recorded as open on 2026-09-26 with the note that it would be resolved by
+prefixes *"if it starts to bite"*. It bit three times: twice in Wave 2 as citations resolving
+silently to the wrong definition, and once in Wave 3 as a **legitimate upstream correction being
+read as a downstream change-set entry, failing an authority-boundary check** — one level more
+serious than a misresolution, because the artifact was judged to have exceeded its authority.
+
+The insufficiency above was found by **reading the validator source and running its own regex**
+before implementing the decision, rather than adopting the scheme and discovering it at the next
+validation failure.
