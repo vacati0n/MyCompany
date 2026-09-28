@@ -135,6 +135,58 @@ internal sealed class NpgsqlJobWriter : IJobWriter
         };
     }
 
+    /// <summary>
+    /// Claims the NAMED job, only when it is ready and available by the datastore's own clock, or
+    /// returns null. The same skip-locked selection as <see cref="ClaimNextAsync"/>: a job another
+    /// transaction holds is skipped rather than waited for, so a named claim never blocks on, or
+    /// takes, a unit somebody else is working.
+    /// </summary>
+    public async Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand(
+            """
+            WITH candidate AS (
+                SELECT job_id
+                FROM jobs
+                WHERE job_id = @job_id AND claim_state = 'Ready' AND available_at <= now()
+                FOR UPDATE SKIP LOCKED
+            )
+            UPDATE jobs j
+               SET claim_state = 'Claimed',
+                   claimed_by = @worker,
+                   lease_expires_at = now() + @lease
+              FROM candidate
+             WHERE j.job_id = candidate.job_id
+            RETURNING j.job_id, j.item_id, j.channel_id, j.workflow, j.position,
+                      j.claim_state, j.available_at, j.claimed_by, j.lease_expires_at
+            """,
+            _connection,
+            _transaction);
+
+        command.Parameters.AddWithValue("job_id", job.Value);
+        command.Parameters.AddWithValue("worker", workerId);
+        command.Parameters.AddWithValue("lease", lease);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        return new Job
+        {
+            Id = new JobId(reader.GetGuid(0)),
+            Item = new ItemId(reader.GetGuid(1)),
+            Channel = new ChannelId(reader.GetGuid(2)),
+            Workflow = reader.GetString(3),
+            Position = Enum.Parse<LifecyclePosition>(reader.GetString(4)),
+            ClaimState = Enum.Parse<ClaimState>(reader.GetString(5)),
+            AvailableAt = reader.GetFieldValue<DateTimeOffset>(6),
+            ClaimedBy = reader.IsDBNull(7) ? null : reader.GetString(7),
+            LeaseExpiresAt = reader.IsDBNull(8) ? null : reader.GetFieldValue<DateTimeOffset>(8),
+        };
+    }
+
     public async Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken cancellationToken)
     {
         await using var command = new NpgsqlCommand(

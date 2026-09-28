@@ -690,6 +690,48 @@ public sealed class BoundaryTests
         }
     }
 
+    /// <summary>
+    /// The publishing entry point and the dossier recorder sit in the RULE-DETERMINED assembly, so
+    /// the no-model closure asserted above covers them by the same proof that covers every other
+    /// deterministic step: that assembly references the domain and the ports and nothing else, so
+    /// neither service can name the capability boundary or the credential broker, and a model call
+    /// from either does not compile.
+    ///
+    /// The second half holds them to it from the other side. Every dependency either takes is
+    /// declared in the domain, the ports or the rule-determined assembly itself, so neither can be
+    /// handed a capability, a credential or a persistence adapter by the composition root either.
+    /// </summary>
+    [Fact]
+    public void TheEntryPointAndTheDossierRecorderSitInTheRuleDeterminedAssembly()
+    {
+        var permitted = new[] { Domain, Application, Deterministic };
+
+        foreach (var service in new[] { typeof(PublishingSequenceService), typeof(ItemDossierRecorder) })
+        {
+            Assert.Equal(Deterministic, service.Assembly.GetName().Name);
+
+            var dependencies = service.GetConstructors()
+                .SelectMany(c => c.GetParameters())
+                .Select(p => p.ParameterType)
+                .Concat(service
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
+                    .Where(f => f.DeclaringType == service)
+                    .Select(f => f.FieldType))
+                .ToArray();
+
+            Assert.NotEmpty(dependencies);
+
+            foreach (var dependency in dependencies)
+            {
+                var owner = dependency.Assembly.GetName().Name ?? string.Empty;
+                Assert.True(
+                    permitted.Contains(owner) || owner.StartsWith("System", StringComparison.Ordinal),
+                    $"{service.Name} depends on {dependency.FullName}, declared in {owner}, outside the domain, the ports "
+                    + "and the rule-determined assembly");
+            }
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Decision D-002 — where the analytics surface is declared, and what it may carry
     // -----------------------------------------------------------------------
@@ -772,6 +814,20 @@ public sealed class BoundaryTests
         "MediaCompany.Deterministic.Services.ReportedMeasure.Source",
         "MediaCompany.Domain.Analytics.SingleRecordCaveat.Standard",
         "MediaCompany.Deterministic.Reporting.MeasureCatalogue.RevenueDerivedNames",
+
+        // Wave 5. The tier ratio's required definition, and the required statement each reading
+        // carries of what its record set does and does not establish; each is composed by the
+        // surface, never copied out of a record.
+        "MediaCompany.Domain.Analytics.TierRatioReadModel.Definition",
+        "MediaCompany.Domain.Analytics.ThroughputReadModel.Statement",
+        "MediaCompany.Domain.Analytics.ItemDossierReadModel.Statement",
+        "MediaCompany.Domain.Analytics.SupplyAuditReading.Statement",
+        "MediaCompany.Domain.Analytics.DeterminationReading.Statement",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.TierRatioDefinition",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.ThroughputStatement",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.DossierStatement",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.SupplyAuditStatement",
+        "MediaCompany.Deterministic.Analytics.AnalyticsComposers.DeterminationStatement",
     ];
 
     /// <summary>
@@ -1197,6 +1253,7 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         public IGateWriter Gates { get; } = new NoGates();
         public IRouteAvailabilityWriter Availability { get; } = new NoAvailability();
         public IDispatchWriter Dispatches { get; } = new NoDispatches();
+        public IDossierWriter Dossiers { get; } = new NoDossiers();
 
         public Task CommitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -1210,6 +1267,9 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         public Task RecordStageAsync(JobStage stage, CancellationToken ct) => Task.CompletedTask;
 
         public Task<Job?> ClaimNextAsync(string workerId, TimeSpan lease, CancellationToken ct) =>
+            Task.FromResult<Job?>(null);
+
+        public Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken ct) =>
             Task.FromResult<Job?>(null);
 
         public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct) =>
@@ -1280,6 +1340,29 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         public Task RecordAttemptAsync(
             MediaCompany.Domain.Publication.AttemptRecord attempt, CancellationToken ct) =>
             throw new NotSupportedException("the lifecycle engine records no attempt");
+    }
+
+    private sealed class NoDossiers : IDossierWriter
+    {
+        public Task OpenAsync(MediaCompany.Domain.ItemId item, MediaCompany.Domain.ItemVersion version,
+            DateTimeOffset openedAt, CancellationToken ct) =>
+            throw new NotSupportedException("the lifecycle engine opens no dossier");
+
+        public Task RecordStageAsync(MediaCompany.Domain.ItemId item, MediaCompany.Domain.ItemVersion version,
+            MediaCompany.Domain.Dossier.StageEvidence evidence, CancellationToken ct) =>
+            throw new NotSupportedException("the lifecycle engine records no stage evidence");
+
+        public Task RecordSupplyAuditAsync(MediaCompany.Domain.ItemId item, MediaCompany.Domain.ItemVersion version,
+            MediaCompany.Domain.Dossier.SupplyAuditEntry entry, CancellationToken ct) =>
+            throw new NotSupportedException("the lifecycle engine records no supply audit");
+
+        public Task RecordDeterminationAsync(MediaCompany.Domain.ItemId item, MediaCompany.Domain.ItemVersion version,
+            MediaCompany.Domain.Dossier.DeterminationResolution resolution, CancellationToken ct) =>
+            throw new NotSupportedException("the lifecycle engine records no determination");
+
+        public Task RecordComponentAsync(MediaCompany.Domain.ItemId item, MediaCompany.Domain.ItemVersion version,
+            DossierComponent component, DateTimeOffset recordedAt, CancellationToken ct) =>
+            throw new NotSupportedException("the lifecycle engine records no dossier component");
     }
 }
 

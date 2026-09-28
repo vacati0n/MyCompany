@@ -1,5 +1,6 @@
 using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Audit;
+using MediaCompany.Domain.Dossier;
 using MediaCompany.Domain.Work;
 
 namespace MediaCompany.Application.Ports;
@@ -57,6 +58,15 @@ public interface IWorkTransaction : IAsyncDisposable
     /// without a queue entry nor a queue entry without a dispatch.
     /// </summary>
     IDispatchWriter Dispatches { get; }
+
+    /// <summary>
+    /// The item dossier: its header, its typed components and its payload components.
+    ///
+    /// Reachable ONLY from a transaction, exactly as every other writer is, so a recorded
+    /// component and the audit entry that records it commit together, and a component the
+    /// datastore refuses leaves neither behind.
+    /// </summary>
+    IDossierWriter Dossiers { get; }
 
     Task CommitAsync(CancellationToken cancellationToken);
 }
@@ -229,6 +239,13 @@ public interface IJobWriter
     /// </summary>
     Task<Job?> ClaimNextAsync(string workerId, TimeSpan lease, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Claims the NAMED unit for <paramref name="workerId"/>, only when it is ready and available,
+    /// or returns null. The same skip-locked discipline and the same datastore clock as
+    /// <see cref="ClaimNextAsync"/>, so a caller driving one unit claims that unit and no other.
+    /// </summary>
+    Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken cancellationToken);
+
     Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken cancellationToken);
 
     /// <summary>
@@ -259,4 +276,114 @@ public interface IBudgetEvaluator
         DateOnly period,
         DateTimeOffset raisedAt,
         CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The item dossier's writer (decision D-004 of the accepted design), reachable only from a
+/// transaction.
+///
+/// A header row per item version is written once, when the dossier is opened, and is the
+/// observation boundary: every component is recorded against an opened dossier, and a component
+/// recorded against one that was never opened is refused by the datastore. Stage evidence,
+/// supply-audit entries and determination resolutions have typed homes whose table checks admit
+/// exactly the row shapes the domain rules admit; the remaining components are held one row per
+/// recorded component as one structured payload. Every row is written once.
+/// </summary>
+public interface IDossierWriter
+{
+    /// <summary>Opens the dossier of one item version. A second opening of the same version is refused.</summary>
+    Task OpenAsync(ItemId item, ItemVersion version, DateTimeOffset openedAt, CancellationToken cancellationToken);
+
+    /// <summary>Records one production stage's outcome. One outcome per stage per item version.</summary>
+    Task RecordStageAsync(ItemId item, ItemVersion version, StageEvidence evidence, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records one supply-audit entry, holding its count exactly as the entry holds it: a zero as
+    /// zero and an absent count as absent.
+    /// </summary>
+    Task RecordSupplyAuditAsync(ItemId item, ItemVersion version, SupplyAuditEntry entry, CancellationToken cancellationToken);
+
+    /// <summary>Records one determination's resolution. One resolution per determination per item version.</summary>
+    Task RecordDeterminationAsync(
+        ItemId item,
+        ItemVersion version,
+        DeterminationResolution resolution,
+        CancellationToken cancellationToken);
+
+    /// <summary>Records one payload component. The four singleton kinds are unique per item version.</summary>
+    Task RecordComponentAsync(
+        ItemId item,
+        ItemVersion version,
+        DossierComponent component,
+        DateTimeOffset recordedAt,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The closed set of dossier components held as one structured payload each. The four quantity-
+/// free singletons are unique per item version; the other four are one row per recorded entry.
+/// </summary>
+public enum DossierComponentKind
+{
+    TreatmentVerdict = 1,
+    AudienceDesignation = 2,
+    VisualProvenance = 3,
+    ClipOriginAssessment = 4,
+    ClaimAttribution = 5,
+    ItemMetadata = 6,
+    OriginalityAssessment = 7,
+    Runtime = 8,
+}
+
+/// <summary>
+/// One payload component of the item dossier. A closed union: each case carries exactly the
+/// delivered domain value it records, and there is no case a writer could fill with anything else.
+/// </summary>
+public abstract record DossierComponent
+{
+    private DossierComponent()
+    {
+    }
+
+    public abstract DossierComponentKind Kind { get; }
+
+    public sealed record Treatment(TreatmentVerdict Verdict) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.TreatmentVerdict;
+    }
+
+    public sealed record Audience(AudienceDesignation Designation) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.AudienceDesignation;
+    }
+
+    public sealed record Visual(VisualProvenance Provenance) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.VisualProvenance;
+    }
+
+    public sealed record ClipOrigin(ClipOriginAssessment Assessment) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.ClipOriginAssessment;
+    }
+
+    public sealed record Claim(ClaimAttribution Attribution) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.ClaimAttribution;
+    }
+
+    public sealed record Metadata(ItemMetadata Surfaces) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.ItemMetadata;
+    }
+
+    public sealed record Originality(FootageRemovalAssessment Assessment) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.OriginalityAssessment;
+    }
+
+    public sealed record Runtime(TimeSpan Duration) : DossierComponent
+    {
+        public override DossierComponentKind Kind => DossierComponentKind.Runtime;
+    }
 }

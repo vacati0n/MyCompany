@@ -254,6 +254,6 @@ public sealed class AnalyticsRepresentationTests
         var unmeasured = MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "none recorded");
 
         Assert.Throws<ArgumentException>(
-            () => new TierRatioReadModel(new DateOnly(2026, 10, 1), unmeasured, caveat, " "));
+            () => new TierRatioReadModel(new DateOnly(2026, 10, 1), unmeasured, caveat, " ", "a stated definition"));
     }
 }

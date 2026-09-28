@@ -71,6 +71,14 @@ public static class CompositionRoot
         services.AddSingleton<IRevenueParameterRegister>(sp =>
             new NpgsqlRevenueParameterRegister(sp.GetRequiredService<NpgsqlDataSource>()));
 
+        // The throughput reader over the append-only record, and the item dossier reader over the
+        // dossier register the fifth schema resource creates empty. Both read upward from below
+        // the ports; neither writes.
+        services.AddSingleton<IThroughputReader>(sp =>
+            new NpgsqlThroughputReader(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IItemDossierReader>(sp =>
+            new NpgsqlItemDossierReader(sp.GetRequiredService<NpgsqlDataSource>()));
+
         // The credential broker — the only module holding a dependency on the secret store.
         services.AddSingleton(sp =>
         {
@@ -104,6 +112,12 @@ public static class CompositionRoot
         services.AddSingleton<ReportingService>();
         services.AddSingleton<OperatingRegisterReport>();
         services.AddSingleton<PermissionAnswerService>();
+
+        // The dossier recorder a production step writes through, and the publishing entry point.
+        // Both sit in the rule-determined assembly, so neither can take the capability gateway or
+        // the credential broker, and neither reads a configuration value.
+        services.AddSingleton<ItemDossierRecorder>();
+        services.AddSingleton<PublishingSequenceService>();
 
         // The analytics surface. It takes read ports and a clock and nothing else; it could not
         // take the capability gateway, because its assembly does not reference the one that

@@ -2,6 +2,7 @@ using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Configuration;
+using MediaCompany.Domain.Dossier;
 using MediaCompany.Domain.Publication;
 using MediaCompany.Domain.Registry;
 using MediaCompany.Domain.Rights;
@@ -208,3 +209,77 @@ public interface IRevenueParameterRegister
 
     Task RecordAsync(RevenueParameterRecord parameter, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// The throughput reader (decision D-003 of the accepted design).
+///
+/// It reads the append-only record by action and instant and by nothing else: no reason, subject,
+/// reference or other free-form column of an entry is read. The record is the source because the
+/// lifecycle writes an entry for every transition in the transaction that makes it, whereas the
+/// queue table holds only the current claim state and is overwritten on every claim, release and
+/// advance, so a count taken from it over a closed period could change after it was read.
+///
+/// It returns BARE COUNTS on a boundary summary, exactly as the delivered cost summaries do. They
+/// become quantities at one composing site only, which decides every measurement case; nothing
+/// here decides whether a count was observed.
+/// </summary>
+public interface IThroughputReader
+{
+    /// <summary>
+    /// The action counts over the half-open interval from <paramref name="periodStart"/> to
+    /// <paramref name="periodEnd"/>, the record's earliest instant, and the instant the datastore
+    /// read them at, by its own clock.
+    /// </summary>
+    Task<ThroughputSummary> ReadAsync(DateTimeOffset periodStart, DateTimeOffset periodEnd, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// What the append-only record held for one half-open interval, as counts of lifecycle actions.
+///
+/// The in-period counts are the entries whose instant lies in the interval. The to-close counts
+/// are every entry up to the interval's close, which is what the units waiting at the close are
+/// reconstructed from: arrivals into the ready queue less the claims that took units out of it.
+/// <see cref="EarliestEntry"/> is null when the record holds no entry at all.
+/// </summary>
+public sealed record ThroughputSummary(
+    DateTimeOffset PeriodStart,
+    DateTimeOffset PeriodEnd,
+    DateTimeOffset? EarliestEntry,
+    DateTimeOffset ReadAt,
+    long EnqueuedToClose,
+    long StageSucceededToClose,
+    long RetriedToClose,
+    long ClaimedToClose,
+    long ClaimedInPeriod,
+    long RetriedInPeriod,
+    long EscalatedInPeriod,
+    long CompletedInPeriod);
+
+/// <summary>
+/// The item dossier reader (decision D-004 of the accepted design). One member per recorded
+/// source, each answering for ONE item version and never for another version of the same item.
+///
+/// Every member returns null where no dossier header exists for the item version, and only
+/// there: null means "no dossier was opened", which is a different fact from a dossier that was
+/// opened and holds no row of the kind asked for, returned as an empty list.
+/// </summary>
+public interface IItemDossierReader
+{
+    /// <summary>The reconstituted dossier with the channel its item belongs to, or null where none was opened.</summary>
+    Task<RecordedDossier?> DossierAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
+
+    /// <summary>The recorded stage outcomes, or null where no dossier was opened.</summary>
+    Task<IReadOnlyList<StageEvidence>?> StageEvidenceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
+
+    /// <summary>The recorded supply-audit entries, or null where no dossier was opened.</summary>
+    Task<IReadOnlyList<SupplyAuditEntry>?> SupplyAuditAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
+
+    /// <summary>The recorded determination resolutions, or null where no dossier was opened.</summary>
+    Task<IReadOnlyList<DeterminationResolution>?> DeterminationsAsync(
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>A dossier read back from the record store, with the channel its item belongs to.</summary>
+public sealed record RecordedDossier(ItemDossier Dossier, ChannelId Channel, DateTimeOffset OpenedAt);

@@ -24,9 +24,20 @@ public sealed class WorkLifecycleService
         _clock = clock;
     }
 
-    public async Task EnqueueAsync(Job job, CancellationToken cancellationToken)
+    /// <summary>
+    /// Enqueues a unit and writes its pending stage row and its entry in one transaction.
+    ///
+    /// Returns the instant the pending stage row was entered at. The stage row is keyed on the
+    /// unit, the position and that instant, so a caller that later records the outcome of this
+    /// first position closes THIS row only if it supplies the same instant; without it the
+    /// outcome lands in a second row and the pending one stays open. Existing callers that await
+    /// the task and ignore the instant behave exactly as before.
+    /// </summary>
+    public async Task<DateTimeOffset> EnqueueAsync(Job job, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(job);
+
+        var enteredAt = _clock.UtcNow;
 
         await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
         await transaction.Jobs.EnqueueAsync(job, cancellationToken).ConfigureAwait(false);
@@ -38,12 +49,14 @@ public sealed class WorkLifecycleService
                 Outcome = StageOutcome.Pending,
                 Attempts = 0,
                 Escalated = false,
-                EnteredAt = _clock.UtcNow,
+                EnteredAt = enteredAt,
             },
             cancellationToken).ConfigureAwait(false);
-        await transaction.Audit.AppendAsync(Entry(job, "job.enqueued", "queued for production"), cancellationToken)
+        await transaction.Audit.AppendAsync(Entry(job, LifecycleActions.Enqueued, "queued for production"), cancellationToken)
             .ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+        return enteredAt;
     }
 
     /// <summary>
@@ -61,7 +74,32 @@ public sealed class WorkLifecycleService
             return null;
         }
 
-        await transaction.Audit.AppendAsync(Entry(job, "job.claimed", $"claimed by {workerId}"), cancellationToken)
+        await transaction.Audit.AppendAsync(Entry(job, LifecycleActions.Claimed, $"claimed by {workerId}"), cancellationToken)
+            .ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return job;
+    }
+
+    /// <summary>
+    /// Claims ONE NAMED unit, and only when it is ready and available, or returns null.
+    ///
+    /// The delivered claim takes the oldest ready unit of any workflow, so a caller driving one
+    /// unit through its positions could otherwise claim somebody else's. This claim takes the
+    /// unit it is given under the same skip-locked discipline and the same datastore clock, and
+    /// writes the same claim entry, so the throughput reading counts it exactly as it counts the
+    /// delivered claim.
+    /// </summary>
+    public async Task<Job?> ClaimUnitAsync(JobId unit, string workerId, TimeSpan lease, CancellationToken cancellationToken)
+    {
+        await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
+        var job = await transaction.Jobs.ClaimAsync(unit, workerId, lease, cancellationToken).ConfigureAwait(false);
+        if (job is null)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+
+        await transaction.Audit.AppendAsync(Entry(job, LifecycleActions.Claimed, $"claimed by {workerId}"), cancellationToken)
             .ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return job;
@@ -143,7 +181,7 @@ public sealed class WorkLifecycleService
             }
 
             await ok.Audit.AppendAsync(
-                Entry(job, finished ? "job.completed" : "job.stage-succeeded",
+                Entry(job, finished ? LifecycleActions.Completed : LifecycleActions.StageSucceeded,
                       finished ? $"{position} was the last position of {workflow.Name}" : $"{position} succeeded"),
                 cancellationToken).ConfigureAwait(false);
             await ok.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -182,7 +220,7 @@ public sealed class WorkLifecycleService
             cancellationToken).ConfigureAwait(false);
         await transaction.Jobs.ReleaseAsync(job.Id, claimState, availableAt, cancellationToken).ConfigureAwait(false);
         await transaction.Audit.AppendAsync(
-            Entry(job, escalated ? "job.stage-escalated" : "job.stage-retried", failureReason ?? outcome.ToString()),
+            Entry(job, escalated ? LifecycleActions.StageEscalated : LifecycleActions.StageRetried, failureReason ?? outcome.ToString()),
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

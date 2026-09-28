@@ -61,11 +61,70 @@ public sealed record ApprovalExerciseLabel
 }
 
 /// <summary>
+/// How one approval-effort component resolved at the derivation site. A component is either
+/// derived from its own recorded marks, or it is not, and then the result says which mark is
+/// absent or which marks are inconsistent. Each component resolves from its own marks alone, so
+/// a missing mark makes only the component derived from it undeterminable.
+/// </summary>
+public enum ApprovalComponentState
+{
+    /// <summary>The interval was derived from the component's own recorded marks.</summary>
+    Derived = 1,
+
+    /// <summary>A mark the component is derived from was not recorded.</summary>
+    MarkAbsent = 2,
+
+    /// <summary>The marks were recorded and are inconsistent with one another, so no interval exists.</summary>
+    MarksInconsistent = 3,
+}
+
+/// <summary>
+/// One component's result: a derived interval, or a statement naming the mark that is absent or
+/// the marks that are inconsistent. The interval is present exactly when the component was
+/// derived; a component that was not derived carries no interval to be read as zero.
+/// </summary>
+public sealed record ApprovalComponentResult
+{
+    private ApprovalComponentResult(ApprovalComponentState state, TimeSpan? interval, string statement)
+    {
+        State = state;
+        Interval = interval;
+        Statement = statement;
+    }
+
+    public ApprovalComponentState State { get; }
+
+    /// <summary>The derived interval. Null unless <see cref="State"/> is derived.</summary>
+    public TimeSpan? Interval { get; }
+
+    /// <summary>The mark that is absent or the marks that are inconsistent. Empty when derived.</summary>
+    public string Statement { get; }
+
+    internal static ApprovalComponentResult Derived(TimeSpan interval) =>
+        interval < TimeSpan.Zero
+            ? throw new ArgumentOutOfRangeException(nameof(interval), "A derived interval is not negative.")
+            : new ApprovalComponentResult(ApprovalComponentState.Derived, interval, string.Empty);
+
+    internal static ApprovalComponentResult Absent(string statement) =>
+        new(ApprovalComponentState.MarkAbsent, null, statement);
+
+    internal static ApprovalComponentResult Inconsistent(string statement) =>
+        new(ApprovalComponentState.MarksInconsistent, null, statement);
+}
+
+/// <summary>
 /// One approval's three separated quantities (module M-027, constraint C-012 of the design).
 ///
 /// Review, queue and rework are three DERIVED quantities over recorded marks, never entered. The
 /// derivation is the whole reason the marks exist: a single elapsed figure silently includes queue
 /// time, and a threshold derived from it would relax per-publication approval on the wrong number.
+///
+/// Two readings of the same marks are carried, both computed HERE, at the one derivation site. The
+/// whole-row members keep their delivered meaning exactly — a row missing any one quantity
+/// resolves unmeasured and carries no interval at all — so the approval surface exercise and the
+/// datastore view read unchanged. The three component results resolve each quantity from its own
+/// marks alone, so a missing queued mark makes the queue component undeterminable and leaves the
+/// review and rework components as derived.
 /// </summary>
 public sealed record ApprovalMeasurement
 {
@@ -77,7 +136,10 @@ public sealed record ApprovalMeasurement
         TimeSpan? queueTime,
         TimeSpan? reworkTime,
         string unmeasuredReason,
-        ApprovalExerciseLabel label)
+        ApprovalExerciseLabel label,
+        ApprovalComponentResult reviewComponent,
+        ApprovalComponentResult queueComponent,
+        ApprovalComponentResult reworkComponent)
     {
         Item = item;
         Version = version;
@@ -87,6 +149,9 @@ public sealed record ApprovalMeasurement
         ReworkTime = reworkTime;
         UnmeasuredReason = unmeasuredReason;
         Label = label;
+        ReviewComponent = reviewComponent;
+        QueueComponent = queueComponent;
+        ReworkComponent = reworkComponent;
     }
 
     public ItemId Item { get; }
@@ -112,6 +177,19 @@ public sealed record ApprovalMeasurement
     public ApprovalExerciseLabel Label { get; }
 
     /// <summary>
+    /// Review, from the presentation and decision instants alone. Both marks are mandatory on the
+    /// approval type and in the table, so this component is derived on every approval that exists:
+    /// a review mark missing is a construction the type refuses, not a component that resolves.
+    /// </summary>
+    public ApprovalComponentResult ReviewComponent { get; }
+
+    /// <summary>Queue, from the queued mark and the presentation alone.</summary>
+    public ApprovalComponentResult QueueComponent { get; }
+
+    /// <summary>Rework, from the rework link, the predecessor's decision and the presentation alone.</summary>
+    public ApprovalComponentResult ReworkComponent { get; }
+
+    /// <summary>
     /// Derives the three quantities from an approval's recorded marks.
     ///
     /// The approval must carry the queued mark for queue time to be derivable, and the rework link
@@ -126,11 +204,14 @@ public sealed record ApprovalMeasurement
         ArgumentNullException.ThrowIfNull(approval);
         ArgumentNullException.ThrowIfNull(label);
 
-        var missing = new List<string>();
+        // Review: both marks are mandatory and the approval type refuses a decision earlier than
+        // its presentation, so the interval is always derivable and never negative.
+        var review = ApprovalComponentResult.Derived(approval.DecidedAt - approval.PresentedAt);
 
+        ApprovalComponentResult queue;
         if (approval.QueuedAt is null)
         {
-            missing.Add("queue time (no queued mark was recorded)");
+            queue = ApprovalComponentResult.Absent("queue time (no queued mark was recorded)");
         }
         else if (approval.QueuedAt > approval.PresentedAt)
         {
@@ -140,32 +221,45 @@ public sealed record ApprovalMeasurement
             // queue time would. The constructor and a datastore check both bar this today, so the
             // branch is unreachable by any supported route; it is here because the rule is that a
             // component that was not measured resolves as unmeasured, without exception.
-            missing.Add("queue time (the queued mark is later than the presentation)");
+            queue = ApprovalComponentResult.Inconsistent("queue time (the queued mark is later than the presentation)");
+        }
+        else
+        {
+            queue = ApprovalComponentResult.Derived(approval.PresentedAt - approval.QueuedAt.Value);
         }
 
         // Rework time is derivable when the approval declares a predecessor and that predecessor
         // was supplied. A first-pass approval has no rework, which is a measured zero rather than
         // a missing quantity: nothing was reworked, and that is an observation, not an absence.
-        TimeSpan? rework = null;
+        ApprovalComponentResult rework;
         if (approval.ReworkOf is null)
         {
-            rework = TimeSpan.Zero;
+            rework = ApprovalComponentResult.Derived(TimeSpan.Zero);
         }
         else if (reworkPredecessor is null)
         {
-            missing.Add("rework time (the approval names a predecessor that was not supplied)");
+            rework = ApprovalComponentResult.Absent("rework time (the approval names a predecessor that was not supplied)");
+        }
+        else if (approval.PresentedAt - reworkPredecessor.DecidedAt < TimeSpan.Zero)
+        {
+            rework = ApprovalComponentResult.Inconsistent(
+                "rework time (the predecessor was decided after this approval was presented)");
         }
         else
         {
-            rework = approval.PresentedAt - reworkPredecessor.DecidedAt;
-            if (rework < TimeSpan.Zero)
-            {
-                missing.Add("rework time (the predecessor was decided after this approval was presented)");
-                rework = null;
-            }
+            rework = ApprovalComponentResult.Derived(approval.PresentedAt - reworkPredecessor.DecidedAt);
         }
 
-        if (missing.Count > 0)
+        // The whole-row resolution, from the SAME component results, so the two readings of one
+        // approval cannot be computed by different rules. Its meaning is the delivered one: any
+        // component not derived makes the row unmeasured and nulls all three intervals, and the
+        // missing-quantity statement is the delivered text, in the delivered order.
+        var missing = new[] { queue, rework }
+            .Where(c => c.State != ApprovalComponentState.Derived)
+            .Select(c => c.Statement)
+            .ToArray();
+
+        if (missing.Length > 0)
         {
             return new ApprovalMeasurement(
                 approval.Item,
@@ -175,23 +269,24 @@ public sealed record ApprovalMeasurement
                 null,
                 null,
                 string.Join("; ", missing),
-                label);
+                label,
+                review,
+                queue,
+                rework);
         }
-
-        // Both intervals are non-negative here: an inverted queue mark resolved as unmeasured
-        // above, and the approval type refuses a decision earlier than its presentation.
-        var queue = approval.PresentedAt - approval.QueuedAt!.Value;
-        var review = approval.DecidedAt - approval.PresentedAt;
 
         return new ApprovalMeasurement(
             approval.Item,
             approval.ItemVersion,
             ApprovalMeasurementResolution.Measured,
+            review.Interval,
+            queue.Interval,
+            rework.Interval,
+            string.Empty,
+            label,
             review,
             queue,
-            rework,
-            string.Empty,
-            label);
+            rework);
     }
 }
 

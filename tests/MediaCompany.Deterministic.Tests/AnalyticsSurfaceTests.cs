@@ -134,7 +134,10 @@ public sealed class AnalyticsSurfaceTests
 
         var queue = Assert.IsType<MeasurementQuantity.Unmeasured>(model.Queue);
         Assert.Contains("no queued mark", queue.Detail, StringComparison.Ordinal);
-        Assert.IsType<MeasurementQuantity.Unmeasured>(model.Review);
+
+        // The review component is derived from its own two marks, both recorded, so it reports
+        // what was recorded rather than inheriting the queue component's absence.
+        Assert.Equal("2 minutes", model.Review.Describe());
 
         // And no threshold, target or pass line is stated anywhere in the output.
         foreach (var word in new[] { "threshold", "target", "pass line", "should be", "acceptable" })

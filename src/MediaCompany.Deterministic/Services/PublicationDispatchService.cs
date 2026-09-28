@@ -38,6 +38,33 @@ public sealed class PublicationDispatchService
     /// composed attempt writes the dispatch record, the attempt row, the gate transition, the
     /// queue entry and the audit entry together.
     /// </summary>
+    public Task<DispatchPersistResult> PersistAsync(
+        DispatchOutcome outcome,
+        ItemId item,
+        ItemVersion version,
+        DestinationDescriptor destination,
+        string approvedBy,
+        string metadataAndSettingsDigest,
+        JobId? job,
+        GateStateChange? gateStateChange,
+        CancellationToken cancellationToken) =>
+        PersistAsync(
+            outcome, item, version, destination, approvedBy, metadataAndSettingsDigest,
+            job, gateStateChange, terminalStage: null, cancellationToken);
+
+    /// <summary>
+    /// Writes the outcome of one dispatch attempt and, where the attempt creates the dispatch
+    /// record and brings the supplied unit to its terminal claim state, CLOSES THAT UNIT'S STAGE
+    /// ROW at composition and writes the lifecycle completion entry, in the same transaction.
+    ///
+    /// Without the closure the delivered path leaves a pending stage row at the composition
+    /// position and writes no completion entry, so a finished unit's stage history would show
+    /// composition as never ending and the completion count would miss it. The closure is written
+    /// ONLY on a created dispatch with an advanced unit: a refused attempt and an attempt that
+    /// resolves to a record already there write neither, so neither the stage history nor the
+    /// completion count states an event that did not occur. A caller that supplies no closure
+    /// receives exactly the delivered behaviour.
+    /// </summary>
     public async Task<DispatchPersistResult> PersistAsync(
         DispatchOutcome outcome,
         ItemId item,
@@ -47,10 +74,28 @@ public sealed class PublicationDispatchService
         string metadataAndSettingsDigest,
         JobId? job,
         GateStateChange? gateStateChange,
+        JobStage? terminalStage,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(outcome);
         ArgumentNullException.ThrowIfNull(destination);
+
+        if (terminalStage is { } closure)
+        {
+            if (job is not { } forUnit || !closure.Job.Equals(forUnit))
+            {
+                throw new ArgumentException(
+                    "A terminal-stage closure closes the stage row of the unit this dispatch advances, and of no other.",
+                    nameof(terminalStage));
+            }
+
+            if (closure.Position != LifecyclePosition.PublishingComposed || closure.Outcome != StageOutcome.Succeeded)
+            {
+                throw new ArgumentException(
+                    "A terminal-stage closure records composition as succeeded; it closes no other position.",
+                    nameof(terminalStage));
+            }
+        }
 
         var now = _clock.UtcNow;
         var attempt = PublicationDispatchComposer.RecordFor(
@@ -136,6 +181,20 @@ public sealed class PublicationDispatchService
                     next is null ? ClaimState.Done : ClaimState.Ready,
                     now,
                     cancellationToken).ConfigureAwait(false);
+
+                // The terminal-stage closure and the completion entry, only when the unit was just
+                // brought to its terminal claim state. Composition is then recorded as having
+                // ended, on the same row the pending entry opened, and the completion is one
+                // action whichever path finished the unit.
+                if (next is null && terminalStage is { } closing)
+                {
+                    await transaction.Jobs.RecordStageAsync(
+                        closing with { LeftAt = closing.LeftAt ?? now },
+                        cancellationToken).ConfigureAwait(false);
+
+                    await transaction.Audit.AppendAsync(
+                        CompletionEntry(jobId, item), cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
@@ -172,6 +231,25 @@ public sealed class PublicationDispatchService
         Decision = action,
         CostReference = "none",
         Risk = $"approval:{approvedBy}",
+        RetentionClass = RetentionClass.OperationalRecord,
+    };
+
+    /// <summary>
+    /// The lifecycle completion entry, in the lifecycle's own shape and under the one declared
+    /// action name, so the throughput reading counts a unit the dispatch finished exactly as it
+    /// counts one the lifecycle finished.
+    /// </summary>
+    private static AuditEntryDraft CompletionEntry(JobId job, ItemId item) => new()
+    {
+        Actor = "lifecycle",
+        Action = LifecycleActions.Completed,
+        Subject = $"job:{job} item:{item}",
+        Reason = $"{LifecyclePosition.PublishingComposed} was the last position of {PublishingWorkflow.Name}",
+        InputsReference = $"workflow:{PublishingWorkflow.Name} position:{LifecyclePosition.PublishingComposed}",
+        OutputsReference = $"claim-state:{ClaimState.Done}",
+        Decision = LifecycleActions.Completed,
+        CostReference = "none",
+        Risk = "none",
         RetentionClass = RetentionClass.OperationalRecord,
     };
 }
