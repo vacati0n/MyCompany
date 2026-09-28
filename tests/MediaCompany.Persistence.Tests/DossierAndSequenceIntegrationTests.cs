@@ -581,6 +581,33 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
             c => c.Parameters.AddWithValue("action", LifecycleActions.Completed)));
     }
 
+    /// <summary>
+    /// Recorded state: the installed store, driven by a process whose clock runs AHEAD of the
+    /// datastore's. The unit is enqueued available at an instant the datastore has not reached, so
+    /// the named claim, which measures availability by the datastore's own clock, does not take it:
+    /// the drive comes to rest unclaimed at the first position, runs no step, and writes no
+    /// attempt, rather than claiming a unit that is not yet available.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AUnitNotYetAvailableByTheDatastoresClockRestsUnclaimed()
+    {
+        var ahead = new SteppingClock(DateTimeOffset.UtcNow.AddDays(1));
+        var unitOfWork = new NpgsqlUnitOfWork(Source, ahead);
+        var sequence = new PublishingSequenceService(
+            new WorkLifecycleService(unitOfWork, ahead),
+            new PublicationGateService(new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), unitOfWork, ahead),
+            new PublicationDispatchService(unitOfWork, ahead),
+            ahead);
+
+        var result = await sequence.DriveAsync(Request(), CancellationToken.None);
+
+        Assert.Equal(PublishingSequenceRest.NotClaimable, result.Rest);
+        Assert.Equal(LifecyclePosition.Queued, result.RestingPosition);
+        Assert.Empty(result.PositionsDriven);
+        Assert.Equal("Ready", await JobStateAsync(result.Unit));
+        Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM publication_attempts"));
+    }
+
     // -----------------------------------------------------------------------
     // Harness
     // -----------------------------------------------------------------------
