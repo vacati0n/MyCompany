@@ -25,22 +25,28 @@ public sealed class WorkLifecycleService
     }
 
     /// <summary>
-    /// Enqueues a unit and writes its pending stage row and its entry in one transaction.
-    ///
-    /// Returns the instant the pending stage row was entered at. The stage row is keyed on the
-    /// unit, the position and that instant, so a caller that later records the outcome of this
-    /// first position closes THIS row only if it supplies the same instant; without it the
-    /// outcome lands in a second row and the pending one stays open. Existing callers that await
-    /// the task and ignore the instant behave exactly as before.
+    /// Enqueues a unit, claimable at once, and writes its pending stage row and its entry in one
+    /// transaction.
     /// </summary>
-    public async Task<DateTimeOffset> EnqueueAsync(Job job, CancellationToken cancellationToken)
+    public Task<DateTimeOffset> EnqueueAsync(Job job, CancellationToken cancellationToken) =>
+        EnqueueAsync(job, TimeSpan.Zero, cancellationToken);
+
+    /// <summary>
+    /// Enqueues a unit claimable after <paramref name="claimableAfter"/> by the datastore's clock,
+    /// and writes its pending stage row and its entry in one transaction.
+    ///
+    /// Returns the instant the unit became claimable, which the datastore set and which is also the
+    /// instant its pending stage row was entered at. The stage row is keyed on the unit, the
+    /// position and that instant, so a caller that later records the outcome of this first
+    /// position closes THIS row only if it supplies the same instant. The job's own availability
+    /// field is not used: no caller sets claimability on a clock the claim is not decided on.
+    /// </summary>
+    public async Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(job);
 
-        var enteredAt = _clock.UtcNow;
-
         await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.Jobs.EnqueueAsync(job, cancellationToken).ConfigureAwait(false);
+        var enteredAt = await transaction.Jobs.EnqueueAsync(job, claimableAfter, cancellationToken).ConfigureAwait(false);
         await transaction.Jobs.RecordStageAsync(
             new JobStage
             {
@@ -160,13 +166,15 @@ public sealed class WorkLifecycleService
             if (finished)
             {
                 await ok.Jobs.AdvanceAsync(
-                    job.Id, LifecyclePosition.Completed, ClaimState.Done, now, cancellationToken)
+                    job.Id, LifecyclePosition.Completed, ClaimState.Done, TimeSpan.Zero, cancellationToken)
                     .ConfigureAwait(false);
             }
             else
             {
-                await ok.Jobs.AdvanceAsync(
-                    job.Id, next!.Value, ClaimState.Ready, now, cancellationToken).ConfigureAwait(false);
+                // Claimable at once by the datastore's clock; the instant it set is the instant the
+                // next position's pending row is entered at, so a claim reading it keys that row.
+                var claimableAt = await ok.Jobs.AdvanceAsync(
+                    job.Id, next!.Value, ClaimState.Ready, TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
                 await ok.Jobs.RecordStageAsync(
                     new JobStage
                     {
@@ -175,7 +183,7 @@ public sealed class WorkLifecycleService
                         Outcome = StageOutcome.Pending,
                         Attempts = 0,
                         Escalated = false,
-                        EnteredAt = now,
+                        EnteredAt = claimableAt,
                     },
                     cancellationToken).ConfigureAwait(false);
             }
@@ -191,16 +199,16 @@ public sealed class WorkLifecycleService
         var disposition = FailureHandling.Decide(
             failureClass ?? FailureClass.Transient, attemptsSoFar, policy, elapsed, deadline);
 
-        var (outcome, escalated, availableAt, claimState) = disposition switch
+        var (outcome, escalated, claimableAfter, claimState) = disposition switch
         {
             FailureDisposition.RetrySameRoute retry =>
-                (StageOutcome.Retried, false, now + retry.Backoff, ClaimState.Ready),
+                (StageOutcome.Retried, false, retry.Backoff, ClaimState.Ready),
             // A re-resolution waits the declared backoff before becoming claimable again. Without
             // it a route that is unavailable for a recorded reason is re-resolved in a tight loop
             // until the attempt count exhausts.
             FailureDisposition.ReResolve => (
-                StageOutcome.Retried, false, now + FailureHandling.Backoff(attemptsSoFar, policy), ClaimState.Ready),
-            FailureDisposition.Escalate => (StageOutcome.Escalated, true, now, ClaimState.Dead),
+                StageOutcome.Retried, false, FailureHandling.Backoff(attemptsSoFar, policy), ClaimState.Ready),
+            FailureDisposition.Escalate => (StageOutcome.Escalated, true, TimeSpan.Zero, ClaimState.Dead),
             _ => throw new InvalidOperationException("Unreachable: the disposition union has three members."),
         };
 
@@ -218,7 +226,7 @@ public sealed class WorkLifecycleService
                 FailureReason = failureReason,
             },
             cancellationToken).ConfigureAwait(false);
-        await transaction.Jobs.ReleaseAsync(job.Id, claimState, availableAt, cancellationToken).ConfigureAwait(false);
+        await transaction.Jobs.ReleaseAsync(job.Id, claimState, claimableAfter, cancellationToken).ConfigureAwait(false);
         await transaction.Audit.AppendAsync(
             Entry(job, escalated ? LifecycleActions.StageEscalated : LifecycleActions.StageRetried, failureReason ?? outcome.ToString()),
             cancellationToken).ConfigureAwait(false);

@@ -153,6 +153,7 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
             """));
         Assert.Equal(1L, await ScalarAsync<long>(
             "SELECT COUNT(*) FROM pg_indexes WHERE indexname = 'audit_entries_by_action'"));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM audit_record_horizon"));
         Assert.Equal(1L, await ScalarAsync<long>(
             "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'routes' AND column_name = 'reasoning_tier_stated' AND column_default IS NULL"));
     }
@@ -182,22 +183,25 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// A route recorded stating a tier is constructed by the composed registry stating THAT tier,
-    /// and one recorded stating none is constructed stating none — never a default tier.
+    /// Every shape a route can record its tier in — each of the three tiers, and none — is
+    /// constructed by the composed registry in exactly that shape: a stated tier as that tier, and
+    /// none as none, never as a default tier.
     /// </summary>
-    [RequiresPostgresFact]
-    public async Task ARouteStatingATierAndOneStatingNoneReadBackInTheShapeTheyWereWritten()
+    [RequiresPostgresTheory]
+    [InlineData("Light")]
+    [InlineData("Standard")]
+    [InlineData("Deep")]
+    [InlineData("none")]
+    public async Task EveryStatedTierShapeReadsBackInTheShapeItWasWritten(string stated)
     {
-        var stating = RouteId.New();
-        var statingNone = RouteId.New();
-        await InsertSubstituteRouteAsync(stating, "Primary", "'Light'");
-        await InsertSubstituteRouteAsync(statingNone, "Secondary", "NULL");
+        var route = RouteId.New();
+        await InsertSubstituteRouteAsync(route, "Primary", stated == "none" ? "NULL" : $"'{stated}'");
 
-        var routes = await new NpgsqlRouteRegistry(Source)
-            .AdmittedRoutesAsync(CapabilityClass.EditorialReasoning, CancellationToken.None);
+        var read = Assert.Single(await new NpgsqlRouteRegistry(Source)
+            .AdmittedRoutesAsync(CapabilityClass.EditorialReasoning, CancellationToken.None));
 
-        Assert.Equal(ReasoningTier.Light, routes.Single(r => r.Id == stating).StatedReasoningTier);
-        Assert.Null(routes.Single(r => r.Id == statingNone).StatedReasoningTier);
+        Assert.Equal(route, read.Id);
+        Assert.Equal(stated == "none" ? null : Enum.Parse<ReasoningTier>(stated), read.StatedReasoningTier);
     }
 
     /// <summary>The register refuses a tier outside the closed three-value set.</summary>
@@ -302,10 +306,23 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     // -----------------------------------------------------------------------
 
     /// <summary>
+    /// A failure policy with no backoff, so a unit released for retry is claimable at once by the
+    /// datastore's clock. Its values are demonstration parameters.
+    /// </summary>
+    private static readonly FailurePolicy NoBackoff = new()
+    {
+        MaxAttempts = 3,
+        InitialBackoff = TimeSpan.Zero,
+        BackoffMultiplier = 2.0,
+        MaxBackoff = TimeSpan.Zero,
+    };
+
+    /// <summary>
     /// Units carried through the DELIVERED services — enqueued, claimed, advanced, retried,
-    /// escalated and completed — and read back for a period covering them. Every count is read
-    /// from the append-only record, and the waiting count at the close agrees with the queue
-    /// table's own ready count.
+    /// escalated and completed — and read back for a period from the record's first entry to an
+    /// instant the datastore had reached. Every count is read from the append-only record, all
+    /// eight counts the reader returns are as recorded, and the waiting count at the close agrees
+    /// with the queue table's own ready count.
     ///
     /// The three units and their paths are DEMONSTRATION PARAMETERS resting on the Scope Gate
     /// reading that sizing waits for a production series: they exercise the counting rule, they
@@ -315,35 +332,47 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     public async Task TheThroughputReadingCountsEveryTransitionTheDeliveredServicesRecorded()
     {
         var lifecycle = new WorkLifecycleService(new NpgsqlUnitOfWork(Source, _clock), _clock);
-        var single = new WorkflowDefinition("demonstration", [LifecyclePosition.Queued], FailurePolicy.Default);
+        var single = new WorkflowDefinition("demonstration", [LifecyclePosition.Queued], NoBackoff);
 
         // Unit A: claimed, advanced, retried once, then refused and escalated.
         var a = Unit(PublishingWorkflow.Name);
         var aEntered = await lifecycle.EnqueueAsync(a, CancellationToken.None);
         var aClaim = await lifecycle.ClaimUnitAsync(a.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
         await lifecycle.RecordStageOutcomeAsync(aClaim!, PublishingWorkflow.Definition, LifecyclePosition.Queued, aEntered,
-            true, null, 1, FailurePolicy.Default, TimeSpan.Zero, TimeSpan.FromHours(1), null, CancellationToken.None);
+            true, null, 1, NoBackoff, TimeSpan.Zero, TimeSpan.FromHours(1), null, CancellationToken.None);
         var aSecond = await lifecycle.ClaimUnitAsync(a.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
         await lifecycle.RecordStageOutcomeAsync(aSecond!, PublishingWorkflow.Definition, aSecond!.Position, aSecond.AvailableAt,
-            false, FailureClass.Transient, 1, FailurePolicy.Default, TimeSpan.Zero, TimeSpan.FromHours(1), "transient", CancellationToken.None);
+            false, FailureClass.Transient, 1, NoBackoff, TimeSpan.Zero, TimeSpan.FromHours(1), "transient", CancellationToken.None);
         var aThird = await lifecycle.ClaimUnitAsync(a.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
         await lifecycle.RecordStageOutcomeAsync(aThird!, PublishingWorkflow.Definition, aThird!.Position, aSecond.AvailableAt,
-            false, FailureClass.Refusal, 2, FailurePolicy.Default, TimeSpan.Zero, TimeSpan.FromHours(1), "refused", CancellationToken.None);
+            false, FailureClass.Refusal, 2, NoBackoff, TimeSpan.Zero, TimeSpan.FromHours(1), "refused", CancellationToken.None);
 
         // Unit B: claimed and completed at the only position its workflow declares.
         var b = Unit(single.Name);
         var bEntered = await lifecycle.EnqueueAsync(b, CancellationToken.None);
         var bClaim = await lifecycle.ClaimUnitAsync(b.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
         await lifecycle.RecordStageOutcomeAsync(bClaim!, single, LifecyclePosition.Queued, bEntered,
-            true, null, 1, FailurePolicy.Default, TimeSpan.Zero, TimeSpan.FromHours(1), null, CancellationToken.None);
+            true, null, 1, NoBackoff, TimeSpan.Zero, TimeSpan.FromHours(1), null, CancellationToken.None);
 
         // Unit C: enqueued and left waiting.
         await lifecycle.EnqueueAsync(Unit(PublishingWorkflow.Name), CancellationToken.None);
 
-        // The period opens at the record's first entry, which the coverage rule requires of a period
-        // over which the count was taken, and closes after the last.
+        // The period opens at the record's first entry and closes at an instant the datastore has
+        // already reached, which the read's own horizon will lie at or after.
         var start = await EarliestEntryAsync();
-        var close = _clock.Peek;
+        var close = await DatastoreNowAsync();
+
+        var summary = await new NpgsqlThroughputReader(Source).ReadAsync(start, close, CancellationToken.None);
+        Assert.True(summary.Quiet);
+        Assert.True(summary.Horizon >= close);
+        Assert.Equal(
+            new long[] { 3, 1, 1, 4, 4, 1, 1, 1 },
+            new[]
+            {
+                summary.EnqueuedToClose, summary.StageSucceededToClose, summary.RetriedToClose, summary.ClaimedToClose,
+                summary.ClaimedInPeriod, summary.RetriedInPeriod, summary.EscalatedInPeriod, summary.CompletedInPeriod,
+            });
+
         var reading = await Analytics().ThroughputAsync(start, close, CancellationToken.None);
 
         Assert.Equal("4 claims", reading.Claimed.Describe());
@@ -356,34 +385,166 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// SIDE BY SIDE: an elapsed period after the record's first entry holding no transition reads
-    /// as an OBSERVED ZERO; a period beginning before the first entry, and one not yet elapsed,
-    /// read UNMEASURED naming the coverage bounds. The waiting count is a stock at the close, so in
-    /// the quiet period it still reports the unit left waiting.
+    /// SIDE BY SIDE, every quantity: a period after the record's first entry, closed below the
+    /// horizon the read set and holding no transition, reads OBSERVED ZERO in all five quantities —
+    /// the unit enqueued earlier was claimed, so none waits — and the in-period counts behind them
+    /// are all zero; a period beginning before the first entry, and one ending after the horizon
+    /// the read set, read UNMEASURED in all five, naming why.
     /// </summary>
     [RequiresPostgresFact]
     public async Task AnObservedZeroPeriodAndAnUnmeasuredPeriodReadApartFromTheStore()
     {
         var lifecycle = new WorkLifecycleService(new NpgsqlUnitOfWork(Source, _clock), _clock);
-        var first = _clock.Peek;
-        await lifecycle.EnqueueAsync(Unit(PublishingWorkflow.Name), CancellationToken.None);
-        var afterEntries = _clock.Peek;
+        var unit = Unit(PublishingWorkflow.Name);
+        await lifecycle.EnqueueAsync(unit, CancellationToken.None);
+        await lifecycle.ClaimUnitAsync(unit.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
+
+        var earliest = await EarliestEntryAsync();
+        var quietStart = await DatastoreNowAsync();
+        await Task.Delay(20);
+        var quietEnd = await DatastoreNowAsync();
+
+        var reader = new NpgsqlThroughputReader(Source);
+        var raw = await reader.ReadAsync(quietStart, quietEnd, CancellationToken.None);
+        Assert.True(raw.Quiet);
+        Assert.Equal(
+            new long[] { 1, 0, 0, 1, 0, 0, 0, 0 },
+            new[]
+            {
+                raw.EnqueuedToClose, raw.StageSucceededToClose, raw.RetriedToClose, raw.ClaimedToClose,
+                raw.ClaimedInPeriod, raw.RetriedInPeriod, raw.EscalatedInPeriod, raw.CompletedInPeriod,
+            });
 
         var service = Analytics();
-        var quiet = await service.ThroughputAsync(afterEntries.AddMinutes(10), afterEntries.AddMinutes(20), CancellationToken.None);
-        var beforeRecord = await service.ThroughputAsync(first.AddHours(-1), afterEntries, CancellationToken.None);
-        var notElapsed = await service.ThroughputAsync(afterEntries, DateTimeOffset.UtcNow.AddHours(1), CancellationToken.None);
+        var quiet = await service.ThroughputAsync(quietStart, quietEnd, CancellationToken.None);
+        var beforeRecord = await service.ThroughputAsync(earliest.AddHours(-1), quietEnd, CancellationToken.None);
+        var notFinal = await service.ThroughputAsync(quietStart, quietEnd.AddHours(1), CancellationToken.None);
 
-        Assert.IsType<MeasurementQuantity.ObservedZero>(quiet.Claimed);
-        Assert.IsType<MeasurementQuantity.ObservedZero>(quiet.Completed);
-        Assert.Equal("1 units waiting", quiet.Waiting.Describe());
+        foreach (var quantity in Quantities(quiet))
+        {
+            Assert.IsType<MeasurementQuantity.ObservedZero>(quantity);
+        }
 
-        var before = Assert.IsType<MeasurementQuantity.Unmeasured>(beforeRecord.Claimed);
-        Assert.Contains("earliest entry", before.Detail, StringComparison.Ordinal);
-        var pending = Assert.IsType<MeasurementQuantity.Unmeasured>(notElapsed.Claimed);
-        Assert.Contains("had not elapsed", pending.Detail, StringComparison.Ordinal);
+        foreach (var quantity in Quantities(beforeRecord))
+        {
+            var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(quantity);
+            Assert.Contains("earliest entry", unmeasured.Detail, StringComparison.Ordinal);
+        }
 
-        Assert.NotEqual(quiet.Claimed.Describe(), beforeRecord.Claimed.Describe());
+        foreach (var quantity in Quantities(notFinal))
+        {
+            var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(quantity);
+            Assert.Contains("ends after the record horizon", unmeasured.Detail, StringComparison.Ordinal);
+        }
+
+        foreach (var (zero, none) in Quantities(quiet).Zip(Quantities(beforeRecord)))
+        {
+            Assert.NotEqual(zero.Describe(), none.Describe());
+        }
+    }
+
+    /// <summary>
+    /// AN OBSERVED ZERO IS FINAL. A period read as observed zero claims stays observed zero: a claim
+    /// committed through the delivered services afterwards is stamped at or after the horizon the
+    /// read set, outside the period; an entry inserted DIRECTLY with a stamp inside the period,
+    /// bypassing the appender, is refused by the datastore; and a second read of the period still
+    /// reads observed zero.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task APeriodReadAsObservedZeroCannotGainAnEntryAfterTheRead()
+    {
+        var lifecycle = new WorkLifecycleService(new NpgsqlUnitOfWork(Source, _clock), _clock);
+        var unit = Unit(PublishingWorkflow.Name);
+        await lifecycle.EnqueueAsync(unit, CancellationToken.None);
+
+        var periodStart = await DatastoreNowAsync();
+        await Task.Delay(20);
+        var periodEnd = await DatastoreNowAsync();
+
+        var reader = new NpgsqlThroughputReader(Source);
+        var first = await reader.ReadAsync(periodStart, periodEnd, CancellationToken.None);
+        Assert.IsType<MeasurementQuantity.ObservedZero>(AnalyticsComposers.Throughput(first).Claimed);
+
+        await lifecycle.ClaimUnitAsync(unit.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
+        var claimStamp = await ScalarStampAsync(
+            "SELECT occurred_at FROM audit_entries WHERE action = 'job.claimed' ORDER BY sequence_no DESC LIMIT 1");
+        Assert.True(claimStamp >= first.Horizon);
+
+        var refused = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
+            """
+            INSERT INTO audit_entries (entry_id, actor, action, subject, occurred_at, reason, inputs_reference,
+                                       outputs_reference, decision, cost_reference, risk, retention_class,
+                                       previous_entry_hash, entry_hash)
+            VALUES (gen_random_uuid(), 'lifecycle', 'job.claimed', 'a late entry', @inside, 'bypassing the appender',
+                    'none', 'none', 'job.claimed', 'none', 'none', 'OperationalRecord', 'none', md5(random()::text))
+            """,
+            c => c.Parameters.AddWithValue("inside", periodStart + ((periodEnd - periodStart) / 2))));
+        Assert.Equal(PostgresErrorCodes.IntegrityConstraintViolation, refused.SqlState);
+        Assert.Contains("closed below", refused.MessageText, StringComparison.Ordinal);
+
+        var second = await reader.ReadAsync(periodStart, periodEnd, CancellationToken.None);
+        Assert.IsType<MeasurementQuantity.ObservedZero>(AnalyticsComposers.Throughput(second).Claimed);
+        Assert.Equal(0L, second.ClaimedInPeriod);
+    }
+
+    /// <summary>
+    /// While an audited transaction is in flight the read never waits and never states a count:
+    /// every attempt to close the record fails, and every quantity reads unmeasured naming the
+    /// in-flight transitions. Once the transaction commits, a read counts its entry.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AReadMeetingAnInFlightTransitionReadsUnmeasuredAndCountsItOnceCommitted()
+    {
+        var lifecycle = new WorkLifecycleService(new NpgsqlUnitOfWork(Source, _clock), _clock);
+        await lifecycle.EnqueueAsync(Unit(PublishingWorkflow.Name), CancellationToken.None);
+        var start = await EarliestEntryAsync();
+
+        var unitOfWork = new NpgsqlUnitOfWork(Source, _clock);
+        await using (var inFlight = await unitOfWork.BeginAsync(CancellationToken.None))
+        {
+            await inFlight.Audit.AppendAsync(
+                new AuditEntryDraft
+                {
+                    Actor = "lifecycle",
+                    Action = LifecycleActions.Claimed,
+                    Subject = "an in-flight demonstration claim",
+                    Reason = "held open while a read is attempted",
+                    InputsReference = "none",
+                    OutputsReference = "none",
+                    Decision = LifecycleActions.Claimed,
+                    CostReference = "none",
+                    Risk = "none",
+                    RetentionClass = Domain.Audit.RetentionClass.OperationalRecord,
+                },
+                CancellationToken.None);
+
+            var during = await Analytics().ThroughputAsync(start, await DatastoreNowAsync(), CancellationToken.None);
+            foreach (var quantity in Quantities(during))
+            {
+                var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(quantity);
+                Assert.Equal(UnmeasuredReason.SourceCannotStateOne, unmeasured.Reason);
+                Assert.Contains("in flight", unmeasured.Detail, StringComparison.Ordinal);
+            }
+
+            await inFlight.CommitAsync(CancellationToken.None);
+        }
+
+        var after = await Analytics().ThroughputAsync(start, await DatastoreNowAsync(), CancellationToken.None);
+        Assert.Equal("1 claims", after.Claimed.Describe());
+    }
+
+    /// <summary>The record horizon only moves forward and cannot be removed.</summary>
+    [RequiresPostgresFact]
+    public async Task TheRecordHorizonOnlyMovesForward()
+    {
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM audit_record_horizon"));
+
+        var backwards = await Assert.ThrowsAsync<PostgresException>(() =>
+            ExecuteAsync("UPDATE audit_record_horizon SET horizon = horizon - interval '1 hour'"));
+        Assert.Contains("only moves forward", backwards.MessageText, StringComparison.Ordinal);
+
+        await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync("DELETE FROM audit_record_horizon"));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM audit_record_horizon"));
     }
 
     /// <summary>
@@ -410,7 +571,7 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
         var lifecycle = new WorkLifecycleService(new NpgsqlUnitOfWork(Source, _clock), _clock);
         Assert.NotNull(await lifecycle.ClaimUnitAsync(job, "demo", TimeSpan.FromMinutes(5), CancellationToken.None));
 
-        var reading = await Analytics().ThroughputAsync(await EarliestEntryAsync(), _clock.Peek, CancellationToken.None);
+        var reading = await Analytics().ThroughputAsync(await EarliestEntryAsync(), await DatastoreNowAsync(), CancellationToken.None);
 
         var waiting = Assert.IsType<MeasurementQuantity.Unmeasured>(reading.Waiting);
         Assert.Equal(UnmeasuredReason.SourceCannotStateOne, waiting.Reason);
@@ -419,7 +580,7 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
 
     /// <summary>
     /// The named claim against the store: it takes the named unit and no other ready one, and it
-    /// does not take a unit whose availability is in the datastore's future.
+    /// does not take a unit enqueued with a delay the datastore's clock has not yet run out.
     /// </summary>
     [RequiresPostgresFact]
     public async Task TheNamedClaimTakesOnlyTheNamedAvailableUnit()
@@ -427,10 +588,10 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
         var lifecycle = new WorkLifecycleService(new NpgsqlUnitOfWork(Source, _clock), _clock);
         var other = Unit(PublishingWorkflow.Name);
         var named = Unit(PublishingWorkflow.Name);
-        var later = Unit(PublishingWorkflow.Name) with { AvailableAt = DateTimeOffset.UtcNow.AddDays(1) };
+        var later = Unit(PublishingWorkflow.Name);
         await lifecycle.EnqueueAsync(other, CancellationToken.None);
         await lifecycle.EnqueueAsync(named, CancellationToken.None);
-        await lifecycle.EnqueueAsync(later, CancellationToken.None);
+        await lifecycle.EnqueueAsync(later, TimeSpan.FromDays(1), CancellationToken.None);
 
         var claimed = await lifecycle.ClaimUnitAsync(named.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None);
 
@@ -439,6 +600,9 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
             "SELECT claim_state FROM jobs WHERE job_id = @job", c => c.Parameters.AddWithValue("job", other.Id.Value)));
         Assert.Null(await lifecycle.ClaimUnitAsync(later.Id, "demo", TimeSpan.FromMinutes(5), CancellationToken.None));
     }
+
+    private static IEnumerable<MeasurementQuantity> Quantities(ThroughputReadModel reading) =>
+        [reading.Waiting, reading.Claimed, reading.Retried, reading.Escalated, reading.Completed];
 
     // -----------------------------------------------------------------------
     // Harness
@@ -577,6 +741,17 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
                 c.Parameters.AddWithValue("agent", Agent.Value);
                 c.Parameters.AddWithValue("item", Item.Value);
             });
+    }
+
+    /// <summary>The datastore's own clock, the clock every audit stamp and every availability instant is set on.</summary>
+    private Task<DateTimeOffset> DatastoreNowAsync() => ScalarStampAsync("SELECT clock_timestamp()");
+
+    private async Task<DateTimeOffset> ScalarStampAsync(string sql)
+    {
+        await using var command = Source.CreateCommand(sql);
+        await using var reader = await command.ExecuteReaderAsync();
+        await reader.ReadAsync();
+        return reader.GetFieldValue<DateTimeOffset>(0);
     }
 
     private async Task<DateTimeOffset> EarliestEntryAsync()

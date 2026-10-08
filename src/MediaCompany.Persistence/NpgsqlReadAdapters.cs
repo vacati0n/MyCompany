@@ -809,20 +809,91 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
 /// </summary>
 public sealed class NpgsqlThroughputReader : IThroughputReader
 {
+    /// <summary>How many non-waiting attempts at the record horizon a read makes before reading unmeasured.</summary>
+    public const int HorizonAttempts = 3;
+
+    /// <summary>The pause between two attempts. The read never waits on an in-flight transaction itself.</summary>
+    public static readonly TimeSpan HorizonRetryPause = TimeSpan.FromMilliseconds(50);
+
     private readonly NpgsqlDataSource _dataSource;
 
     public NpgsqlThroughputReader(NpgsqlDataSource dataSource) => _dataSource = dataSource;
 
+    /// <summary>
+    /// Closes the record and counts. The read obtains the record horizon EXCLUSIVELY WITHOUT
+    /// WAITING, which the datastore grants only when no audited transaction holds it shared — that
+    /// is, when no entry is in flight. It then raises the horizon to the later of the datastore's
+    /// clock and its prior value, and takes every count in statements issued after the grant, so
+    /// every entry that can ever be stamped below the new horizon is already committed and counted.
+    /// If every attempt meets an in-flight transaction, no count is taken and the summary says so.
+    /// </summary>
     public async Task<ThroughputSummary> ReadAsync(
         DateTimeOffset periodStart,
         DateTimeOffset periodEnd,
         CancellationToken cancellationToken)
     {
-        await using var command = _dataSource.CreateCommand(
+        for (var attempt = 1; attempt <= HorizonAttempts; attempt++)
+        {
+            var summary = await TryReadAsync(periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
+            if (summary is not null)
+            {
+                return summary;
+            }
+
+            if (attempt < HorizonAttempts)
+            {
+                await Task.Delay(HorizonRetryPause, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        return new ThroughputSummary(
+            periodStart, periodEnd, EarliestEntry: null, Quiet: false, Horizon: null,
+            0, 0, 0, 0, 0, 0, 0, 0);
+    }
+
+    private async Task<ThroughputSummary?> TryReadAsync(
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            await using var hold = new NpgsqlCommand(
+                "SELECT horizon FROM audit_record_horizon WHERE only_row FOR UPDATE NOWAIT",
+                connection,
+                transaction);
+            await hold.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (PostgresException refused) when (refused.SqlState == PostgresErrorCodes.LockNotAvailable)
+        {
+            // An audited transaction is in flight. Never wait on it: report the attempt failed.
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+
+        DateTimeOffset horizon;
+        await using (var raise = new NpgsqlCommand(
+            """
+            UPDATE audit_record_horizon
+               SET horizon = GREATEST(clock_timestamp(), horizon)
+             WHERE only_row
+            RETURNING horizon
+            """,
+            connection,
+            transaction))
+        {
+            await using var raised = await raise.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await raised.ReadAsync(cancellationToken).ConfigureAwait(false);
+            horizon = raised.GetFieldValue<DateTimeOffset>(0);
+        }
+
+        await using var command = new NpgsqlCommand(
             """
             SELECT
                 (SELECT min(occurred_at) FROM audit_entries)                                            AS earliest,
-                now()                                                                                  AS read_at,
                 count(*) FILTER (WHERE action = @enqueued)                                              AS enqueued_to_close,
                 count(*) FILTER (WHERE action = @succeeded)                                             AS succeeded_to_close,
                 count(*) FILTER (WHERE action = @retried)                                               AS retried_to_close,
@@ -833,7 +904,9 @@ public sealed class NpgsqlThroughputReader : IThroughputReader
                 count(*) FILTER (WHERE action = @completed AND occurred_at >= @period_start)            AS completed_in_period
             FROM audit_entries
             WHERE action = ANY(@actions) AND occurred_at < @period_end
-            """);
+            """,
+            connection,
+            transaction);
 
         command.Parameters.AddWithValue("enqueued", Domain.Work.LifecycleActions.Enqueued);
         command.Parameters.AddWithValue("succeeded", Domain.Work.LifecycleActions.StageSucceeded);
@@ -845,22 +918,29 @@ public sealed class NpgsqlThroughputReader : IThroughputReader
         command.Parameters.AddWithValue("period_start", periodStart);
         command.Parameters.AddWithValue("period_end", periodEnd);
 
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+        ThroughputSummary summary;
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
-        return new ThroughputSummary(
-            periodStart,
-            periodEnd,
-            reader.IsDBNull(0) ? null : reader.GetFieldValue<DateTimeOffset>(0),
-            reader.GetFieldValue<DateTimeOffset>(1),
-            EnqueuedToClose: reader.GetInt64(2),
-            StageSucceededToClose: reader.GetInt64(3),
-            RetriedToClose: reader.GetInt64(4),
-            ClaimedToClose: reader.GetInt64(5),
-            ClaimedInPeriod: reader.GetInt64(6),
-            RetriedInPeriod: reader.GetInt64(7),
-            EscalatedInPeriod: reader.GetInt64(8),
-            CompletedInPeriod: reader.GetInt64(9));
+            summary = new ThroughputSummary(
+                periodStart,
+                periodEnd,
+                reader.IsDBNull(0) ? null : reader.GetFieldValue<DateTimeOffset>(0),
+                Quiet: true,
+                Horizon: horizon,
+                EnqueuedToClose: reader.GetInt64(1),
+                StageSucceededToClose: reader.GetInt64(2),
+                RetriedToClose: reader.GetInt64(3),
+                ClaimedToClose: reader.GetInt64(4),
+                ClaimedInPeriod: reader.GetInt64(5),
+                RetriedInPeriod: reader.GetInt64(6),
+                EscalatedInPeriod: reader.GetInt64(7),
+                CompletedInPeriod: reader.GetInt64(8));
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return summary;
     }
 }
 

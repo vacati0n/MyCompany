@@ -543,23 +543,26 @@ public static class AnalyticsComposers
             throw new ArgumentException("A period closes after it starts.", nameof(summary));
         }
 
+        // The read never found a quiet instant: audited transitions were in flight at every
+        // attempt to close the record, so no count it could give would be final.
+        if (!summary.Quiet || summary.Horizon is not { } horizon)
+        {
+            return Unmeasured(
+                summary,
+                UnmeasuredReason.SourceCannotStateOne,
+                "audited transitions were in flight at every bounded attempt to close the append-only record, "
+                + "so no count over the period would be final");
+        }
+
+        // OBSERVED only where the period starts no earlier than the record's first entry and ends no
+        // later than the horizon this read set, below which no entry can commit any more.
         var covered = summary.EarliestEntry is { } earliest
             && summary.PeriodStart >= earliest
-            && summary.PeriodEnd <= summary.ReadAt;
+            && summary.PeriodEnd <= horizon;
 
         if (!covered)
         {
-            var detail = CoverageDetail(summary);
-
-            return new ThroughputReadModel(
-                summary.PeriodStart,
-                summary.PeriodEnd,
-                MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "units waiting at the close: " + detail),
-                MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "claims: " + detail),
-                MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "retried stage attempts: " + detail),
-                MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "escalated units: " + detail),
-                MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "completed units: " + detail),
-                ThroughputStatement);
+            return Unmeasured(summary, UnmeasuredReason.NoObservationExists, CoverageDetail(summary, horizon));
         }
 
         // Waiting at the close: every arrival into the ready queue up to the close, less every
@@ -587,7 +590,18 @@ public static class AnalyticsComposers
             ThroughputStatement);
     }
 
-    private static string CoverageDetail(ThroughputSummary summary)
+    private static ThroughputReadModel Unmeasured(ThroughputSummary summary, UnmeasuredReason reason, string detail) =>
+        new(
+            summary.PeriodStart,
+            summary.PeriodEnd,
+            MeasurementQuantity.NotMeasured(reason, "units waiting at the close: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "claims: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "retried stage attempts: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "escalated units: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "completed units: " + detail),
+            ThroughputStatement);
+
+    private static string CoverageDetail(ThroughputSummary summary, DateTimeOffset horizon)
     {
         var period = $"the period from {summary.PeriodStart:O} to {summary.PeriodEnd:O}";
 
@@ -602,8 +616,8 @@ public static class AnalyticsComposers
                 + "so no count was taken over all of it";
         }
 
-        return $"{period} had not elapsed when the record store was read at {summary.ReadAt:O}, "
-            + "so its count is not yet taken";
+        return $"{period} ends after the record horizon this read set at {horizon:O}, "
+            + "so entries stamped inside it could still commit and its count is not final";
     }
 
     // -----------------------------------------------------------------------
@@ -613,8 +627,9 @@ public static class AnalyticsComposers
     /// <summary>What a dossier reading establishes and what it does not.</summary>
     public const string DossierStatement =
         "these counts are of rows the item dossier register holds for this item version, recorded through the "
-        + "dossier recorder; they establish what was recorded and nothing about what was produced, and none of "
-        + "them is a clip count, a supply figure or a threshold";
+        + "dossier recorder, as recorded at the read; the dossier accumulates, so they claim no permanence; they "
+        + "establish what was recorded and nothing about what was produced, and none of them is a clip count, a "
+        + "supply figure or a threshold";
 
     /// <summary>What a supply-audit reading establishes and what it does not.</summary>
     public const string SupplyAuditStatement =

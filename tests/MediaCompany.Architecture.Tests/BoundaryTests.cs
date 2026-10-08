@@ -1262,7 +1262,8 @@ internal sealed class TerminalStateProbe : IUnitOfWork
 
     private sealed class Writer(TerminalStateProbe owner) : IJobWriter
     {
-        public Task EnqueueAsync(Job job, CancellationToken ct) => Task.CompletedTask;
+        public Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken ct) =>
+            Task.FromResult(ProbeClock.Instant);
 
         public Task RecordStageAsync(JobStage stage, CancellationToken ct) => Task.CompletedTask;
 
@@ -1272,15 +1273,15 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         public Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken ct) =>
             Task.FromResult<Job?>(null);
 
-        public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct) =>
-            Task.CompletedTask;
+        public Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken ct) =>
+            Task.FromResult(ProbeClock.Instant + claimableAfter);
 
-        public Task AdvanceAsync(
+        public Task<DateTimeOffset> AdvanceAsync(
             JobId job, LifecyclePosition position, ClaimState state,
-            DateTimeOffset availableAt, CancellationToken ct)
+            TimeSpan claimableAfter, CancellationToken ct)
         {
             owner.Advances.Add((position, state));
-            return Task.CompletedTask;
+            return Task.FromResult(ProbeClock.Instant + claimableAfter);
         }
     }
 

@@ -240,12 +240,19 @@ public interface IThroughputReader
 /// are every entry up to the interval's close, which is what the units waiting at the close are
 /// reconstructed from: arrivals into the ready queue less the claims that took units out of it.
 /// <see cref="EarliestEntry"/> is null when the record holds no entry at all.
+///
+/// <see cref="Quiet"/> states whether the read obtained the record horizon, which it can only do
+/// when no audited transaction is in flight; <see cref="Horizon"/> is the horizon that read set, the
+/// instant below which no entry can commit any more. When the read was not quiet no count was
+/// taken: the horizon is null and every count is zero by default and means nothing, which the
+/// composing site decides from <see cref="Quiet"/> rather than from the counts.
 /// </summary>
 public sealed record ThroughputSummary(
     DateTimeOffset PeriodStart,
     DateTimeOffset PeriodEnd,
     DateTimeOffset? EarliestEntry,
-    DateTimeOffset ReadAt,
+    bool Quiet,
+    DateTimeOffset? Horizon,
     long EnqueuedToClose,
     long StageSucceededToClose,
     long RetriedToClose,

@@ -322,8 +322,9 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
     /// <summary>
     /// The table checks refuse every row shape the domain rules do not admit, and each refusal
     /// leaves no audit entry: a supply entry carrying a count AND an unobtained reason, a prior
-    /// observation recorded in part, an evidenced determination with no evidence, and a
-    /// not-evidenceable reason on an outcome that is not not-evidenceable.
+    /// observation recorded in part, an evidenced determination with no evidence, a
+    /// not-evidenceable reason on an outcome that is not not-evidenceable, and a not-evidenceable
+    /// determination missing its remedy or its reason.
     /// </summary>
     [RequiresPostgresFact]
     public async Task TheRegisterRefusesEveryRowShapeTheDomainRulesDoNotAdmit()
@@ -379,6 +380,23 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
             Outcome = DeterminationOutcome.Unresolved,
             ResolvedAt = At,
             NotEvidenceableReason = "a reason carried by an outcome that takes none",
+        }, WorkforceRole.Producer, CancellationToken.None));
+
+        // A not-evidenceable resolution missing its remedy, and one missing its reason.
+        await AssertRefused(() => recorder.RecordDeterminationAsync(Item, Version, new DeterminationResolution
+        {
+            Determination = ComplianceDetermination.SyntheticMediaDisclosure,
+            Outcome = DeterminationOutcome.RecordedNotEvidenceable,
+            ResolvedAt = At,
+            NotEvidenceableReason = "the surface opens only at upload",
+        }, WorkforceRole.Producer, CancellationToken.None));
+
+        await AssertRefused(() => recorder.RecordDeterminationAsync(Item, Version, new DeterminationResolution
+        {
+            Determination = ComplianceDetermination.SyntheticMediaDisclosure,
+            Outcome = DeterminationOutcome.RecordedNotEvidenceable,
+            ResolvedAt = At,
+            WhatWouldMakeItEvidenceable = "an upload, which nothing in this build performs",
         }, WorkforceRole.Producer, CancellationToken.None));
 
         // One opening entry and one entry for the one admitted row; nothing for any refusal.
@@ -604,30 +622,38 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// Recorded state: the installed store, driven by a process whose clock runs AHEAD of the
-    /// datastore's. The unit is enqueued available at an instant the datastore has not reached, so
-    /// the named claim, which measures availability by the datastore's own clock, does not take it:
-    /// the drive comes to rest unclaimed at the first position, runs no step, and writes no
-    /// attempt, rather than claiming a unit that is not yet available.
+    /// Recorded state: the fixture store, driven by a process whose clock runs a day AHEAD of the
+    /// datastore's, and then a day BEHIND it. Claimability is set on the datastore's clock plus a
+    /// stated delay, the clock every claim is decided on, so in both cases the unit made available
+    /// at each position is claimable at once and the drive reaches the terminal claim state at
+    /// composition, whatever the offset between the clocks.
     /// </summary>
-    [RequiresPostgresFact]
-    public async Task AUnitNotYetAvailableByTheDatastoresClockRestsUnclaimed()
+    [RequiresPostgresTheory]
+    [InlineData(1)]
+    [InlineData(-1)]
+    public async Task ADriveReachesCompositionWhateverTheOffsetBetweenTheClocks(int days)
     {
-        var ahead = new SteppingClock(DateTimeOffset.UtcNow.AddDays(1));
-        var unitOfWork = new NpgsqlUnitOfWork(Source, ahead);
+        await RecordOwnerApprovalFixtureAsync();
+        foreach (var condition in Enum.GetValues<FirstPublicationCondition>())
+        {
+            await RecordConditionFixtureAsync(condition, ConditionState.Satisfied);
+        }
+
+        var offset = new SteppingClock(DateTimeOffset.UtcNow.AddDays(days));
+        var unitOfWork = new NpgsqlUnitOfWork(Source, offset);
         var sequence = new PublishingSequenceService(
-            new WorkLifecycleService(unitOfWork, ahead),
-            new PublicationGateService(new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), unitOfWork, ahead),
-            new PublicationDispatchService(unitOfWork, ahead),
-            ahead);
+            new WorkLifecycleService(unitOfWork, offset),
+            new PublicationGateService(new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), unitOfWork, offset),
+            new PublicationDispatchService(unitOfWork, offset),
+            offset);
 
         var result = await sequence.DriveAsync(Request(), CancellationToken.None);
 
-        Assert.Equal(PublishingSequenceRest.NotClaimable, result.Rest);
-        Assert.Equal(LifecyclePosition.Queued, result.RestingPosition);
-        Assert.Empty(result.PositionsDriven);
-        Assert.Equal("Ready", await JobStateAsync(result.Unit));
-        Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM publication_attempts"));
+        Assert.Equal(PublishingSequenceRest.Composed, result.Rest);
+        Assert.Equal(PublishingWorkflow.Definition.Stages, result.PositionsDriven);
+        Assert.Equal("Done", await JobStateAsync(result.Unit));
+        Assert.Equal(0L, await PendingStageRowsAsync(result.Unit));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM publication_dispatches"));
     }
 
     // -----------------------------------------------------------------------

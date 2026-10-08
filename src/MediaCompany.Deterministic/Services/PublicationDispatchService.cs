@@ -179,7 +179,7 @@ public sealed class PublicationDispatchService
                     jobId,
                     next ?? LifecyclePosition.Completed,
                     next is null ? ClaimState.Done : ClaimState.Ready,
-                    now,
+                    TimeSpan.Zero,
                     cancellationToken).ConfigureAwait(false);
 
                 // The terminal-stage closure and the completion entry, only when the unit was just

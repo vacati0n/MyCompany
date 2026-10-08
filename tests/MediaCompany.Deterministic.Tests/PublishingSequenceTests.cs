@@ -388,7 +388,7 @@ public sealed class PublishingSequenceTests
             Position = LifecyclePosition.PublishingComposed,
             ClaimState = ClaimState.Claimed,
             AvailableAt = Now,
-        }, CancellationToken.None);
+        }, TimeSpan.Zero, CancellationToken.None);
         await transaction.CommitAsync(CancellationToken.None);
         return (work, job);
     }

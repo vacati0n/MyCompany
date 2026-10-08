@@ -96,7 +96,7 @@ public sealed class SustainedRateSurfaceTests
         DateTimeOffset start,
         DateTimeOffset end,
         DateTimeOffset? earliest,
-        DateTimeOffset readAt,
+        DateTimeOffset horizon,
         long enqueued = 0,
         long succeeded = 0,
         long retriedToClose = 0,
@@ -105,7 +105,7 @@ public sealed class SustainedRateSurfaceTests
         long retried = 0,
         long escalated = 0,
         long completed = 0) =>
-        new(start, end, earliest, readAt, enqueued, succeeded, retriedToClose, claimedToClose,
+        new(start, end, earliest, Quiet: true, horizon, enqueued, succeeded, retriedToClose, claimedToClose,
             claimed, retried, escalated, completed);
 
     /// <summary>
@@ -117,10 +117,10 @@ public sealed class SustainedRateSurfaceTests
     public void AnObservedZeroPeriodAndAnUnmeasuredPeriodRenderApart()
     {
         var earliest = Start;
-        var readAt = Start.AddDays(10);
+        var horizon = Start.AddDays(10);
 
-        var observed = AnalyticsComposers.Throughput(Summary(Start.AddDays(2), Start.AddDays(3), earliest, readAt));
-        var before = AnalyticsComposers.Throughput(Summary(Start.AddDays(-1), Start.AddDays(3), earliest, readAt));
+        var observed = AnalyticsComposers.Throughput(Summary(Start.AddDays(2), Start.AddDays(3), earliest, horizon));
+        var before = AnalyticsComposers.Throughput(Summary(Start.AddDays(-1), Start.AddDays(3), earliest, horizon));
 
         foreach (var quantity in new[] { observed.Waiting, observed.Claimed, observed.Retried, observed.Escalated, observed.Completed })
         {
@@ -142,10 +142,29 @@ public sealed class SustainedRateSurfaceTests
     public void APeriodNotYetElapsedIsUnmeasured()
     {
         var reading = AnalyticsComposers.Throughput(
-            Summary(Start.AddDays(1), Start.AddDays(5), Start, readAt: Start.AddDays(4), claimed: 3, claimedToClose: 3, enqueued: 3));
+            Summary(Start.AddDays(1), Start.AddDays(5), Start, horizon: Start.AddDays(4), claimed: 3, claimedToClose: 3, enqueued: 3));
 
         var claimed = Assert.IsType<MeasurementQuantity.Unmeasured>(reading.Claimed);
-        Assert.Contains("had not elapsed", claimed.Detail, StringComparison.Ordinal);
+        Assert.Contains("ends after the record horizon", claimed.Detail, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A read that never found a quiet instant to close the record takes no count: every quantity
+    /// reads unmeasured because the source cannot state one, naming the in-flight transitions,
+    /// whatever its period.
+    /// </summary>
+    [Fact]
+    public void AReadThatFoundTransitionsInFlightReadsUnmeasuredThroughout()
+    {
+        var reading = AnalyticsComposers.Throughput(new ThroughputSummary(
+            Start.AddDays(1), Start.AddDays(2), Start, Quiet: false, Horizon: null, 0, 0, 0, 0, 0, 0, 0, 0));
+
+        foreach (var quantity in new[] { reading.Waiting, reading.Claimed, reading.Retried, reading.Escalated, reading.Completed })
+        {
+            var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(quantity);
+            Assert.Equal(UnmeasuredReason.SourceCannotStateOne, unmeasured.Reason);
+            Assert.Contains("in flight", unmeasured.Detail, StringComparison.Ordinal);
+        }
     }
 
     /// <summary>A record holding no entry at all measures no period.</summary>

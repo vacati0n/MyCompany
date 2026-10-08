@@ -412,12 +412,12 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
                         Workflow = "single-item",
                         Position = MediaCompany.Domain.Work.LifecyclePosition.Queued,
                         ClaimState = MediaCompany.Domain.Work.ClaimState.Ready,
-                        // Real time, not the fixture clock. The claim predicate reads the
-                        // datastore's own `now()` so that two workers cannot disagree about
-                        // when a job became available, which means an injected clock does not
-                        // move it and a seeded instant must be in the datastore's past.
+                        // Not written: the datastore sets availability from its own clock plus
+                        // the stated delay, the clock the claim predicate reads, so two workers
+                        // cannot disagree about when a job became available.
                         AvailableAt = DateTimeOffset.UtcNow.AddMinutes(-1),
                     },
+                    TimeSpan.Zero,
                     CancellationToken.None);
             }
 

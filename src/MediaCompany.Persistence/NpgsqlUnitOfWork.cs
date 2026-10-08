@@ -49,7 +49,7 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
         _connection = connection;
         _transaction = transaction;
 
-        Audit = new NpgsqlAuditAppender(connection, transaction, clock);
+        Audit = new NpgsqlAuditAppender(connection, transaction);
         Operations = new NpgsqlOperationRecorder(connection, transaction);
         Jobs = new NpgsqlJobWriter(connection, transaction);
         Budgets = new NpgsqlBudgetEvaluator(connection, transaction);

@@ -49,6 +49,13 @@ internal sealed class InMemoryWork : IUnitOfWork
 
     public int Commits { get; private set; }
 
+    /// <summary>
+    /// The double's OWN clock, standing in for the datastore's: availability is set from it plus the
+    /// stated delay, exactly as the datastore sets it from its clock, and it is deliberately not the
+    /// clock injected into the services under test. Real time unless a demonstration supplies one.
+    /// </summary>
+    public Func<DateTimeOffset> StoreClock { get; init; } = () => DateTimeOffset.UtcNow;
+
     public Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IWorkTransaction>(new Txn(this));
 
@@ -156,10 +163,11 @@ internal sealed class InMemoryWork : IUnitOfWork
 
         private sealed class JobWriter(List<Action> pending, InMemoryWork owner) : IJobWriter
         {
-            public Task EnqueueAsync(Job job, CancellationToken ct)
+            public Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken ct)
             {
-                pending.Add(() => owner.Jobs[job.Id] = job);
-                return Task.CompletedTask;
+                var availableAt = owner.StoreClock() + claimableAfter;
+                pending.Add(() => owner.Jobs[job.Id] = job with { AvailableAt = availableAt });
+                return Task.FromResult(availableAt);
             }
 
             public Task RecordStageAsync(JobStage stage, CancellationToken ct)
@@ -195,21 +203,23 @@ internal sealed class InMemoryWork : IUnitOfWork
                 return Task.FromResult<Job?>(claimed);
             }
 
-            public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct)
+            public Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken ct)
             {
+                var availableAt = owner.StoreClock() + claimableAfter;
                 pending.Add(() => owner.Jobs[job] = owner.Jobs[job] with
                 {
                     ClaimState = state,
                     AvailableAt = availableAt,
                     ClaimedBy = null,
                 });
-                return Task.CompletedTask;
+                return Task.FromResult(availableAt);
             }
 
-            public Task AdvanceAsync(
+            public Task<DateTimeOffset> AdvanceAsync(
                 JobId job, LifecyclePosition position, ClaimState state,
-                DateTimeOffset availableAt, CancellationToken ct)
+                TimeSpan claimableAfter, CancellationToken ct)
             {
+                var availableAt = owner.StoreClock() + claimableAfter;
                 pending.Add(() => owner.Jobs[job] = owner.Jobs[job] with
                 {
                     Position = position,
@@ -217,7 +227,7 @@ internal sealed class InMemoryWork : IUnitOfWork
                     AvailableAt = availableAt,
                     ClaimedBy = null,
                 });
-                return Task.CompletedTask;
+                return Task.FromResult(availableAt);
             }
         }
 

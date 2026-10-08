@@ -28,14 +28,17 @@ internal sealed class NpgsqlJobWriter : IJobWriter
         _transaction = transaction;
     }
 
-    public async Task EnqueueAsync(Job job, CancellationToken cancellationToken)
+    public async Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(job);
 
+        // The availability instant is the DATASTORE'S clock plus the stated delay — the clock every
+        // claim compares it against. The job's own availability field is not written.
         await using var command = new NpgsqlCommand(
             """
             INSERT INTO jobs (job_id, item_id, channel_id, workflow, position, claim_state, available_at, claimed_by, lease_expires_at)
-            VALUES (@job_id, @item_id, @channel_id, @workflow, @position, @claim_state, @available_at, NULL, NULL)
+            VALUES (@job_id, @item_id, @channel_id, @workflow, @position, @claim_state, now() + @delay, NULL, NULL)
+            RETURNING available_at
             """,
             _connection,
             _transaction);
@@ -46,9 +49,26 @@ internal sealed class NpgsqlJobWriter : IJobWriter
         command.Parameters.AddWithValue("workflow", job.Workflow);
         command.Parameters.AddWithValue("position", job.Position.ToString());
         command.Parameters.AddWithValue("claim_state", job.ClaimState.ToString());
-        command.Parameters.AddWithValue("available_at", job.AvailableAt);
+        command.Parameters.AddWithValue("delay", Delay(claimableAfter));
 
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await AvailableAtAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>A delay until claimability is never negative; a negative one would be an instant in the past by another name.</summary>
+    private static TimeSpan Delay(TimeSpan claimableAfter) =>
+        claimableAfter < TimeSpan.Zero
+            ? throw new ArgumentOutOfRangeException(nameof(claimableAfter), "A delay until claimability is not negative.")
+            : claimableAfter;
+
+    private static async Task<DateTimeOffset> AvailableAtAsync(NpgsqlCommand command, CancellationToken cancellationToken)
+    {
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOperationException("No queue row was written for the unit named.");
+        }
+
+        return reader.GetFieldValue<DateTimeOffset>(0);
     }
 
     public async Task RecordStageAsync(JobStage stage, CancellationToken cancellationToken)
@@ -187,32 +207,33 @@ internal sealed class NpgsqlJobWriter : IJobWriter
         };
     }
 
-    public async Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken cancellationToken)
+    public async Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken cancellationToken)
     {
         await using var command = new NpgsqlCommand(
             """
             UPDATE jobs
                SET claim_state = @state,
-                   available_at = @available_at,
+                   available_at = now() + @delay,
                    claimed_by = NULL,
                    lease_expires_at = NULL
              WHERE job_id = @job_id
+            RETURNING available_at
             """,
             _connection,
             _transaction);
 
         command.Parameters.AddWithValue("job_id", job.Value);
         command.Parameters.AddWithValue("state", state.ToString());
-        command.Parameters.AddWithValue("available_at", availableAt);
+        command.Parameters.AddWithValue("delay", Delay(claimableAfter));
 
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await AvailableAtAsync(command, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task AdvanceAsync(
+    public async Task<DateTimeOffset> AdvanceAsync(
         JobId job,
         LifecyclePosition position,
         ClaimState state,
-        DateTimeOffset availableAt,
+        TimeSpan claimableAfter,
         CancellationToken cancellationToken)
     {
         await using var command = new NpgsqlCommand(
@@ -220,10 +241,11 @@ internal sealed class NpgsqlJobWriter : IJobWriter
             UPDATE jobs
                SET position = @position,
                    claim_state = @state,
-                   available_at = @available_at,
+                   available_at = now() + @delay,
                    claimed_by = NULL,
                    lease_expires_at = NULL
              WHERE job_id = @job_id
+            RETURNING available_at
             """,
             _connection,
             _transaction);
@@ -231,8 +253,8 @@ internal sealed class NpgsqlJobWriter : IJobWriter
         command.Parameters.AddWithValue("job_id", job.Value);
         command.Parameters.AddWithValue("position", position.ToString());
         command.Parameters.AddWithValue("state", state.ToString());
-        command.Parameters.AddWithValue("available_at", availableAt);
+        command.Parameters.AddWithValue("delay", Delay(claimableAfter));
 
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await AvailableAtAsync(command, cancellationToken).ConfigureAwait(false);
     }
 }

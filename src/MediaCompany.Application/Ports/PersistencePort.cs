@@ -225,10 +225,22 @@ public sealed record OperationDraft
     public MediaCompany.Domain.Capabilities.ReasoningTier? ReasoningTierServed { get; init; }
 }
 
-/// <summary>The durable job queue as a transactional claim table (module M-013 over M-017).</summary>
+/// <summary>
+/// The durable job queue as a transactional claim table (module M-013 over M-017).
+///
+/// ONE CLOCK DECIDES CLAIMABILITY. Every member that makes a unit claimable states a DELAY until it
+/// is claimable — zero, or a backoff — and the datastore sets the availability instant from its own
+/// clock plus that delay, returning it. No member accepts an availability instant: the claim and the
+/// lease are decided on the datastore's clock, so an instant set on any other clock could leave a
+/// unit made available at once unclaimable at once.
+/// </summary>
 public interface IJobWriter
 {
-    Task EnqueueAsync(Job job, CancellationToken cancellationToken);
+    /// <summary>
+    /// Enqueues a unit, claimable after <paramref name="claimableAfter"/> by the datastore's clock.
+    /// The unit's own availability instant is not written: the datastore sets it, and returns it.
+    /// </summary>
+    Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken cancellationToken);
 
     Task RecordStageAsync(JobStage stage, CancellationToken cancellationToken);
 
@@ -246,18 +258,19 @@ public interface IJobWriter
     /// </summary>
     Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken cancellationToken);
 
-    Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken cancellationToken);
+    /// <summary>Releases a claim into <paramref name="state"/>, claimable after the stated delay; returns the instant set.</summary>
+    Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken cancellationToken);
 
     /// <summary>
     /// Moves a unit to its next lifecycle position and claim state together. A unit whose
     /// workflow has no next position reaches a terminal claim state here, which is what stops a
     /// finished unit from being claimed again.
     /// </summary>
-    Task AdvanceAsync(
+    Task<DateTimeOffset> AdvanceAsync(
         JobId job,
         MediaCompany.Domain.Work.LifecyclePosition position,
         ClaimState state,
-        DateTimeOffset availableAt,
+        TimeSpan claimableAfter,
         CancellationToken cancellationToken);
 }
 

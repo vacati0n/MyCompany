@@ -280,7 +280,8 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
         private sealed class Jobless : IJobWriter
         {
-            public Task EnqueueAsync(Job job, CancellationToken ct) => Task.CompletedTask;
+            public Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken ct) =>
+                Task.FromResult(DateTimeOffset.UnixEpoch);
 
             public Task RecordStageAsync(JobStage stage, CancellationToken ct) => Task.CompletedTask;
 
@@ -290,11 +291,11 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             public Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken ct) =>
                 Task.FromResult<Job?>(null);
 
-            public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct) =>
-                Task.CompletedTask;
+            public Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken ct) =>
+                Task.FromResult(DateTimeOffset.UnixEpoch);
 
-            public Task AdvanceAsync(JobId job, LifecyclePosition position, ClaimState state,
-                DateTimeOffset availableAt, CancellationToken ct) => Task.CompletedTask;
+            public Task<DateTimeOffset> AdvanceAsync(JobId job, LifecyclePosition position, ClaimState state,
+                TimeSpan claimableAfter, CancellationToken ct) => Task.FromResult(DateTimeOffset.UnixEpoch);
         }
 
         private sealed class Gateless : IGateWriter

@@ -187,6 +187,70 @@ CREATE OR REPLACE TRIGGER dossier_components_write_once
     FOR EACH ROW EXECUTE FUNCTION refuse_dossier_amendment();
 
 -- ---------------------------------------------------------------------------
+-- The record horizon: what makes an observed period final
+-- ---------------------------------------------------------------------------
+
+-- ONE ROW, holding the instant below which the append-only record is closed. Every audit entry is
+-- stamped by the datastore as the later of its own clock and this horizon, under a SHARED hold on
+-- this row that lasts until the stamping transaction ends; a throughput read takes the row
+-- EXCLUSIVELY without waiting, which is granted only when no audited transaction is in flight,
+-- raises it to the later of the datastore's clock and its prior value, and counts afterwards. No
+-- entry can then commit stamped inside a period that ended at or before a horizon a read set, so
+-- an observed period, observed zero included, is permanent by construction.
+CREATE TABLE IF NOT EXISTS audit_record_horizon (
+    only_row boolean PRIMARY KEY DEFAULT true CHECK (only_row),
+    horizon  timestamptz NOT NULL
+);
+
+-- Initialised once, while the append-only record is held against writers, at the later of the
+-- datastore's clock and the latest stamp already recorded, so every existing entry lies below it.
+LOCK TABLE audit_entries IN SHARE ROW EXCLUSIVE MODE;
+
+INSERT INTO audit_record_horizon (only_row, horizon)
+SELECT true, GREATEST(clock_timestamp(), COALESCE(max(occurred_at), clock_timestamp()))
+FROM audit_entries
+ON CONFLICT (only_row) DO NOTHING;
+
+-- THE CHECK, binding every writer of the append-only record, the appender and anything that
+-- bypasses it alike: it takes the horizon shared, held to the end of the writing transaction, and
+-- refuses an entry stamped below it.
+CREATE OR REPLACE FUNCTION refuse_entry_below_horizon() RETURNS trigger AS $$
+DECLARE
+    closed_below timestamptz;
+BEGIN
+    SELECT horizon INTO closed_below FROM audit_record_horizon WHERE only_row FOR SHARE;
+
+    IF closed_below IS NOT NULL AND NEW.occurred_at < closed_below THEN
+        RAISE EXCEPTION 'the append-only record is closed below %: an entry stamped % is refused',
+            closed_below, NEW.occurred_at
+            USING ERRCODE = 'integrity_constraint_violation';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER audit_entries_at_or_above_horizon
+    BEFORE INSERT ON audit_entries
+    FOR EACH ROW EXECUTE FUNCTION refuse_entry_below_horizon();
+
+-- The horizon row is moved only forward and is never removed.
+CREATE OR REPLACE FUNCTION refuse_horizon_regression() RETURNS trigger AS $$
+BEGIN
+    IF TG_OP = 'DELETE' OR NEW.horizon < OLD.horizon THEN
+        RAISE EXCEPTION 'the record horizon only moves forward: % refused', TG_OP
+            USING ERRCODE = 'integrity_constraint_violation';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER audit_record_horizon_forward_only
+    BEFORE UPDATE OR DELETE ON audit_record_horizon
+    FOR EACH ROW EXECUTE FUNCTION refuse_horizon_regression();
+
+-- ---------------------------------------------------------------------------
 -- The throughput reading's access path
 -- ---------------------------------------------------------------------------
 
