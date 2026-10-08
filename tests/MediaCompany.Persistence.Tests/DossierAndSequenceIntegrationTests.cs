@@ -58,28 +58,50 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
         }
 
         _dataSource = NpgsqlDataSource.Create(PostgresIntegrationTests.ConnectionString);
-        await ExecuteAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
-        await SchemaInstaller.InstallAsync(_dataSource, CancellationToken.None);
-        await ExecuteAsync(
-            """
-            INSERT INTO companies (company_id, name, operating_state) VALUES (@company, 'Media Company', 'building');
-            INSERT INTO channels (channel_id, company_id, platform, language, registered)
-                VALUES (@channel, @company, 'video-platform', 'en', false);
-            INSERT INTO items (item_id, channel_id, item_version, title) VALUES (@item, @channel, 1, 'demonstration item');
-            """,
-            c =>
-            {
-                c.Parameters.AddWithValue("company", Company.Value);
-                c.Parameters.AddWithValue("channel", Channel.Value);
-                c.Parameters.AddWithValue("item", Item.Value);
-            });
+
+        try
+        {
+            await ThrowawayStore.DropAsync(_dataSource);
+            await SchemaInstaller.InstallAsync(_dataSource, CancellationToken.None);
+            await ExecuteAsync(
+                """
+                INSERT INTO companies (company_id, name, operating_state) VALUES (@company, 'Media Company', 'building');
+                INSERT INTO channels (channel_id, company_id, platform, language, registered)
+                    VALUES (@channel, @company, 'video-platform', 'en', false);
+                INSERT INTO items (item_id, channel_id, item_version, title) VALUES (@item, @channel, 1, 'demonstration item');
+                """,
+                c =>
+                {
+                    c.Parameters.AddWithValue("company", Company.Value);
+                    c.Parameters.AddWithValue("channel", Channel.Value);
+                    c.Parameters.AddWithValue("item", Item.Value);
+                });
+        }
+        catch
+        {
+            // A demonstration that fails while preparing its store still leaves no row behind.
+            await ThrowawayStore.DropAsync(_dataSource);
+            throw;
+        }
     }
 
+    /// <summary>
+    /// Drops the schema on completion, whatever the demonstration did, so no row it wrote — a
+    /// condition recorded satisfied, an owner approval, a gate state or a dispatch record included —
+    /// outlives it. The drop at start stays as well.
+    /// </summary>
     public async Task DisposeAsync()
     {
         if (_dataSource is not null)
         {
-            await _dataSource.DisposeAsync();
+            try
+            {
+                await ThrowawayStore.DropAsync(_dataSource);
+            }
+            finally
+            {
+                await _dataSource.DisposeAsync();
+            }
         }
     }
 

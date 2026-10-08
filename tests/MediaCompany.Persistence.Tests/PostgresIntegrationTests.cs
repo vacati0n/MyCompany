@@ -55,16 +55,38 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
         }
 
         _dataSource = NpgsqlDataSource.Create(ConnectionString);
-        await DropEverythingAsync();
-        await SchemaInstaller.InstallAsync(_dataSource, CancellationToken.None);
-        await SeedAsync();
+
+        try
+        {
+            await ThrowawayStore.DropAsync(_dataSource);
+            await SchemaInstaller.InstallAsync(_dataSource, CancellationToken.None);
+            await SeedAsync();
+        }
+        catch
+        {
+            // A demonstration that fails while preparing its store still leaves no row behind.
+            await ThrowawayStore.DropAsync(_dataSource);
+            throw;
+        }
     }
 
+    /// <summary>
+    /// Drops the schema on completion, whatever the demonstration did, so no row it wrote — a
+    /// condition recorded satisfied, an owner approval, a gate state or a dispatch record included —
+    /// outlives it. The drop at start stays as well.
+    /// </summary>
     public async Task DisposeAsync()
     {
         if (_dataSource is not null)
         {
-            await _dataSource.DisposeAsync();
+            try
+            {
+                await ThrowawayStore.DropAsync(_dataSource);
+            }
+            finally
+            {
+                await _dataSource.DisposeAsync();
+            }
         }
     }
 
@@ -568,8 +590,6 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
                 c.Parameters.AddWithValue("item", Item.Value);
             });
     }
-
-    private Task DropEverythingAsync() => ExecuteAsync("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
 
     private async Task ExecuteAsync(string sql, Action<NpgsqlCommand>? configure = null)
     {
