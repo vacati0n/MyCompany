@@ -1731,3 +1731,51 @@ was not taken.
 Whether this reading stands. If the CEO would rather accept a demonstration depth as
 provisional evidence, that is a new decision and gets its own identifier; nothing here is
 renumbered.
+
+---
+
+# Wave 6 session decisions — block `CEO-D-500`–`CEO-D-599`, corrections `CEO-C-500`–`CEO-C-599`
+
+**This session takes `CEO-D-500`–`CEO-D-599` for decisions and `CEO-C-500`–`CEO-C-599` for
+corrections**, under the allocation-block rule and the source-qualifier scheme. The previous
+session's block used only `CEO-D-400`. Nothing is renumbered.
+
+---
+
+## CEO-D-500 — Channel isolation: one legal entity, several channels
+
+**Decided 2026-10-08 by the CEO**, in the session that runs Wave 6, before the run's scope
+phase, answering the question put in the Wave 5 wave report: *settle channel isolation now —
+one legal entity or several — or build configuration flexible to both answers?* **This is the
+owner's decision, not the orchestrator's reading.**
+
+### The decision
+
+**The company operates every channel under one legal entity.** There is one payee and one
+payment account, shared by every channel. Channels are separated by configuration, not by
+corporate structure: per-channel audience, brand, voice, content strategy, schedule, budget,
+library registration, risk profile, analytics partition and approval queue, exactly the
+per-channel list of master plan section 17.5.
+
+### What it discharges, and what it does not
+
+1. **It discharges the cross-wave condition that channel isolation is settled before, not
+   during, the multi-channel wave.** The isolation question is closed: isolation is not
+   structural at the payee.
+2. **It does not discharge the approval-workload re-examination**, which still needs the
+   approval-minutes series that does not exist. No second channel is created, configured as
+   live or routed to in Wave 6; the ticket's scope stands.
+3. **It authorises no spend, no account, no channel creation and no publication.** The payment
+   account is still owed by the owner and still blocks first publication; under this decision
+   there is exactly one such account to open, not one per channel.
+
+### The consequence the system must carry
+
+Master plan section 17.5 records, as an inference, that genuine isolation between channels
+requires distinct payees. Under one payee the channels are **related** for the platform's
+monetisation and enforcement purposes: an enforcement action against one channel may reach the
+others. The decision accepts that exposure. The system must therefore model the payee as a
+**company-level** fact shared by every channel, never as a per-channel value that could be
+configured to differ, and the per-channel risk profile must be able to state that the channels
+share one payee. Budget remains per channel for tracking and the company budget of USD 77.41
+per month remains the ceiling across all of them.
