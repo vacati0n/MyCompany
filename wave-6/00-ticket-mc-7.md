@@ -59,7 +59,7 @@ Measured in this programme, not theoretical. `research/framework-defects.md` car
 3. **At least three acceptance criteria per task** in nested-bullet fields; the parser swallows the first nested bullet. Not applicable to table-row criteria.
 4. **Do not sign a decision record.**
 5. **Do not express a requirement trace as a range.**
-6. **The string "claude" must not appear in any framework artifact**, including file paths and branch names.
+6. **The lowercase name of the session-tooling vendor — the word that names every session worktree directory — must not appear in any framework artifact**, including file paths and branch names, which is how it gets in.
 7. **A version field must be a version string.**
 8. **Read the validator source rather than guessing**, and run it read-only over the draft before handing back. Every phase of Waves 4 and 5 passed first time on that habit: twelve of twelve.
 9. **A gate decision's rationale reaches no downstream phase.** Restate every gate answer in the next phase's briefing, and expect a careful agent to treat it as an assumption.
