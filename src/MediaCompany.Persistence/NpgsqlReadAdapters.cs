@@ -616,6 +616,39 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServed
     }
 
     /// <summary>
+    /// The headroom in the datastore's booking month, the month and the amount in one statement. The
+    /// subtraction is the datastore's, as in the delivered member.
+    /// </summary>
+    public async Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(attribution);
+
+        await using var command = _dataSource.CreateCommand(
+            """
+            WITH booking AS (
+                SELECT (date_trunc('month', GREATEST(clock_timestamp(), horizon) AT TIME ZONE 'UTC'))::date AS month
+                FROM audit_record_horizon WHERE only_row
+            )
+            SELECT booking.month,
+                   COALESCE((SELECT MIN(b.amount - u.utilized)
+                             FROM fn_budgets_for(@channel_id, @department_id, booking.month) b
+                             CROSS JOIN LATERAL fn_budget_utilization(b.budget_id) u), 0),
+                   COALESCE((SELECT MIN(b.currency) FROM fn_budgets_for(@channel_id, @department_id, booking.month) b), 'USD')
+            FROM booking
+            """);
+        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
+        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOperationException("The record horizon is missing; the fifth schema resource creates it.");
+        }
+
+        return new BookedHeadroom(reader.GetFieldValue<DateOnly>(0), new Money(reader.GetDecimal(1), reader.GetString(2)));
+    }
+
+    /// <summary>
     /// One item's cost position, mirroring the delivered period summary. No row in the view means
     /// no operation is recorded for the item, which is a different fact from a recorded cost of
     /// zero and is reported as a count of zero operations rather than as a zero amount.

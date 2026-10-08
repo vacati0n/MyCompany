@@ -101,8 +101,26 @@ internal sealed class FakeBudgetReader : IBudgetReader
 {
     public Money Remaining { get; set; } = new(100m);
 
-    public Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken ct) =>
-        Task.FromResult(Remaining);
+    /// <summary>How many headroom reads were taken for a month the caller supplied, on its own clock.</summary>
+    public int CallerMonthReads { get; private set; }
+
+    /// <summary>How many headroom reads were taken for the datastore's booking month.</summary>
+    public int BookingMonthReads { get; private set; }
+
+    public Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken ct)
+    {
+        CallerMonthReads++;
+        return Task.FromResult(Remaining);
+    }
+
+    /// <summary>The booking month a demonstration names, and the remaining amount.</summary>
+    public DateOnly BookingMonth { get; set; } = new(2026, 10, 1);
+
+    public Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken ct)
+    {
+        BookingMonthReads++;
+        return Task.FromResult(new BookedHeadroom(BookingMonth, Remaining));
+    }
 }
 
 /// <summary>

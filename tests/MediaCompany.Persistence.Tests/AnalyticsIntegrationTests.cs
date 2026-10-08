@@ -538,6 +538,9 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     {
         public Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken ct) =>
             Task.FromResult(new Money(1_000m));
+
+        public Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken ct) =>
+            Task.FromResult(new BookedHeadroom(new DateOnly(2026, 10, 1), new Money(1_000m)));
     }
 
     private sealed class TestClock(DateTimeOffset now) : IClock

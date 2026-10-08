@@ -21,11 +21,16 @@ public enum RightsCheckRest
     Refused = 3,
 }
 
-/// <summary>What one run of the rights-check step did, and every gate step it took.</summary>
+/// <summary>
+/// What one run of the rights-check step did, and every gate step it took. <see cref="Evidence"/> is
+/// the copyright-check outcome the run decided on, or null where no check ran and none is recorded: a
+/// check that never ran reads absent, never as an outcome at an invented instant.
+/// </summary>
+
 public sealed record RightsCheckResult(
     RightsCheckRest Rest,
     ChannelId Channel,
-    Domain.Dossier.StageEvidence Evidence,
+    Domain.Dossier.StageEvidence? Evidence,
     bool EvidenceRecordedByThisRun,
     IReadOnlyList<GateStepOutcome> GateSteps);
 
@@ -110,7 +115,7 @@ public sealed class RightsCheckStep
                 var existing = recorded.Dossier.StageFor(ProductionStage.CopyrightCheck);
                 return new RightsCheckResult(
                     RightsCheckRest.Refused, recorded.Channel,
-                    existing ?? NotRun(subject), EvidenceRecordedByThisRun: false, steps);
+                    existing, EvidenceRecordedByThisRun: false, steps);
             }
         }
 
@@ -132,9 +137,32 @@ public sealed class RightsCheckStep
             var presented = await _gate.PresentForOwnerApprovalAsync(item, version, cancellationToken).ConfigureAwait(false);
             steps.Add(presented);
 
-            return new RightsCheckResult(
-                presented is GateStepOutcome.Moved ? RightsCheckRest.PresentedForOwnerApproval : RightsCheckRest.Refused,
-                recorded.Channel, evidence, recordedNow, steps);
+            if (presented is GateStepOutcome.Moved)
+            {
+                return new RightsCheckResult(RightsCheckRest.PresentedForOwnerApproval, recorded.Channel, evidence, recordedNow, steps);
+            }
+
+            // RECORDED EVIDENCE AND THE PRESENTATION DISAGREE (decision D-009, as corrected in its
+            // review): the evidence read releasable, and the presentation's own rights check, taken now,
+            // did not — a basis expired or an asset decision was added since. The version is sent back
+            // naming the disagreement, so the step reaches the rest D-009 defines rather than refusing on
+            // every later run. Any other refusal is reported as it stands.
+            if (presented is GateStepOutcome.Refused { Reason: GateStepRefusal.RightsNotReleasable } disagreement)
+            {
+                var back = await _gate
+                    .SendBackFromRightsCheckAsync(
+                        item, version, Copyright,
+                        $"the recorded copyright-check evidence read releasable and the rights check at presentation did not: {disagreement.Detail}",
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                steps.Add(back);
+
+                return new RightsCheckResult(
+                    back is GateStepOutcome.Moved ? RightsCheckRest.SentBack : RightsCheckRest.Refused,
+                    recorded.Channel, evidence, recordedNow, steps);
+            }
+
+            return new RightsCheckResult(RightsCheckRest.Refused, recorded.Channel, evidence, recordedNow, steps);
         }
 
         var sentBack = await _gate
@@ -146,13 +174,4 @@ public sealed class RightsCheckStep
             sentBack is GateStepOutcome.Moved ? RightsCheckRest.SentBack : RightsCheckRest.Refused,
             recorded.Channel, evidence, recordedNow, steps);
     }
-
-    /// <summary>The evidence a refused run reports where no copyright check was run or recorded.</summary>
-    private static Domain.Dossier.StageEvidence NotRun(DeclaredSubject subject) => new()
-    {
-        Stage = ProductionStage.CopyrightCheck,
-        Outcome = StageOutcome.Pending,
-        Summary = $"the copyright check was not run for subject '{subject.Subject}': the submission was refused",
-        RecordedAt = DateTimeOffset.MinValue,
-    };
 }

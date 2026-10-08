@@ -726,7 +726,7 @@ public sealed class NpgsqlApprovalQueueReader : IApprovalQueueReader
         FROM (
             SELECT DISTINCT ON (item_id, item_version) item_id, item_version, to_state, occurred_at
             FROM gate_transitions
-            ORDER BY item_id, item_version, occurred_at DESC
+            ORDER BY item_id, item_version, recorded_order DESC
         ) t
         JOIN items i ON i.item_id = t.item_id
         WHERE t.to_state = 'AwaitingOwnerApproval'

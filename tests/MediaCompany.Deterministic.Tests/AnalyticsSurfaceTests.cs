@@ -571,7 +571,7 @@ public sealed class AnalyticsSurfaceTests
     [Fact]
     public async Task TheMeasurableNowReportIsUnmeasuredThroughoutForAPeriodWithNoRecordedOperation()
     {
-        var service = new ReportingService(new StubCosts(operations: 0), new StubPartitions(), new StubClock());
+        var service = new ReportingService(new StubPartitions(), new StubClock());
 
         var lines = await service.MeasurableNowAsync(Period, CancellationToken.None);
 
@@ -584,7 +584,16 @@ public sealed class AnalyticsSurfaceTests
     [Fact]
     public async Task TheMeasurableNowReportIsObservedForAPeriodHoldingRecordedOperations()
     {
-        var service = new ReportingService(new StubCosts(operations: 2), new StubPartitions(), new StubClock());
+        // The report reads one source, the channel partition, whose company row carries the operations.
+        var service = new ReportingService(
+            new StubPartitions
+            {
+                Horizon = DateTimeOffset.UnixEpoch,
+                EarliestEntry = DateTimeOffset.UnixEpoch,
+                CompanyOperations = StubPartitions.Empty with { Operations = 2, Cost = new Money(1.25m) },
+                CompanyVariance = new Money(-76.16m),
+            },
+            new StubClock());
 
         var lines = await service.MeasurableNowAsync(Period, CancellationToken.None);
 

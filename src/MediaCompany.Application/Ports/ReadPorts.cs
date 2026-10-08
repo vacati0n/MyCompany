@@ -155,7 +155,18 @@ public interface ICostRollupReader
 public interface IBudgetReader
 {
     Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// What remains of the governing budgets in the month the datastore would book an operation into
+    /// NOW, and that month (the multi-channel change, as corrected in its review): the month of the
+    /// later of the datastore's clock and the record horizon, decided in the same statement as the
+    /// remaining amount, so admission is decided on the clock booking is decided on.
+    /// </summary>
+    Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken cancellationToken);
 }
+
+/// <summary>The headroom of one attribution in the datastore's booking month, and that month.</summary>
+public sealed record BookedHeadroom(DateOnly Month, Money Remaining);
 
 /// <summary>
 /// One period's cost position as the datastore computes it. <see cref="ContainsEstimates"/> is

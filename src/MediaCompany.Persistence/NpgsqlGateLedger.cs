@@ -123,7 +123,7 @@ public sealed class NpgsqlGateLedger : IGateLedger
             """
             SELECT to_state FROM gate_transitions
             WHERE item_id = @item_id AND item_version = @version
-            ORDER BY occurred_at DESC LIMIT 1
+            ORDER BY recorded_order DESC LIMIT 1
             """);
         command.Parameters.AddWithValue("item_id", item.Value);
         command.Parameters.AddWithValue("version", version.Value);

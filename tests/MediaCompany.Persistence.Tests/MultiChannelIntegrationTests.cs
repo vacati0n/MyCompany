@@ -744,7 +744,7 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
         var result = await RightsCheck().RunAsync(ItemB, Version, Subject(), CancellationToken.None);
 
         Assert.Equal(RightsCheckRest.SentBack, result.Rest);
-        Assert.Equal(StageOutcome.Failed, result.Evidence.Outcome);
+        Assert.Equal(StageOutcome.Failed, result.Evidence!.Outcome);
         Assert.Contains("no asset decision is recorded", result.Evidence.Summary, StringComparison.Ordinal);
         Assert.Equal(GateState.SentBack, await new NpgsqlGateLedger(Source).CurrentStateAsync(ItemB, Version, CancellationToken.None));
         Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM gate_transitions WHERE to_state = 'AwaitingOwnerApproval'"));
@@ -803,6 +803,215 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
         var second = await sequence.DriveAsync(Request(ItemA, ChannelA), CancellationToken.None);
         Assert.NotEqual(first.Unit, second.Unit);
         Assert.Equal("another-worker", await ScalarAsync<string>("SELECT claimed_by FROM jobs WHERE job_id = @j", c => c.Parameters.AddWithValue("j", first.Unit.Value)));
+    }
+
+    // -----------------------------------------------------------------------
+    // The correction cycle: datastore order, one-read additivity, concurrency, resume
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// LATEST IS THE DATASTORE'S ORDER. An owner verdict written with a caller instant EARLIER than
+    /// the presentation's still becomes the item's current state, because the datastore positions each
+    /// transition under the item hold; and a second, contradictory verdict from the same state is then
+    /// refused, so no two transitions leave one state.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ATransitionWithAnEarlierCallerInstantIsStillLatestAndNoStateIsLeftTwice()
+    {
+        await ChannelTestKit.RecordRightsFixtureAsync(Source, ItemA, ChannelA);
+        await ChannelTestKit.PresentAsync(Gate(), ItemA, Version);
+
+        // A process whose clock runs twelve hours behind the presentation's.
+        var behind = SteppingClock.HoursAgo(12);
+        var lateGate = ChannelTestKit.Gate(Source, new NpgsqlUnitOfWork(Source, behind), behind);
+        await lateGate.RecordOwnerVerdictAsync(ItemA, Version, ApprovalVerdict.Approved, "fixture verdict", behind.UtcNow, CancellationToken.None);
+
+        Assert.Equal(GateState.Approved, await new NpgsqlGateLedger(Source).CurrentStateAsync(ItemA, Version, CancellationToken.None));
+
+        await Assert.ThrowsAsync<GateStateConflictException>(() => lateGate.RecordOwnerVerdictAsync(
+            ItemA, Version, ApprovalVerdict.SentBack, "a contradictory verdict", behind.UtcNow, CancellationToken.None));
+
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM gate_transitions WHERE from_state = 'AwaitingOwnerApproval'"));
+        Assert.Equal(0L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM (SELECT from_state FROM gate_transitions GROUP BY item_id, item_version, from_state HAVING COUNT(*) > 1) forks"));
+    }
+
+    /// <summary>
+    /// EIGHT CONCURRENT GATE WRITERS of one item version, each submitting from the Draft it read:
+    /// exactly one moves the item, every other is refused by name, and one transition leaves Draft.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ConcurrentGateWritersOfOneItemLeaveExactlyOneTransition()
+    {
+        var start = new TaskCompletionSource();
+        var writers = Enumerable.Range(0, 8).Select(async _ =>
+        {
+            await start.Task;
+            return await Gate().SubmitForRightsCheckAsync(ItemA, Version, WorkforceRole.Producer, CancellationToken.None);
+        }).ToArray();
+
+        start.SetResult();
+        var outcomes = await Task.WhenAll(writers);
+
+        Assert.Single(outcomes, o => o is GateStepOutcome.Moved);
+        Assert.Equal(7, outcomes.Count(o => o is GateStepOutcome.Refused));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM gate_transitions"));
+        Assert.Equal(GateState.AwaitingRightsCheck, await new NpgsqlGateLedger(Source).CurrentStateAsync(ItemA, Version, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// METERED OPERATIONS CONCURRENT WITH APPENDERS AND CLOSURES: transactions holding the horizon
+    /// shared while waiting for the chain head, appenders holding the chain head while taking the
+    /// horizon shared, and month and throughput closures beside them all complete — no deadlock — with
+    /// every operation booked and the chain linear.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task MeteredOperationsConcurrentWithAppendersAndClosuresAllComplete()
+    {
+        var month = await ChannelTestKit.BookingMonthAsync(Source);
+        var analytics = ChannelTestKit.Analytics(Source, _clock);
+        var unitOfWork = new NpgsqlUnitOfWork(Source, _clock);
+        var start = new TaskCompletionSource();
+
+        var metered = Enumerable.Range(0, 6).Select(async n =>
+        {
+            await start.Task;
+            await using var transaction = await unitOfWork.BeginAsync(CancellationToken.None);
+            await transaction.Operations.RecordAsync(Draft(ChannelA, ItemA, 100 + n, 10), CancellationToken.None);
+            await Task.Delay(15);
+            await transaction.Audit.AppendAsync(Entry($"metered {n}"), CancellationToken.None);
+            await transaction.CommitAsync(CancellationToken.None);
+        });
+
+        var appenders = Enumerable.Range(0, 6).Select(async n =>
+        {
+            await start.Task;
+            await using var transaction = await unitOfWork.BeginAsync(CancellationToken.None);
+            await transaction.Audit.AppendAsync(Entry($"appender {n}"), CancellationToken.None);
+            await Task.Delay(15);
+            await transaction.Operations.RecordAsync(Draft(ChannelB, ItemB, 200 + n, 0), CancellationToken.None);
+            await transaction.CommitAsync(CancellationToken.None);
+        });
+
+        var closures = Enumerable.Range(0, 3).Select(async _ =>
+        {
+            await start.Task;
+            for (var read = 0; read < 5; read++)
+            {
+                await analytics.OperationsByChannelAsync(month, CancellationToken.None);
+                await analytics.ThroughputByChannelAsync(DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow, CancellationToken.None);
+            }
+        });
+
+        var all = Task.WhenAll(metered.Concat(appenders).Concat(closures).ToArray());
+        start.SetResult();
+        Assert.Same(all, await Task.WhenAny(all, Task.Delay(TimeSpan.FromSeconds(60))));
+        await all;
+
+        Assert.Equal(12L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs"));
+        Assert.Equal(12L, await ScalarAsync<long>("SELECT COUNT(*) FROM audit_entries"));
+        Assert.Equal(-1, AuditChain.FirstBrokenLink(await EntriesAsync()));
+    }
+
+    /// <summary>
+    /// THE REPORT SUMS EXACTLY ON THE STORE, with an operation booked between the report's read and
+    /// anything after it: every company line equals the sum of its channel lines, because both come
+    /// from one read.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task TheReportsChannelLinesSumToItsCompanyLinesWithAWriteBetweenReads()
+    {
+        await AppendObservationStartAsync();
+        await RecordOperationAsync(ChannelA, ItemA, 1_000, 500);
+        await RecordOperationAsync(ChannelB, ItemB, 2_000, 0);
+        var month = await ChannelTestKit.BookingMonthAsync(Source);
+
+        var interleaving = new WriteAfterFirstRead(new NpgsqlChannelPartitionReader(Source), () => RecordOperationAsync(ChannelA, ItemA, 3_000, 3_000));
+        var lines = await new ReportingService(interleaving, _clock).MeasurableNowAsync(month, CancellationToken.None);
+
+        decimal Amount(MeasurementQuantity q) => q is MeasurementQuantity.ObservedValue v ? v.Amount : 0m;
+        var company = Amount(lines.Single(l => l.Name == "monthly-cost-total").Quantity);
+        var channels = lines.Where(l => l.Name.StartsWith("monthly-cost-total:channel:", StringComparison.Ordinal)).Sum(l => Amount(l.Quantity));
+
+        Assert.True(interleaving.Written);
+        Assert.NotEqual(0m, company);
+        Assert.Equal(company, channels);
+    }
+
+    /// <summary>
+    /// RESUME WHERE EVIDENCE AND THE GATE DISAGREE: recorded copyright-check evidence reads releasable,
+    /// and since it was recorded an incomplete asset decision was added, so the presentation's own rights
+    /// check refuses; the step sends the version back naming the disagreement instead of refusing on
+    /// every run.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AResumedRightsCheckWhoseEvidenceAndGateDisagreeIsSentBack()
+    {
+        await ChannelTestKit.RecordRightsFixtureAsync(Source, ItemA, ChannelA);
+        var recorder = new ItemDossierRecorder(new NpgsqlUnitOfWork(Source, _clock), _clock);
+        await recorder.OpenAsync(ItemA, Version, WorkforceRole.Producer, CancellationToken.None);
+        await Gate().SubmitForRightsCheckAsync(ItemA, Version, WorkforceRole.Producer, CancellationToken.None);
+
+        var dossiers = new NpgsqlItemDossierReader(Source);
+        var evidence = await new CopyrightCheckStageHandler(dossiers, new NpgsqlAssetLedger(Source), _clock)
+            .HandleAsync(ItemA, Version, Subject(), CancellationToken.None);
+        Assert.Equal(StageOutcome.Succeeded, evidence.Evidence.Outcome);
+        await recorder.RecordStageAsync(ItemA, Version, evidence.Evidence, WorkforceRole.Copyright, CancellationToken.None);
+
+        await new NpgsqlAssetLedger(Source).RecordAsync(ChannelTestKit.CompleteAsset(ItemA) with { ProofOfLicenceReference = null }, CancellationToken.None);
+
+        var first = await RightsCheck().RunAsync(ItemA, Version, Subject(), CancellationToken.None);
+
+        Assert.Equal(RightsCheckRest.SentBack, first.Rest);
+        Assert.False(first.EvidenceRecordedByThisRun);
+        Assert.Equal(GateState.SentBack, await new NpgsqlGateLedger(Source).CurrentStateAsync(ItemA, Version, CancellationToken.None));
+        Assert.Contains("recorded copyright-check evidence read releasable", await ScalarAsync<string>(
+            "SELECT reason FROM gate_transitions WHERE to_state = 'SentBack'"), StringComparison.Ordinal);
+    }
+
+    /// <summary>A refused run reports no stage evidence where no check ran, rather than one at an invented instant.</summary>
+    [RequiresPostgresFact]
+    public async Task ARefusedRunReportsAnUnrunCheckAsAbsent()
+    {
+        await ChannelTestKit.RecordRightsFixtureAsync(Source, ItemA, ChannelA);
+        await ChannelTestKit.PresentAsync(Gate(), ItemA, Version);
+
+        var result = await RightsCheck().RunAsync(ItemA, Version, Subject(), CancellationToken.None);
+
+        Assert.Equal(RightsCheckRest.Refused, result.Rest);
+        Assert.Null(result.Evidence);
+        Assert.Equal(GateState.AwaitingOwnerApproval, await new NpgsqlGateLedger(Source).CurrentStateAsync(ItemA, Version, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// A channel partition reader that books one operation right after the first read it serves, which
+    /// is a write between the report's read and anything the report might read after it.
+    /// </summary>
+    private sealed class WriteAfterFirstRead(IChannelPartitionReader inner, Func<Task> write) : IChannelPartitionReader
+    {
+        public bool Written { get; private set; }
+
+        public async Task<OperationPartitionSummary> OperationsAsync(DateOnly month, CancellationToken cancellationToken)
+        {
+            var summary = await inner.OperationsAsync(month, cancellationToken);
+            if (!Written)
+            {
+                Written = true;
+                await write();
+            }
+
+            return summary;
+        }
+
+        public Task<MonthClosure> CloseMonthAsync(DateOnly month, CancellationToken cancellationToken) => inner.CloseMonthAsync(month, cancellationToken);
+
+        public Task<DossierPartitionSummary> DossiersAsync(DateOnly month, CancellationToken cancellationToken) => inner.DossiersAsync(month, cancellationToken);
+
+        public Task<ThroughputPartitionSummary> ThroughputAsync(DateTimeOffset periodStart, DateTimeOffset periodEnd, CancellationToken cancellationToken) =>
+            inner.ThroughputAsync(periodStart, periodEnd, cancellationToken);
+
+        public Task<BudgetPartitionSummary> BudgetsAsync(DateOnly month, Money ceiling, CancellationToken cancellationToken) =>
+            inner.BudgetsAsync(month, ceiling, cancellationToken);
     }
 
     // -----------------------------------------------------------------------

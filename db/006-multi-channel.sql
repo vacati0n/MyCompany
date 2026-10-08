@@ -178,11 +178,38 @@ CREATE OR REPLACE TRIGGER agent_costs_booked_under_horizon
 -- The gate: every transition starts from the recorded state
 -- ---------------------------------------------------------------------------
 
+-- THE ORDER, the datastore's and nobody else's. "Latest" is decided by the position the datastore
+-- assigns each transition while it holds the item row, never by the instant a caller supplies: one
+-- clock, the datastore's, as the record horizon already is for the append-only record. Rows recorded
+-- before this file existed are given positions in the order of their recorded instants, once.
+CREATE SEQUENCE IF NOT EXISTS gate_transitions_recorded_order;
+
+ALTER TABLE gate_transitions ADD COLUMN IF NOT EXISTS recorded_order bigint;
+
+UPDATE gate_transitions g
+   SET recorded_order = ordered.position
+  FROM (
+      SELECT item_id, item_version, occurred_at,
+             row_number() OVER (ORDER BY occurred_at, item_id, item_version) AS position
+      FROM gate_transitions
+      WHERE recorded_order IS NULL
+  ) ordered
+ WHERE g.recorded_order IS NULL
+   AND g.item_id = ordered.item_id AND g.item_version = ordered.item_version AND g.occurred_at = ordered.occurred_at;
+
+SELECT setval('gate_transitions_recorded_order',
+              GREATEST(COALESCE((SELECT max(recorded_order) FROM gate_transitions), 0), 1),
+              (SELECT max(recorded_order) FROM gate_transitions) IS NOT NULL);
+
+CREATE UNIQUE INDEX IF NOT EXISTS gate_transitions_by_recorded_order
+    ON gate_transitions (item_id, item_version, recorded_order);
+
 -- THE CHECK, binding every writer of the gate-transition record. It holds the item row against
 -- other gate writers for the rest of the writing transaction, so two writers of one item
 -- serialise, and it refuses a transition whose from-state is not the item version's latest
--- recorded state, Draft where none is recorded. No caller can claim a state the record does not
--- hold. The hold is the no-key exclusive form, so a foreign-key check on the item is not blocked.
+-- recorded state, Draft where none is recorded, latest by the datastore's position. No caller can
+-- claim a state the record does not hold. The hold is the no-key exclusive form, so a foreign-key
+-- check on the item is not blocked.
 --
 -- Its trigger is named to fire AFTER the delivered bypass check on the same event, so a transition
 -- into Published from anything but Approved is still refused for that reason first.
@@ -192,10 +219,14 @@ DECLARE
 BEGIN
     PERFORM 1 FROM items WHERE item_id = NEW.item_id FOR NO KEY UPDATE;
 
+    -- The position is taken HERE, under the hold, so positions follow the order in which writers of
+    -- one item were admitted, whatever any caller supplied as the row's instant.
+    NEW.recorded_order := nextval('gate_transitions_recorded_order');
+
     SELECT to_state INTO recorded
     FROM gate_transitions
     WHERE item_id = NEW.item_id AND item_version = NEW.item_version
-    ORDER BY occurred_at DESC
+    ORDER BY recorded_order DESC
     LIMIT 1;
 
     recorded := COALESCE(recorded, 'Draft');

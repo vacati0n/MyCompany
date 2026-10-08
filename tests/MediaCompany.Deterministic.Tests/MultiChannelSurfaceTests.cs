@@ -438,7 +438,7 @@ public sealed class MultiChannelSurfaceTests
             OperationRows = [new OperationPartitionRow(ChannelA, true, StubPartitions.Empty)],
         };
 
-        var lines = await new ReportingService(new NoCosts(), partitions, new FixedClock(Now)).MeasurableNowAsync(Month, CancellationToken.None);
+        var lines = await new ReportingService(partitions, new FixedClock(Now)).MeasurableNowAsync(Month, CancellationToken.None);
 
         var channelLine = Assert.Single(lines, l => l.Name == $"monthly-cost-total:channel:{ChannelA}");
         Assert.IsType<MeasurementQuantity.Unmeasured>(channelLine.Quantity);
