@@ -27,7 +27,12 @@ public sealed class PublishingSequenceTests
     private sealed class Harness
     {
         public InMemoryWork Work { get; } = new();
-        public FixedClock Clock { get; } = new(Now);
+        /// <summary>
+        /// A MOVING clock: every read is a second later than the last. Under a fixed clock the
+        /// instant the lifecycle stamps a pending row with and the instant the unit is made
+        /// available at coincide, so a closure keyed on the wrong one of them could not fail.
+        /// </summary>
+        public SteppingTestClock Clock { get; } = new(Now);
         public RecordedGateState Gate { get; } = new();
 
         public PublishingSequenceService Sequence()
@@ -38,6 +43,22 @@ public sealed class PublishingSequenceTests
                 gate,
                 new PublicationDispatchService(Work, Clock),
                 Clock);
+        }
+    }
+
+    /// <summary>A clock that advances one second on every read.</summary>
+    private sealed class SteppingTestClock(DateTimeOffset start) : IClock
+    {
+        private DateTimeOffset _next = start;
+
+        public DateTimeOffset UtcNow
+        {
+            get
+            {
+                var current = _next;
+                _next = _next.AddSeconds(1);
+                return current;
+            }
         }
     }
 
@@ -253,7 +274,10 @@ public sealed class PublishingSequenceTests
         Assert.Contains(composition, s => s.Outcome == StageOutcome.Succeeded && s.LeftAt is not null);
 
         // Every pending row the drive opened was closed on its own key: one pending and one
-        // closing write per position, on the same entered instant.
+        // closing write per position, on the same entered instant. The clock moves on every
+        // read, so the instant a pending row was entered at and the instant its unit was made
+        // available at differ wherever they come from separate reads, and a closure keyed on the
+        // wrong one lands on a different instant and fails here.
         foreach (var position in PublishingWorkflow.Definition.Stages)
         {
             var rows = harness.Work.Stages.Where(s => s.Position == position).ToArray();
@@ -262,6 +286,12 @@ public sealed class PublishingSequenceTests
             Assert.Equal(StageOutcome.Pending, rows[0].Outcome);
             Assert.Equal(StageOutcome.Succeeded, rows[1].Outcome);
         }
+
+        // And the clock did move between the reads that matter, so the check above is able to fail.
+        var first = PublishingWorkflow.Definition.Stages[0];
+        Assert.NotEqual(
+            harness.Work.Stages.First(s => s.Position == first).EnteredAt,
+            harness.Work.Stages.First(s => s.Position != first).EnteredAt);
 
         Assert.Single(harness.Work.AuditEntries, e => e.Action == LifecycleActions.Completed);
         Assert.Empty(harness.Work.Transitions);
