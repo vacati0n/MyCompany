@@ -752,10 +752,10 @@ public sealed class BoundaryTests
     [Fact]
     public void NoAdmittedChannelKeyReachesAControl()
     {
-        Assert.Equal(8, ChannelConfigurationKeys.Admitted.Count);
         Assert.All(
             ChannelConfigurationKeys.Admitted,
             key => Assert.False(ChannelConfigurationKeys.ReachesAControl(key), $"the admitted channel key {key} reaches a control"));
+        Assert.Equal(8, ChannelConfigurationKeys.Admitted.Count);
 
         foreach (var proposed in new[]
                  {
