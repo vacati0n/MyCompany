@@ -75,12 +75,23 @@ switch (command)
         _ = provider.GetRequiredService<ItemDossierRecorder>();
         _ = provider.GetRequiredService<PublishingSequenceService>();
 
+        // The multi-channel capability: the three read ports, the channel profile service, the
+        // copyright-check stage handler and the rights-check step.
+        _ = provider.GetRequiredService<IItemRegister>();
+        _ = provider.GetRequiredService<IChannelPartitionReader>();
+        _ = provider.GetRequiredService<IApprovalQueueReader>();
+        _ = provider.GetRequiredService<ChannelProfileService>();
+        _ = provider.GetRequiredService<MediaCompany.Deterministic.Production.CopyrightCheckStageHandler>();
+        _ = provider.GetRequiredService<RightsCheckStep>();
+
         Console.WriteLine("Composition root resolved.");
         Console.WriteLine("  capability egress: ICapabilityGateway only; no provider adapter is registered or registrable.");
         Console.WriteLine("  credentials:       opaque scoped handles; no secret value passes through this process boundary.");
         Console.WriteLine("  provider endpoints configured: 0 (this wave creates no account and commits no spend).");
         Console.WriteLine("  analytics surface:  resolved, with its read ports; it writes nothing and reaches no capability.");
         Console.WriteLine("  publishing sequence: resolved; it ends at composition and reaches no capability.");
+        Console.WriteLine("  channel readings:   resolved; every reading partitions by channel, and nothing records a channel value.");
+        Console.WriteLine($"  declared version:   {typeof(CompositionRoot).Assembly.GetName().Version}");
         return 0;
     }
 

@@ -61,6 +61,7 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
             await ThrowawayStore.DropAsync(_dataSource);
             await SchemaInstaller.InstallAsync(_dataSource, CancellationToken.None);
             await SeedAsync();
+            Period = await ChannelTestKit.BookingMonthAsync(_dataSource);
         }
         catch
         {
@@ -97,7 +98,11 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
     private static readonly ItemId Item = ItemId.New();
     private static readonly ProviderAccountId Account = new("provider-alpha");
     private static readonly ModelId ModelName = new("alpha-reasoning");
-    private static readonly DateOnly Period = new(2026, 10, 1);
+    /// <summary>
+    /// The month the datastore books this demonstration's operations into, read back from the store
+    /// rather than fixed: operations are booked at the datastore's instant (the multi-channel change).
+    /// </summary>
+    private DateOnly Period { get; set; }
 
     private static Attribution Attribution() => new(Item, Channel, Department, Agent);
 

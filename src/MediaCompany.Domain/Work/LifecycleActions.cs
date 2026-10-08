@@ -32,4 +32,21 @@ public static class LifecycleActions
     /// <summary>Every lifecycle action, in the order a unit can meet them.</summary>
     public static IReadOnlyList<string> All { get; } =
         [Enqueued, Claimed, StageSucceeded, Completed, StageRetried, StageEscalated];
+
+    /// <summary>
+    /// The subject every lifecycle entry names, declared ONCE beside the action names (the
+    /// multi-channel change). The lifecycle service and the dispatch service write it, and the
+    /// channel partition of the throughput reading reads the work unit back out of it with
+    /// <see cref="UnitSubjectPattern"/> and reaches the unit's channel through the unit's own
+    /// channel reference, so no entry needs a channel column of its own.
+    /// </summary>
+    public static string UnitSubject(JobId job, ItemId item) => $"job:{job.Value:D} item:{item.Value:D}";
+
+    /// <summary>
+    /// The pattern the work unit is read back out of a lifecycle entry's subject with: its first
+    /// capture group is the unit's identifier. An entry whose subject does not match is reported as
+    /// unattributed rather than dropped.
+    /// </summary>
+    public const string UnitSubjectPattern =
+        "^job:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) item:";
 }

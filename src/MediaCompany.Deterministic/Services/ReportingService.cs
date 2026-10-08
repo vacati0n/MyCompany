@@ -36,16 +36,25 @@ public sealed record ReportedMeasure(string Name, MeasurementQuantity Quantity, 
 public sealed class ReportingService
 {
     private readonly ICostRollupReader _costs;
+    private readonly IChannelPartitionReader _partitions;
     private readonly IClock _clock;
 
-    public ReportingService(ICostRollupReader costs, IClock clock)
+    public ReportingService(ICostRollupReader costs, IChannelPartitionReader partitions, IClock clock)
     {
         _costs = costs;
+        _partitions = partitions;
         _clock = clock;
     }
 
     public async Task<IReadOnlyList<ReportedMeasure>> MeasurableNowAsync(DateOnly period, CancellationToken cancellationToken)
     {
+        // The month is read under the record horizon's closure, taken first, and every line states
+        // whether the month can still change (the multi-channel change, decision D-006): a figure
+        // over a month that is not final is as recorded at the read.
+        var partition = ChannelAnalyticsComposers.Operations(
+            await _partitions.OperationsAsync(period, cancellationToken).ConfigureAwait(false));
+        var finality = partition.Finality.Statement;
+
         // Every money figure here is read from the datastore's own aggregation, including the
         // variance. Nothing in this method performs money arithmetic, so the figure the report
         // shows and the figure the record carries are one number.
@@ -83,7 +92,29 @@ public sealed class ReportingService
             "recorded operations, exact decimal aggregation",
             summary.ContainsEstimates)));
 
-        return lines;
+        // The same figures for every channel the register holds or the rows name, each the
+        // datastore's aggregation over that channel's rows in the statement that also aggregates the
+        // company's, so the channel lines of an additive figure sum exactly to the company line.
+        foreach (var channel in partition.Channels)
+        {
+            var name = $"channel:{channel.Channel}";
+            var standing = channel.Standing == ChannelPartitionStanding.InRegister
+                ? string.Empty
+                : " (a channel identifier the channel register does not hold)";
+
+            lines.Add(new ReportedMeasure(
+                $"monthly-cost-total:{name}", channel.Cost,
+                $"recorded operations of the channel{standing}, exact decimal aggregation", channel.ContainsEstimates));
+            lines.Add(new ReportedMeasure(
+                $"deterministic-set-ai-cost:{name}", channel.DeterministicSetCost,
+                $"recorded operations of the channel{standing} attributed to the named deterministic set", IsEstimate: false));
+            lines.AddRange(channel.CostByCapability.Select(pair => new ReportedMeasure(
+                $"cost-by-capability:{pair.Key}:{name}", pair.Value,
+                $"recorded operations of the channel{standing}, exact decimal aggregation", channel.ContainsEstimates)));
+        }
+
+        // Every line says whether its month can still change.
+        return lines.Select(line => line with { Source = $"{line.Source}; {finality}" }).ToArray();
     }
 
     /// <summary>

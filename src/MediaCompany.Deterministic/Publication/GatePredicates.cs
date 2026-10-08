@@ -42,6 +42,13 @@ public enum GateRefusal
     /// cannot ride the approval that version carried.
     /// </summary>
     DispatchVersionChanged = 10,
+
+    /// <summary>
+    /// The channel the evaluation was asked about is not the channel the item is recorded against,
+    /// or no such item is recorded (the multi-channel change). Each channel's own conditions and
+    /// registrations are read only for an item of that channel.
+    /// </summary>
+    ChannelNotTheItemsRecordedChannel = 11,
 }
 
 /// <summary>The verdict of the gate on one item version.</summary>

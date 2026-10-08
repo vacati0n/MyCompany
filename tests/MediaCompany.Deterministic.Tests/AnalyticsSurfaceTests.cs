@@ -571,7 +571,7 @@ public sealed class AnalyticsSurfaceTests
     [Fact]
     public async Task TheMeasurableNowReportIsUnmeasuredThroughoutForAPeriodWithNoRecordedOperation()
     {
-        var service = new ReportingService(new StubCosts(operations: 0), new StubClock());
+        var service = new ReportingService(new StubCosts(operations: 0), new StubPartitions(), new StubClock());
 
         var lines = await service.MeasurableNowAsync(Period, CancellationToken.None);
 
@@ -584,7 +584,7 @@ public sealed class AnalyticsSurfaceTests
     [Fact]
     public async Task TheMeasurableNowReportIsObservedForAPeriodHoldingRecordedOperations()
     {
-        var service = new ReportingService(new StubCosts(operations: 2), new StubClock());
+        var service = new ReportingService(new StubCosts(operations: 2), new StubPartitions(), new StubClock());
 
         var lines = await service.MeasurableNowAsync(Period, CancellationToken.None);
 

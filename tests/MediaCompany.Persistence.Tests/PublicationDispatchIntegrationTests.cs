@@ -162,9 +162,12 @@ public sealed class PublicationDispatchIntegrationTests : IAsyncLifetime
         await using (var transaction = await unitOfWork.BeginAsync(CancellationToken.None))
         {
             await transaction.Dispatches.RecordDispatchAsync(Record(), CancellationToken.None);
+            // A state change from the state the record holds, Draft: the datastore refuses a
+            // from-state the record does not hold (the multi-channel change), so the interrupted
+            // change starts where the item is recorded.
             await transaction.Gates.RecordTransitionAsync(
-                Item, Version, GateState.AwaitingRightsCheck, GateState.PublishReady,
-                "held short of dispatch", _clock.UtcNow, CancellationToken.None);
+                Item, Version, GateState.Draft, GateState.AwaitingRightsCheck,
+                "submitted, with the dispatch, in a transaction that is interrupted", _clock.UtcNow, CancellationToken.None);
 
             // The interruption lands here, between the state change and the queue entry.
         }
@@ -302,12 +305,17 @@ public sealed class PublicationDispatchIntegrationTests : IAsyncLifetime
         Assert.False(empty.AllSatisfied());
         Assert.All(empty.Evaluate(), s => Assert.Equal(ConditionResolution.Absent, s.Resolution));
 
+        // The payment account is a COMPANY-LEVEL observation (the multi-channel change), recorded in
+        // the company-level record and read through the channel's company; the other two are the
+        // channel's own.
         await ExecuteAsync(
             """
             INSERT INTO first_publication_conditions (channel_id, condition, state, evidence, observed_on)
             VALUES (@channel, 'LibraryRegistration', 'NotSatisfied', 'not registered on any library', @on),
-                   (@channel, 'PaymentAccount',      'NotSatisfied', 'the payment account does not exist', @on),
-                   (@channel, 'TwoStepVerification', 'Unknown',      'unconfirmed; no strike stands', @on)
+                   (@channel, 'TwoStepVerification', 'Unknown',      'unconfirmed; no strike stands', @on);
+            INSERT INTO company_payment_account_observations (company_id, state, evidence, observed_on)
+            SELECT company_id, 'NotSatisfied', 'the payment account does not exist', @on
+            FROM channels WHERE channel_id = @channel
             """,
             c =>
             {
@@ -326,20 +334,40 @@ public sealed class PublicationDispatchIntegrationTests : IAsyncLifetime
             recorded.Evaluate().Single(s => s.Condition == FirstPublicationCondition.TwoStepVerification).Resolution);
     }
 
-    /// <summary>An observation with no evidence is refused at the datastore as well as in code.</summary>
+    /// <summary>
+    /// An observation with no evidence is refused at the datastore as well as in code, on the
+    /// per-channel record and on the company-level payment-account record alike. The per-channel
+    /// probe names a condition the per-channel record still admits, so it is the EVIDENCE check that
+    /// refuses it rather than the refusal of a new per-channel payment-account row.
+    /// </summary>
     [RequiresPostgresFact]
     public async Task AnUnevidencedObservationIsRefusedByTheDatastore()
     {
-        await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
+        var perChannel = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
             """
             INSERT INTO first_publication_conditions (channel_id, condition, state, evidence, observed_on)
-            VALUES (@channel, 'PaymentAccount', 'Satisfied', '   ', @on)
+            VALUES (@channel, 'LibraryRegistration', 'Satisfied', '   ', @on)
             """,
             c =>
             {
                 c.Parameters.AddWithValue("channel", Channel.Value);
                 c.Parameters.Add("on", NpgsqlDbType.Date).Value = Observed;
             }));
+        Assert.Equal(PostgresErrorCodes.CheckViolation, perChannel.SqlState);
+        Assert.Equal("first_publication_conditions_evidence_check", perChannel.ConstraintName);
+
+        var companyLevel = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
+            """
+            INSERT INTO company_payment_account_observations (company_id, state, evidence, observed_on)
+            SELECT company_id, 'Satisfied', '   ', @on FROM channels WHERE channel_id = @channel
+            """,
+            c =>
+            {
+                c.Parameters.AddWithValue("channel", Channel.Value);
+                c.Parameters.Add("on", NpgsqlDbType.Date).Value = Observed;
+            }));
+        Assert.Equal(PostgresErrorCodes.CheckViolation, companyLevel.SqlState);
+        Assert.Equal("company_payment_account_observations_evidence_check", companyLevel.ConstraintName);
     }
 
     // -----------------------------------------------------------------------

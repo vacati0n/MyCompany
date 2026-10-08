@@ -81,11 +81,24 @@ public sealed class NpgsqlGateLedger : IGateLedger
         // Every observation is read and the register picks the latest per condition. A channel
         // with no rows yields a register in which all three resolve ABSENT and therefore refuse;
         // there is no code path here that returns "nothing to check".
+        //
+        // ONE PAYEE (the multi-channel change, decision D-002). Library registration and two-step
+        // verification are the channel's own observations. The payment account is the COMPANY'S,
+        // reached through the channel's mandatory company reference, so every channel of a company
+        // resolves it from the same rows. A per-channel payment-account row recorded before the
+        // change is retained in its table and is not read here, so resolution can only be more
+        // refusing than before; a channel the register does not hold reaches no company and reads
+        // the payment account absent.
         await using var command = _dataSource.CreateCommand(
             """
             SELECT condition, state, evidence, observed_on
             FROM first_publication_conditions
-            WHERE channel_id = @channel_id
+            WHERE channel_id = @channel_id AND condition <> 'PaymentAccount'
+            UNION ALL
+            SELECT 'PaymentAccount', o.state, o.evidence, o.observed_on
+            FROM company_payment_account_observations o
+            JOIN channels c ON c.company_id = o.company_id
+            WHERE c.channel_id = @channel_id
             ORDER BY observed_on
             """);
         command.Parameters.AddWithValue("channel_id", channel.Value);

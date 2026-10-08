@@ -20,48 +20,240 @@ namespace MediaCompany.Deterministic.Services;
 ///
 /// The service carries NO release path. Exclusion X-001 removes the upload, so the gate produces
 /// a <see cref="GatePassToken"/> and refusals, and nothing here reaches a publishing platform.
+///
+/// Every gate state change it writes starts from the RECORDED state (the multi-channel change,
+/// decision D-008 of its design). The transition table is unchanged.
 /// </summary>
 public sealed class PublicationGateService
 {
+    /// <summary>The audit action of a submission for the rights check.</summary>
+    public const string SubmittedAction = "gate.submitted-for-rights-check";
+
+    /// <summary>The audit action of a presentation for owner approval.</summary>
+    public const string PresentedAction = "gate.presented-for-owner-approval";
+
+    /// <summary>The audit action of an item sent back from the rights check.</summary>
+    public const string SentBackFromRightsCheckAction = "gate.sent-back-from-rights-check";
+
+    /// <summary>The audit action of a gate step the service refused by name, writing nothing else.</summary>
+    public const string StepRefusedAction = "gate.step-refused";
+
     private readonly IGateLedger _gates;
     private readonly IAssetLedger _assets;
+    private readonly IItemRegister _items;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClock _clock;
 
-    public PublicationGateService(IGateLedger gates, IAssetLedger assets, IUnitOfWork unitOfWork, IClock clock)
+    public PublicationGateService(
+        IGateLedger gates,
+        IAssetLedger assets,
+        IItemRegister items,
+        IUnitOfWork unitOfWork,
+        IClock clock)
     {
         _gates = gates;
         _assets = assets;
+        _items = items;
         _unitOfWork = unitOfWork;
         _clock = clock;
     }
 
     /// <summary>
+    /// Submits an item version for the rights check (the multi-channel change, decision D-008 of its
+    /// design): the writer of the awaiting-rights-check state.
+    ///
+    /// The transition starts from the RECORDED state and is written only where the transition table
+    /// admits it, which it does from Draft alone, under a role holding the approval-presentation
+    /// action. Any other recorded state is refused by name, writing nothing but the refusal entry.
+    /// </summary>
+    public async Task<GateStepOutcome> SubmitForRightsCheckAsync(
+        ItemId item,
+        ItemVersion version,
+        WorkforceRole actor,
+        CancellationToken cancellationToken)
+    {
+        RequireAction(actor, ActionKind.ApprovalPresent);
+
+        var current = await _gates.CurrentStateAsync(item, version, cancellationToken).ConfigureAwait(false);
+
+        if (!GateTransitionTable.IsAllowed(current, GateState.AwaitingRightsCheck))
+        {
+            return await RefuseAsync(
+                item, version, actor, "submission for the rights check", current,
+                GateStepRefusal.NotSubmittableFromRecordedState,
+                $"the transition table admits no edge from {current} to {GateState.AwaitingRightsCheck}",
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return await TransitionAsync(
+            item, version, actor, current, GateState.AwaitingRightsCheck,
+            "submitted for the rights check", SubmittedAction, RetentionClass.GovernanceRecord,
+            "submission for the rights check", cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Presents an item version for owner approval. The presentation instant is the start of the
     /// elapsed-minutes clock; nothing enters that figure by hand.
+    ///
+    /// The presentation reads the RECORDED state and refuses by name, writing nothing but a refusal
+    /// entry, unless the recorded state is awaiting rights check and the rights check is releasable
+    /// for the item's RECORDED channel, which requires at least one recorded asset decision. A
+    /// presentation from Draft is therefore refused here before any writer is reached, and the
+    /// writer's table check and the datastore's recorded-from-state check stand behind it.
     /// </summary>
-    public async Task<DateTimeOffset> PresentForOwnerApprovalAsync(
+    public async Task<GateStepOutcome> PresentForOwnerApprovalAsync(
         ItemId item,
         ItemVersion version,
         CancellationToken cancellationToken)
     {
-        var now = _clock.UtcNow;
+        const string Step = "presentation for owner approval";
+        const WorkforceRole Presenter = WorkforceRole.Producer;
+
         var current = await _gates.CurrentStateAsync(item, version, cancellationToken).ConfigureAwait(false);
 
+        if (current != GateState.AwaitingRightsCheck)
+        {
+            return await RefuseAsync(
+                item, version, Presenter, Step, current, GateStepRefusal.NotAwaitingRightsCheck,
+                $"an item is presented for owner approval only from {GateState.AwaitingRightsCheck}; it is recorded in {current}",
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        var channel = await _items.RecordedChannelAsync(item, cancellationToken).ConfigureAwait(false);
+        if (channel is not { } recordedChannel)
+        {
+            return await RefuseAsync(
+                item, version, Presenter, Step, current, GateStepRefusal.ItemNotRecorded,
+                "no item is recorded under this identifier, so it has no channel whose registrations its rights are checked against",
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
+        var assets = await _assets.ForItemAsync(item, cancellationToken).ConfigureAwait(false);
+        var registrations = await _assets.RegistrationsAsync(recordedChannel, cancellationToken).ConfigureAwait(false);
+        var rights = RecordedRightsCheck.Evaluate(assets, registrations, today);
+
+        if (!rights.Releasable)
+        {
+            return await RefuseAsync(
+                item, version, Presenter, Step, current, GateStepRefusal.RightsNotReleasable, rights.Detail,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return await TransitionAsync(
+            item, version, Presenter, current, GateState.AwaitingOwnerApproval,
+            "approval package presented to the owner", PresentedAction, RetentionClass.GovernanceRecord,
+            Step, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Sends an item version back from the rights check where the check was not releasable (the
+    /// multi-channel change, decision D-009 of its design). Only from awaiting rights check, under a
+    /// role holding the asset-verification action; any other recorded state is refused by name.
+    /// </summary>
+    public async Task<GateStepOutcome> SendBackFromRightsCheckAsync(
+        ItemId item,
+        ItemVersion version,
+        WorkforceRole actor,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        RequireAction(actor, ActionKind.AssetVerify);
+
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new ArgumentException("A send-back carries its reason.", nameof(reason));
+        }
+
+        const string Step = "send-back from the rights check";
+        var current = await _gates.CurrentStateAsync(item, version, cancellationToken).ConfigureAwait(false);
+
+        if (current != GateState.AwaitingRightsCheck)
+        {
+            return await RefuseAsync(
+                item, version, actor, Step, current, GateStepRefusal.NotAwaitingRightsCheck,
+                $"an item is sent back from the rights check only from {GateState.AwaitingRightsCheck}; it is recorded in {current}",
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return await TransitionAsync(
+            item, version, actor, current, GateState.SentBack, $"sent back from the rights check: {reason}",
+            SentBackFromRightsCheckAction, RetentionClass.RightsRecord, Step, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// One gate transition from the recorded state and its entry, on one transaction. Where the
+    /// datastore refuses the from-state, because another writer moved the item after it was read,
+    /// the transaction is rolled back and the refusal is named on a transaction of its own.
+    /// </summary>
+    private async Task<GateStepOutcome> TransitionAsync(
+        ItemId item,
+        ItemVersion version,
+        WorkforceRole actor,
+        GateState from,
+        GateState to,
+        string reason,
+        string action,
+        RetentionClass retention,
+        string step,
+        CancellationToken cancellationToken)
+    {
+        var now = _clock.UtcNow;
+
+        try
+        {
+            await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.Gates.RecordTransitionAsync(item, version, from, to, reason, now, cancellationToken)
+                .ConfigureAwait(false);
+            await transaction.Audit.AppendAsync(
+                new AuditEntryDraft
+                {
+                    Actor = actor.ToString(),
+                    Action = action,
+                    Subject = $"item:{item} version:{version}",
+                    Reason = reason,
+                    InputsReference = $"from-state:{from}",
+                    OutputsReference = $"at:{now:O}",
+                    Decision = to.ToString(),
+                    CostReference = "none",
+                    Risk = "none",
+                    RetentionClass = retention,
+                },
+                cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (GateStateConflictException conflict)
+        {
+            return await RefuseAsync(
+                item, version, actor, step, from, GateStepRefusal.RecordedStateChanged, conflict.Message,
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        return new GateStepOutcome.Moved(from, to, now);
+    }
+
+    /// <summary>A refusal by name: one entry on its own transaction, and no state change.</summary>
+    private async Task<GateStepOutcome> RefuseAsync(
+        ItemId item,
+        ItemVersion version,
+        WorkforceRole actor,
+        string step,
+        GateState recorded,
+        GateStepRefusal refusal,
+        string detail,
+        CancellationToken cancellationToken)
+    {
         await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.Gates.RecordTransitionAsync(
-            item, version, current, GateState.AwaitingOwnerApproval,
-            "approval package presented to the owner", now, cancellationToken).ConfigureAwait(false);
         await transaction.Audit.AppendAsync(
             new AuditEntryDraft
             {
-                Actor = "gate",
-                Action = "gate.presented-for-owner-approval",
+                Actor = actor.ToString(),
+                Action = StepRefusedAction,
                 Subject = $"item:{item} version:{version}",
-                Reason = "the approval package was presented to the owner",
-                InputsReference = $"from-state:{current}",
-                OutputsReference = $"presented-at:{now:O}",
-                Decision = GateState.AwaitingOwnerApproval.ToString(),
+                Reason = $"{step} refused: {refusal}: {detail}",
+                InputsReference = $"recorded-state:{recorded}",
+                OutputsReference = "none; no gate state was changed",
+                Decision = "refused",
                 CostReference = "none",
                 Risk = "none",
                 RetentionClass = RetentionClass.GovernanceRecord,
@@ -69,7 +261,15 @@ public sealed class PublicationGateService
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-        return now;
+        return new GateStepOutcome.Refused(recorded, refusal, detail);
+    }
+
+    private static void RequireAction(WorkforceRole actor, ActionKind action)
+    {
+        if (!ActionSet.Holds(actor, action))
+        {
+            throw new InvalidOperationException($"{actor} holds no {action} action; the action set is closed.");
+        }
     }
 
     /// <summary>
@@ -146,6 +346,41 @@ public sealed class PublicationGateService
     {
         var now = _clock.UtcNow;
         var today = DateOnly.FromDateTime(now.UtcDateTime);
+
+        // The channel is the ITEM'S (the multi-channel change, as ruled at its Design Gate). A
+        // caller supplying another channel would have that channel's conditions and registrations
+        // read for this item, so the evaluation is refused by name instead, and nothing else is read.
+        var recordedChannel = await _items.RecordedChannelAsync(item, cancellationToken).ConfigureAwait(false);
+        if (recordedChannel is not { } itemChannel || !itemChannel.Equals(channel))
+        {
+            var refusal = new GateVerdict.Refused(
+                GateRefusal.ChannelNotTheItemsRecordedChannel,
+                recordedChannel is { } other
+                    ? $"publish evaluation was asked about channel {channel}, and the item is recorded against channel {other}"
+                    : $"publish evaluation was asked about channel {channel}, and no item is recorded under this identifier");
+
+            await using (var refused = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false))
+            {
+                await refused.Audit.AppendAsync(
+                    new AuditEntryDraft
+                    {
+                        Actor = actor.ToString(),
+                        Action = "gate.publish-evaluated",
+                        Subject = $"item:{item} version:{version}",
+                        Reason = $"{refusal.Reason}: {refusal.Detail}",
+                        InputsReference = $"channel:{channel}",
+                        OutputsReference = "no token; nothing else was read",
+                        Decision = "refused",
+                        CostReference = "none",
+                        Risk = "none",
+                        RetentionClass = RetentionClass.GovernanceRecord,
+                    },
+                    cancellationToken).ConfigureAwait(false);
+                await refused.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return refusal;
+        }
 
         var blocks = await _gates.OpenBlocksAsync(item, cancellationToken).ConfigureAwait(false);
         var approvals = await _gates.ApprovalsAsync(item, version, cancellationToken).ConfigureAwait(false);
@@ -246,4 +481,40 @@ public sealed class PublicationGateService
 
         return block;
     }
+}
+
+/// <summary>Why a gate step was refused by name. Closed; a sixth reason is a code change.</summary>
+public enum GateStepRefusal
+{
+    /// <summary>The transition table admits no edge from the recorded state to awaiting rights check.</summary>
+    NotSubmittableFromRecordedState = 1,
+
+    /// <summary>The step is taken only from awaiting rights check, and the item is recorded elsewhere.</summary>
+    NotAwaitingRightsCheck = 2,
+
+    /// <summary>The rights check is not releasable for the item's recorded channel, or no asset decision is recorded.</summary>
+    RightsNotReleasable = 3,
+
+    /// <summary>No item is recorded under the identifier, so it has no recorded channel.</summary>
+    ItemNotRecorded = 4,
+
+    /// <summary>Another writer changed the item's recorded state after it was read; the datastore refused the stale state.</summary>
+    RecordedStateChanged = 5,
+}
+
+/// <summary>
+/// What one gate step did: the state moved, or the step was refused by name with the recorded state
+/// it was refused from. A closed union, so a refusal is never an exception a caller can miss.
+/// </summary>
+public abstract record GateStepOutcome
+{
+    private GateStepOutcome()
+    {
+    }
+
+    /// <summary>The recorded state moved, and the entry recording it committed with it.</summary>
+    public sealed record Moved(GateState From, GateState To, DateTimeOffset At) : GateStepOutcome;
+
+    /// <summary>Nothing moved; only the refusal entry was written.</summary>
+    public sealed record Refused(GateState RecordedState, GateStepRefusal Reason, string Detail) : GateStepOutcome;
 }

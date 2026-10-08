@@ -419,29 +419,28 @@ public static class AnalyticsComposers
 
         var carryingBoth = records.Where(r => r.CarriesTierEvidence).ToArray();
         var caveat = SingleRecordCaveat.For(ServedTierCount(records));
-
-        if (carryingBoth.Length < 2)
-        {
-            return new TierRatioReadModel(
-                period,
-                MeasurementQuantity.NotMeasured(
-                    UnmeasuredReason.NoObservationExists,
-                    $"fewer than two served-tier records that also carry a requested tier exist in period {period:yyyy-MM} "
-                    + $"({carryingBoth.Length} recorded), so no tier ratio can be read from it"),
-                caveat,
-                SplitAssumption,
-                TierRatioDefinition);
-        }
-
         var agreeing = carryingBoth.Count(r => r.Requested == r.Served);
 
         return new TierRatioReadModel(
             period,
-            MeasurementQuantity.Observed(decimal.Divide(agreeing * 100, carryingBoth.Length), "percent"),
+            TierRatioFromCounts(period, carryingBoth.Length, agreeing, "period"),
             caveat,
             SplitAssumption,
             TierRatioDefinition);
     }
+
+    /// <summary>
+    /// The agreement share's ONE rule, over counts: unmeasured where fewer than two records carry
+    /// both tiers, otherwise the share in percent. The delivered reading over a record list and the
+    /// channel partition over the datastore's counts both decide here, so the two cannot drift.
+    /// </summary>
+    public static MeasurementQuantity TierRatioFromCounts(DateOnly period, long carryingBoth, long agreeing, string scope) =>
+        carryingBoth < 2
+            ? MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.NoObservationExists,
+                $"fewer than two served-tier records that also carry a requested tier exist in {scope} {period:yyyy-MM} "
+                + $"({carryingBoth} recorded), so no tier ratio can be read from it")
+            : MeasurementQuantity.Observed(decimal.Divide(agreeing * 100, carryingBoth), "percent");
 
     // -----------------------------------------------------------------------
     // The six revenue-derived figures (plan task T-007)

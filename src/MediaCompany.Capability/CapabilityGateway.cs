@@ -301,8 +301,15 @@ public sealed class CapabilityGateway : ICapabilityGateway
             },
             cancellationToken).ConfigureAwait(false);
 
+        // Budgets are evaluated for the month the datastore BOOKED the operation in, read from the
+        // stored instant the recorder returned (the multi-channel change, decision D-006), so an
+        // alert is raised against the month the operation counts towards, not the month the process
+        // clock happened to show when the request arrived.
+        var booked = operation.OccurredAt.UtcDateTime;
+        var bookedPeriod = new DateOnly(booked.Year, booked.Month, 1);
+
         var alerts = await transaction.Budgets
-            .EvaluateAsync(request.Attribution, period, now, cancellationToken).ConfigureAwait(false);
+            .EvaluateAsync(request.Attribution, bookedPeriod, now, cancellationToken).ConfigureAwait(false);
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

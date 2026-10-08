@@ -22,6 +22,9 @@ namespace MediaCompany.Deterministic.Tests;
 public sealed class PublishingSequenceTests
 {
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-09-01T12:00:00Z");
+
+    /// <summary>The one channel every demonstration item here is recorded against.</summary>
+    private static readonly ChannelId DemonstrationChannel = ChannelId.New();
     private static readonly DateOnly Observed = new(2026, 8, 30);
 
     private sealed class Harness
@@ -37,7 +40,7 @@ public sealed class PublishingSequenceTests
 
         public PublishingSequenceService Sequence()
         {
-            var gate = new PublicationGateService(Gate, new NoAssets(), Work, Clock);
+            var gate = new PublicationGateService(Gate, new NoAssets(), new RecordedItems(DemonstrationChannel), Work, Clock);
             return new PublishingSequenceService(
                 new WorkLifecycleService(Work, Clock),
                 gate,
@@ -116,7 +119,7 @@ public sealed class PublishingSequenceTests
     {
         Item = item,
         Version = version,
-        Channel = ChannelId.New(),
+        Channel = DemonstrationChannel,
         Subject = PublishingFixture.Subject,
         Destination = PublishingFixture.Destination,
         TreatmentConditions = Enum.GetValues<TreatmentCondition>(),

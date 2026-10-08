@@ -8,6 +8,13 @@
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!--
+      The one version the repository declares. Every built assembly carries it, and the release
+      record reads it from here rather than deriving one. Decided at the Design Gate of the
+      multi-channel change as a minor increment over the three previous release records.
+    -->
+    <Version>1.3.0</Version>
   </PropertyGroup>
   <ItemGroup Condition="'$(MSBuildProjectName)' != 'MediaCompany.Domain'">
     <Using Include="MediaCompany.Domain" />

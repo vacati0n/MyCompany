@@ -130,7 +130,9 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheFifthResourceRecordsNothingAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.005-sustained-rate.sql", SchemaInstaller.ResourceNames[^1]);
+        // The fifth resource, applied after the four it depends on; the multi-channel change appends a
+        // sixth after it.
+        Assert.Equal("MediaCompany.Persistence.Schema.005-sustained-rate.sql", SchemaInstaller.ResourceNames[4]);
 
         foreach (var table in new[]
                  {
@@ -619,13 +621,7 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
         AvailableAt = _clock.UtcNow,
     };
 
-    private AnalyticsReportService Analytics()
-    {
-        var costs = new NpgsqlCostReader(Source);
-        return new AnalyticsReportService(
-            costs, costs, new NpgsqlRevenueParameterRegister(Source), new NpgsqlThroughputReader(Source),
-            new NpgsqlItemDossierReader(Source), new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), _clock);
-    }
+    private AnalyticsReportService Analytics() => ChannelTestKit.Analytics(Source, _clock);
 
     private static DateOnly Period(DateTimeOffset occurredAt) => new(occurredAt.Year, occurredAt.Month, 1);
 

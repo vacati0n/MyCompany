@@ -35,6 +35,23 @@ internal sealed class InMemoryWork : IUnitOfWork
 
     public List<(GateState From, GateState To)> Transitions { get; } = [];
 
+    /// <summary>
+    /// The latest recorded gate state per item version, as the datastore's recorded-from-state check
+    /// reads it: Draft where nothing is recorded. A transition claiming any other from-state is refused
+    /// exactly as the record store refuses it (the multi-channel change, decision D-008).
+    /// </summary>
+    public Dictionary<(ItemId Item, ItemVersion Version), GateState> GateStates { get; } = [];
+
+    /// <summary>
+    /// Records a gate state as a demonstration fixture, standing for transitions recorded before the
+    /// demonstration began, so a demonstration that writes from that state starts where it claims to.
+    /// </summary>
+    public InMemoryWork WithRecordedGateState(ItemId item, ItemVersion version, GateState state)
+    {
+        GateStates[(item, version)] = state;
+        return this;
+    }
+
     /// <summary>Dispatch records that became durable, keyed as the datastore keys them.</summary>
     public List<DispatchRecord> Dispatches { get; } = [];
 
@@ -245,6 +262,9 @@ internal sealed class InMemoryWork : IUnitOfWork
                 return Task.CompletedTask;
             }
 
+            /// <summary>States this transaction has written and not yet committed, which it reads as its own.</summary>
+            private readonly Dictionary<(ItemId, ItemVersion), GateState> _written = [];
+
             public Task RecordTransitionAsync(
                 ItemId item, ItemVersion version, GateState from, GateState to,
                 string reason, DateTimeOffset at, CancellationToken ct)
@@ -254,7 +274,25 @@ internal sealed class InMemoryWork : IUnitOfWork
                     throw new InvalidOperationException($"{from} to {to} is not a transition in the gate table.");
                 }
 
-                pending.Add(() => owner.Transitions.Add((from, to)));
+                // The recorded-from-state check, mirrored: the from-state must be the latest recorded
+                // state, this transaction's own writes included, Draft where none is recorded.
+                var key = (item, version);
+                var recorded = _written.TryGetValue(key, out var own)
+                    ? own
+                    : owner.GateStates.TryGetValue(key, out var committed) ? committed : GateState.Draft;
+
+                if (from != recorded)
+                {
+                    throw new GateStateConflictException(
+                        $"{from} to {to} was refused for item {item} version {version}: it is recorded in {recorded}");
+                }
+
+                _written[key] = to;
+                pending.Add(() =>
+                {
+                    owner.Transitions.Add((from, to));
+                    owner.GateStates[key] = to;
+                });
                 return Task.CompletedTask;
             }
         }

@@ -108,3 +108,99 @@ public static class PublishingConfigurationKeys
     public static bool ReachesAControl(string key) =>
         ForbiddenKeyFragments.Any(f => key.Contains(f, StringComparison.OrdinalIgnoreCase));
 }
+
+/// <summary>
+/// The configuration keys a channel's own attributes are held under (the multi-channel change,
+/// decision D-001 of its accepted design).
+///
+/// One legal entity runs several channels, separated by configuration only. Eight of a channel's
+/// attributes are values in the temporal configuration register under these keys, each scoped to
+/// ONE channel by <see cref="ScopeFor"/>, so every change carries its validity, its author and its
+/// reason, and a superseded value stays retrievable. The channel's language is read from the channel
+/// register row and its library registrations from the library registration register, so neither is
+/// configuration, and the registration precondition stays unsatisfiable from configuration.
+///
+/// Every key is a pure VALUE SLOT: free text kept verbatim and interpreted by no component. The set
+/// is closed, and <see cref="ReachesAControl"/> refuses any key naming the payee, a payment account,
+/// a registration, a condition, the approval step, a gate state, a refusal, a block, publication,
+/// dispatch, an upload, a route, a trigger, a due time, liveness or an enablement — so no per-channel
+/// value can become a control, a precondition, the payee, a trigger or a routing decision. The
+/// schedule and the content strategy are therefore never read as a due time or a routing target,
+/// and a channel brought into being by register and configuration rows is neither live nor routed to.
+///
+/// No value for any channel is recorded by this change, in code, seed or migration.
+/// </summary>
+public static class ChannelConfigurationKeys
+{
+    public const string Audience = "channel.audience";
+    public const string Brand = "channel.brand";
+    public const string Voice = "channel.voice";
+    public const string Tone = "channel.tone";
+    public const string VisualIdentity = "channel.visual-identity";
+    public const string ContentStrategy = "channel.content-strategy";
+    public const string Schedule = "channel.schedule";
+    public const string RiskNotes = "channel.risk-notes";
+
+    /// <summary>The prefix of every channel scope; the rest of the scope is the channel's register identifier.</summary>
+    public const string ScopePrefix = "channel:";
+
+    /// <summary>The closed key set, in the order a profile presents it.</summary>
+    public static IReadOnlyList<string> Ordered { get; } =
+    [
+        Audience,
+        Brand,
+        Voice,
+        Tone,
+        VisualIdentity,
+        ContentStrategy,
+        Schedule,
+        RiskNotes,
+    ];
+
+    public static readonly IReadOnlySet<string> Admitted = new HashSet<string>(Ordered, StringComparer.Ordinal);
+
+    /// <summary>
+    /// The substrings no admitted channel key may contain. A key reaching any of them would make a
+    /// per-channel value a control rather than a value, which the shared-payee decision and the
+    /// owner-approval state both forbid.
+    /// </summary>
+    public static readonly IReadOnlyList<string> ForbiddenKeyFragments =
+    [
+        "payee",
+        "payment",
+        "account",
+        "registration",
+        "condition",
+        "approval",
+        "gate",
+        "refusal",
+        "block",
+        "publish",
+        "dispatch",
+        "upload",
+        "route",
+        "routing",
+        "trigger",
+        "due",
+        "live",
+        "enable",
+    ];
+
+    public static bool IsAdmitted(string key) => Admitted.Contains(key);
+
+    /// <summary>Whether a proposed key would reach a control rather than carry a value.</summary>
+    public static bool ReachesAControl(string key) =>
+        ForbiddenKeyFragments.Any(f => key.Contains(f, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The scope that holds one channel's values: the prefix and the channel's register identifier.</summary>
+    public static string ScopeFor(ChannelId channel) => ScopePrefix + channel.Value.ToString("D");
+
+    /// <summary>
+    /// Whether a scope names exactly one channel. A channel key is admitted only under such a scope,
+    /// and no other key is admitted under one.
+    /// </summary>
+    public static bool IsChannelScope(string scope) =>
+        scope is not null
+        && scope.StartsWith(ScopePrefix, StringComparison.Ordinal)
+        && Guid.TryParseExact(scope[ScopePrefix.Length..], "D", out _);
+}

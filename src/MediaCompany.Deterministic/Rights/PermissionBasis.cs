@@ -150,3 +150,46 @@ public static class ReleasableRightsPrecondition
         return new ReleasableRightsVerdict(blocking.Count == 0, blocking);
     }
 }
+
+/// <summary>
+/// The rights check a presentation for owner approval and the copyright-check stage decide on (the
+/// multi-channel change, decision D-009 of its design, as ruled at its Design Gate).
+///
+/// It is the delivered rights precondition with ONE further requirement: at least one asset decision
+/// is recorded for the item. An item with no recorded asset row passes the delivered precondition
+/// vacuously; here the absence folds to NOT SATISFIED and is named, so no item reaches the owner with
+/// no asset decision on record. The delivered precondition itself is unchanged, and publish evaluation
+/// still decides on it.
+/// </summary>
+public static class RecordedRightsCheck
+{
+    /// <summary>The detail a check refuses with where no asset decision is recorded.</summary>
+    public const string NoAssetDecisionRecorded =
+        "no asset decision is recorded for the item, so its rights cannot be checked; an absent decision folds to not satisfied";
+
+    public static RecordedRightsVerdict Evaluate(
+        IReadOnlyList<Asset> assets,
+        IReadOnlyList<LibraryRegistration> channelRegistrations,
+        DateOnly asOf)
+    {
+        ArgumentNullException.ThrowIfNull(assets);
+        ArgumentNullException.ThrowIfNull(channelRegistrations);
+
+        var delivered = ReleasableRightsPrecondition.Evaluate(assets, channelRegistrations, asOf);
+
+        if (assets.Count == 0)
+        {
+            return new RecordedRightsVerdict(false, NoAssetDecisionRecorded, delivered);
+        }
+
+        return delivered.Releasable
+            ? new RecordedRightsVerdict(true, $"all {assets.Count} recorded asset decision(s) carry a verified, unexpired permission basis on a registered library", delivered)
+            : new RecordedRightsVerdict(
+                false,
+                string.Join(" | ", delivered.Blocking.Select(b => $"asset {b.Asset}: {string.Join("; ", b.MissingOrFailing)}")),
+                delivered);
+    }
+}
+
+/// <summary>What the recorded rights check decided, why, and the delivered precondition's own verdict.</summary>
+public sealed record RecordedRightsVerdict(bool Releasable, string Detail, ReleasableRightsVerdict Delivered);

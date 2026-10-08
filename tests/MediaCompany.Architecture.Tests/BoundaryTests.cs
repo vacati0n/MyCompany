@@ -706,7 +706,13 @@ public sealed class BoundaryTests
     {
         var permitted = new[] { Domain, Application, Deterministic };
 
-        foreach (var service in new[] { typeof(PublishingSequenceService), typeof(ItemDossierRecorder) })
+        // Wave 6 adds the channel profile service, the copyright-check stage handler and the
+        // rights-check step, the dossier recorder's first production caller, to the same proof.
+        foreach (var service in new[]
+                 {
+                     typeof(PublishingSequenceService), typeof(ItemDossierRecorder), typeof(ChannelProfileService),
+                     typeof(MediaCompany.Deterministic.Production.CopyrightCheckStageHandler), typeof(RightsCheckStep),
+                 })
         {
             Assert.Equal(Deterministic, service.Assembly.GetName().Name);
 
@@ -728,6 +734,274 @@ public sealed class BoundaryTests
                     permitted.Contains(owner) || owner.StartsWith("System", StringComparison.Ordinal),
                     $"{service.Name} depends on {dependency.FullName}, declared in {owner}, outside the domain, the ports "
                     + "and the rule-determined assembly");
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // The multi-channel capability — channel keys reach no control, and one component reads them
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// The channel configuration keys are pure value slots (the multi-channel design, decision D-001).
+    /// Every admitted channel key passes the forbidden-fragment rule, and a proposed key naming the
+    /// payee, a payment account, a registration, a condition, the approval step, a gate, a refusal, a
+    /// block, publication, dispatch, an upload, a route, a trigger, a due time, liveness or an
+    /// enablement is inadmissible rather than merely absent.
+    /// </summary>
+    [Fact]
+    public void NoAdmittedChannelKeyReachesAControl()
+    {
+        Assert.Equal(8, ChannelConfigurationKeys.Admitted.Count);
+        Assert.All(
+            ChannelConfigurationKeys.Admitted,
+            key => Assert.False(ChannelConfigurationKeys.ReachesAControl(key), $"the admitted channel key {key} reaches a control"));
+
+        foreach (var proposed in new[]
+                 {
+                     "channel.payee", "channel.payment-account", "channel.account-holder", "channel.library-registration",
+                     "channel.condition-override", "channel.approval-default", "channel.gate-skip", "channel.refusal-text",
+                     "channel.block-clear", "channel.publish-enabled", "channel.dispatch-target", "channel.upload-endpoint",
+                     "channel.route", "channel.routing-target", "channel.trigger", "channel.due-at", "channel.live",
+                     "channel.enable",
+                 })
+        {
+            Assert.True(ChannelConfigurationKeys.ReachesAControl(proposed), $"the proposed channel key {proposed} should be inadmissible");
+            Assert.False(ChannelConfigurationKeys.IsAdmitted(proposed));
+        }
+
+        // No channel key is a base key, a production key or a publishing key, so none of those
+        // surfaces can be reached through a channel scope.
+        Assert.Empty(ChannelConfigurationKeys.Admitted.Intersect(ConfigurationKeys.Admitted));
+        Assert.Empty(ChannelConfigurationKeys.Admitted.Intersect(PublishingConfigurationKeys.Admitted));
+        Assert.Empty(ChannelConfigurationKeys.Admitted.Intersect(MediaCompany.Application.Production.ProductionConfigurationKeys.Admitted));
+    }
+
+    /// <summary>
+    /// ONE COMPONENT READS A CHANNEL KEY (decision D-001): the channel profile service. Beside it only
+    /// the key set's own declaration and the configuration store's admission check name the key set,
+    /// so no schedule, content strategy or any other per-channel value can be read as a due time, a
+    /// trigger, a routing target, a gate state, a refusal, a precondition or a payee.
+    ///
+    /// The check reads the COMPILED METHOD BODIES of every production assembly: a channel key used
+    /// anywhere is a string literal the compiler inlines, and a use of the key set's members is a
+    /// member reference, and both are found there whatever the source spelled.
+    /// </summary>
+    [Fact]
+    public void OnlyTheChannelProfileServiceReadsAChannelKey()
+    {
+        var offenders = ChannelKeyReaders()
+            .Where(owner => !PermittedChannelKeyReaders.Contains(owner))
+            .ToArray();
+
+        Assert.Empty(offenders);
+
+        // The check is over something: the profile service is found reading the keys.
+        Assert.Contains("MediaCompany.Deterministic.Services.ChannelProfileService", ChannelKeyReaders());
+    }
+
+    /// <summary>
+    /// The scan the single-reader rule rests on, applied to a probe that reads a channel key outside
+    /// the profile service: it is found and named, so the rule cannot pass by matching nothing.
+    /// </summary>
+    [Fact]
+    public void TheChannelKeyScanFindsAReaderOutsideTheProfileServiceAndNamesIt()
+    {
+        var found = ChannelKeyReadersIn(typeof(ProbeReadingAChannelKey).Assembly);
+        Assert.Contains(typeof(ProbeReadingAChannelKey).FullName!, found);
+    }
+
+    /// <summary>
+    /// The approval queue is a VIEW (decision D-005): its port, the channel partition port and the
+    /// item register port have READ MEMBERS ONLY. The member set of each is declared here, so a member
+    /// added to any of them — a write, a presentation, a decision, a send-back, a submission or a
+    /// transition included — fails the build until it is named here, where a reader sees it; and every
+    /// member returns a read.
+    /// </summary>
+    [Fact]
+    public void TheApprovalQueueAndTheChannelPortsHaveReadMembersOnly()
+    {
+        var declared = new Dictionary<Type, string[]>
+        {
+            [typeof(IApprovalQueueReader)] = ["AwaitingOwnerApprovalAsync", "DecidedAsync"],
+            [typeof(IChannelPartitionReader)] = ["OperationsAsync", "CloseMonthAsync", "DossiersAsync", "ThroughputAsync", "BudgetsAsync"],
+            [typeof(IItemRegister)] = ["RecordedChannelAsync"],
+        };
+
+        foreach (var (port, reads) in declared)
+        {
+            var members = port.GetMethods();
+            Assert.Equal(reads.Order(StringComparer.Ordinal), members.Select(m => m.Name).Distinct().Order(StringComparer.Ordinal));
+
+            foreach (var member in members)
+            {
+                Assert.True(
+                    member.ReturnType.IsGenericType && member.ReturnType.GetGenericTypeDefinition() == typeof(Task<>),
+                    $"{port.Name}.{member.Name} does not return a read");
+            }
+
+            Assert.Empty(port.GetProperties());
+            Assert.Empty(port.GetEvents());
+        }
+    }
+
+    /// <summary>The types allowed to name the channel key set, each for the reason its summary states.</summary>
+    private static readonly string[] PermittedChannelKeyReaders =
+    [
+        // The one composing site of a channel's profile.
+        "MediaCompany.Deterministic.Services.ChannelProfileService",
+
+        // The key set's own declaration.
+        "MediaCompany.Domain.Configuration.ChannelConfigurationKeys",
+
+        // The configuration store's admission check, which admits a channel key only under a
+        // channel scope and reads no value.
+        "MediaCompany.Persistence.NpgsqlConfigurationStore",
+    ];
+
+    private static IReadOnlyList<string> ChannelKeyReaders() =>
+        ProductionAssemblies.SelectMany(name => ChannelKeyReadersIn(Load(name))).Distinct().ToArray();
+
+    /// <summary>
+    /// Every type in an assembly whose compiled method bodies load a channel key literal or reference
+    /// a member of the channel key set. A compiler-generated nested type is reported as the type that
+    /// declares it.
+    /// </summary>
+    private static IReadOnlyList<string> ChannelKeyReadersIn(Assembly assembly)
+    {
+        var keySet = typeof(ChannelConfigurationKeys);
+        var keys = ChannelConfigurationKeys.Admitted;
+        var readers = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var type in assembly.GetTypes())
+        {
+            var owner = type;
+            while (owner.IsNested && (owner.Name.Contains('<', StringComparison.Ordinal) || owner.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false)))
+            {
+                owner = owner.DeclaringType!;
+            }
+
+            var bodies = type.GetMethods(Declared).Where(m => m.DeclaringType == type).Cast<MethodBase>()
+                .Concat(type.GetConstructors(Declared));
+
+            foreach (var method in bodies)
+            {
+                foreach (var operand in IlOperands(method))
+                {
+                    var hit = operand switch
+                    {
+                        string literal => keys.Contains(literal),
+                        MemberInfo member => member.DeclaringType == keySet,
+                        _ => false,
+                    };
+
+                    if (hit)
+                    {
+                        readers.Add(owner.FullName ?? owner.Name);
+                    }
+                }
+            }
+        }
+
+        return readers.ToArray();
+    }
+
+    private static readonly IReadOnlyDictionary<short, System.Reflection.Emit.OpCode> OpCodesByValue =
+        typeof(System.Reflection.Emit.OpCodes)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Select(f => (System.Reflection.Emit.OpCode)f.GetValue(null)!)
+            .ToDictionary(o => o.Value);
+
+    /// <summary>
+    /// The string literals and member references a compiled method body names, decoded opcode by
+    /// opcode, so no operand is mistaken for another.
+    /// </summary>
+    private static IEnumerable<object> IlOperands(MethodBase method)
+    {
+        byte[]? il;
+        try
+        {
+            il = method.GetMethodBody()?.GetILAsByteArray();
+        }
+        catch (InvalidOperationException)
+        {
+            yield break;
+        }
+
+        if (il is null)
+        {
+            yield break;
+        }
+
+        var module = method.Module;
+        var genericTypes = method.DeclaringType?.IsGenericType == true ? method.DeclaringType.GetGenericArguments() : null;
+        var genericMethods = method.IsGenericMethod ? method.GetGenericArguments() : null;
+
+        for (var at = 0; at < il.Length;)
+        {
+            short value = il[at] == 0xFE ? (short)(0xFE00 | il[at + 1]) : il[at];
+            at += il[at] == 0xFE ? 2 : 1;
+
+            if (!OpCodesByValue.TryGetValue(value, out var code))
+            {
+                yield break;
+            }
+
+            switch (code.OperandType)
+            {
+                case System.Reflection.Emit.OperandType.InlineNone:
+                    break;
+                case System.Reflection.Emit.OperandType.ShortInlineBrTarget:
+                case System.Reflection.Emit.OperandType.ShortInlineI:
+                case System.Reflection.Emit.OperandType.ShortInlineVar:
+                    at += 1;
+                    break;
+                case System.Reflection.Emit.OperandType.InlineVar:
+                    at += 2;
+                    break;
+                case System.Reflection.Emit.OperandType.InlineI8:
+                case System.Reflection.Emit.OperandType.InlineR:
+                    at += 8;
+                    break;
+                case System.Reflection.Emit.OperandType.InlineSwitch:
+                    var cases = BitConverter.ToInt32(il, at);
+                    at += 4 + (4 * cases);
+                    break;
+                case System.Reflection.Emit.OperandType.InlineString:
+                {
+                    var token = BitConverter.ToInt32(il, at);
+                    at += 4;
+                    yield return module.ResolveString(token);
+                    break;
+                }
+
+                case System.Reflection.Emit.OperandType.InlineMethod:
+                case System.Reflection.Emit.OperandType.InlineField:
+                case System.Reflection.Emit.OperandType.InlineTok:
+                case System.Reflection.Emit.OperandType.InlineType:
+                {
+                    var token = BitConverter.ToInt32(il, at);
+                    at += 4;
+                    MemberInfo? member = null;
+                    try
+                    {
+                        member = module.ResolveMember(token, genericTypes, genericMethods);
+                    }
+                    catch (ArgumentException)
+                    {
+                    }
+
+                    if (member is not null)
+                    {
+                        yield return member;
+                    }
+
+                    break;
+                }
+
+                default:
+                    at += 4;
+                    break;
             }
         }
     }
@@ -828,6 +1102,27 @@ public sealed class BoundaryTests
         "MediaCompany.Deterministic.Analytics.AnalyticsComposers.DossierStatement",
         "MediaCompany.Deterministic.Analytics.AnalyticsComposers.SupplyAuditStatement",
         "MediaCompany.Deterministic.Analytics.AnalyticsComposers.DeterminationStatement",
+
+        // Wave 6, the multi-channel capability. The finality statement every month reading carries,
+        // the statement each channel-partitioned reading carries of what it does and does not
+        // establish, the company ceiling's coverage statement, and the two-clock limit the deferred
+        // cycle time states; each is composed by the surface, never copied out of a record.
+        "MediaCompany.Domain.Analytics.MonthFinality.Statement",
+        "MediaCompany.Domain.Analytics.OperationPartitionReading.Statement",
+        "MediaCompany.Domain.Analytics.OperationPartitionReading.RevenueStatement",
+        "MediaCompany.Domain.Analytics.DossierPartitionReading.Statement",
+        "MediaCompany.Domain.Analytics.ThroughputPartitionReading.Statement",
+        "MediaCompany.Domain.Analytics.CompanyCeilingReading.CoverageStatement",
+        "MediaCompany.Domain.Analytics.ChannelApprovalListing.Statement",
+        "MediaCompany.Domain.Analytics.ChannelApprovalWorkload.Statement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.OperationPartitionStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.RevenueStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.DossierPartitionStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ThroughputPartitionStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.CeilingCoverageStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ApprovalListingStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ApprovalWorkloadStatement",
+        "MediaCompany.Deterministic.Reporting.MeasureCatalogue.CycleTimeClockLimit",
     ];
 
     /// <summary>
@@ -1400,3 +1695,9 @@ internal sealed record ProbeCarryingAnUndeclaredStringMember(string RenderedFigu
 /// <summary>An analytics read model as it must be written.</summary>
 internal sealed record ProbeCarryingOnlyAMeasurementQuantity(
     MediaCompany.Domain.Analytics.MeasurementQuantity Review);
+
+/// <summary>A type that reads a channel key outside the profile service, as the single-reader rule must find.</summary>
+internal static class ProbeReadingAChannelKey
+{
+    public static string Schedule() => ChannelConfigurationKeys.Schedule;
+}
