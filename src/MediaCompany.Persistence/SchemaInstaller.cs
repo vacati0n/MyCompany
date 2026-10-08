@@ -32,6 +32,12 @@ public static class SchemaInstaller
         // the register is created empty, so the reversal is lossless in the state this change
         // delivers.
         "MediaCompany.Persistence.Schema.004-analytics.sql",
+
+        // Wave 5, the sustained-rate capability. Additive: the stated reasoning tier on the route
+        // register, the item dossier register of five write-once tables, and one index over the
+        // append-only record by action and instant. Every object is created only where absent,
+        // and nothing here records a first-publication condition, an approval or a route.
+        "MediaCompany.Persistence.Schema.005-sustained-rate.sql",
     ];
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)

@@ -68,11 +68,19 @@ switch (command)
         _ = provider.GetRequiredService<IServedTierReader>();
         _ = provider.GetRequiredService<IRevenueParameterRegister>();
 
+        // The sustained-rate capability: the two readers, the dossier recorder and the publishing
+        // entry point, each resolved here so a wiring defect surfaces without a datastore.
+        _ = provider.GetRequiredService<IThroughputReader>();
+        _ = provider.GetRequiredService<IItemDossierReader>();
+        _ = provider.GetRequiredService<ItemDossierRecorder>();
+        _ = provider.GetRequiredService<PublishingSequenceService>();
+
         Console.WriteLine("Composition root resolved.");
         Console.WriteLine("  capability egress: ICapabilityGateway only; no provider adapter is registered or registrable.");
         Console.WriteLine("  credentials:       opaque scoped handles; no secret value passes through this process boundary.");
         Console.WriteLine("  provider endpoints configured: 0 (this wave creates no account and commits no spend).");
         Console.WriteLine("  analytics surface:  resolved, with its read ports; it writes nothing and reaches no capability.");
+        Console.WriteLine("  publishing sequence: resolved; it ends at composition and reaches no capability.");
         return 0;
     }
 

@@ -76,6 +76,15 @@ public static class MeasureCatalogue
         new Measure.Deferred("watch-hours", "an observed audience figure from the publishing platform"),
         new Measure.Deferred("subscriber-growth-rate", "an observed audience figure from the publishing platform"),
         new Measure.Deferred("partner-programme-threshold-progress", "observed watch hours and subscriber counts"),
+
+        // The three rate measures a sustained publishing rate would be decided on. Each is
+        // DEFERRED and computed nowhere: the only store in which any of them is computable now is
+        // a demonstration store, whose every count is a demonstration parameter rather than an
+        // observation, so each waits on a production series of the company's own work. No sizing
+        // quantity — buffer depth, concurrency or target rate — is declared at all.
+        new Measure.Deferred("cycle-time", "a production series of items carried through the production path"),
+        new Measure.Deferred("failure-rate", "a production series of stage outcomes from the company's own work"),
+        new Measure.Deferred("rework-rate", "a production series of owner send-backs and re-presentations"),
     ];
 
     public static IReadOnlyList<Measure.MeasurableNow> MeasurableNow { get; } =

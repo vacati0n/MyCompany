@@ -4,6 +4,7 @@ using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Configuration;
+using MediaCompany.Domain.Dossier;
 using MediaCompany.Domain.Registry;
 using MediaCompany.Domain.Rights;
 using Npgsql;
@@ -23,7 +24,8 @@ public sealed class NpgsqlRouteRegistry : IRouteRegistry
         await using var command = _dataSource.CreateCommand(
             """
             SELECT route_id, capability_class, tier, target_kind, provider_account_id, model_id,
-                   substitute_task, hold_reason, rated_quality, context_capacity, terms_basis, terms_verified_on
+                   substitute_task, hold_reason, rated_quality, context_capacity, terms_basis, terms_verified_on,
+                   reasoning_tier_stated
             FROM routes
             WHERE capability_class = @capability
             ORDER BY tier
@@ -44,6 +46,14 @@ public sealed class NpgsqlRouteRegistry : IRouteRegistry
                 var kind => throw new InvalidOperationException($"Unknown route target kind '{kind}'."),
             };
 
+            // The stated tier is passed EXPLICITLY on every row, never left to the constructor's
+            // default. A row stating none maps to the domain's absent tier, which means the route
+            // cannot state one — never to a default tier, and never to anything derived from a
+            // request, which this adapter does not see.
+            ReasoningTier? statedTier = reader.IsDBNull(12)
+                ? null
+                : Enum.Parse<ReasoningTier>(reader.GetString(12));
+
             routes.Add(new Route(
                 new RouteId(reader.GetGuid(0)),
                 Enum.Parse<CapabilityClass>(reader.GetString(1)),
@@ -52,7 +62,8 @@ public sealed class NpgsqlRouteRegistry : IRouteRegistry
                 new QualityRating(reader.GetInt32(8)),
                 new ContextCapacity(reader.GetInt32(9)),
                 reader.GetString(10),
-                reader.GetFieldValue<DateOnly>(11)));
+                reader.GetFieldValue<DateOnly>(11),
+                statedReasoningTier: statedTier));
         }
 
         return routes;
@@ -785,4 +796,439 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
             (null, null, unmeasured.Reason.ToString(), unmeasured.Detail),
         _ => throw new InvalidOperationException("Unreachable: the measurement union has three cases."),
     };
+}
+
+/// <summary>
+/// The throughput reader over the append-only record (decision D-003 of the accepted design).
+///
+/// It selects the ACTION and the INSTANT of each entry and nothing else: no reason, subject,
+/// reference or other free-form column is read, so no recorded content can reach a throughput
+/// reading. The action names are the ones the writers use, read from their one declaration. The
+/// read instant is the datastore's own clock, the one the queue claim already measures against.
+/// Every count comes back BARE; the measurement case is decided at the composing site, not here.
+/// </summary>
+public sealed class NpgsqlThroughputReader : IThroughputReader
+{
+    /// <summary>How many non-waiting attempts at the record horizon a read makes before reading unmeasured.</summary>
+    public const int HorizonAttempts = 3;
+
+    /// <summary>The pause between two attempts. The read never waits on an in-flight transaction itself.</summary>
+    public static readonly TimeSpan HorizonRetryPause = TimeSpan.FromMilliseconds(50);
+
+    private readonly NpgsqlDataSource _dataSource;
+
+    public NpgsqlThroughputReader(NpgsqlDataSource dataSource) => _dataSource = dataSource;
+
+    /// <summary>
+    /// Closes the record and counts. The read obtains the record horizon EXCLUSIVELY WITHOUT
+    /// WAITING, which the datastore grants only when no audited transaction holds it shared — that
+    /// is, when no entry is in flight. It then raises the horizon to the later of the datastore's
+    /// clock and its prior value, and takes every count in statements issued after the grant, so
+    /// every entry that can ever be stamped below the new horizon is already committed and counted.
+    /// If every attempt meets an in-flight transaction, no count is taken and the summary says so.
+    /// </summary>
+    public async Task<ThroughputSummary> ReadAsync(
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; attempt <= HorizonAttempts; attempt++)
+        {
+            var summary = await TryReadAsync(periodStart, periodEnd, cancellationToken).ConfigureAwait(false);
+            if (summary is not null)
+            {
+                return summary;
+            }
+
+            if (attempt < HorizonAttempts)
+            {
+                await Task.Delay(HorizonRetryPause, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        return new ThroughputSummary(
+            periodStart, periodEnd, EarliestEntry: null, Quiet: false, Horizon: null,
+            0, 0, 0, 0, 0, 0, 0, 0);
+    }
+
+    private async Task<ThroughputSummary?> TryReadAsync(
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            await using var hold = new NpgsqlCommand(
+                "SELECT horizon FROM audit_record_horizon WHERE only_row FOR UPDATE NOWAIT",
+                connection,
+                transaction);
+            await hold.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (PostgresException refused) when (refused.SqlState == PostgresErrorCodes.LockNotAvailable)
+        {
+            // An audited transaction is in flight. Never wait on it: report the attempt failed.
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+
+        DateTimeOffset horizon;
+        await using (var raise = new NpgsqlCommand(
+            """
+            UPDATE audit_record_horizon
+               SET horizon = GREATEST(clock_timestamp(), horizon)
+             WHERE only_row
+            RETURNING horizon
+            """,
+            connection,
+            transaction))
+        {
+            await using var raised = await raise.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            await raised.ReadAsync(cancellationToken).ConfigureAwait(false);
+            horizon = raised.GetFieldValue<DateTimeOffset>(0);
+        }
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT
+                (SELECT min(occurred_at) FROM audit_entries)                                            AS earliest,
+                count(*) FILTER (WHERE action = @enqueued)                                              AS enqueued_to_close,
+                count(*) FILTER (WHERE action = @succeeded)                                             AS succeeded_to_close,
+                count(*) FILTER (WHERE action = @retried)                                               AS retried_to_close,
+                count(*) FILTER (WHERE action = @claimed)                                               AS claimed_to_close,
+                count(*) FILTER (WHERE action = @claimed   AND occurred_at >= @period_start)            AS claimed_in_period,
+                count(*) FILTER (WHERE action = @retried   AND occurred_at >= @period_start)            AS retried_in_period,
+                count(*) FILTER (WHERE action = @escalated AND occurred_at >= @period_start)            AS escalated_in_period,
+                count(*) FILTER (WHERE action = @completed AND occurred_at >= @period_start)            AS completed_in_period
+            FROM audit_entries
+            WHERE action = ANY(@actions) AND occurred_at < @period_end
+            """,
+            connection,
+            transaction);
+
+        command.Parameters.AddWithValue("enqueued", Domain.Work.LifecycleActions.Enqueued);
+        command.Parameters.AddWithValue("succeeded", Domain.Work.LifecycleActions.StageSucceeded);
+        command.Parameters.AddWithValue("retried", Domain.Work.LifecycleActions.StageRetried);
+        command.Parameters.AddWithValue("claimed", Domain.Work.LifecycleActions.Claimed);
+        command.Parameters.AddWithValue("escalated", Domain.Work.LifecycleActions.StageEscalated);
+        command.Parameters.AddWithValue("completed", Domain.Work.LifecycleActions.Completed);
+        command.Parameters.AddWithValue("actions", Domain.Work.LifecycleActions.All.ToArray());
+        command.Parameters.AddWithValue("period_start", periodStart);
+        command.Parameters.AddWithValue("period_end", periodEnd);
+
+        ThroughputSummary summary;
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+
+            summary = new ThroughputSummary(
+                periodStart,
+                periodEnd,
+                reader.IsDBNull(0) ? null : reader.GetFieldValue<DateTimeOffset>(0),
+                Quiet: true,
+                Horizon: horizon,
+                EnqueuedToClose: reader.GetInt64(1),
+                StageSucceededToClose: reader.GetInt64(2),
+                RetriedToClose: reader.GetInt64(3),
+                ClaimedToClose: reader.GetInt64(4),
+                ClaimedInPeriod: reader.GetInt64(5),
+                RetriedInPeriod: reader.GetInt64(6),
+                EscalatedInPeriod: reader.GetInt64(7),
+                CompletedInPeriod: reader.GetInt64(8));
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return summary;
+    }
+}
+
+/// <summary>
+/// The item dossier reader over the dossier register (decision D-004 of the accepted design).
+///
+/// Every member answers for ONE item version, and returns null only where no dossier header
+/// exists for it. Rows come back in the order they were recorded, and every closed value is read by
+/// name, so a recorded row reads back in the case it was written in.
+/// </summary>
+public sealed class NpgsqlItemDossierReader : IItemDossierReader
+{
+    private readonly NpgsqlDataSource _dataSource;
+
+    public NpgsqlItemDossierReader(NpgsqlDataSource dataSource) => _dataSource = dataSource;
+
+    public async Task<RecordedDossier?> DossierAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
+        // One snapshot for the whole reconstitution, so a component recorded mid-read cannot give
+        // one member a row the others do not see.
+        await using var transaction = await connection
+            .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, cancellationToken).ConfigureAwait(false);
+
+        var header = await HeaderAsync(connection, transaction, item, version, cancellationToken).ConfigureAwait(false);
+        if (header is null)
+        {
+            return null;
+        }
+
+        var stages = await StagesAsync(connection, transaction, item, version, cancellationToken).ConfigureAwait(false);
+        var audit = await SupplyAsync(connection, transaction, item, version, cancellationToken).ConfigureAwait(false);
+        var determinations = await DeterminationRowsAsync(connection, transaction, item, version, cancellationToken)
+            .ConfigureAwait(false);
+        var components = await ComponentsAsync(connection, transaction, item, version, cancellationToken).ConfigureAwait(false);
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+        var dossier = new ItemDossier
+        {
+            Item = item,
+            Version = version,
+            Stages = stages,
+            Treatment = components.OfType<DossierComponent.Treatment>().Select(c => c.Verdict).ToArray(),
+            Audience = components.OfType<DossierComponent.Audience>().SingleOrDefault()?.Designation,
+            Visuals = components.OfType<DossierComponent.Visual>().Select(c => c.Provenance).ToArray(),
+            ClipOrigins = components.OfType<DossierComponent.ClipOrigin>().Select(c => c.Assessment).ToArray(),
+            Claims = components.OfType<DossierComponent.Claim>().Select(c => c.Attribution).ToArray(),
+            SupplyAudit = audit,
+            Determinations = determinations,
+            Runtime = components.OfType<DossierComponent.Runtime>().SingleOrDefault()?.Duration,
+            Metadata = components.OfType<DossierComponent.Metadata>().SingleOrDefault()?.Surfaces,
+            Originality = components.OfType<DossierComponent.Originality>().SingleOrDefault()?.Assessment,
+        };
+
+        return new RecordedDossier(dossier, header.Value.Channel, header.Value.OpenedAt);
+    }
+
+    public async Task<IReadOnlyList<StageEvidence>?> StageEvidenceAsync(
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken) =>
+        await ReadIfOpenedAsync(item, version, StagesAsync, cancellationToken).ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<SupplyAuditEntry>?> SupplyAuditAsync(
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken) =>
+        await ReadIfOpenedAsync(item, version, SupplyAsync, cancellationToken).ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<DeterminationResolution>?> DeterminationsAsync(
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken) =>
+        await ReadIfOpenedAsync(item, version, DeterminationRowsAsync, cancellationToken).ConfigureAwait(false);
+
+    private delegate Task<IReadOnlyList<T>> RowReader<T>(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken);
+
+    private async Task<IReadOnlyList<T>?> ReadIfOpenedAsync<T>(
+        ItemId item,
+        ItemVersion version,
+        RowReader<T> rows,
+        CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = await connection
+            .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, cancellationToken).ConfigureAwait(false);
+
+        var header = await HeaderAsync(connection, transaction, item, version, cancellationToken).ConfigureAwait(false);
+        var result = header is null
+            ? null
+            : await rows(connection, transaction, item, version, cancellationToken).ConfigureAwait(false);
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return result;
+    }
+
+    private static NpgsqlCommand Command(
+        string sql,
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version)
+    {
+        var command = new NpgsqlCommand(sql, connection, transaction);
+        command.Parameters.AddWithValue("item_id", item.Value);
+        command.Parameters.AddWithValue("item_version", version.Value);
+        return command;
+    }
+
+    private static async Task<(ChannelId Channel, DateTimeOffset OpenedAt)?> HeaderAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken)
+    {
+        await using var command = Command(
+            """
+            SELECT i.channel_id, d.opened_at
+            FROM item_dossiers d JOIN items i ON i.item_id = d.item_id
+            WHERE d.item_id = @item_id AND d.item_version = @item_version
+            """,
+            connection, transaction, item, version);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        return (new ChannelId(reader.GetGuid(0)), reader.GetFieldValue<DateTimeOffset>(1));
+    }
+
+    private static async Task<IReadOnlyList<StageEvidence>> StagesAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken)
+    {
+        await using var command = Command(
+            """
+            SELECT stage, outcome, summary, recorded_at, evidence_reference
+            FROM dossier_stage_evidence
+            WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY row_no
+            """,
+            connection, transaction, item, version);
+
+        var rows = new List<StageEvidence>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            rows.Add(new StageEvidence
+            {
+                Stage = Enum.Parse<Domain.Production.ProductionStage>(reader.GetString(0)),
+                Outcome = Enum.Parse<Domain.Work.StageOutcome>(reader.GetString(1)),
+                Summary = reader.GetString(2),
+                RecordedAt = reader.GetFieldValue<DateTimeOffset>(3),
+                EvidenceReference = reader.IsDBNull(4) ? null : reader.GetString(4),
+            });
+        }
+
+        return rows;
+    }
+
+    private static async Task<IReadOnlyList<SupplyAuditEntry>> SupplyAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken)
+    {
+        await using var command = Command(
+            """
+            SELECT requested_term, library, fidelity, audited_at, term_answered, clip_count, unobtained_reason,
+                   what_would_obtain_it, prior_reported_total, prior_observed_on, prior_source, prior_fidelity,
+                   recorded_unavailable
+            FROM dossier_supply_audit_entries
+            WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY row_no
+            """,
+            connection, transaction, item, version);
+
+        var rows = new List<SupplyAuditEntry>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            rows.Add(new SupplyAuditEntry
+            {
+                RequestedTerm = reader.GetString(0),
+                Library = reader.GetString(1),
+                Fidelity = Enum.Parse<TermFidelity>(reader.GetString(2)),
+                AuditedAt = reader.GetFieldValue<DateTimeOffset>(3),
+                TermAnswered = reader.IsDBNull(4) ? null : reader.GetString(4),
+
+                // Null stays null and zero stays zero. The two are different facts, and this is
+                // the read that the table's shape exists to keep apart.
+                Count = reader.IsDBNull(5) ? null : reader.GetInt32(5),
+                UnobtainedReason = Enum.Parse<CountUnobtainedReason>(reader.GetString(6)),
+                WhatWouldObtainIt = reader.IsDBNull(7) ? null : reader.GetString(7),
+
+                // The table check admits a prior only whole, so one column present means all are.
+                Prior = reader.IsDBNull(8)
+                    ? null
+                    : new PriorObservation
+                    {
+                        ReportedTotal = reader.GetInt32(8),
+                        ObservedOn = reader.GetFieldValue<DateOnly>(9),
+                        Source = reader.GetString(10),
+                        FidelityAtObservation = Enum.Parse<TermFidelity>(reader.GetString(11)),
+                    },
+                RecordedUnavailable = reader.GetBoolean(12),
+            });
+        }
+
+        return rows;
+    }
+
+    private static async Task<IReadOnlyList<DeterminationResolution>> DeterminationRowsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken)
+    {
+        await using var command = Command(
+            """
+            SELECT determination, outcome, resolved_at, evidence, not_evidenceable_reason,
+                   what_would_make_it_evidenceable, policy_reference, policy_verified_on
+            FROM dossier_determinations
+            WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY row_no
+            """,
+            connection, transaction, item, version);
+
+        var rows = new List<DeterminationResolution>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            rows.Add(new DeterminationResolution
+            {
+                Determination = Enum.Parse<ComplianceDetermination>(reader.GetString(0)),
+                Outcome = Enum.Parse<DeterminationOutcome>(reader.GetString(1)),
+                ResolvedAt = reader.GetFieldValue<DateTimeOffset>(2),
+                Evidence = reader.IsDBNull(3) ? null : reader.GetString(3),
+                NotEvidenceableReason = reader.IsDBNull(4) ? null : reader.GetString(4),
+                WhatWouldMakeItEvidenceable = reader.IsDBNull(5) ? null : reader.GetString(5),
+                PolicyReference = reader.IsDBNull(6) ? null : reader.GetString(6),
+                PolicyVerifiedOn = reader.IsDBNull(7) ? null : reader.GetFieldValue<DateOnly>(7),
+            });
+        }
+
+        return rows;
+    }
+
+    private static async Task<IReadOnlyList<DossierComponent>> ComponentsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        ItemId item,
+        ItemVersion version,
+        CancellationToken cancellationToken)
+    {
+        await using var command = Command(
+            """
+            SELECT kind, payload::text
+            FROM dossier_components
+            WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY row_no
+            """,
+            connection, transaction, item, version);
+
+        var rows = new List<DossierComponent>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            rows.Add(DossierPayload.Deserialize(
+                Enum.Parse<DossierComponentKind>(reader.GetString(0)),
+                reader.GetString(1)));
+        }
+
+        return rows;
+    }
 }

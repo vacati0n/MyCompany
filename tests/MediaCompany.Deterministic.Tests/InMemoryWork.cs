@@ -41,7 +41,20 @@ internal sealed class InMemoryWork : IUnitOfWork
     /// <summary>Attempt records that became durable, refused attempts included.</summary>
     public List<AttemptRecord> Attempts { get; } = [];
 
+    /// <summary>Dossier headers that became durable.</summary>
+    public HashSet<(ItemId Item, ItemVersion Version)> DossierHeaders { get; } = [];
+
+    /// <summary>Dossier rows that became durable, each with the item version it was recorded against.</summary>
+    public List<(ItemId Item, ItemVersion Version, object Row)> DossierRows { get; } = [];
+
     public int Commits { get; private set; }
+
+    /// <summary>
+    /// The double's OWN clock, standing in for the datastore's: availability is set from it plus the
+    /// stated delay, exactly as the datastore sets it from its clock, and it is deliberately not the
+    /// clock injected into the services under test. Real time unless a demonstration supplies one.
+    /// </summary>
+    public Func<DateTimeOffset> StoreClock { get; init; } = () => DateTimeOffset.UtcNow;
 
     public Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IWorkTransaction>(new Txn(this));
@@ -62,6 +75,7 @@ internal sealed class InMemoryWork : IUnitOfWork
             Gates = new GateWriter(_pending, owner);
             Availability = new NoAvailability();
             Dispatches = new DispatchWriter(_pending, owner);
+            Dossiers = new DossierWriter(_pending, owner);
         }
 
         public IAuditAppender Audit { get; }
@@ -77,6 +91,8 @@ internal sealed class InMemoryWork : IUnitOfWork
         public IRouteAvailabilityWriter Availability { get; }
 
         public IDispatchWriter Dispatches { get; }
+
+        public IDossierWriter Dossiers { get; }
 
         public Task CommitAsync(CancellationToken cancellationToken)
         {
@@ -147,10 +163,11 @@ internal sealed class InMemoryWork : IUnitOfWork
 
         private sealed class JobWriter(List<Action> pending, InMemoryWork owner) : IJobWriter
         {
-            public Task EnqueueAsync(Job job, CancellationToken ct)
+            public Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken ct)
             {
-                pending.Add(() => owner.Jobs[job.Id] = job);
-                return Task.CompletedTask;
+                var availableAt = owner.StoreClock() + claimableAfter;
+                pending.Add(() => owner.Jobs[job.Id] = job with { AvailableAt = availableAt });
+                return Task.FromResult(availableAt);
             }
 
             public Task RecordStageAsync(JobStage stage, CancellationToken ct)
@@ -172,21 +189,37 @@ internal sealed class InMemoryWork : IUnitOfWork
                 return Task.FromResult<Job?>(claimed);
             }
 
-            public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct)
+            public Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken ct)
             {
+                // The named claim: only the unit named, only when it is ready. Availability is not
+                // modelled here, because the double has no second clock to disagree with.
+                if (!owner.Jobs.TryGetValue(job, out var named) || named.ClaimState != ClaimState.Ready)
+                {
+                    return Task.FromResult<Job?>(null);
+                }
+
+                var claimed = named with { ClaimState = ClaimState.Claimed, ClaimedBy = workerId };
+                pending.Add(() => owner.Jobs[claimed.Id] = claimed);
+                return Task.FromResult<Job?>(claimed);
+            }
+
+            public Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken ct)
+            {
+                var availableAt = owner.StoreClock() + claimableAfter;
                 pending.Add(() => owner.Jobs[job] = owner.Jobs[job] with
                 {
                     ClaimState = state,
                     AvailableAt = availableAt,
                     ClaimedBy = null,
                 });
-                return Task.CompletedTask;
+                return Task.FromResult(availableAt);
             }
 
-            public Task AdvanceAsync(
+            public Task<DateTimeOffset> AdvanceAsync(
                 JobId job, LifecyclePosition position, ClaimState state,
-                DateTimeOffset availableAt, CancellationToken ct)
+                TimeSpan claimableAfter, CancellationToken ct)
             {
+                var availableAt = owner.StoreClock() + claimableAfter;
                 pending.Add(() => owner.Jobs[job] = owner.Jobs[job] with
                 {
                     Position = position,
@@ -194,7 +227,7 @@ internal sealed class InMemoryWork : IUnitOfWork
                     AvailableAt = availableAt,
                     ClaimedBy = null,
                 });
-                return Task.CompletedTask;
+                return Task.FromResult(availableAt);
             }
         }
 
@@ -264,6 +297,48 @@ internal sealed class InMemoryWork : IUnitOfWork
         public Task RecordAttemptAsync(AttemptRecord attempt, CancellationToken cancellationToken)
         {
             pending.Add(() => owner.Attempts.Add(attempt));
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <summary>
+    /// The dossier writer, reproducing the two refusals the datastore makes that the demonstrations
+    /// here rest on: a component recorded against a dossier never opened is refused, and a dossier
+    /// is opened once.
+    /// </summary>
+    private sealed class DossierWriter(List<Action> pending, InMemoryWork owner) : IDossierWriter
+    {
+        public Task OpenAsync(ItemId item, ItemVersion version, DateTimeOffset openedAt, CancellationToken ct)
+        {
+            if (owner.DossierHeaders.Contains((item, version)))
+            {
+                throw new InvalidOperationException("The dossier of this item version is already opened.");
+            }
+
+            pending.Add(() => owner.DossierHeaders.Add((item, version)));
+            return Task.CompletedTask;
+        }
+
+        public Task RecordStageAsync(ItemId item, ItemVersion version, MediaCompany.Domain.Dossier.StageEvidence evidence, CancellationToken ct) =>
+            Row(item, version, evidence);
+
+        public Task RecordSupplyAuditAsync(ItemId item, ItemVersion version, MediaCompany.Domain.Dossier.SupplyAuditEntry entry, CancellationToken ct) =>
+            Row(item, version, entry);
+
+        public Task RecordDeterminationAsync(ItemId item, ItemVersion version, MediaCompany.Domain.Dossier.DeterminationResolution resolution, CancellationToken ct) =>
+            Row(item, version, resolution);
+
+        public Task RecordComponentAsync(ItemId item, ItemVersion version, DossierComponent component, DateTimeOffset recordedAt, CancellationToken ct) =>
+            Row(item, version, component);
+
+        private Task Row(ItemId item, ItemVersion version, object row)
+        {
+            if (!owner.DossierHeaders.Contains((item, version)))
+            {
+                throw new InvalidOperationException("No dossier is opened for this item version.");
+            }
+
+            pending.Add(() => owner.DossierRows.Add((item, version, row)));
             return Task.CompletedTask;
         }
     }

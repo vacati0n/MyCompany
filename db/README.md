@@ -32,14 +32,23 @@ correction and restore-to-point is the only reversal.
 
 ## Run the integration demonstrations
 
+**The demonstrations destroy the schema of whatever database the test connection string names.**
+Each one drops that database's schema when it starts and drops it again when it completes,
+whether it passed, failed or aborted, so no row a demonstration wrote outlives it — including the
+first-publication conditions some of them record as satisfied, the owner approvals, the gate-state
+fixtures and the dispatch records, which exist only as fixtures of a demonstration. A development
+schema must therefore live in a **different database** from the one the demonstrations are pointed
+at: the development schema above is created in `mediacompany`, and the demonstrations run against
+a separate `mediacompany_demo` database in the same container.
+
 ```bash
-MEDIACOMPANY_TEST_CONNECTION_STRING="Host=localhost;Port=55432;Database=mediacompany;Username=postgres;Password=mediacompany-dev" dotnet test MediaCompany.slnx
+docker exec mediacompany-pg createdb -U postgres mediacompany_demo
+MEDIACOMPANY_TEST_CONNECTION_STRING="Host=localhost;Port=55432;Database=mediacompany_demo;Username=postgres;Password=mediacompany-dev" dotnet test MediaCompany.slnx
 ```
 
-Without that variable the fifteen datastore demonstrations skip with a recorded reason rather
-than passing, and the suite reports them as not-run. With it they execute. Each one drops and
-recreates the schema, so point the variable at a throwaway instance and never at a store holding
-anything you intend to keep.
+Never point the test variable at a database holding anything you intend to keep, the development
+schema included. Without the variable the datastore demonstrations skip with a recorded reason
+rather than passing, and the suite reports them as not-run. With it they execute.
 
 ## Other commands
 

@@ -99,37 +99,46 @@ public static class AnalyticsComposers
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// One approval's effort as three separate quantities, mapped from the delivered measurement.
+    /// One approval's effort as three separate quantities, each mapped from ITS OWN component
+    /// result at the delivered derivation site.
     ///
-    /// The delivered derivation is reused as it stands: it already separates review, queue and
-    /// rework, already treats a first-pass approval's absent rework as an observed zero, and
-    /// already names which quantity was missing. No threshold, target or pass line is stated
-    /// against any of the three, here or anywhere the read model travels.
+    /// The mapping no longer reads the whole-row resolution, which made every component unmeasured
+    /// whenever any one mark was missing: a review interval that was derived is now reported as
+    /// derived whatever happened to the queue mark. A derived zero is an observed zero, a derived
+    /// non-zero interval an observed value in minutes, an absent mark unmeasured because no
+    /// observation exists, and inconsistent marks unmeasured because the source cannot state one,
+    /// each naming the mark. No threshold, target or pass line is stated against any of the three,
+    /// here or anywhere the read model travels, and no combined figure is formed.
     /// </summary>
     public static ApprovalEffortReadModel ApprovalEffort(ApprovalMeasurement measurement)
     {
         ArgumentNullException.ThrowIfNull(measurement);
 
-        var unmeasured = measurement.Resolution == ApprovalMeasurementResolution.Unmeasured;
-
         return new ApprovalEffortReadModel
         {
             Item = measurement.Item,
             Version = measurement.Version,
-            Review = Interval(measurement.ReviewTime, unmeasured, "review", measurement.UnmeasuredReason),
-            Queue = Interval(measurement.QueueTime, unmeasured, "queue", measurement.UnmeasuredReason),
-            Rework = Interval(measurement.ReworkTime, unmeasured, "rework", measurement.UnmeasuredReason),
+            Review = Component(measurement.ReviewComponent, "review"),
+            Queue = Component(measurement.QueueComponent, "queue"),
+            Rework = Component(measurement.ReworkComponent, "rework"),
             Label = measurement.Label,
         };
     }
 
-    private static MeasurementQuantity Interval(TimeSpan? interval, bool unmeasured, string component, string reason) =>
-        interval is { } value && !unmeasured
-            ? MeasurementQuantity.Observed((decimal)value.TotalMinutes, "minutes")
-            : MeasurementQuantity.NotMeasured(
+    private static MeasurementQuantity Component(ApprovalComponentResult result, string component) =>
+        result.State switch
+        {
+            ApprovalComponentState.Derived when result.Interval is { } interval =>
+                MeasurementQuantity.Observed((decimal)interval.TotalMinutes, "minutes"),
+            ApprovalComponentState.MarksInconsistent => MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.SourceCannotStateOne,
+                $"{component} time is not derivable from the recorded marks: {result.Statement}"),
+            ApprovalComponentState.MarkAbsent => MeasurementQuantity.NotMeasured(
                 UnmeasuredReason.NoObservationExists,
-                $"{component} time is not derivable from the recorded marks: "
-                + (string.IsNullOrWhiteSpace(reason) ? "no mark was recorded" : reason));
+                $"{component} time is not derivable from the recorded marks: {result.Statement}"),
+            _ => throw new InvalidOperationException(
+                "Unreachable: a derived component carries its interval, and the component state set has three members."),
+        };
 
     // -----------------------------------------------------------------------
     // Production-path stage outcomes and refusals (plan tasks T-009, and D-004)
@@ -384,40 +393,54 @@ public static class AnalyticsComposers
     }
 
     /// <summary>
-    /// The share of served-tier records in which the admitted route served the tier the request
-    /// asked for (decision D-007).
+    /// What the tier ratio is. Authored here, once, and carried by every ratio as a required
+    /// construction argument, so no output presents the ratio without saying which ratio it is.
+    /// </summary>
+    public const string TierRatioDefinition =
+        "the agreement share: of the operations recorded in the period whose record carries both a requested "
+        + "and a served reasoning tier, the share in percent whose served tier equals its requested tier; it is "
+        + "computed from the recorded pairs alone, needs no assumed split and no ordering of tiers, and it is "
+        + "not the reasoning-tier split the cost model assumes";
+
+    /// <summary>
+    /// The agreement share over the records that carry BOTH a requested and a served tier.
     ///
-    /// A period holding fewer than two served-tier records yields the UNMEASURED case with that as
-    /// its stated reason: one record establishes the mechanism and settles no ratio. The caveat and
-    /// the split-assumption label are construction arguments, so no output of this function exists
-    /// without them.
+    /// The delivered meaning is kept and its denominator corrected: a record carrying a served
+    /// tier and no requested tier has nothing to agree or disagree with, so it no longer counts as
+    /// a mismatch. A period holding fewer than two records that carry both tiers yields the
+    /// UNMEASURED case with that as its stated reason, which also guarantees at least two
+    /// served-tier records behind any ratio presented. The caveat, the split-assumption label and
+    /// the definition are construction arguments, so no output of this function exists without
+    /// them.
     /// </summary>
     public static TierRatioReadModel TierRatio(DateOnly period, IReadOnlyList<ServedTierRecord> records)
     {
         ArgumentNullException.ThrowIfNull(records);
 
-        var served = records.Where(r => r.Served is not null).ToArray();
+        var carryingBoth = records.Where(r => r.CarriesTierEvidence).ToArray();
         var caveat = SingleRecordCaveat.For(ServedTierCount(records));
 
-        if (served.Length < 2)
+        if (carryingBoth.Length < 2)
         {
             return new TierRatioReadModel(
                 period,
                 MeasurementQuantity.NotMeasured(
                     UnmeasuredReason.NoObservationExists,
-                    $"fewer than two served-tier records exist in period {period:yyyy-MM} "
-                    + $"({served.Length} recorded), so no tier ratio can be read from it"),
+                    $"fewer than two served-tier records that also carry a requested tier exist in period {period:yyyy-MM} "
+                    + $"({carryingBoth.Length} recorded), so no tier ratio can be read from it"),
                 caveat,
-                SplitAssumption);
+                SplitAssumption,
+                TierRatioDefinition);
         }
 
-        var matching = served.Count(r => r.Requested is not null && r.Requested == r.Served);
+        var agreeing = carryingBoth.Count(r => r.Requested == r.Served);
 
         return new TierRatioReadModel(
             period,
-            MeasurementQuantity.Observed(decimal.Divide(matching * 100, served.Length), "percent"),
+            MeasurementQuantity.Observed(decimal.Divide(agreeing * 100, carryingBoth.Length), "percent"),
             caveat,
-            SplitAssumption);
+            SplitAssumption,
+            TierRatioDefinition);
     }
 
     // -----------------------------------------------------------------------
@@ -486,4 +509,240 @@ public static class AnalyticsComposers
             ? []
             : RevenueDerived.Select(figure => Admit(figure, parameter)).ToArray();
     }
+
+    // -----------------------------------------------------------------------
+    // Throughput and queue quantities for a period
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// What a throughput reading establishes and what it does not. Authored here and carried by
+    /// every reading as a required construction argument.
+    /// </summary>
+    public const string ThroughputStatement =
+        "these counts establish what the record store that was read held for the period and nothing more: "
+        + "no sustainable rate, no required buffer depth and no concurrency figure is established by them, and a "
+        + "count read from a demonstration store is a demonstration parameter rather than an observation of the "
+        + "company's own work";
+
+    /// <summary>
+    /// The ONE composing site at which every throughput quantity's case is decided.
+    ///
+    /// The coverage rule: a period lying wholly after the append-only record's earliest entry and
+    /// already elapsed when the datastore read it is one over which the count was taken, so a
+    /// count of none there is an OBSERVED ZERO. Any other period is UNMEASURED because no
+    /// observation exists, naming the coverage bounds, and no count is presented for it at all. A
+    /// reconstructed waiting count below zero means the record is incomplete for the queue, and is
+    /// unmeasured because the source cannot state one rather than clamped to zero.
+    /// </summary>
+    public static ThroughputReadModel Throughput(ThroughputSummary summary)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+
+        if (summary.PeriodEnd <= summary.PeriodStart)
+        {
+            throw new ArgumentException("A period closes after it starts.", nameof(summary));
+        }
+
+        // The read never found a quiet instant: audited transitions were in flight at every
+        // attempt to close the record, so no count it could give would be final.
+        if (!summary.Quiet || summary.Horizon is not { } horizon)
+        {
+            return Unmeasured(
+                summary,
+                UnmeasuredReason.SourceCannotStateOne,
+                "audited transitions were in flight at every bounded attempt to close the append-only record, "
+                + "so no count over the period would be final");
+        }
+
+        // OBSERVED only where the period starts no earlier than the record's first entry and ends no
+        // later than the horizon this read set, below which no entry can commit any more.
+        var covered = summary.EarliestEntry is { } earliest
+            && summary.PeriodStart >= earliest
+            && summary.PeriodEnd <= horizon;
+
+        if (!covered)
+        {
+            return Unmeasured(summary, UnmeasuredReason.NoObservationExists, CoverageDetail(summary, horizon));
+        }
+
+        // Waiting at the close: every arrival into the ready queue up to the close, less every
+        // claim that took a unit out of it. Arrivals are enqueues, non-final successes and
+        // retries; escalation and completion leave from the claimed state, not the ready one.
+        var arrivals = summary.EnqueuedToClose + summary.StageSucceededToClose + summary.RetriedToClose;
+        var waiting = arrivals - summary.ClaimedToClose;
+
+        var waitingQuantity = waiting < 0
+            ? MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.SourceCannotStateOne,
+                $"the append-only record up to {summary.PeriodEnd:O} holds more claims ({summary.ClaimedToClose}) than "
+                + $"arrivals into the ready queue ({arrivals}), so the units waiting at the close cannot be reconstructed "
+                + "from it; a claim state was changed by something other than the lifecycle and dispatch services")
+            : MeasurementQuantity.Count(waiting, "units waiting");
+
+        return new ThroughputReadModel(
+            summary.PeriodStart,
+            summary.PeriodEnd,
+            waitingQuantity,
+            MeasurementQuantity.Count(summary.ClaimedInPeriod, "claims"),
+            MeasurementQuantity.Count(summary.RetriedInPeriod, "retried stage attempts"),
+            MeasurementQuantity.Count(summary.EscalatedInPeriod, "escalated units"),
+            MeasurementQuantity.Count(summary.CompletedInPeriod, "completed units"),
+            ThroughputStatement);
+    }
+
+    private static ThroughputReadModel Unmeasured(ThroughputSummary summary, UnmeasuredReason reason, string detail) =>
+        new(
+            summary.PeriodStart,
+            summary.PeriodEnd,
+            MeasurementQuantity.NotMeasured(reason, "units waiting at the close: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "claims: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "retried stage attempts: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "escalated units: " + detail),
+            MeasurementQuantity.NotMeasured(reason, "completed units: " + detail),
+            ThroughputStatement);
+
+    private static string CoverageDetail(ThroughputSummary summary, DateTimeOffset horizon)
+    {
+        var period = $"the period from {summary.PeriodStart:O} to {summary.PeriodEnd:O}";
+
+        if (summary.EarliestEntry is not { } earliest)
+        {
+            return $"the append-only record holds no entry, so no count was taken over {period}";
+        }
+
+        if (summary.PeriodStart < earliest)
+        {
+            return $"{period} begins before the append-only record's earliest entry at {earliest:O}, "
+                + "so no count was taken over all of it";
+        }
+
+        return $"{period} ends after the record horizon this read set at {horizon:O}, "
+            + "so entries stamped inside it could still commit and its count is not final";
+    }
+
+    // -----------------------------------------------------------------------
+    // The four record sources, read back from the item dossier register
+    // -----------------------------------------------------------------------
+
+    /// <summary>What a dossier reading establishes and what it does not.</summary>
+    public const string DossierStatement =
+        "these counts are of rows the item dossier register holds for this item version, recorded through the "
+        + "dossier recorder, as recorded at the read; the dossier accumulates, so they claim no permanence; they "
+        + "establish what was recorded and nothing about what was produced, and none of them is a clip count, a "
+        + "supply figure or a threshold";
+
+    /// <summary>What a supply-audit reading establishes and what it does not.</summary>
+    public const string SupplyAuditStatement =
+        "one entry per recorded audit, grouped by the recorded subject term; a clip count appears only where the "
+        + "recorded audit establishes one, and an entry whose count was never established carries no number";
+
+    /// <summary>What a determination reading establishes and what it does not.</summary>
+    public const string DeterminationStatement =
+        "one entry per member of the closed determination set; a determination with no recorded outcome reads "
+        + "unmeasured, and no outcome is inferred from another determination's outcome";
+
+    private static string NoDossier(ItemId item, ItemVersion version, string lookedFor) =>
+        $"{lookedFor} were looked for in the item dossier register for item {item} version {version}, "
+        + "and no dossier is opened there for that version";
+
+    /// <summary>
+    /// A count of recorded rows for one source: unmeasured naming the register and the version
+    /// where no dossier was opened, and an observed count (zero included) where one was.
+    /// </summary>
+    private static MeasurementQuantity RecordedRows(
+        bool opened,
+        long rows,
+        ItemId item,
+        ItemVersion version,
+        string unit) =>
+        opened
+            ? MeasurementQuantity.Count(rows, unit)
+            : MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, NoDossier(item, version, unit));
+
+    /// <summary>
+    /// The item dossier of one item version, one count per component. With no dossier opened every
+    /// count is unmeasured naming the register and the version; with one opened, a component with
+    /// no row is an observed zero and any other an observed value.
+    /// </summary>
+    public static ItemDossierReadModel DossierCounts(ItemId item, ItemVersion version, RecordedDossier? recorded)
+    {
+        var opened = recorded is not null;
+        var dossier = recorded?.Dossier;
+
+        MeasurementQuantity Rows(Func<ItemDossier, long> count, string unit) =>
+            RecordedRows(opened, dossier is null ? 0 : count(dossier), item, version, unit);
+
+        return new ItemDossierReadModel
+        {
+            Item = item,
+            Version = version,
+            Stages = Rows(d => d.Stages.Count, "stage outcomes"),
+            TreatmentVerdicts = Rows(d => d.Treatment.Count, "treatment verdicts"),
+            AudienceDesignations = Rows(d => d.Audience is null ? 0 : 1, "audience designations"),
+            Visuals = Rows(d => d.Visuals.Count, "visual provenance records"),
+            ClipOriginAssessments = Rows(d => d.ClipOrigins.Count, "clip origin assessments"),
+            ClaimAttributions = Rows(d => d.Claims.Count, "claim attributions"),
+            SupplyAuditEntries = Rows(d => d.SupplyAudit.Count, "supply audit entries"),
+            DeterminationResolutions = Rows(d => d.Determinations.Count, "determination resolutions"),
+            RuntimeRecords = Rows(d => d.Runtime is null ? 0 : 1, "runtime records"),
+            MetadataRecords = Rows(d => d.Metadata is null ? 0 : 1, "metadata records"),
+            OriginalityAssessments = Rows(d => d.Originality is null ? 0 : 1, "originality assessments"),
+            Statement = DossierStatement,
+        };
+    }
+
+    /// <summary>
+    /// The stage-outcome surface where NO dossier is opened for the item version: every stage of
+    /// the closed set unmeasured, naming the register and the version, and NO refusal listed,
+    /// because no predicate is evaluated over a dossier that does not exist.
+    /// </summary>
+    public static StageOutcomeSurface StageOutcomesUnrecorded(ItemId item, ItemVersion version) => new()
+    {
+        Item = item,
+        Version = version,
+        Stages = ProductionStageSet.All.Select(stage => new StageOutcomeReadModel
+        {
+            Stage = stage,
+            RecordedOutcome = null,
+            RecordedOutcomes = MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.NoObservationExists,
+                NoDossier(item, version, $"outcomes of stage {stage}")),
+            Statement = $"stage {stage} has no recorded outcome: no dossier is opened for this item version",
+        }).ToArray(),
+        CompositionStep = CompositionStep(),
+        Refusals = [],
+    };
+
+    /// <summary>
+    /// The supply audit of one item version as recorded. With no dossier opened the entry count is
+    /// unmeasured naming the register and the version, and no entry is listed.
+    /// </summary>
+    public static SupplyAuditReading SupplyAuditRecorded(
+        ItemId item,
+        ItemVersion version,
+        IReadOnlyList<SupplyAuditEntry>? entries) => new()
+    {
+        Item = item,
+        Version = version,
+        RecordedEntries = RecordedRows(entries is not null, entries?.Count ?? 0, item, version, "supply audit entries"),
+        Entries = entries is null ? [] : SupplyAudit(entries),
+        Statement = SupplyAuditStatement,
+    };
+
+    /// <summary>
+    /// The determinations of one item version as recorded, over the closed set. With no dossier
+    /// opened the resolution count is unmeasured naming the register and the version.
+    /// </summary>
+    public static DeterminationReading DeterminationsRecorded(
+        ItemId item,
+        ItemVersion version,
+        IReadOnlyList<DeterminationResolution>? resolutions) => new()
+    {
+        Item = item,
+        Version = version,
+        RecordedResolutions = RecordedRows(
+            resolutions is not null, resolutions?.Count ?? 0, item, version, "determination resolutions"),
+        Determinations = Determinations(resolutions ?? []),
+        Statement = DeterminationStatement,
+    };
 }
