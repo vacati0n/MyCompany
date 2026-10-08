@@ -23,7 +23,7 @@ and carries only `prompt.txt`** — all repository content is in the feature wor
 planner caught the orchestrator citing a `research/` path that did not exist at the base.
 
 **Check that `main` carries Wave 5 before relying on the default branch base.** Wave 5 was
-merged and pushed on branch `wave-5-sustained-rate` and PR'd to `main`; if the PR has not merged,
+merged locally on branch `wave-5-sustained-rate` (merge commit `f9a3b67`); **the push and the PR were blocked by the permission classifier and left to the owner** — if `main` does not carry it,
 pass `--base wave-5-sustained-rate`.
 
 ## Before the first dispatch — two infrastructure steps that cost Wave 5 ten days
