@@ -26,6 +26,11 @@ connection string in a repository.
 MEDIACOMPANY_CONNECTION_STRING="Host=localhost;Port=55432;Database=mediacompany;Username=postgres;Password=mediacompany-dev" dotnet run --project src/MediaCompany.Host -- install
 ```
 
+**Apply the schema before any process that writes gate transitions starts.** The sixth resource
+(`006-multi-channel.sql`) numbers the existing gate transitions once, by their recorded instants;
+re-applying it while gate writers are running could move the order sequence backwards. Install
+is a stopped-system step.
+
 Establish the backup and restore position **before** the first append-only entry is written. The
 recorded history refuses update and delete, so from that point the store has no in-place
 correction and restore-to-point is the only reversal.

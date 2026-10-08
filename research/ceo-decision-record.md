@@ -1779,3 +1779,16 @@ others. The decision accepts that exposure. The system must therefore model the 
 configured to differ, and the per-channel risk profile must be able to state that the channels
 share one payee. Budget remains per channel for tracking and the company budget of USD 77.41
 per month remains the ceiling across all of them.
+
+---
+
+## CEO-C-500 — Correction to CEO-D-500's wording on the per-channel list
+
+**Recorded 2026-10-09 by the orchestrating session.** `CEO-D-500` described its per-channel list
+as "exactly" the list of master plan section 17.5. It is not: the decision's list adds voice,
+analytics partition and approval queue, and omits language, tone and visual identity. The scope
+agent and the documentation agent both caught the difference. **The correct reading, used by the
+whole of Wave 6, is the union of both lists**, with one qualification the Scope Gate made: the
+approval queue is a per-channel *view* over the gate transition-table state, never configuration.
+The owner's decision itself — one legal entity, several channels — is unchanged. Nothing is
+renumbered.
