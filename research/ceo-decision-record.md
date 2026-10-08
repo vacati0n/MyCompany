@@ -1676,3 +1676,58 @@ this agent as a whole"*.
 
 **The rule stands: take each agent's final figure; the rework is the delta.** Wave 2's corrected
 total of 1,836,117 and Wave 3's 1,930,677 are the figures of record.
+
+---
+
+# Wave 5 session decisions — block `CEO-D-400`–`CEO-D-499`, corrections `CEO-C-400`–`CEO-C-499`
+
+**This session takes `CEO-D-400`–`CEO-D-499` for decisions and `CEO-C-400`–`CEO-C-499` for
+corrections**, under the allocation-block rule and the source-qualifier scheme. The previous
+session's block ran to `CEO-D-301` and `CEO-C-301`. Nothing is renumbered.
+
+---
+
+## CEO-D-400 — No sizing claim until a production series exists; a queue demonstration is a capability demonstration, not evidence of the rate
+
+**Decided 2026-09-27 by the orchestrating session at the Wave 5 Scope Gate**, answering the
+blocking question the scope phase raised rather than absorbed. **Not a CEO decision — recorded
+here because it interprets existing ones, and the CEO may overturn it at the wave report.**
+
+### The question
+
+The scope agent bounded the instrumentation half of the ticket's goal and refused to bound the
+other half — *build what a sustained three-items-per-week rate would require of the system* —
+because stating that requirement as an acceptance threshold needs a cycle time, a failure rate
+or a rework rate, none of which has ever been observed, and the same ticket forbids inventing
+a quantity. It asked: what does the owner accept as evidence that the system can sustain the
+rate — a demonstration of queue behaviour at a depth recorded as an assumption, or does any
+sizing claim wait until a production series exists?
+
+### The decision: the sizing claim waits; the demonstration is admitted only as capability
+
+1. **Any sizing claim, required buffer depth, concurrency figure or sustainable-rate assertion
+   waits until a production series exists** that includes observed cycle time, failure rate and
+   rework rate. Nothing in Wave 5 asserts that the system can sustain three items a week.
+2. **A demonstration of queue behaviour is admitted as a capability demonstration only.** The
+   depth it runs at is a **demonstration parameter**, recorded and labelled as an assumption in
+   every artifact that carries it. No acceptance threshold and no claim about the rate may be
+   derived from it, and no artifact may present it as a measurement.
+3. The wave therefore delivers the rate as **testable, not tested** — the same shape as Wave 3
+   (publishing capability built, nothing published) and Wave 4 (analytics built, revenue dark).
+
+### Why this did not need to go to the CEO first
+
+The owner's standing decisions already settle it. The master plan states that *the decision to
+sustain follows the approval-minutes baseline rather than preceding it*; the ticket forbids
+inventing any quantity and requires the rate to become decidable *on observation rather than on
+assumption*; and the clean-record threshold — the nearest relative of this question — is
+already reserved to the owner until a series exists. Reading those together, a sizing threshold
+asserted now would contradict all three. The restrictive reading is taken; the expansive
+reading — accepting a demonstration depth as evidence of the rate — **remains the CEO's** and
+was not taken.
+
+### What the CEO is asked at the wave report
+
+Whether this reading stands. If the CEO would rather accept a demonstration depth as
+provisional evidence, that is a new decision and gets its own identifier; nothing here is
+renumbered.

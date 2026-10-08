@@ -151,6 +151,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             Gates = new Gateless();
             Availability = new AvailabilityRecorder(owner);
             Dispatches = new Dispatchless();
+            Dossiers = new Dossierless();
         }
 
         public IAuditAppender Audit { get; }
@@ -166,6 +167,8 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         public IRouteAvailabilityWriter Availability { get; }
 
         public IDispatchWriter Dispatches { get; }
+
+        public IDossierWriter Dossiers { get; }
 
         public Task CommitAsync(CancellationToken cancellationToken)
         {
@@ -277,18 +280,22 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
         private sealed class Jobless : IJobWriter
         {
-            public Task EnqueueAsync(Job job, CancellationToken ct) => Task.CompletedTask;
+            public Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken ct) =>
+                Task.FromResult(DateTimeOffset.UnixEpoch);
 
             public Task RecordStageAsync(JobStage stage, CancellationToken ct) => Task.CompletedTask;
 
             public Task<Job?> ClaimNextAsync(string workerId, TimeSpan lease, CancellationToken ct) =>
                 Task.FromResult<Job?>(null);
 
-            public Task ReleaseAsync(JobId job, ClaimState state, DateTimeOffset availableAt, CancellationToken ct) =>
-                Task.CompletedTask;
+            public Task<Job?> ClaimAsync(JobId job, string workerId, TimeSpan lease, CancellationToken ct) =>
+                Task.FromResult<Job?>(null);
 
-            public Task AdvanceAsync(JobId job, LifecyclePosition position, ClaimState state,
-                DateTimeOffset availableAt, CancellationToken ct) => Task.CompletedTask;
+            public Task<DateTimeOffset> ReleaseAsync(JobId job, ClaimState state, TimeSpan claimableAfter, CancellationToken ct) =>
+                Task.FromResult(DateTimeOffset.UnixEpoch);
+
+            public Task<DateTimeOffset> AdvanceAsync(JobId job, LifecyclePosition position, ClaimState state,
+                TimeSpan claimableAfter, CancellationToken ct) => Task.FromResult(DateTimeOffset.UnixEpoch);
         }
 
         private sealed class Gateless : IGateWriter
@@ -337,5 +344,28 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             MediaCompany.Domain.Publication.AttemptRecord attempt, CancellationToken cancellationToken) =>
             throw new NotSupportedException(
                 "The resolution boundary records no publication attempt.");
+    }
+
+    /// <summary>The resolution boundary writes no dossier; this fake exists to prove it is never called.</summary>
+    private sealed class Dossierless : IDossierWriter
+    {
+        public Task OpenAsync(ItemId item, ItemVersion version, DateTimeOffset openedAt, CancellationToken ct) =>
+            throw new NotSupportedException("The resolution boundary opens no dossier.");
+
+        public Task RecordStageAsync(ItemId item, ItemVersion version,
+            MediaCompany.Domain.Dossier.StageEvidence evidence, CancellationToken ct) =>
+            throw new NotSupportedException("The resolution boundary records no stage evidence.");
+
+        public Task RecordSupplyAuditAsync(ItemId item, ItemVersion version,
+            MediaCompany.Domain.Dossier.SupplyAuditEntry entry, CancellationToken ct) =>
+            throw new NotSupportedException("The resolution boundary records no supply audit.");
+
+        public Task RecordDeterminationAsync(ItemId item, ItemVersion version,
+            MediaCompany.Domain.Dossier.DeterminationResolution resolution, CancellationToken ct) =>
+            throw new NotSupportedException("The resolution boundary records no determination.");
+
+        public Task RecordComponentAsync(ItemId item, ItemVersion version, DossierComponent component,
+            DateTimeOffset recordedAt, CancellationToken ct) =>
+            throw new NotSupportedException("The resolution boundary records no dossier component.");
     }
 }

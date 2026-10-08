@@ -122,20 +122,32 @@ public sealed record DispatchDescriptor
     /// The metadata and settings the attempt record answers with. Rendered once here so the record
     /// and the descriptor cannot drift apart.
     /// </summary>
-    public string MetadataAndSettingsDigest
-    {
-        get
-        {
-            var material = new StringBuilder();
-            material.Append(Destination.Canonical).Append('\n');
-            material.Append(Settings.Canonical).Append('\n');
-            foreach (var surface in Surfaces.OrderBy(s => s.Kind))
-            {
-                material.Append(surface.Kind).Append('=').Append(surface.Content).Append('\n');
-            }
+    public string MetadataAndSettingsDigest => DigestOf(Destination, Settings, Surfaces);
 
-            return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material.ToString())));
+    /// <summary>
+    /// The digest rule, stated once. A REFUSED attempt answers "with which metadata and settings"
+    /// too, and it has no descriptor to read the digest from, so the rule is exposed here rather
+    /// than restated at the caller that persists a refusal: the refused attempt and a later
+    /// composed one for the same inputs then carry the same digest by construction.
+    /// </summary>
+    public static string DigestOf(
+        DestinationDescriptor destination,
+        PublicationSettings settings,
+        IReadOnlyList<SurfaceRecord> surfaces)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(surfaces);
+
+        var material = new StringBuilder();
+        material.Append(destination.Canonical).Append('\n');
+        material.Append(settings.Canonical).Append('\n');
+        foreach (var surface in surfaces.OrderBy(s => s.Kind))
+        {
+            material.Append(surface.Kind).Append('=').Append(surface.Content).Append('\n');
         }
+
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material.ToString())));
     }
 }
 

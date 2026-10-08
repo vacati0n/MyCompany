@@ -598,3 +598,52 @@ carry one, or name the role that sets it.
 
 **Recommended fix.** Either supply a deployment status and a version into the closing phase, or
 remove the unreachable row and let the register's three values be the whole verdict space.
+
+---
+
+## Finding 11 — a stale `failure-envelope.json` survives in the next phase's folder after its gate is decided
+
+**Found 2026-09-27 driving MC-6 (`run-423e990b743d`), Wave 5. Low severity. Not a correctness
+defect of the run; a misleading artifact left where an agent will read it.**
+
+### What happens
+
+When `omn-agent run <KEY> --complete --phase <P>` runs while the gate that closes `<P>` has not
+yet been decided, the state engine evaluates the next phase, finds its entry blocked by the
+undecided gate, and writes a `failure-envelope.json` into the **next** phase's state folder:
+
+```
+failure_class:  gate-approval-required
+reason_code:    approval_wait
+guard:          G4-GATE
+detail:         Planning Gate closing execution-planning has no recorded decision; owners: [...]
+```
+
+The gate is then decided with `--gate ... --decision approve`, the next phase is dispatched and
+runs to completion — and the envelope is **never removed or superseded**. It sat beside the
+architect's dispatch prompt in the design phase folder (written 12:35:24Z, the gate decided
+seconds later) and again in the implementation phase folder. The design agent noticed it, read it
+as contradicting the task context, correctly judged it stale and did not act on it — but it had
+to spend attention deciding that, and a less careful agent would have reported the run as held.
+
+### Reproduction
+
+Complete a phase before deciding its gate; decide the gate; dispatch the next phase; list the next
+phase's folder. Observed on every phase boundary of this run where the complete step preceded the
+gate decision.
+
+### Why it matters
+
+An agent reading its own phase folder is entitled to treat every file there as current. A
+failure envelope that says the run is awaiting a human decision, in a folder whose dispatch
+prompt says the run is executing, is a contradiction the framework created and the agent must
+resolve. The cost was small here because the agent was careful. The fix is also small: the gate
+decision step should remove or mark superseded any `gate-approval-required` envelope whose
+`detail` names that gate, or the dispatch step should refuse to proceed while one is present so
+the contradiction is impossible.
+
+### Workaround
+
+Tell every dispatched agent, in its briefing, that a `failure-envelope.json` of class
+`gate-approval-required` in its folder is stale once its dispatch prompt exists, and to ignore it.
+This wave did so from the implementation phase onward.

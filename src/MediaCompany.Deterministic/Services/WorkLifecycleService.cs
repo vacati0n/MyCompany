@@ -24,12 +24,29 @@ public sealed class WorkLifecycleService
         _clock = clock;
     }
 
-    public async Task EnqueueAsync(Job job, CancellationToken cancellationToken)
+    /// <summary>
+    /// Enqueues a unit, claimable at once, and writes its pending stage row and its entry in one
+    /// transaction.
+    /// </summary>
+    public Task<DateTimeOffset> EnqueueAsync(Job job, CancellationToken cancellationToken) =>
+        EnqueueAsync(job, TimeSpan.Zero, cancellationToken);
+
+    /// <summary>
+    /// Enqueues a unit claimable after <paramref name="claimableAfter"/> by the datastore's clock,
+    /// and writes its pending stage row and its entry in one transaction.
+    ///
+    /// Returns the instant the unit became claimable, which the datastore set and which is also the
+    /// instant its pending stage row was entered at. The stage row is keyed on the unit, the
+    /// position and that instant, so a caller that later records the outcome of this first
+    /// position closes THIS row only if it supplies the same instant. The job's own availability
+    /// field is not used: no caller sets claimability on a clock the claim is not decided on.
+    /// </summary>
+    public async Task<DateTimeOffset> EnqueueAsync(Job job, TimeSpan claimableAfter, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(job);
 
         await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.Jobs.EnqueueAsync(job, cancellationToken).ConfigureAwait(false);
+        var enteredAt = await transaction.Jobs.EnqueueAsync(job, claimableAfter, cancellationToken).ConfigureAwait(false);
         await transaction.Jobs.RecordStageAsync(
             new JobStage
             {
@@ -38,12 +55,14 @@ public sealed class WorkLifecycleService
                 Outcome = StageOutcome.Pending,
                 Attempts = 0,
                 Escalated = false,
-                EnteredAt = _clock.UtcNow,
+                EnteredAt = enteredAt,
             },
             cancellationToken).ConfigureAwait(false);
-        await transaction.Audit.AppendAsync(Entry(job, "job.enqueued", "queued for production"), cancellationToken)
+        await transaction.Audit.AppendAsync(Entry(job, LifecycleActions.Enqueued, "queued for production"), cancellationToken)
             .ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+        return enteredAt;
     }
 
     /// <summary>
@@ -61,7 +80,32 @@ public sealed class WorkLifecycleService
             return null;
         }
 
-        await transaction.Audit.AppendAsync(Entry(job, "job.claimed", $"claimed by {workerId}"), cancellationToken)
+        await transaction.Audit.AppendAsync(Entry(job, LifecycleActions.Claimed, $"claimed by {workerId}"), cancellationToken)
+            .ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return job;
+    }
+
+    /// <summary>
+    /// Claims ONE NAMED unit, and only when it is ready and available, or returns null.
+    ///
+    /// The delivered claim takes the oldest ready unit of any workflow, so a caller driving one
+    /// unit through its positions could otherwise claim somebody else's. This claim takes the
+    /// unit it is given under the same skip-locked discipline and the same datastore clock, and
+    /// writes the same claim entry, so the throughput reading counts it exactly as it counts the
+    /// delivered claim.
+    /// </summary>
+    public async Task<Job?> ClaimUnitAsync(JobId unit, string workerId, TimeSpan lease, CancellationToken cancellationToken)
+    {
+        await using var transaction = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
+        var job = await transaction.Jobs.ClaimAsync(unit, workerId, lease, cancellationToken).ConfigureAwait(false);
+        if (job is null)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            return null;
+        }
+
+        await transaction.Audit.AppendAsync(Entry(job, LifecycleActions.Claimed, $"claimed by {workerId}"), cancellationToken)
             .ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return job;
@@ -122,13 +166,15 @@ public sealed class WorkLifecycleService
             if (finished)
             {
                 await ok.Jobs.AdvanceAsync(
-                    job.Id, LifecyclePosition.Completed, ClaimState.Done, now, cancellationToken)
+                    job.Id, LifecyclePosition.Completed, ClaimState.Done, TimeSpan.Zero, cancellationToken)
                     .ConfigureAwait(false);
             }
             else
             {
-                await ok.Jobs.AdvanceAsync(
-                    job.Id, next!.Value, ClaimState.Ready, now, cancellationToken).ConfigureAwait(false);
+                // Claimable at once by the datastore's clock; the instant it set is the instant the
+                // next position's pending row is entered at, so a claim reading it keys that row.
+                var claimableAt = await ok.Jobs.AdvanceAsync(
+                    job.Id, next!.Value, ClaimState.Ready, TimeSpan.Zero, cancellationToken).ConfigureAwait(false);
                 await ok.Jobs.RecordStageAsync(
                     new JobStage
                     {
@@ -137,13 +183,13 @@ public sealed class WorkLifecycleService
                         Outcome = StageOutcome.Pending,
                         Attempts = 0,
                         Escalated = false,
-                        EnteredAt = now,
+                        EnteredAt = claimableAt,
                     },
                     cancellationToken).ConfigureAwait(false);
             }
 
             await ok.Audit.AppendAsync(
-                Entry(job, finished ? "job.completed" : "job.stage-succeeded",
+                Entry(job, finished ? LifecycleActions.Completed : LifecycleActions.StageSucceeded,
                       finished ? $"{position} was the last position of {workflow.Name}" : $"{position} succeeded"),
                 cancellationToken).ConfigureAwait(false);
             await ok.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -153,16 +199,16 @@ public sealed class WorkLifecycleService
         var disposition = FailureHandling.Decide(
             failureClass ?? FailureClass.Transient, attemptsSoFar, policy, elapsed, deadline);
 
-        var (outcome, escalated, availableAt, claimState) = disposition switch
+        var (outcome, escalated, claimableAfter, claimState) = disposition switch
         {
             FailureDisposition.RetrySameRoute retry =>
-                (StageOutcome.Retried, false, now + retry.Backoff, ClaimState.Ready),
+                (StageOutcome.Retried, false, retry.Backoff, ClaimState.Ready),
             // A re-resolution waits the declared backoff before becoming claimable again. Without
             // it a route that is unavailable for a recorded reason is re-resolved in a tight loop
             // until the attempt count exhausts.
             FailureDisposition.ReResolve => (
-                StageOutcome.Retried, false, now + FailureHandling.Backoff(attemptsSoFar, policy), ClaimState.Ready),
-            FailureDisposition.Escalate => (StageOutcome.Escalated, true, now, ClaimState.Dead),
+                StageOutcome.Retried, false, FailureHandling.Backoff(attemptsSoFar, policy), ClaimState.Ready),
+            FailureDisposition.Escalate => (StageOutcome.Escalated, true, TimeSpan.Zero, ClaimState.Dead),
             _ => throw new InvalidOperationException("Unreachable: the disposition union has three members."),
         };
 
@@ -180,9 +226,9 @@ public sealed class WorkLifecycleService
                 FailureReason = failureReason,
             },
             cancellationToken).ConfigureAwait(false);
-        await transaction.Jobs.ReleaseAsync(job.Id, claimState, availableAt, cancellationToken).ConfigureAwait(false);
+        await transaction.Jobs.ReleaseAsync(job.Id, claimState, claimableAfter, cancellationToken).ConfigureAwait(false);
         await transaction.Audit.AppendAsync(
-            Entry(job, escalated ? "job.stage-escalated" : "job.stage-retried", failureReason ?? outcome.ToString()),
+            Entry(job, escalated ? LifecycleActions.StageEscalated : LifecycleActions.StageRetried, failureReason ?? outcome.ToString()),
             cancellationToken).ConfigureAwait(false);
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

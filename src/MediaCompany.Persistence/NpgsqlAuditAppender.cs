@@ -18,22 +18,24 @@ internal sealed class NpgsqlAuditAppender : IAuditAppender
 {
     private readonly NpgsqlConnection _connection;
     private readonly NpgsqlTransaction _transaction;
-    private readonly IClock _clock;
 
-    internal NpgsqlAuditAppender(NpgsqlConnection connection, NpgsqlTransaction transaction, IClock clock)
+    internal NpgsqlAuditAppender(NpgsqlConnection connection, NpgsqlTransaction transaction)
     {
         _connection = connection;
         _transaction = transaction;
-        _clock = clock;
     }
 
     public async Task<AuditEntry> AppendAsync(AuditEntryDraft draft, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(draft);
 
+        // The stamp is the DATASTORE'S, taken before the hash is computed so the chain rule is
+        // unchanged, and taken under a shared hold on the record horizon that lasts until this
+        // transaction ends: no throughput read can close a period over this entry while it is in
+        // flight, and the entry can never be stamped below a horizon a read has already set.
+        var occurredAt = await StampAsync(cancellationToken).ConfigureAwait(false);
         var previousHash = await HeadHashAsync(cancellationToken).ConfigureAwait(false);
         var id = AuditEntryId.New();
-        var occurredAt = _clock.UtcNow;
 
         var hash = AuditChain.ComputeHash(
             id,
@@ -119,6 +121,28 @@ internal sealed class NpgsqlAuditAppender : IAuditAppender
                 RetentionClass = RetentionClass.GovernanceRecord,
             },
             cancellationToken);
+
+    /// <summary>
+    /// The later of the datastore's clock and the record horizon, read while holding the horizon
+    /// shared. The hold is a row hold inside this transaction, so it lasts until commit or
+    /// rollback; appenders hold it alongside one another and are not serialized by it.
+    /// </summary>
+    private async Task<DateTimeOffset> StampAsync(CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand(
+            "SELECT GREATEST(clock_timestamp(), horizon) FROM audit_record_horizon WHERE only_row FOR SHARE",
+            _connection,
+            _transaction);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOperationException(
+                "The record horizon is missing; the fifth schema resource creates it, and no entry is stamped without it.");
+        }
+
+        return reader.GetFieldValue<DateTimeOffset>(0);
+    }
 
     private async Task<string> HeadHashAsync(CancellationToken cancellationToken)
     {

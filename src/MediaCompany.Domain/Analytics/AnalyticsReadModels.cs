@@ -218,13 +218,18 @@ public sealed record ServedTierReadModel
 }
 
 /// <summary>
-/// A reasoning-tier ratio over a period (decision D-007). A period holding fewer than two
-/// served-tier records yields the unmeasured case with that as its stated reason, and the caveat
-/// travels with the output either way.
+/// A reasoning-tier ratio over a period. A period holding fewer than two records that carry both
+/// a requested and a served tier yields the unmeasured case with that as its stated reason, and
+/// the caveat, the assumption label and the definition travel with the output either way.
 /// </summary>
 public sealed record TierRatioReadModel
 {
-    public TierRatioReadModel(DateOnly period, MeasurementQuantity ratio, SingleRecordCaveat caveat, string assumptionLabel)
+    public TierRatioReadModel(
+        DateOnly period,
+        MeasurementQuantity ratio,
+        SingleRecordCaveat caveat,
+        string assumptionLabel,
+        string definition)
     {
         ArgumentNullException.ThrowIfNull(ratio);
         ArgumentNullException.ThrowIfNull(caveat);
@@ -236,10 +241,21 @@ public sealed record TierRatioReadModel
                 nameof(assumptionLabel));
         }
 
+        // A CONSTRUCTION INVARIANT of the same shape as the caveat and the assumption label. A
+        // ratio presented without saying which ratio it is gets read as the measured tier split,
+        // and a definition added at presentation is one the first presentation does not carry.
+        if (string.IsNullOrWhiteSpace(definition))
+        {
+            throw new ArgumentException(
+                "A tier ratio states its definition wherever it is presented; without it the figure is read as the measured split.",
+                nameof(definition));
+        }
+
         Period = period;
         Ratio = ratio;
         Caveat = caveat;
         AssumptionLabel = assumptionLabel;
+        Definition = definition;
     }
 
     public DateOnly Period { get; }
@@ -248,6 +264,141 @@ public sealed record TierRatioReadModel
 
     /// <summary>States that the split is assumed. Required; no output presents the split as measured.</summary>
     public string AssumptionLabel { get; }
+
+    /// <summary>What the ratio is. Required; no output presents the ratio without saying what it is.</summary>
+    public string Definition { get; }
+}
+
+/// <summary>
+/// Throughput and queue quantities for one caller-supplied half-open period of instants.
+///
+/// Every quantity is one case of the closed three-case union, decided at one composing site by
+/// one coverage rule, and the required statement says what the counts establish and what they do
+/// not: they establish what the store read recorded over the period, and nothing about a
+/// sustainable rate, a required buffer depth or a concurrency figure.
+/// </summary>
+public sealed record ThroughputReadModel
+{
+    public ThroughputReadModel(
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        MeasurementQuantity waiting,
+        MeasurementQuantity claimed,
+        MeasurementQuantity retried,
+        MeasurementQuantity escalated,
+        MeasurementQuantity completed,
+        string statement)
+    {
+        ArgumentNullException.ThrowIfNull(waiting);
+        ArgumentNullException.ThrowIfNull(claimed);
+        ArgumentNullException.ThrowIfNull(retried);
+        ArgumentNullException.ThrowIfNull(escalated);
+        ArgumentNullException.ThrowIfNull(completed);
+
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            throw new ArgumentException(
+                "A throughput reading states what its counts do and do not establish; without it a count is read as a rate.",
+                nameof(statement));
+        }
+
+        PeriodStart = periodStart;
+        PeriodEnd = periodEnd;
+        Waiting = waiting;
+        Claimed = claimed;
+        Retried = retried;
+        Escalated = escalated;
+        Completed = completed;
+        Statement = statement;
+    }
+
+    /// <summary>The period's first instant, included.</summary>
+    public DateTimeOffset PeriodStart { get; }
+
+    /// <summary>The period's close, excluded.</summary>
+    public DateTimeOffset PeriodEnd { get; }
+
+    /// <summary>Units waiting to be claimed at the period's close.</summary>
+    public MeasurementQuantity Waiting { get; }
+
+    /// <summary>Claims made in the period.</summary>
+    public MeasurementQuantity Claimed { get; }
+
+    /// <summary>Stage attempts released for retry in the period.</summary>
+    public MeasurementQuantity Retried { get; }
+
+    /// <summary>Units escalated to the dead claim state in the period.</summary>
+    public MeasurementQuantity Escalated { get; }
+
+    /// <summary>Units reaching the terminal claim state in the period.</summary>
+    public MeasurementQuantity Completed { get; }
+
+    /// <summary>What the counts establish and what they do not. Required.</summary>
+    public string Statement { get; }
+}
+
+/// <summary>
+/// The item dossier of one item version as the company recorded it: one count per recorded
+/// component.
+///
+/// Every count is unmeasured naming the register and the item version where no dossier was
+/// opened, an observed zero where one was opened and holds no row of that component, and an
+/// observed value otherwise. The counts are of RECORDED ROWS; none of them is a clip count, a
+/// supply figure or a threshold.
+/// </summary>
+public sealed record ItemDossierReadModel
+{
+    public required ItemId Item { get; init; }
+    public required ItemVersion Version { get; init; }
+    public required MeasurementQuantity Stages { get; init; }
+    public required MeasurementQuantity TreatmentVerdicts { get; init; }
+    public required MeasurementQuantity AudienceDesignations { get; init; }
+    public required MeasurementQuantity Visuals { get; init; }
+    public required MeasurementQuantity ClipOriginAssessments { get; init; }
+    public required MeasurementQuantity ClaimAttributions { get; init; }
+    public required MeasurementQuantity SupplyAuditEntries { get; init; }
+    public required MeasurementQuantity DeterminationResolutions { get; init; }
+    public required MeasurementQuantity RuntimeRecords { get; init; }
+    public required MeasurementQuantity MetadataRecords { get; init; }
+    public required MeasurementQuantity OriginalityAssessments { get; init; }
+
+    /// <summary>What the recorded set does and does not establish. Required.</summary>
+    public required string Statement { get; init; }
+}
+
+/// <summary>
+/// The supply audit of one item version as recorded, one entry per recorded audit, with the count
+/// of entries in its measurement case. No entry carries a clip count the recorded audit does not
+/// establish, and the grouping key is the recorded subject term.
+/// </summary>
+public sealed record SupplyAuditReading
+{
+    public required ItemId Item { get; init; }
+    public required ItemVersion Version { get; init; }
+
+    /// <summary>How many entries are recorded. Unmeasured where no dossier was opened.</summary>
+    public required MeasurementQuantity RecordedEntries { get; init; }
+
+    public required IReadOnlyList<SupplyAuditReadModel> Entries { get; init; }
+
+    public required string Statement { get; init; }
+}
+
+/// <summary>
+/// The compliance determinations of one item version as recorded: one entry per member of the
+/// closed five-member set, with the count of recorded resolutions in its measurement case.
+/// </summary>
+public sealed record DeterminationReading
+{
+    public required ItemId Item { get; init; }
+    public required ItemVersion Version { get; init; }
+
+    /// <summary>How many resolutions are recorded. Unmeasured where no dossier was opened.</summary>
+    public required MeasurementQuantity RecordedResolutions { get; init; }
+
+    public required IReadOnlyList<DeterminationOutcomeReadModel> Determinations { get; init; }
+
+    public required string Statement { get; init; }
 }
 
 /// <summary>

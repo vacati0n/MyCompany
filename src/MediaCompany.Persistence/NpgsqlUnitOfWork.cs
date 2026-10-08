@@ -49,13 +49,14 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
         _connection = connection;
         _transaction = transaction;
 
-        Audit = new NpgsqlAuditAppender(connection, transaction, clock);
+        Audit = new NpgsqlAuditAppender(connection, transaction);
         Operations = new NpgsqlOperationRecorder(connection, transaction);
         Jobs = new NpgsqlJobWriter(connection, transaction);
         Budgets = new NpgsqlBudgetEvaluator(connection, transaction);
         Gates = new NpgsqlGateWriter(connection, transaction);
         Availability = new NpgsqlRouteAvailabilityWriter(connection, transaction);
         Dispatches = new NpgsqlDispatchWriter(connection, transaction);
+        Dossiers = new NpgsqlDossierWriter(connection, transaction);
     }
 
     public IAuditAppender Audit { get; }
@@ -71,6 +72,8 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
     public IRouteAvailabilityWriter Availability { get; }
 
     public IDispatchWriter Dispatches { get; }
+
+    public IDossierWriter Dossiers { get; }
 
     public async Task CommitAsync(CancellationToken cancellationToken)
     {
