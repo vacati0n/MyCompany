@@ -273,4 +273,34 @@ public sealed class SchemaStaticTests
         Assert.Contains("CREATE TABLE publication_attempts", sql);
         Assert.Contains("CREATE TABLE first_publication_conditions", sql);
     }
+
+    /// <summary>
+    /// The multi-channel resource is additive and RECORDS NO CHANNEL VALUE (the multi-channel
+    /// change): it drops and alters nothing a delivered reader depends on, binds its checks to new
+    /// rows only, and the one row it writes is the chain-head row. No channel, company, budget,
+    /// configuration value, condition, payment-account observation, approval or gate transition is
+    /// inserted by it.
+    /// </summary>
+    [Fact]
+    public void TheMultiChannelResourceIsAdditiveAndRecordsNoChannelValue()
+    {
+        var sql = SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.006-multi-channel.sql");
+
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^1]);
+        Assert.DoesNotContain("DROP TABLE", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DROP COLUMN", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ALTER COLUMN", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DROP CONSTRAINT", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("NOT VALID", sql, StringComparison.Ordinal);
+
+        var inserts = System.Text.RegularExpressions.Regex.Matches(sql, @"INSERT\s+INTO\s+(\w+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            .Select(m => m.Groups[1].Value)
+            .ToArray();
+        Assert.Equal(new[] { "audit_chain_head" }, inserts);
+
+        foreach (var table in new[] { "configuration", "budgets", "channels", "companies", "library_registrations" })
+        {
+            Assert.DoesNotContain($"UPDATE {table}", sql, StringComparison.OrdinalIgnoreCase);
+        }
+    }
 }

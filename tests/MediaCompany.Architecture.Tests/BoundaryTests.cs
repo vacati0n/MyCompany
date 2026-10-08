@@ -845,6 +845,24 @@ public sealed class BoundaryTests
         }
     }
 
+    /// <summary>
+    /// The repository declares ONE version, in the shared build properties, and every production
+    /// assembly carries it (the multi-channel change, as decided at its Design Gate).
+    /// </summary>
+    [Fact]
+    public void EveryProductionAssemblyCarriesTheDeclaredVersion()
+    {
+        foreach (var name in ProductionAssemblies)
+        {
+            var assembly = Load(name);
+            Assert.Equal(new Version(1, 3, 0, 0), assembly.GetName().Version);
+
+            var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            Assert.NotNull(informational);
+            Assert.StartsWith("1.3.0", informational, StringComparison.Ordinal);
+        }
+    }
+
     /// <summary>The types allowed to name the channel key set, each for the reason its summary states.</summary>
     private static readonly string[] PermittedChannelKeyReaders =
     [

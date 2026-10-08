@@ -67,6 +67,14 @@ internal sealed class InMemoryWork : IUnitOfWork
     public int Commits { get; private set; }
 
     /// <summary>
+    /// Runs after every commit, once what the transaction wrote is visible. A demonstration uses it
+    /// to act as ANOTHER WORKER between two of the drive's transactions, which is how a unit comes to
+    /// rest unclaimed: the other worker claims it after the drive advanced it and before the drive
+    /// claims it by name.
+    /// </summary>
+    public Action? AfterCommit { get; set; }
+
+    /// <summary>
     /// The double's OWN clock, standing in for the datastore's: availability is set from it plus the
     /// stated delay, exactly as the datastore sets it from its clock, and it is deliberately not the
     /// clock injected into the services under test. Real time unless a demonstration supplies one.
@@ -120,6 +128,7 @@ internal sealed class InMemoryWork : IUnitOfWork
 
             _owner.Commits++;
             _committed = true;
+            _owner.AfterCommit?.Invoke();
             return Task.CompletedTask;
         }
 
