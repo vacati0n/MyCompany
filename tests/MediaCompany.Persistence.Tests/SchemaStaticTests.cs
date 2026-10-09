@@ -288,7 +288,9 @@ public sealed class SchemaStaticTests
 
         // The sixth resource installs immediately before the seventh, which installs before the eighth, now last
         // (the AI-economics and AI-management changes).
-        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^3]);
+        // The ninth resource (the production change) now installs last; the sixth is still the sixth.
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^4]);
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[5]);
         Assert.DoesNotContain("DROP TABLE", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DROP COLUMN", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ALTER COLUMN", sql, StringComparison.OrdinalIgnoreCase);

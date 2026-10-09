@@ -185,7 +185,8 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
             admitted AS (
                 SELECT route_id, capability_class, tier, target_kind, provider_account_id, model_id,
                        substitute_task, hold_reason, rated_quality, context_capacity, terms_basis, terms_verified_on,
-                       reasoning_tier_stated
+                       reasoning_tier_stated, automated_access_position, customer_content_position,
+                       terms_positions_evidence, terms_positions_read_on
                 FROM routes
                 WHERE capability_class = @capability
             ),
@@ -223,7 +224,28 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
                            JOIN agent_costs ac ON ac.operation_id = o.operation_id
                            WHERE o.route_id IN (SELECT route_id FROM admitted)
                              AND o.task_class = @task_class
-                             AND o.observed_at <= (SELECT at FROM booking)) e)::text END
+                             AND o.observed_at <= (SELECT at FROM booking)) e)::text END,
+                   -- THE ITEM CAP (the production change, decision D-006 of its design), in the same statement: the
+                   -- recorded cap, the stated cost of the item's booked operations over all time, how many of them
+                   -- carry an unstated cost, and the worst case of every reservation of the item no booking has
+                   -- reconciled. Null where the item has no recorded cap.
+                   (SELECT json_build_object(
+                        'amount', c.amount, 'currency', c.currency, 'source', c.source,
+                        'booked', COALESCE((SELECT sum(a.computed_cost) FROM agent_costs a
+                                            WHERE a.item_id = c.item_id AND a.cost_stated IS TRUE), 0),
+                        'unstated', (SELECT count(*) FROM agent_costs a
+                                     WHERE a.item_id = c.item_id AND a.cost_stated IS NOT TRUE),
+                        'open_amount', COALESCE((SELECT sum(r.worst_case_amount) FROM admission_reservations r
+                                                 WHERE r.item_id = c.item_id
+                                                   AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id)), 0),
+                        'open_count', (SELECT count(*) FROM admission_reservations r
+                                       WHERE r.item_id = c.item_id
+                                         AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id)))
+                    FROM item_caps c WHERE c.item_id = @item_id)::text,
+                   -- The unit kinds each admitted model is recorded as billed by (the production change, decision D-007).
+                   (SELECT COALESCE(json_object_agg(m.model_id, m.billed_kinds), json_build_object())
+                    FROM models m
+                    WHERE m.model_id IN (SELECT model_id FROM admitted WHERE model_id IS NOT NULL) AND m.billed_kinds IS NOT NULL)::text
             {ReadingJoins}
             """,
             _connection,
@@ -231,6 +253,7 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
         AddReadingParameters(command, attribution, companyAllotment);
         command.Parameters.AddWithValue("capability", capability.ToString());
         command.Parameters.Add("task_class", NpgsqlDbType.Text).Value = (object?)taskClass?.ToString() ?? DBNull.Value;
+        command.Parameters.AddWithValue("item_id", attribution.Item.Value);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -247,7 +270,46 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
             SnapshotJson.Accounts(reader.GetString(19)),
             SnapshotJson.Prices(reader.GetString(20)),
             readings,
-            SnapshotJson.Evidence(reader.GetString(22)));
+            SnapshotJson.Evidence(reader.GetString(22)))
+        {
+            ItemCap = reader.IsDBNull(23) ? null : SnapshotJson.ItemCap(reader.GetString(23)),
+            BilledKinds = SnapshotJson.BilledKinds(reader.GetString(24)),
+        };
+    }
+
+    /// <summary>
+    /// Writes one worst-case reservation on THIS transaction, which the caller commits before the call it reserves
+    /// for (the production change, decision D-006 of its design). It takes no scope hold and needs no reserved
+    /// instant of its own: the admitted instant is the admission's, and the row's recording instant the datastore's.
+    /// </summary>
+    public async Task RecordReservationAsync(ReservationDraft reservation, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(reservation);
+
+        await using var command = new NpgsqlCommand(
+            """
+            INSERT INTO admission_reservations (
+                operation_id, item_id, route_id, model_id, input_units, output_units, cached_units, character_units,
+                image_units, worst_case_amount, currency, admitted_at, recorded_at)
+            VALUES (
+                @operation_id, @item_id, @route_id, @model_id, @input_units, @output_units, @cached_units, @character_units,
+                @image_units, @amount, @currency, @admitted_at, clock_timestamp())
+            """,
+            _connection,
+            _transaction);
+        command.Parameters.AddWithValue("operation_id", reservation.Operation.Value);
+        command.Parameters.AddWithValue("item_id", reservation.Item.Value);
+        command.Parameters.AddWithValue("route_id", reservation.Route.Value);
+        command.Parameters.AddWithValue("model_id", reservation.Model.Value);
+        command.Parameters.AddWithValue("input_units", reservation.WorstCaseUnits.InputUnits);
+        command.Parameters.AddWithValue("output_units", reservation.WorstCaseUnits.OutputUnits);
+        command.Parameters.AddWithValue("cached_units", reservation.WorstCaseUnits.CachedUnits);
+        command.Parameters.AddWithValue("character_units", reservation.WorstCaseUnits.CharacterUnits);
+        command.Parameters.AddWithValue("image_units", reservation.WorstCaseUnits.ImageUnits);
+        command.Parameters.Add("amount", NpgsqlDbType.Numeric).Value = reservation.WorstCaseAmount.Amount;
+        command.Parameters.AddWithValue("currency", reservation.WorstCaseAmount.Currency);
+        command.Parameters.AddWithValue("admitted_at", reservation.AdmittedAt);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken)
@@ -609,6 +671,8 @@ internal static class SnapshotJson
             };
 
             var stated = Text(e, "reasoning_tier_stated");
+            var access = Text(e, "automated_access_position");
+            var content = Text(e, "customer_content_position");
             return new Route(
                 new RouteId(e.GetProperty("route_id").GetGuid()),
                 Enum.Parse<CapabilityClass>(Text(e, "capability_class")!),
@@ -618,8 +682,50 @@ internal static class SnapshotJson
                 new ContextCapacity(e.GetProperty("context_capacity").GetInt32()),
                 Text(e, "terms_basis")!,
                 Date(e, "terms_verified_on"),
-                statedReasoningTier: stated is null ? null : Enum.Parse<ReasoningTier>(stated));
+                statedReasoningTier: stated is null ? null : Enum.Parse<ReasoningTier>(stated))
+            {
+                // The production change (decision D-003 of its design): the recorded terms positions, or none.
+                TermsPositions = access is null && content is null
+                    ? null
+                    : new RouteTermsPositions(
+                        access is null ? null : Enum.Parse<AutomatedAccessPosition>(access),
+                        content is null ? null : Enum.Parse<CustomerContentPosition>(content),
+                        Text(e, "terms_positions_evidence"),
+                        Null(e, "terms_positions_read_on") ? null : Date(e, "terms_positions_read_on")),
+            };
         });
+
+    /// <summary>The item cap column of the snapshot (the production change, decision D-006 of its design).</summary>
+    internal static ItemCapReading ItemCap(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        var e = document.RootElement;
+        var currency = Text(e, "currency")!;
+        return new ItemCapReading
+        {
+            Cap = new Money(e.GetProperty("amount").GetDecimal(), currency),
+            Source = Text(e, "source")!,
+            Booked = new Money(e.GetProperty("booked").GetDecimal(), currency),
+            UnstatedOperations = e.GetProperty("unstated").GetInt64(),
+            OpenReservations = new Money(e.GetProperty("open_amount").GetDecimal(), currency),
+            OpenReservationCount = e.GetProperty("open_count").GetInt64(),
+        };
+    }
+
+    /// <summary>The billed kinds column of the snapshot (the production change, decision D-007 of its design).</summary>
+    internal static IReadOnlyDictionary<ModelId, IReadOnlyList<PriceUnitKind>> BilledKinds(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        var kinds = new Dictionary<ModelId, IReadOnlyList<PriceUnitKind>>();
+        foreach (var model in document.RootElement.EnumerateObject())
+        {
+            kinds[new ModelId(model.Name)] = model.Value.EnumerateArray()
+                .Select(k => Enum.Parse<PriceUnitKind>(k.GetString()!))
+                .ToArray();
+        }
+
+        return kinds;
+    }
 
     internal static IReadOnlyList<ForbiddenSource> Forbidden(string json) =>
         Each(json, e => new ForbiddenSource(
@@ -647,7 +753,12 @@ internal static class SnapshotJson
             Text(e, "provider")!,
             Text(e, "commercial_terms_basis")!,
             Date(e, "verified_on"),
-            Enum.Parse<ProviderAccountStatus>(Text(e, "status")!)));
+            Enum.Parse<ProviderAccountStatus>(Text(e, "status")!))
+        {
+            // The production change (decision D-002 of its design): the recorded scope and scheme, or none.
+            Scope = Text(e, "credential_scope") is { } scope ? Enum.Parse<CredentialScope>(scope) : null,
+            Scheme = Text(e, "authentication_scheme") is { } scheme ? Enum.Parse<AuthenticationScheme>(scheme) : null,
+        });
 
     internal static IReadOnlyList<ModelPrice> Prices(string json) =>
         Each(json, e => new ModelPrice(

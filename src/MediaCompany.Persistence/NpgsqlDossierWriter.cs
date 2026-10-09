@@ -68,6 +68,39 @@ internal sealed class NpgsqlDossierWriter : IDossierWriter
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Records one stage outcome STAMPED BY THE DATASTORE in the statement that writes it (the production change,
+    /// decision D-010 of its design), and returns the stored instant. No caller instant is a parameter.
+    /// </summary>
+    public async Task<DateTimeOffset> RecordStageStampedAsync(
+        ItemId item,
+        ItemVersion version,
+        MediaCompany.Domain.Production.ProductionStage stage,
+        MediaCompany.Domain.Work.StageOutcome outcome,
+        string summary,
+        string? evidenceReference,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(summary);
+
+        await using var command = Command(
+            """
+            INSERT INTO dossier_stage_evidence
+                (item_id, item_version, stage, outcome, summary, recorded_at, evidence_reference)
+            VALUES (@item_id, @item_version, @stage, @outcome, @summary, clock_timestamp(), @evidence_reference)
+            RETURNING recorded_at
+            """,
+            item,
+            version);
+
+        command.Parameters.AddWithValue("stage", stage.ToString());
+        command.Parameters.AddWithValue("outcome", outcome.ToString());
+        command.Parameters.AddWithValue("summary", summary);
+        Text(command, "evidence_reference", evidenceReference);
+
+        return (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+    }
+
     public async Task RecordSupplyAuditAsync(
         ItemId item,
         ItemVersion version,
