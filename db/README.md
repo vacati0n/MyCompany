@@ -31,6 +31,13 @@ MEDIACOMPANY_CONNECTION_STRING="Host=localhost;Port=55432;Database=mediacompany;
 re-applying it while gate writers are running could move the order sequence backwards. Install
 is a stopped-system step.
 
+**All seven resources are applied in order, before any process starts.** The seventh resource
+(`007-ai-economics.sql`) adds the benchmark record, the admission decision and booking tables,
+the cost-stated column and its reason, and the separate same-instant gate trigger. Rows written
+before it is applied read their cost as not stated, so applying it mid-month to a store that
+already holds operations refuses metered admission until that month ends. Apply it to an empty
+store, or at a month boundary.
+
 Establish the backup and restore position **before** the first append-only entry is written. The
 recorded history refuses update and delete, so from that point the store has no in-place
 correction and restore-to-point is the only reversal.
