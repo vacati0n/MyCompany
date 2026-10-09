@@ -6,6 +6,13 @@ namespace MediaCompany.Capability.Providers;
 
 /// <summary>
 /// What an adapter returns from one attempt against a provider.
+///
+/// THE PRODUCTION CHANGE (decisions D-001 and D-002 of its design): an attempt carries the content the vendor
+/// produced, as the one buffer it was received in, and whether its CHARGE IS KNOWN. A charge is known only where
+/// the vendor's response body stated its usage, or where nothing was sent; a timeout, a transport failure, a
+/// non-success status and a success whose body states no usage each leave it unknown, and the boundary then books
+/// the attempt at its admitted WORST CASE labelled estimate — never at zero units as a measurement. Both members
+/// default to the delivered meaning, so every delivered construction compiles and behaves as before.
 /// </summary>
 internal sealed record ProviderAttempt(
     bool Succeeded,
@@ -13,7 +20,14 @@ internal sealed record ProviderAttempt(
     CostBasis CostBasis,
     TimeSpan Duration,
     string? FailureReason,
-    ProviderFailureSignal? Signal);
+    ProviderFailureSignal? Signal)
+{
+    /// <summary>The content produced, on a successful attempt only.</summary>
+    public ProducedContent? Content { get; init; }
+
+    /// <summary>Whether the vendor's charge for this attempt is known from its own response, or because nothing was sent.</summary>
+    public bool ChargeKnown { get; init; } = true;
+}
 
 /// <summary>The signal a provider gave, which the availability ledger turns into a recorded state.</summary>
 internal enum ProviderFailureSignal
@@ -39,6 +53,15 @@ internal enum ProviderFailureSignal
 internal interface IProviderAdapter
 {
     ProviderAccountId ProviderAccount { get; }
+
+    /// <summary>
+    /// Whether this adapter serves a capability (the production change): one account can serve more than one
+    /// vendor contract, as the speech-and-image vendor's does. A delivered adapter serves whatever it is asked.
+    /// </summary>
+    bool Serves(CapabilityClass capability) => true;
+
+    /// <summary>The vendor's key header for the key-header scheme, or null where the vendor takes a bearer value.</summary>
+    string? KeyHeaderName => null;
 
     Task<ProviderAttempt> InvokeAsync(
         RouteTarget.ProviderRoute route,

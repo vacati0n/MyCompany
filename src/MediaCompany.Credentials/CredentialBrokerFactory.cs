@@ -42,6 +42,52 @@ public static class CredentialBrokerFactory
 
         return new CredentialBroker(new ProcessExternalSecretStore(options), clock, options.HandleTtl);
     }
+
+    /// <summary>
+    /// The broker of the DEMONSTRATION composition (the production change, decision D-004 of its design). Its
+    /// store reads NO variable and holds no secret: it answers every holder with one fixed, non-secret placeholder,
+    /// so a fake provider's handle is issued and presented exactly as a real one is, and nothing is read from the
+    /// process environment whatever variables are set.
+    /// </summary>
+    public static CredentialBroker CreateDemonstration(Func<DateTimeOffset> clock)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+        return new CredentialBroker(new DemonstrationSecretStore(), clock, new SecretStoreOptions().HandleTtl);
+    }
+
+    /// <summary>
+    /// The exact name of the variable a holder's secret is published under (the production change, decision D-016
+    /// of its design), so the owner guide, the metered refusal and the store all name one variable. It reads
+    /// nothing and returns a name, never a value.
+    /// </summary>
+    public static string VariableName(ProviderAccountId account, ChannelId? channel, SecretStoreOptions? options = null) =>
+        ProcessExternalSecretStore.VariableNameFor(
+            new CredentialHolderKey(account, channel), (options ?? new SecretStoreOptions()).VariablePrefix);
+
+    /// <summary>
+    /// Whether the variable a holder's secret would be published under is set and non-empty. It answers yes or
+    /// no and never returns, logs or compares the value; the metered mode's refusal reads it to name each missing
+    /// variable before any call.
+    /// </summary>
+    public static bool IsPublished(ProviderAccountId account, ChannelId? channel, SecretStoreOptions? options = null) =>
+        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(VariableName(account, channel, options)));
+}
+
+/// <summary>
+/// The demonstration composition's store (the production change, decision D-004 of its design): it reads no
+/// environment variable and answers every holder with the same placeholder, which is not a secret of anything.
+/// Internal, as every store is.
+/// </summary>
+internal sealed class DemonstrationSecretStore : ISecretStore
+{
+    /// <summary>The placeholder a fake provider's handle is presented with; it opens nothing.</summary>
+    internal const string Placeholder = "demonstration-placeholder-not-a-secret";
+
+    public Task<string?> ResolveAsync(CredentialHolderKey holder, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<string?>(Placeholder);
+    }
 }
 
 /// <summary>

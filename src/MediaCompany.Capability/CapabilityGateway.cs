@@ -22,7 +22,20 @@ public abstract record CapabilityOutcome
     {
     }
 
-    public sealed record Completed(OperationRecord Operation, IReadOnlyList<BudgetAlert> Alerts) : CapabilityOutcome;
+    /// <summary>
+    /// The provider was reached, or an attempt was booked. THE PRODUCTION CHANGE (decisions D-001 and D-018 of its
+    /// design): a completed call hands back the CONTENT the vendor produced, beside its operation record, as the
+    /// one buffer received with its length and hash; a failed attempt carries none. <see cref="Recovered"/> says
+    /// the attempt was booked after its admission transaction was lost, which stops a production run.
+    /// </summary>
+    public sealed record Completed(OperationRecord Operation, IReadOnlyList<BudgetAlert> Alerts) : CapabilityOutcome
+    {
+        /// <summary>The content produced, on a succeeded attempt only; absent on every other outcome by construction.</summary>
+        public ProducedContent? Content { get; init; }
+
+        /// <summary>Whether the attempt was booked on a fresh transaction after its admission transaction was lost.</summary>
+        public bool Recovered { get; init; }
+    }
 
     public sealed record Held(RefusalReason Reason, QualityRating FloorRequired, DateTimeOffset EscalatesAt, bool EscalatedToOwner)
         : CapabilityOutcome;
@@ -107,7 +120,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICredentialBroker _broker;
-    private readonly IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> _adapters;
+    private readonly IEnumerable<IProviderAdapter> _adapters;
     private readonly TimeSpan _recoveryCommandTimeout;
 
     /// <param name="providerCallBound">
@@ -120,6 +133,30 @@ public sealed class CapabilityGateway : ICapabilityGateway
         IUnitOfWork unitOfWork,
         ICredentialBroker broker,
         IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> adapters,
+        TimeSpan providerCallBound)
+        : this(unitOfWork, broker, (IEnumerable<IProviderAdapter>)adapters.Values, providerCallBound)
+    {
+    }
+
+    /// <param name="adapters">
+    /// The adapters this boundary reaches (the production change): one account may serve more than one vendor
+    /// contract, so an adapter is chosen by its account AND the capability it serves.
+    /// </param>
+    /// <param name="providerCallBound">As the delivered constructor's.</param>
+    internal CapabilityGateway(
+        IUnitOfWork unitOfWork,
+        ICredentialBroker broker,
+        IReadOnlyList<IProviderAdapter> adapters,
+        TimeSpan providerCallBound)
+        : this(unitOfWork, broker, (IEnumerable<IProviderAdapter>)adapters, providerCallBound)
+    {
+    }
+
+    /// <summary>The one realization: the adapters are read at each call, so a live view stays live.</summary>
+    private CapabilityGateway(
+        IUnitOfWork unitOfWork,
+        ICredentialBroker broker,
+        IEnumerable<IProviderAdapter> adapters,
         TimeSpan providerCallBound)
     {
         _unitOfWork = unitOfWork;
@@ -246,27 +283,44 @@ public sealed class CapabilityGateway : ICapabilityGateway
             .ReadAsync(request.Capability, request.Attribution, ApprovedEnvelope.Metered, request.TaskClass, cancellationToken)
             .ConfigureAwait(false);
 
-        var controller = CostController.Decide(snapshot.Readings, reservation.Instant);
+        // Under a recorded item cap, a channel with no budget amount is governed by the company ceiling and the
+        // cap alone (the owner's decision of 2026-10-09; the production change, decision D-006 of its design).
+        var capped = snapshot.ItemCap is not null;
+        var controller = CostController.Decide(snapshot.Readings, reservation.Instant, capped);
+        var table = BuildPriceTable(snapshot.Prices, snapshot.BilledKinds);
 
         // The headroom is consulted only where the controller admits metered work, which requires every
         // operation of the month to state its cost (the company reading covers them all), so it is never a
-        // partial sum where it decides.
-        var record = RouteResolver.ResolveWithRecord(
-            request,
-            new ResolutionInputs
-            {
-                AdmittedRoutes = snapshot.Routes,
-                ForbiddenSources = snapshot.ForbiddenSources,
-                Availability = snapshot.Availability,
-                AccountStatus = snapshot.Accounts.ToDictionary(a => a.Id, a => a.Status),
-                Prices = BuildPriceTable(snapshot.Prices),
-                BudgetRemaining = snapshot.Readings.Headroom,
-                Now = reservation.Instant,
-                Controller = controller,
-                Evidence = snapshot.Evidence,
-            });
+        // partial sum where it decides. For a capped item of a channel with no budget row, the headroom is
+        // what remains of the company ceiling less the item's open reservations, never the zero a missing
+        // budget row reads as.
+        var headroom = capped && snapshot.Readings.ChannelBudgetAmount is null
+            ? new Money(
+                ApprovedEnvelope.Metered.Amount - snapshot.Readings.CompanySpend.Booked.Amount - snapshot.ItemCap!.OpenReservations.Amount,
+                ApprovedEnvelope.Metered.Currency)
+            : snapshot.Readings.Headroom;
 
-        return new Admission(reservation, controller, record, snapshot.Prices);
+        var inputs = new ResolutionInputs
+        {
+            AdmittedRoutes = snapshot.Routes,
+            ForbiddenSources = snapshot.ForbiddenSources,
+            Availability = snapshot.Availability,
+            AccountStatus = snapshot.Accounts.ToDictionary(a => a.Id, a => a.Status),
+            Prices = table,
+            BudgetRemaining = headroom,
+            Now = reservation.Instant,
+            Controller = controller,
+            Evidence = snapshot.Evidence,
+            ItemCap = snapshot.ItemCap,
+        };
+
+        var record = RouteResolver.ResolveWithRecord(request, inputs);
+
+        return new Admission(reservation, controller, record, snapshot.Prices)
+        {
+            Inputs = inputs,
+            Accounts = snapshot.Accounts,
+        };
     }
 
     private async Task<CapabilityOutcome> ExecuteResolvedAsync(
@@ -327,7 +381,8 @@ public sealed class CapabilityGateway : ICapabilityGateway
         RouteTarget.ProviderRoute provider,
         CancellationToken cancellationToken)
     {
-        if (!_adapters.TryGetValue(provider.ProviderAccount, out var adapter))
+        var adapter = _adapters.FirstOrDefault(a => a.ProviderAccount.Equals(provider.ProviderAccount) && a.Serves(request.Capability));
+        if (adapter is null)
         {
             return await RecordNonProviderOutcomeAsync(
                 held.Transaction, admission, request, context, OperationOutcome.Failed,
@@ -339,6 +394,56 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 cancellationToken).ConfigureAwait(false);
         }
 
+        // ONE IDENTIFIER PER ATTEMPT, minted before the call (the correction cycle): every write of this
+        // attempt, on this transaction or on a fresh one after a loss, is under it, so it is booked once. Under
+        // a recorded item cap the reservation is keyed on it too, so the booking reconciles the reservation.
+        var operationId = OperationId.New();
+
+        // THE WORST-CASE RESERVATION (the production change, decision D-006 of its design). For an item with a
+        // recorded cap, the worst case of the call — the request's estimated units at the prices this admission
+        // read — is written on a COMPANION transaction and COMMITTED BEFORE the credential is issued and the
+        // vendor is called. The admission transaction keeps its holds and its reserved instant; the companion
+        // takes no scope hold. From the commit on, the worst case counts against the cap whatever happens to the
+        // admission transaction, so an attempt lost, failed, timed out or never recorded is never invisible to the
+        // next admission of the item. A reservation that cannot be committed ends the attempt with no call.
+        var worstUnits = request.EstimatedUnits.AsUnits();
+        if (admission.Inputs?.ItemCap is { } cap)
+        {
+            var worstAmount = RouteResolver.EstimateCost(resolved.Route, request, admission.Inputs)!.Value;
+            try
+            {
+                await using var companion = await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
+                await companion.Admission.RecordReservationAsync(
+                    new ReservationDraft
+                    {
+                        Operation = operationId,
+                        Item = request.Attribution.Item,
+                        Route = resolved.Route.Id,
+                        Model = provider.Model,
+                        WorstCaseUnits = worstUnits,
+                        WorstCaseAmount = worstAmount,
+                        AdmittedAt = admission.Reservation.Instant,
+                    },
+                    cancellationToken).ConfigureAwait(false);
+                await companion.CommitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception unreserved) when (unreserved is not OperationCanceledException)
+            {
+                return await RecordNonProviderOutcomeAsync(
+                    held.Transaction, admission, request, context, OperationOutcome.Failed,
+                    $"the worst-case reservation of {worstAmount} against {cap.Describe()} could not be committed "
+                    + $"({unreserved.GetType().Name}); no call was made",
+                    resolved.Route.Id, resolved.Route.StatedReasoningTier, null,
+                    _ => new CapabilityOutcome.Refused(
+                        RefusalReason.NoAvailableRoute,
+                        $"The worst-case reservation could not be committed ({unreserved.GetType().Name}); no call was made."),
+                    cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        // A company-level account's credential is issued under the GLOBAL form of the variable name, which needs
+        // no channel identifier; its scheme is the account's recorded one (the production change, decision D-002).
+        var account = admission.Accounts?.FirstOrDefault(a => a.Id.Equals(provider.ProviderAccount));
         var issuance = await _broker.IssueAsync(
             new CredentialRequest
             {
@@ -347,8 +452,10 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 Job = context.Job,
                 Stage = context.Stage,
                 Actor = context.Actor,
-                Channel = request.Attribution.Channel,
+                Channel = account?.Scope == CredentialScope.Company ? null : request.Attribution.Channel,
                 Capability = request.Capability,
+                Scheme = account?.Scheme ?? AuthenticationScheme.BearerAuthorization,
+                KeyHeaderName = adapter.KeyHeaderName,
             },
             cancellationToken).ConfigureAwait(false);
 
@@ -364,14 +471,26 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
         var handle = ((CredentialOutcome.Issued)issuance).Handle;
 
-        // ONE IDENTIFIER PER ATTEMPT, minted before the call (the correction cycle): every write of this
-        // attempt, on this transaction or on a fresh one after a loss, is under it, so it is booked once.
-        var operationId = OperationId.New();
-
         // The provider is called WITH THE ADMISSION TRANSACTION OPEN, so the shared hold on the record
         // horizon keeps the reserved instant bookable for the whole call; the call is bounded by the
         // client's own timeout and is never retried inside the transaction.
         var attempt = await adapter.InvokeAsync(provider, request, handle, cancellationToken).ConfigureAwait(false);
+
+        // NO CHARGED OR POSSIBLY CHARGED ATTEMPT IS BOOKED AT ZERO UNITS (the production change, decision D-006 of
+        // its design). Where the vendor's charge is not known from its response — a timeout, a transport failure,
+        // a non-success status, a body without usage — the attempt is booked at the admitted WORST CASE, labelled
+        // estimate, which is the reservation's units under a cap and the request's estimate otherwise.
+        if (!attempt.ChargeKnown)
+        {
+            attempt = attempt with
+            {
+                Units = worstUnits,
+                CostBasis = CostBasis.Estimate,
+                FailureReason = attempt.Succeeded
+                    ? null
+                    : $"{attempt.FailureReason}; booked at the admitted worst case, labelled estimate",
+            };
+        }
 
         // From here the cost is incurred, so recording is NOT CANCELLABLE: a cancellation that arrives now
         // must not roll back the record of what the provider already did.
@@ -441,10 +560,14 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
             try
             {
-                return await RecordAttemptAsync(
+                var recovered = await RecordAttemptAsync(
                     fresh.Transaction,
                     admission with { Reservation = reservation, Controller = CostController.Decide(readings, reservation.Instant) },
                     request, context, resolved, provider, attempt, operationId, statement, recording).ConfigureAwait(false);
+
+                // The production change (decision D-018 of its design): the outcome says it was recovered, so a
+                // production run makes no further call after it.
+                return recovered is CapabilityOutcome.Completed completed ? completed with { Recovered = true } : recovered;
             }
             catch (OperationAlreadyRecordedException already)
             {
@@ -457,7 +580,11 @@ public sealed class CapabilityGateway : ICapabilityGateway
                     .StoredAlertsAsync(
                         request.Attribution, new DateOnly(booked.Year, booked.Month, 1), already.Recorded.OccurredAt, recording)
                     .ConfigureAwait(false);
-                return new CapabilityOutcome.Completed(already.Recorded, alerts);
+                return new CapabilityOutcome.Completed(already.Recorded, alerts)
+                {
+                    Content = attempt.Succeeded ? attempt.Content : null,
+                    Recovered = true,
+                };
             }
         }
         catch (Exception failure)
@@ -585,7 +712,11 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
-        return new CapabilityOutcome.Completed(operation, alerts);
+        // The content is handed back ONLY on a succeeded attempt, as the one buffer the adapter received.
+        return new CapabilityOutcome.Completed(operation, alerts)
+        {
+            Content = attempt.Succeeded ? attempt.Content : null,
+        };
     }
 
     /// <summary>
@@ -676,25 +807,25 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
     /// <summary>
     /// The price table resolution estimates with. A model enters it only where it is priced in force for
-    /// EVERY ONE of the input, output and cached unit kinds; a model missing any of them is absent, so
-    /// resolution removes its routes with their own reason rather than estimating a missing price as zero.
-    /// Where two rows of one kind are in force the higher price is taken, as the recorder applies it.
+    /// EVERY unit kind it is billed by (the production change, decision D-007 of its design, the owner's pricing
+    /// rule of 2026-10-09): input, output and cached as delivered where its billed kinds are not recorded, and
+    /// exactly its recorded billed kinds otherwise; a kind it is not billed by needs no price. A model missing a
+    /// billed kind is absent, so resolution removes its routes with their own reason rather than estimating a
+    /// missing price as zero. Where two rows of one kind are in force the higher price is taken, as the recorder
+    /// applies it.
     /// </summary>
-    private static IReadOnlyDictionary<ModelId, UnitPrices> BuildPriceTable(IReadOnlyList<ModelPrice> prices)
+    internal static IReadOnlyDictionary<ModelId, UnitPrices> BuildPriceTable(
+        IReadOnlyList<ModelPrice> prices,
+        IReadOnlyDictionary<ModelId, IReadOnlyList<PriceUnitKind>>? billedKinds = null)
     {
         var table = new Dictionary<ModelId, UnitPrices>();
         foreach (var group in prices.GroupBy(p => p.Model))
         {
-            var input = group.Where(p => p.UnitKind == PriceUnitKind.InputUnit).MaxBy(p => p.UnitPrice);
-            var output = group.Where(p => p.UnitKind == PriceUnitKind.OutputUnit).MaxBy(p => p.UnitPrice);
-            var cached = group.Where(p => p.UnitKind == PriceUnitKind.CachedUnit).MaxBy(p => p.UnitPrice);
-
-            if (input is null || output is null || cached is null)
+            var billed = billedKinds is not null && billedKinds.TryGetValue(group.Key, out var kinds) ? kinds : null;
+            if (UnitPrices.From(group, billed) is { } unitPrices)
             {
-                continue;
+                table[group.Key] = unitPrices;
             }
-
-            table[group.Key] = new UnitPrices(input.UnitPrice, output.UnitPrice, cached.UnitPrice, input.Currency);
         }
 
         return table;
@@ -713,7 +844,14 @@ public sealed class CapabilityGateway : ICapabilityGateway
         BookingReservation Reservation,
         ControllerDecision Controller,
         ResolutionRecord Record,
-        IReadOnlyList<ModelPrice> Prices);
+        IReadOnlyList<ModelPrice> Prices)
+    {
+        /// <summary>What resolution decided by, the item cap and the price table included (the production change).</summary>
+        public ResolutionInputs? Inputs { get; init; }
+
+        /// <summary>The provider accounts the snapshot read, with their recorded scope and scheme (the production change).</summary>
+        public IReadOnlyList<ProviderAccount>? Accounts { get; init; }
+    }
 
     /// <summary>The admission transaction, disposed exactly once whichever path ends it.</summary>
     private sealed class HeldTransaction(IWorkTransaction transaction) : IAsyncDisposable
