@@ -554,7 +554,7 @@ public static class ManagementComposers
                     $"{figure} is not yet earnable: platform advertising is earnable only after partner-programme entry, and the revenue "
                     + "register holds no admitted observed parameter")),
                 "the revenue parameter register; AnalyticsComposers.Visible", "as of the snapshot",
-                figure == RevenueDerivedFigure.Revenue ? "nothing to decide before programme entry; shown so it is not read as zero" : null));
+                figure == RevenueDerivedFigure.Revenue ? "whether the channel is on course for programme entry, the only route to advertising revenue (owner)" : null));
         }
 
         return lines;
