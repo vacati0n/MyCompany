@@ -31,7 +31,15 @@ public sealed class NpgsqlRouteRegistry : IRouteRegistry
             ORDER BY tier
             """);
         command.Parameters.AddWithValue("capability", capability.ToString());
+        return await ReadRoutesAsync(command, cancellationToken).ConfigureAwait(false);
+    }
 
+    /// <summary>
+    /// Maps the route rows a command returns, in the delivered column order. Shared with the company record
+    /// reader's snapshot (the AI-management change), which reads every route on its own transaction.
+    /// </summary>
+    internal static async Task<IReadOnlyList<Route>> ReadRoutesAsync(NpgsqlCommand command, CancellationToken cancellationToken)
+    {
         var routes = new List<Route>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -701,12 +709,22 @@ public sealed class NpgsqlRevenueParameterRegister : IRevenueParameterRegister
 
     public async Task<IReadOnlyList<RevenueParameterRecord>> RecordedAsync(CancellationToken cancellationToken)
     {
-        await using var command = _dataSource.CreateCommand(
-            """
-            SELECT amount, unit, unmeasured_reason, unmeasured_detail, source_observation, observed_on
-            FROM observed_revenue_parameters ORDER BY recorded_at, parameter_id
-            """);
+        await using var command = _dataSource.CreateCommand(RecordedSql);
+        return await ReadRecordedAsync(command, cancellationToken).ConfigureAwait(false);
+    }
 
+    /// <summary>The register's statement, shared with the company record reader's snapshot (the AI-management change).</summary>
+    internal const string RecordedSql =
+        """
+        SELECT amount, unit, unmeasured_reason, unmeasured_detail, source_observation, observed_on
+        FROM observed_revenue_parameters ORDER BY recorded_at, parameter_id
+        """;
+
+    /// <summary>Maps the register rows a command returns.</summary>
+    internal static async Task<IReadOnlyList<RevenueParameterRecord>> ReadRecordedAsync(
+        NpgsqlCommand command,
+        CancellationToken cancellationToken)
+    {
         var records = new List<RevenueParameterRecord>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))

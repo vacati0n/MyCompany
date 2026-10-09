@@ -203,28 +203,41 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             async (connection, transaction, ct) =>
             {
                 var register = await RegisterAsync(connection, transaction, ct).ConfigureAwait(false);
-                var (channels, company, variance) = await OperationTotalsAsync(connection, transaction, month, ct).ConfigureAwait(false);
+                var (channels, company, variance) = await OperationTotalsAsync(connection, transaction, month, null, null, ct).ConfigureAwait(false);
                 return (register, channels, company, variance);
             },
             cancellationToken).ConfigureAwait(false);
 
-        var registered = read.register.Select(r => r.Channel).ToHashSet();
+        return new OperationPartitionSummary(
+            closure, read.register, PartitionRows(read.register, read.channels), read.company, read.variance);
+    }
+
+    /// <summary>
+    /// One row per channel the register holds, then one per channel identifier the rows name and the register
+    /// does not, so nothing read is dropped from the company figure. Shared by the delivered month reading and
+    /// the company record reader's snapshot (the AI-management change).
+    /// </summary>
+    internal static IReadOnlyList<OperationPartitionRow> PartitionRows(
+        IReadOnlyList<RegisteredChannel> register,
+        IReadOnlyDictionary<ChannelId, OperationTotals> channels)
+    {
+        var registered = register.Select(r => r.Channel).ToHashSet();
         var rows = new List<OperationPartitionRow>();
 
-        foreach (var channel in read.register)
+        foreach (var channel in register)
         {
             rows.Add(new OperationPartitionRow(
                 channel.Channel,
                 InRegister: true,
-                read.channels.TryGetValue(channel.Channel, out var totals) ? totals : EmptyOperations));
+                channels.TryGetValue(channel.Channel, out var totals) ? totals : EmptyOperations));
         }
 
-        foreach (var (channel, totals) in read.channels.Where(c => !registered.Contains(c.Key)).OrderBy(c => c.Key.Value))
+        foreach (var (channel, totals) in channels.Where(c => !registered.Contains(c.Key)).OrderBy(c => c.Key.Value))
         {
             rows.Add(new OperationPartitionRow(channel, InRegister: false, totals));
         }
 
-        return new OperationPartitionSummary(closure, read.register, rows, read.company, read.variance);
+        return rows;
     }
 
     public async Task<DossierPartitionSummary> DossiersAsync(DateOnly month, CancellationToken cancellationToken)
@@ -348,8 +361,8 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             month,
             async (connection, transaction, ct) =>
             {
-                var channels = await ChannelBudgetsAsync(connection, transaction, month, ct).ConfigureAwait(false);
-                var company = await CompanyCeilingAsync(connection, transaction, month, ceiling, ct).ConfigureAwait(false);
+                var channels = await ChannelBudgetsAsync(connection, transaction, month, null, ct).ConfigureAwait(false);
+                var company = await CompanyCeilingAsync(connection, transaction, month, ceiling, null, ct).ConfigureAwait(false);
                 return (channels, company);
             },
             cancellationToken).ConfigureAwait(false);
@@ -373,8 +386,28 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
 
         var (closure, read) = await ReadMonthAsync(
             month,
-            async (connection, transaction, ct) =>
-            {
+            (connection, transaction, ct) => TierPartsAsync(connection, transaction, month, null, ct),
+            cancellationToken).ConfigureAwait(false);
+
+        return new TierDistributionSummary(
+            closure,
+            read.Parts,
+            read.Total,
+            read.Parts.Where(p => p.Tier is not null).Sum(p => p.Operations));
+    }
+
+    /// <summary>
+    /// The tier distribution statement, on a supplied transaction. With <paramref name="asOf"/> null it is the
+    /// delivered statement; with an instant it reads only the operations booked at or before it, which is how the
+    /// company record reader's snapshot reads it (the AI-management change, decision D-001 of its design).
+    /// </summary>
+    internal static async Task<(List<TierPartTotals> Parts, TierPartTotals Total)> TierPartsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        DateOnly month,
+        DateTimeOffset? asOf,
+        CancellationToken ct)
+    {
                 await using var command = new NpgsqlCommand(
                     """
                     SELECT reasoning_tier_served,
@@ -387,12 +420,13 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                            COALESCE(min(currency), 'USD')                     AS currency,
                            count(*) FILTER (WHERE cost_stated IS NOT TRUE)    AS unstated_costs
                     FROM agent_costs
-                    WHERE period = @month
+                    WHERE period = @month AND (@as_of IS NULL OR occurred_at <= @as_of)
                     GROUP BY GROUPING SETS ((reasoning_tier_served), ())
                     """,
                     connection,
                     transaction);
                 command.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
+                AsOf(command, asOf);
 
                 var parts = new List<TierPartTotals>();
                 TierPartTotals? total = null;
@@ -420,15 +454,14 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                 }
 
                 return (Parts: parts, Total: total ?? new TierPartTotals(null, 0, 0, 0, 0, Money.Zero(), 0));
-            },
-            cancellationToken).ConfigureAwait(false);
-
-        return new TierDistributionSummary(
-            closure,
-            read.Parts,
-            read.Total,
-            read.Parts.Where(p => p.Tier is not null).Sum(p => p.Operations));
     }
+
+    /// <summary>
+    /// Binds the instant a snapshot reads up to: null for every delivered caller, which leaves the delivered
+    /// statement's meaning unchanged.
+    /// </summary>
+    internal static void AsOf(NpgsqlCommand command, DateTimeOffset? asOf) =>
+        command.Parameters.Add("as_of", NpgsqlDbType.TimestampTz).Value = (object?)asOf ?? DBNull.Value;
 
     // -----------------------------------------------------------------------
     // The month closure every month reading over the operation record takes
@@ -447,10 +480,15 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
     // The statements
     // -----------------------------------------------------------------------
 
-    private static readonly OperationTotals EmptyOperations =
+    /// <summary>The month or range an operation partition reads, and the instant it reads up to.</summary>
+    private const string OperationFilter =
+        "(@month IS NULL OR period = @month) AND (@range_start IS NULL OR occurred_at >= @range_start) "
+        + "AND (@range_end IS NULL OR occurred_at < @range_end) AND (@as_of IS NULL OR occurred_at <= @as_of)";
+
+    internal static readonly OperationTotals EmptyOperations =
         new(0, Money.Zero(), false, 0, Money.Zero(), new Dictionary<CapabilityClass, Money>(), 0, 0, 0);
 
-    private static async Task<IReadOnlyList<RegisteredChannel>> RegisterAsync(
+    internal static async Task<IReadOnlyList<RegisteredChannel>> RegisterAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         CancellationToken cancellationToken)
@@ -474,12 +512,34 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         CancellationToken cancellationToken) =>
         MonthReads.EarliestEntryAsync(connection, transaction, cancellationToken);
 
-    private static async Task<(Dictionary<ChannelId, OperationTotals> Channels, OperationTotals Company, Money Variance)> OperationTotalsAsync(
+    /// <summary>
+    /// The operation partition statements on a supplied transaction. With <paramref name="month"/> they are the
+    /// delivered month statements; with a <paramref name="range"/> instead they read the operations booked inside
+    /// the half-open range; and with <paramref name="asOf"/> they read only operations booked at or before it,
+    /// which is how the company record reader's snapshot reads them (the AI-management change). Null for both
+    /// optional arguments leaves the delivered statements' meaning unchanged.
+    /// </summary>
+    internal static async Task<(Dictionary<ChannelId, OperationTotals> Channels, OperationTotals Company, Money Variance)> OperationTotalsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
-        DateOnly month,
+        DateOnly? month,
+        (DateTimeOffset Start, DateTimeOffset End)? range,
+        DateTimeOffset? asOf,
         CancellationToken cancellationToken)
     {
+        if (month is null == range is null)
+        {
+            throw new ArgumentException("An operation partition reads one month or one range.", nameof(month));
+        }
+
+        void Bind(NpgsqlCommand command)
+        {
+            command.Parameters.Add("month", NpgsqlDbType.Date).Value = (object?)month ?? DBNull.Value;
+            command.Parameters.Add("range_start", NpgsqlDbType.TimestampTz).Value = (object?)range?.Start ?? DBNull.Value;
+            command.Parameters.Add("range_end", NpgsqlDbType.TimestampTz).Value = (object?)range?.End ?? DBNull.Value;
+            AsOf(command, asOf);
+        }
+
         // The capability split first, by the same grouping, so each partition carries its own.
         var byCapability = new Dictionary<ChannelId, Dictionary<CapabilityClass, Money>>();
         var companyByCapability = new Dictionary<CapabilityClass, Money>();
@@ -487,17 +547,17 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         var companyUnstatedByCapability = new Dictionary<CapabilityClass, long>();
 
         await using (var split = new NpgsqlCommand(
-            """
+            $"""
             SELECT channel_id, GROUPING(channel_id) AS is_company, capability_class, sum(computed_cost) AS total_cost,
                    count(*) FILTER (WHERE cost_stated IS NOT TRUE) AS unstated
             FROM agent_costs
-            WHERE period = @month
+            WHERE {OperationFilter}
             GROUP BY GROUPING SETS ((channel_id, capability_class), (capability_class))
             """,
             connection,
             transaction))
         {
-            split.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
+            Bind(split);
 
             await using var reader = await split.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -534,7 +594,7 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         var company = EmptyOperations;
 
         await using var command = new NpgsqlCommand(
-            """
+            $"""
             SELECT channel_id,
                    GROUPING(channel_id)                                                AS is_company,
                    count(*)                                                            AS operations,
@@ -551,12 +611,12 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                    count(*) FILTER (WHERE cost_stated IS NOT TRUE)                     AS unstated_costs,
                    count(*) FILTER (WHERE deterministic_task IS NOT NULL AND cost_stated IS NOT TRUE) AS unstated_deterministic
             FROM agent_costs
-            WHERE period = @month
+            WHERE {OperationFilter}
             GROUP BY GROUPING SETS ((channel_id), ())
             """,
             connection,
             transaction);
-        command.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
+        Bind(command);
         command.Parameters.Add("envelope", NpgsqlDbType.Numeric).Value = ApprovedEnvelope.MonthlyTotal.Amount;
 
         // With no row in the month the company's variance is the whole envelope unspent, subtracted
@@ -627,7 +687,29 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
 
         var register = await RegisterAsync(connection, transaction, cancellationToken).ConfigureAwait(false);
         var earliest = await EarliestEntryAsync(connection, transaction, cancellationToken).ConfigureAwait(false);
+        var summary = await ThroughputCountsAsync(
+            connection, transaction, register, periodStart, periodEnd, earliest, raised, null, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return summary;
+    }
 
+    /// <summary>
+    /// The throughput counting statement on a supplied transaction, under the given horizon as its coverage.
+    /// With <paramref name="asOf"/> null it is the delivered statement; with an instant it counts only entries
+    /// stamped at or before it, which is how the company record reader's snapshot counts them, under the
+    /// horizon as stored (the AI-management change, decision D-001 of its design).
+    /// </summary>
+    internal static async Task<ThroughputPartitionSummary> ThroughputCountsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        IReadOnlyList<RegisteredChannel> register,
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        DateTimeOffset? earliest,
+        DateTimeOffset raised,
+        DateTimeOffset? asOf,
+        CancellationToken cancellationToken)
+    {
         // Each counted entry reaches its channel through the work unit its declared subject names
         // and the unit's own channel reference. An entry whose subject names no recorded unit is
         // counted under the unattributed partition, and the company row counts every entry.
@@ -637,7 +719,7 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                 SELECT a.action, a.occurred_at, j.channel_id, (j.job_id IS NULL) AS unattributed
                 FROM audit_entries a
                 LEFT JOIN jobs j ON j.job_id = (substring(a.subject FROM @pattern))::uuid
-                WHERE a.action = ANY(@actions) AND a.occurred_at < @period_end
+                WHERE a.action = ANY(@actions) AND a.occurred_at < @period_end AND (@as_of IS NULL OR a.occurred_at <= @as_of)
             )
             SELECT channel_id,
                 GROUPING(channel_id)                                                      AS is_company,
@@ -665,6 +747,7 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         command.Parameters.AddWithValue("actions", LifecycleActions.All.ToArray());
         command.Parameters.AddWithValue("period_start", periodStart);
         command.Parameters.AddWithValue("period_end", periodEnd);
+        AsOf(command, asOf);
 
         ThroughputSummary Summary(NpgsqlDataReader r) => new(
             periodStart, periodEnd, earliest, Quiet: true, Horizon: raised,
@@ -694,8 +777,6 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             }
         }
 
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-
         var empty = new ThroughputSummary(periodStart, periodEnd, earliest, true, raised, 0, 0, 0, 0, 0, 0, 0, 0);
         var registered = register.Select(r => r.Channel).ToHashSet();
 
@@ -715,10 +796,18 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             company);
     }
 
-    private static async Task<IReadOnlyList<ChannelBudgetRow>> ChannelBudgetsAsync(
+    /// <summary>
+    /// Every registered channel's budget position for one month, on a supplied transaction. With
+    /// <paramref name="asOf"/> null the statement means what the delivered one meant; with an instant every
+    /// operation and every alert is read only where recorded at or before it (the AI-management change). The
+    /// utilisation is the delivered function's formula over the same rows, computed inline so the instant
+    /// bounds it too.
+    /// </summary>
+    internal static async Task<IReadOnlyList<ChannelBudgetRow>> ChannelBudgetsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         DateOnly month,
+        DateTimeOffset? asOf,
         CancellationToken cancellationToken)
     {
         // Every registered channel, its operations and recorded cost in the month, and its budget
@@ -726,24 +815,33 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         // where a budget exists: no percentage is computed against an amount nobody recorded.
         await using var command = new NpgsqlCommand(
             """
+            WITH booked AS (
+                SELECT a.channel_id, count(*) AS operations, COALESCE(sum(a.computed_cost), 0) AS utilised,
+                       count(*) FILTER (WHERE a.cost_stated IS NOT TRUE) AS unstated
+                FROM agent_costs a
+                WHERE a.period = @month AND (@as_of IS NULL OR a.occurred_at <= @as_of)
+                GROUP BY a.channel_id
+            )
             SELECT c.channel_id,
-                   (SELECT count(*) FROM agent_costs a WHERE a.channel_id = c.channel_id AND a.period = @month)  AS operations,
-                   (SELECT COALESCE(sum(a.computed_cost), 0) FROM agent_costs a
-                     WHERE a.channel_id = c.channel_id AND a.period = @month)                                   AS utilised,
-                   (SELECT count(*) FROM agent_costs a
-                     WHERE a.channel_id = c.channel_id AND a.period = @month AND a.cost_stated IS NOT TRUE)       AS unstated,
+                   COALESCE(k.operations, 0)                                                AS operations,
+                   COALESCE(k.utilised, 0)                                                  AS utilised,
+                   COALESCE(k.unstated, 0)                                                  AS unstated,
                    b.budget_id,
                    b.amount,
-                   u.utilization_percent
+                   CASE WHEN b.budget_id IS NULL THEN NULL
+                        WHEN b.amount = 0 THEN 0
+                        ELSE ROUND(COALESCE(k.utilised, 0) * 100.0 / b.amount, 4)
+                   END                                                                      AS utilization_percent
             FROM channels c
+            LEFT JOIN booked k ON k.channel_id = c.channel_id
             LEFT JOIN budgets b
                    ON b.scope_kind = 'Channel' AND b.scope_id = c.channel_id AND b.period = @month
-            LEFT JOIN LATERAL fn_budget_utilization(b.budget_id) u ON b.budget_id IS NOT NULL
             ORDER BY c.channel_id
             """,
             connection,
             transaction);
         command.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
+        AsOf(command, asOf);
 
         var rows = new List<(ChannelId Channel, long Operations, Money Utilised, Guid? Budget, Money? Amount, decimal? Percent, long Unstated)>();
         await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
@@ -763,11 +861,13 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
 
         var alerts = new Dictionary<Guid, Dictionary<int, long>>();
         await using (var recorded = new NpgsqlCommand(
-            "SELECT budget_id, threshold, count(*) FROM budget_alerts WHERE period = @month GROUP BY budget_id, threshold",
+            "SELECT budget_id, threshold, count(*) FROM budget_alerts "
+            + "WHERE period = @month AND (@as_of IS NULL OR raised_at <= @as_of) GROUP BY budget_id, threshold",
             connection,
             transaction))
         {
             recorded.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
+            AsOf(recorded, asOf);
             await using var reader = await recorded.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -797,11 +897,13 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             .ToArray();
     }
 
-    private static async Task<(long Operations, Money Cost, decimal? Percent, long Unstated)> CompanyCeilingAsync(
+    /// <summary>The company's recorded cost against a ceiling for one month, on a supplied transaction, bounded by <paramref name="asOf"/> where given.</summary>
+    internal static async Task<(long Operations, Money Cost, decimal? Percent, long Unstated)> CompanyCeilingAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         DateOnly month,
         Money ceiling,
+        DateTimeOffset? asOf,
         CancellationToken cancellationToken)
     {
         // Every operation row of the month, whichever channel it carries, against the ceiling, and
@@ -815,12 +917,13 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                    END,
                    count(*) FILTER (WHERE cost_stated IS NOT TRUE)
             FROM agent_costs
-            WHERE period = @month
+            WHERE period = @month AND (@as_of IS NULL OR occurred_at <= @as_of)
             """,
             connection,
             transaction);
         command.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
         command.Parameters.Add("ceiling", NpgsqlDbType.Numeric).Value = ceiling.Amount;
+        AsOf(command, asOf);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -850,7 +953,7 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
 /// </summary>
 public sealed class NpgsqlApprovalQueueReader : IApprovalQueueReader
 {
-    private const string AwaitingSql =
+    internal const string AwaitingSql =
         """
         SELECT i.channel_id, t.item_id, t.item_version, t.occurred_at
         FROM (
@@ -916,7 +1019,12 @@ public sealed class NpgsqlApprovalQueueReader : IApprovalQueueReader
     {
         await using var command = _dataSource.CreateCommand(AwaitingSql);
         command.Parameters.Add("channel_id", NpgsqlDbType.Uuid).Value = (object?)channel ?? DBNull.Value;
+        return await ReadAwaitingAsync(command, cancellationToken).ConfigureAwait(false);
+    }
 
+    /// <summary>Reads the awaiting-approval listing a command returns, shared with the company record reader's snapshot.</summary>
+    internal static async Task<IReadOnlyList<AwaitingApproval>> ReadAwaitingAsync(NpgsqlCommand command, CancellationToken cancellationToken)
+    {
         var awaiting = new List<AwaitingApproval>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))

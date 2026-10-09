@@ -96,6 +96,16 @@ public static class DeterministicTaskRegistry
     public const string CostControl = "cost-control";
     public const string EvidenceSelection = "evidence-selection";
 
+    // The AI-management change (decisions D-004, D-005, D-009, D-011 and D-012 of its design). The comparable-run
+    // count, the report composition, the rule evaluation, the brief composition and the dashboard composition
+    // join the SAME named set: each is a pure rule over the values of one read, so the delivered
+    // dependency-direction proof covers them and none can express a model call, a metered call or a write.
+    public const string ComparableRunCount = "comparable-run-count";
+    public const string ReportComposition = "report-composition";
+    public const string RuleEvaluation = "rule-evaluation";
+    public const string BriefComposition = "brief-composition";
+    public const string DashboardComposition = "dashboard-composition";
+
     /// <summary>
     /// The complete named set. The idempotent upload the upstream recommendation also names is
     /// excluded here by constraint C-013: this wave publishes nothing, so no upload path exists.
@@ -152,6 +162,11 @@ public static class DeterministicTaskRegistry
         AttemptAnswerCompleteness,
         CostControl,
         EvidenceSelection,
+        ComparableRunCount,
+        ReportComposition,
+        RuleEvaluation,
+        BriefComposition,
+        DashboardComposition,
     }.ToFrozenSet(StringComparer.Ordinal);
 
     // There is deliberately no second list of the publishing members here. A list restating

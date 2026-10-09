@@ -108,7 +108,8 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheSeventhResourceRecordsNothingAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.007-ai-economics.sql", SchemaInstaller.ResourceNames[^1]);
+        // The eighth resource now installs after it (the AI-management change).
+        Assert.Equal("MediaCompany.Persistence.Schema.007-ai-economics.sql", SchemaInstaller.ResourceNames[^2]);
 
         foreach (var table in new[]
                  {
@@ -523,6 +524,11 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     /// labelled evidence; and an observation committed by another session DURING the stand-in's call,
     /// after the evidence was read, is not among the recorded inputs, which read back as exactly the
     /// observations that one statement read, with their count.
+    ///
+    /// RE-POINTED by the AI-management change (the owner's ten comparable runs): each candidate now holds ten
+    /// comparable runs, the alpha route's at quality 92 and the beta route's at quality 88, at the fixture prices,
+    /// so the evidence basis still applies and the beta route is still the cheapest meeting the floor; the count
+    /// behind the ranking grows from two to twenty.
     /// </summary>
     [RequiresPostgresFact]
     public async Task AConcurrentObservationCommitDuringARankingLeavesTheRecordedInputsOneRead()
@@ -534,10 +540,14 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         var entry = CorpusEntryId.New();
         await RegisterEntryAsync(entry, TaskClass.ScriptPass);
 
-        var alphaRun = await RecordOperationAsync(alpha, AlphaModel, ChannelB, ItemB, 1_000, 500, 0, 900);
-        var betaRun = await RecordOperationAsync(beta, BetaModel, ChannelB, ItemB, 1_000, 500, 0, 700);
-        var alphaObservation = await RecordObservationAsync(entry, TaskClass.ScriptPass, alphaRun.Id, 92m);
-        var betaObservation = await RecordObservationAsync(entry, TaskClass.ScriptPass, betaRun.Id, 88m);
+        var recorded = new List<BenchmarkObservation>();
+        for (var run = 0; run < 10; run++)
+        {
+            var alphaRun = await RecordOperationAsync(alpha, AlphaModel, ChannelB, ItemB, 1_000, 500, 0, 900);
+            var betaRun = await RecordOperationAsync(beta, BetaModel, ChannelB, ItemB, 1_000, 500, 0, 700);
+            recorded.Add(await RecordObservationAsync(entry, TaskClass.ScriptPass, alphaRun.Id, 92m));
+            recorded.Add(await RecordObservationAsync(entry, TaskClass.ScriptPass, betaRun.Id, 88m));
+        }
 
         BenchmarkObservation? concurrent = null;
         var standIn = new StandInProvider(Beta, async () =>
@@ -554,16 +564,15 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
 
         var decision = await ReadDecisionAsync(completed.Operation.Id);
         Assert.Equal("Evidence", decision.Basis);
-        Assert.Equal(2L, decision.ObservationsRankedOn);
-        Assert.Equal(
-            new[] { alphaObservation.Id.Value, betaObservation.Id.Value }.Order(),
-            decision.Observations.Order());
+        Assert.Equal(20L, decision.ObservationsRankedOn);
+        Assert.Equal(recorded.Select(o => o.Id.Value).Order(), decision.Observations.Order());
         Assert.DoesNotContain(concurrent!.Id.Value, decision.Observations);
         Assert.Equal(new[] { (beta.Value, 1), (alpha.Value, 2) }, decision.Candidates.Select(c => (c.Route, c.Position)));
-        Assert.All(decision.Candidates, c => Assert.Equal(1L, c.Observations));
+        Assert.All(decision.Candidates, c => Assert.Equal(10L, c.Observations));
         Assert.Equal(90, decision.Candidates.Single(c => c.Route == alpha.Value).ConfiguredRating);
         Assert.Equal(92m, decision.Candidates.Single(c => c.Route == alpha.Value).QualityAmount);
-        Assert.Contains("ranked on evidence: 2 observations", decision.BasisStatement, StringComparison.Ordinal);
+        Assert.Contains("ranked on evidence: 20 observations", decision.BasisStatement, StringComparison.Ordinal);
+        Assert.Contains("every candidate holds at least the owner's ten comparable runs", decision.BasisStatement, StringComparison.Ordinal);
 
         // The route register is read, never written.
         Assert.Equal(90, await ScalarAsync<int>("SELECT rated_quality FROM routes WHERE route_id = @r", c => c.Parameters.AddWithValue("r", alpha.Value)));

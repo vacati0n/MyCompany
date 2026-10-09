@@ -53,6 +53,14 @@ public static class SchemaInstaller
         // created empty, and nothing here records an observation, an entry, a decision, a budget amount,
         // a configuration value, a route or a gate transition.
         "MediaCompany.Persistence.Schema.007-ai-economics.sql",
+
+        // Wave 8, the AI-management capability. Additive: the open-decisions register, write-once with
+        // supersession and seeded with the transcription of the recorded owner decisions and open questions;
+        // the platform-policy statement register and the re-verification result record, created empty; the
+        // held-outcome record, created empty; and the admission decision readings' amount, spend and
+        // utilisation columns widened to the unbounded decimal, as the seventh resource widened the alert
+        // columns. Nothing here records a threshold, a cadence, a budget amount, a statement or a result.
+        "MediaCompany.Persistence.Schema.008-management.sql",
     ];
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)

@@ -281,6 +281,11 @@ public sealed class AiEconomicsRuleTests
     /// candidate meeting the floor — not the configured first — labelled evidence, with every observation it
     /// ranked on and their count; an observed-zero cost ranks as zero; and where no candidate meets the floor
     /// on observation nothing is selected and the request is held under the floor reason.
+    ///
+    /// RE-POINTED by the AI-management change (the owner's ten comparable runs): each candidate now holds ten
+    /// comparable runs, its delivered extremes unchanged — the primary's minimum quality 92 and maximum cost
+    /// 0.0105, the secondary's cost an observed zero — so the evidence basis still applies and the ranking and
+    /// its figures are exactly what they were; only the count behind them grows from three to twenty.
     /// </summary>
     [Fact]
     public void FullyObservedCandidatesAreRankedOnEvidence()
@@ -288,17 +293,20 @@ public sealed class AiEconomicsRuleTests
         var primary = Fixture.Provider(RouteTier.Primary, Fixture.PrimaryAccount, Fixture.PrimaryModel, 90);
         var secondary = Fixture.Provider(RouteTier.Secondary, Fixture.SecondaryAccount, Fixture.SecondaryModel, 85);
         var evidence = new[]
-        {
-            Observation(primary.Id, 92m, 0.0105m),
-            Observation(primary.Id, 95m, 0.0090m),
-            Observation(secondary.Id, 88m, 0m),
-        };
+            {
+                Observation(primary.Id, 92m, 0.0105m),
+                Observation(primary.Id, 95m, 0.0090m),
+                Observation(secondary.Id, 88m, 0m),
+            }
+            .Concat(Enumerable.Range(0, 8).Select(_ => Observation(primary.Id, 94m, 0.0100m)))
+            .Concat(Enumerable.Range(0, 9).Select(_ => Observation(secondary.Id, 89m, 0m)))
+            .ToArray();
 
         var outcome = EvidenceSelection.Select([primary, secondary], TaskClass.ScriptPass, new QualityRating(80), "USD", evidence);
 
         Assert.Equal(secondary.Id, outcome.Selected!.Id);
         Assert.Equal(SelectionBasis.Evidence, outcome.Record.Basis);
-        Assert.Equal("3 observations ranked on", outcome.Record.ObservationCount.Describe());
+        Assert.Equal("20 observations ranked on", outcome.Record.ObservationCount.Describe());
         Assert.Equal(evidence.Select(o => o.Id.Value).Order(), outcome.Record.ObservationsRankedOn.Select(o => o.Value).Order());
         Assert.Equal(92m, Assert.IsType<MeasurementQuantity.ObservedValue>(outcome.Record.Candidates.Single(c => c.Route == primary.Id).ObservedQuality).Amount);
         Assert.Equal(0.0105m, Assert.IsType<MeasurementQuantity.ObservedValue>(outcome.Record.Candidates.Single(c => c.Route == primary.Id).ObservedCost).Amount);

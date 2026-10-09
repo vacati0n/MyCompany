@@ -89,7 +89,17 @@ public sealed class NpgsqlGateLedger : IGateLedger
         // change is retained in its table and is not read here, so resolution can only be more
         // refusing than before; a channel the register does not hold reaches no company and reads
         // the payment account absent.
-        await using var command = _dataSource.CreateCommand(
+        await using var command = _dataSource.CreateCommand(ConditionsSql);
+        command.Parameters.AddWithValue("channel_id", channel.Value);
+        return await ReadConditionsAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The three conditions of one channel, the company-level payment account reached through the channel's
+    /// company. Shared with the company record reader's snapshot (the AI-management change), which runs it on
+    /// its own transaction.
+    /// </summary>
+    internal const string ConditionsSql =
             """
             SELECT condition, state, evidence, observed_on
             FROM first_publication_conditions
@@ -100,9 +110,13 @@ public sealed class NpgsqlGateLedger : IGateLedger
             JOIN channels c ON c.company_id = o.company_id
             WHERE c.channel_id = @channel_id
             ORDER BY observed_on
-            """);
-        command.Parameters.AddWithValue("channel_id", channel.Value);
+            """;
 
+    /// <summary>Reads the condition observations a command returns into the total three-member register.</summary>
+    internal static async Task<FirstPublicationConditionRegister> ReadConditionsAsync(
+        NpgsqlCommand command,
+        CancellationToken cancellationToken)
+    {
         var observations = new List<ConditionObservation>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))

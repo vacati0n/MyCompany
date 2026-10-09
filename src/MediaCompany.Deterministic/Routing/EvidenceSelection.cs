@@ -25,8 +25,11 @@ public sealed record SelectionOutcome(Route? Selected, SelectionRecord Record);
 /// nothing is selected. Otherwise the selection is the delivered route-tier ordering EXACTLY, labelled
 /// configured, naming each unmeasured quantity, unit mismatch or absent task class.
 ///
-/// No observation minimum is applied, and the count behind every evidence ranking is stated. Latency is
-/// read and recorded but not ranked. A configured rating is never presented as an observed quality: the
+/// THE OWNER'S TEN (the AI-management change, decision D-005 of its design, on the owner's decision of
+/// 2026-10-09): the evidence basis applies only where EVERY candidate also holds at least ten comparable runs
+/// of the task class, counted by <see cref="ComparableRuns"/>, the one count the CTO report's label keys on.
+/// Below ten for any candidate the selection is the configured ordering, labelled, and every basis states
+/// every candidate's count against the ten. Latency is read and recorded but not ranked. A configured rating is never presented as an observed quality: the
 /// two are separate fields. The route register is never written.
 /// </summary>
 public static class EvidenceSelection
@@ -59,11 +62,34 @@ public static class EvidenceSelection
 
         var gaps = figures.SelectMany(f => f.Gaps).ToArray();
 
-        if (taskClass is null || gaps.Length > 0)
+        // Every candidate's count of comparable runs against the owner's ten, stated in every basis.
+        var counts = taskClass is { } counted
+            ? configured.Select(route => (Route: route.Id, Count: ComparableRuns.Of(route.Id, counted, evidence))).ToArray()
+            : [];
+        var belowTen = counts.Where(c => !ComparableRuns.ReachesOwnersTen(c.Count)).ToArray();
+        var countStatement = counts.Length == 0
+            ? "no comparable run is counted, because no task class is named"
+            : "comparable runs of task class " + taskClass + ": " + string.Join(
+                "; ", counts.Select(c => $"route {c.Route} {ComparableRuns.AgainstOwnersTen(c.Count)}"));
+
+        if (taskClass is null || gaps.Length > 0 || belowTen.Length > 0)
         {
-            var why = taskClass is null
-                ? "the request names no task class, so there is nothing to compare evidence by"
-                : string.Join("; ", gaps);
+            var reasons = new List<string>();
+            if (taskClass is null)
+            {
+                reasons.Add("the request names no task class, so there is nothing to compare evidence by");
+            }
+
+            reasons.AddRange(gaps);
+
+            if (belowTen.Length > 0)
+            {
+                reasons.Add(
+                    $"{belowTen.Length} of the {counts.Length} candidates hold fewer comparable runs than the owner's ten, "
+                    + "so no evidence ranking replaces the configured ordering");
+            }
+
+            var why = string.Join("; ", reasons);
 
             return new SelectionOutcome(
                 configured[0],
@@ -75,8 +101,8 @@ public static class EvidenceSelection
                     ObservationsRankedOn = [],
                     ObservationCount = MeasurementQuantity.Count(0, "observations ranked on"),
                     Statement = "the configured ordering, taken exactly: route tier order, ties by route identifier; "
-                        + $"evidence was not ranked on, because {why}; a configured route rating is a rating and is "
-                        + "never presented as an observed quality",
+                        + $"evidence was not ranked on, because {why}; {countStatement}; a configured route rating is a "
+                        + "rating and is never presented as an observed quality",
                 });
         }
 
@@ -95,12 +121,12 @@ public static class EvidenceSelection
             ? $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {figures.Length} "
               + $"candidates; no candidate's minimum observed quality meets the floor of {floor.Value} on the "
               + $"{BenchmarkObservation.QualityRatingUnit}, so none is selected and nothing is served below the floor; "
-              + "no minimum observation count is applied"
+              + $"every candidate holds at least the owner's ten comparable runs: {countStatement}"
             : $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {figures.Length} "
               + $"candidates, each candidate's minimum observed quality against the floor of {floor.Value} on the "
               + $"{BenchmarkObservation.QualityRatingUnit} and its maximum observed cost in {currency}; the cheapest "
-              + "candidate meeting the floor was taken, ties by route tier then identifier; no minimum observation "
-              + "count is applied";
+              + "candidate meeting the floor was taken, ties by route tier then identifier; every candidate holds at "
+              + $"least the owner's ten comparable runs: {countStatement}";
 
         return new SelectionOutcome(
             meeting.Length == 0 ? null : ranked[0].Route,

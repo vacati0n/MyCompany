@@ -830,6 +830,10 @@ public sealed class BoundaryTests
 
             // The AI-economics change: the benchmark record's reader has read members only.
             [typeof(IBenchmarkReader)] = ["ObservationsAsync", "RecordAsync"],
+
+            // The AI-management change: the company record reader has read members only, the one snapshot and
+            // the datastore's current month.
+            [typeof(ICompanyRecordReader)] = ["ReadAsync", "CurrentMonthAsync"],
         };
 
         foreach (var (port, reads) in declared)
@@ -859,12 +863,12 @@ public sealed class BoundaryTests
         foreach (var name in ProductionAssemblies)
         {
             var assembly = Load(name);
-            // 1.4.0, decided at the Design Gate of the AI-economics change.
-            Assert.Equal(new Version(1, 4, 0, 0), assembly.GetName().Version);
+            // 1.5.0, decided at the Design Gate of the AI-management change.
+            Assert.Equal(new Version(1, 5, 0, 0), assembly.GetName().Version);
 
             var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             Assert.NotNull(informational);
-            Assert.StartsWith("1.4.0", informational, StringComparison.Ordinal);
+            Assert.StartsWith("1.5.0", informational, StringComparison.Ordinal);
         }
     }
 
@@ -953,6 +957,18 @@ public sealed class BoundaryTests
         var notRecorded = recorded.GetNestedType("NotRecorded")!;
         Assert.Equal(["LookedFor"], notRecorded.GetProperties().Where(p => p.DeclaringType == notRecorded).Select(p => p.Name));
         Assert.Empty(recorded.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
+
+        // The AI-management change adds a THIRD SHAPE, the recorded figure that is not money, and nothing else: the
+        // recorded amount has exactly three shapes, none constructible from outside, and the measurement union stays
+        // at three cases.
+        Assert.Equal(
+            ["NotRecorded", "Recorded", "RecordedFigure"],
+            recorded.GetNestedTypes().Where(t => t.BaseType == recorded).Select(t => t.Name).Order(StringComparer.Ordinal));
+        var figure = recorded.GetNestedType("RecordedFigure")!;
+        Assert.Equal(
+            ["Date", "RecordedIn", "Unit", "Value"],
+            figure.GetProperties().Where(p => p.DeclaringType == figure).Select(p => p.Name).Order(StringComparer.Ordinal));
+        Assert.Empty(figure.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
     }
 
     /// <summary>
@@ -1010,6 +1026,216 @@ public sealed class BoundaryTests
         var found = ConfigurationReachIn(typeof(ProbeReadingAConfigurationKey));
         Assert.NotEmpty(found);
         Assert.Contains(found, f => f.Contains("budget.amount", StringComparison.Ordinal));
+    }
+
+    // -----------------------------------------------------------------------
+    // The AI-management change — every added type named, the management paths read-only and model-free
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Every quantity-carrying type the AI-management change adds, NAMED HERE, is on the analytics surface or a
+    /// named permitted carrier and passes the member rule refusing a bare numeric and an undeclared string, so the
+    /// membership assertion covers each by name.
+    /// </summary>
+    [Fact]
+    public void EveryQuantityCarryingTypeTheAiManagementChangeAddsIsHeldByTheMembershipAssertion()
+    {
+        string[] added =
+        [
+            "MediaCompany.Domain.Analytics.LineFigure",
+            "MediaCompany.Domain.Analytics.LineFigure+Measured",
+            "MediaCompany.Domain.Analytics.LineFigure+Recorded",
+            "MediaCompany.Domain.Analytics.ReportLine",
+            "MediaCompany.Domain.Analytics.RuleOutcome",
+            "MediaCompany.Domain.Analytics.RuleOutcome+Issued",
+            "MediaCompany.Domain.Analytics.RuleOutcome+Abstained",
+            "MediaCompany.Domain.Analytics.CtoRecommendation",
+            "MediaCompany.Domain.Analytics.ManagementReportSet",
+            "MediaCompany.Domain.Analytics.BriefItem",
+            "MediaCompany.Domain.Analytics.BriefSectionReading",
+            "MediaCompany.Domain.Analytics.CeoBrief",
+            "MediaCompany.Domain.Analytics.DashboardTile",
+            "MediaCompany.Domain.Analytics.RecordedControllerDecision",
+            "MediaCompany.Domain.Analytics.RecordedDecisionReading",
+            "MediaCompany.Domain.Analytics.RecordedDecisionCandidate",
+            "MediaCompany.Deterministic.Analytics.ManagementComposers",
+            "MediaCompany.Deterministic.Analytics.RuleCatalogue",
+            "MediaCompany.Deterministic.Analytics.BriefComposer",
+            "MediaCompany.Deterministic.Analytics.DashboardComposer",
+            "MediaCompany.Deterministic.Analytics.ManagementRendering",
+            "MediaCompany.Deterministic.Analytics.ManagementReportService",
+            "MediaCompany.Deterministic.Analytics.ManagementRead",
+            "MediaCompany.Deterministic.Routing.ComparableRuns",
+            "MediaCompany.Application.Ports.CompanySnapshot",
+            "MediaCompany.Persistence.NpgsqlCompanyRecordReader",
+        ];
+
+        var scanned = ScannedAnalyticsTypes().ToDictionary(s => s.Type.FullName!, s => s.PublicOnly);
+
+        foreach (var name in added)
+        {
+            var type = ProductionAssemblies.Select(a => Load(a).GetType(name)).SingleOrDefault(t => t is not null);
+            Assert.True(type is not null, $"{name} is named as an added type and no production assembly declares it");
+            Assert.True(scanned.ContainsKey(name), $"{name} carries an analytics quantity and the member rule does not scan it");
+            Assert.Empty(BareValueMembers(type!, scanned[name]));
+        }
+    }
+
+    /// <summary>
+    /// The member rule applied to a report-line-shaped probe carrying a bare count: it is refused, naming the type
+    /// and the member, so the assertion above cannot pass on a rule that matches nothing.
+    /// </summary>
+    [Fact]
+    public void TheMemberRuleRefusesABareNumericOnAReportLineShapeAndNamesIt()
+    {
+        var offender = Assert.Single(BareValueMembers(typeof(ProbeReportLineWithABareCount)));
+        Assert.Contains(nameof(ProbeReportLineWithABareCount), offender, StringComparison.Ordinal);
+        Assert.Contains("AwaitingCount", offender, StringComparison.Ordinal);
+        Assert.Contains("bare Int64", offender, StringComparison.Ordinal);
+    }
+
+    /// <summary>The management types: the report, rule, brief, dashboard and rendering composers and the surface's entry.</summary>
+    private static readonly Type[] ManagementTypes =
+    [
+        typeof(MediaCompany.Deterministic.Analytics.ManagementComposers),
+        typeof(MediaCompany.Deterministic.Analytics.RuleCatalogue),
+        typeof(MediaCompany.Deterministic.Analytics.BriefComposer),
+        typeof(MediaCompany.Deterministic.Analytics.DashboardComposer),
+        typeof(MediaCompany.Deterministic.Analytics.ManagementRendering),
+        typeof(MediaCompany.Deterministic.Analytics.ManagementReportService),
+        typeof(MediaCompany.Deterministic.Routing.ComparableRuns),
+    ];
+
+    /// <summary>
+    /// The report composition, the rule evaluation, the brief, the dashboard and the comparable-run count are
+    /// REGISTERED MEMBERS of the rule-determined set and sit in the rule-determined assembly, so the
+    /// dependency-direction proof above — that the assembly cannot reach the capability boundary or the credential
+    /// broker — covers each of them BY NAME: none can express a model call, a metered call or a narrative pass.
+    /// </summary>
+    [Fact]
+    public void TheManagementComposersAreRegisteredRuleDeterminedMembersThatCannotReachACapability()
+    {
+        foreach (var type in ManagementTypes)
+        {
+            Assert.Equal(Deterministic, type.Assembly.GetName().Name);
+        }
+
+        foreach (var rule in ManagementTypes.Where(t => t.GetField("TaskName", BindingFlags.Public | BindingFlags.Static) is not null))
+        {
+            var name = (string)rule.GetField("TaskName", BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
+            Assert.True(DeterministicTaskRegistry.Contains(name), $"{rule.Name} declares '{name}', which is not in the rule-determined set");
+            Assert.True(rule is { IsAbstract: true, IsSealed: true }, $"{rule.Name} is a pure static rule");
+        }
+
+        foreach (var name in new[]
+                 {
+                     DeterministicTaskRegistry.ComparableRunCount, DeterministicTaskRegistry.ReportComposition,
+                     DeterministicTaskRegistry.RuleEvaluation, DeterministicTaskRegistry.BriefComposition,
+                     DeterministicTaskRegistry.DashboardComposition,
+                 })
+        {
+            Assert.True(DeterministicTaskRegistry.Contains(name), $"{name} is not in the rule-determined set");
+        }
+
+        // The assembly they sit in reaches neither the capability boundary nor the credential broker, at any depth.
+        var closure = FirstPartyClosure(Deterministic);
+        Assert.DoesNotContain(Capability, closure);
+        Assert.DoesNotContain(Credentials, closure);
+        Assert.DoesNotContain(Persistence, closure);
+    }
+
+    /// <summary>
+    /// NO MANAGEMENT PATH WRITES, WAITS ON A CLOCK, READS CONFIGURATION OR OPENS ANYTHING. No management type holds,
+    /// takes or names — in its declared members or its compiled bodies, closures included — a writer, a unit of
+    /// work, a transaction, the admission ledger, a clock, the configuration surface, a file, a network type or a
+    /// console; and the only port it takes is the company record reader, whose members are reads.
+    /// </summary>
+    [Fact]
+    public void NoManagementPathHoldsAWritePathAClockAConfigurationReachOrAnAction()
+    {
+        foreach (var type in ManagementTypes)
+        {
+            Assert.Empty(ManagementReach(type));
+        }
+    }
+
+    /// <summary>The management scan applied to a dashboard-shaped probe that holds a writer: it is found and named.</summary>
+    [Fact]
+    public void TheManagementScanFindsAProbeDashboardHoldingAWriterAndNamesIt()
+    {
+        var found = ManagementReach(typeof(ProbeDashboardThatRecords));
+        Assert.Contains(found, f => f.Contains(nameof(ProbeDashboardThatRecords), StringComparison.Ordinal) && f.Contains("IUnitOfWork", StringComparison.Ordinal));
+
+        var reading = ManagementReach(typeof(ProbeComposerReadingTheProcessClock));
+        Assert.Contains(reading, f => f.Contains("UtcNow", StringComparison.Ordinal));
+    }
+
+    /// <summary>Every way a type's declared members or compiled bodies reach a write path, a clock, configuration or an action.</summary>
+    private static IReadOnlyList<string> ManagementReach(Type root)
+    {
+        static bool Forbidden(Type? type) =>
+            type is not null
+            && (type == typeof(IUnitOfWork)
+                || type == typeof(IWorkTransaction)
+                || type == typeof(IAdmissionLedger)
+                || type == typeof(IClock)
+                || type == typeof(IConfigurationStore)
+                || type == typeof(IGateLedger)
+                || type == typeof(IAssetLedger)
+                || type == typeof(IRevenueParameterRegister)
+                || (type.Namespace ?? string.Empty).StartsWith("MediaCompany.Domain.Configuration", StringComparison.Ordinal)
+                || (type.Name.EndsWith("Writer", StringComparison.Ordinal) && (type.Namespace ?? string.Empty).StartsWith("MediaCompany", StringComparison.Ordinal))
+                || (type.Namespace ?? string.Empty).StartsWith("System.Net", StringComparison.Ordinal)
+                || (type.Namespace ?? string.Empty).StartsWith("System.IO", StringComparison.Ordinal)
+                || type == typeof(Console)
+                || type == typeof(System.Diagnostics.Process));
+
+        static bool ReadsAClock(MemberInfo member) =>
+            (member.DeclaringType == typeof(DateTimeOffset) || member.DeclaringType == typeof(DateTime))
+            && member.Name is "get_UtcNow" or "get_Now" or "get_Today";
+
+        var reach = new List<string>();
+        var types = new[] { root }.Concat(root.GetNestedTypes(Declared)).ToArray();
+
+        foreach (var type in types)
+        {
+            foreach (var field in type.GetFields(Declared).Where(f => f.DeclaringType == type))
+            {
+                if (Flatten(field.FieldType).Any(Forbidden))
+                {
+                    reach.Add($"{type.FullName}.{field.Name} holds {field.FieldType.Name}");
+                }
+            }
+
+            var bodies = type.GetMethods(Declared).Where(m => m.DeclaringType == type).Cast<MethodBase>()
+                .Concat(type.GetConstructors(Declared));
+
+            foreach (var method in bodies)
+            {
+                foreach (var parameter in method.GetParameters())
+                {
+                    if (Flatten(parameter.ParameterType).Any(Forbidden))
+                    {
+                        reach.Add($"{type.FullName}.{method.Name} takes {parameter.ParameterType.Name}");
+                    }
+                }
+
+                foreach (var operand in IlOperands(method))
+                {
+                    switch (operand)
+                    {
+                        case MemberInfo member when ReadsAClock(member):
+                            reach.Add($"{type.FullName}.{method.Name} reads the process clock through {member.DeclaringType?.Name}.{member.Name.Replace("get_", string.Empty, StringComparison.Ordinal)}");
+                            break;
+                        case MemberInfo member when Forbidden(member.DeclaringType) || (member is Type t && Forbidden(t)):
+                            reach.Add($"{type.FullName}.{method.Name} names {member.DeclaringType?.Name}.{member.Name}");
+                            break;
+                    }
+                }
+            }
+        }
+
+        return reach;
     }
 
     /// <summary>Every way a type's compiled code or declared members reach the configuration surface.</summary>
@@ -1306,6 +1532,13 @@ public sealed class BoundaryTests
         "MediaCompany.Persistence.NpgsqlBenchmarkReader",
         "MediaCompany.Persistence.MeasurementColumns",
         "MediaCompany.Persistence.BenchmarkRows",
+
+        // Wave 8, the AI-management capability. The one snapshot the company record reader returns, declared with
+        // the other ports; the comparable-run count, the rule both the selection and the CTO report key on; and
+        // the reader's adapter below the boundary.
+        "MediaCompany.Application.Ports.CompanySnapshot",
+        "MediaCompany.Deterministic.Routing.ComparableRuns",
+        "MediaCompany.Persistence.NpgsqlCompanyRecordReader",
     ];
 
     /// <summary>
@@ -1408,6 +1641,46 @@ public sealed class BoundaryTests
         "MediaCompany.Deterministic.Accounting.CostController.CompanyBasisRecordedIn",
         "MediaCompany.Deterministic.Accounting.CostController.ChannelBudgetRecordedIn",
         "MediaCompany.Deterministic.Accounting.CostController.CompanyBasisStatement",
+
+        // Wave 8, the AI-management capability. A report line's section, label, the reading it rests on, its short
+        // finality, the decision it informs and the recorded text it prints verbatim (labelled as recorded on every
+        // rendering); a rule outcome's reading, statements and abstention reason; the ten CTO fields that are words;
+        // the report set's and the brief's week and finality statement; a dashboard tile's rendering, composed by the
+        // one rendering; the controller decision's stored statements, read back verbatim and printed as recorded
+        // text with their recording instant; and the task names and the comparable-run unit. Each is composed by
+        // the code, or is recorded text the surface prints labelled as recorded, never a value slot.
+        "MediaCompany.Domain.Analytics.ReportLine.Heading",
+        "MediaCompany.Domain.Analytics.ReportLine.Label",
+        "MediaCompany.Domain.Analytics.ReportLine.RestsOn",
+        "MediaCompany.Domain.Analytics.ReportLine.Finality",
+        "MediaCompany.Domain.Analytics.ReportLine.RecordedText",
+        "MediaCompany.Domain.Analytics.ReportLine.Informs",
+        "MediaCompany.Domain.Analytics.RuleOutcome.Reading",
+        "MediaCompany.Domain.Analytics.RuleOutcome.Informs",
+        "MediaCompany.Domain.Analytics.RuleOutcome+Issued.AnchorStatement",
+        "MediaCompany.Domain.Analytics.RuleOutcome+Issued.Statement",
+        "MediaCompany.Domain.Analytics.RuleOutcome+Abstained.Reason",
+        "MediaCompany.Domain.Analytics.CtoRecommendation.CurrentApproach",
+        "MediaCompany.Domain.Analytics.CtoRecommendation.Problem",
+        "MediaCompany.Domain.Analytics.CtoRecommendation.Alternative",
+        "MediaCompany.Domain.Analytics.CtoRecommendation.OperationalRisk",
+        "MediaCompany.Domain.Analytics.CtoRecommendation.Recommendation",
+        "MediaCompany.Domain.Analytics.CtoRecommendation.DecisionRequired",
+        "MediaCompany.Domain.Analytics.ManagementReportSet.Week",
+        "MediaCompany.Domain.Analytics.ManagementReportSet.FinalityStatement",
+        "MediaCompany.Domain.Analytics.CeoBrief.Week",
+        "MediaCompany.Domain.Analytics.CeoBrief.FinalityStatement",
+        "MediaCompany.Domain.Analytics.DashboardTile.Rendering",
+        "MediaCompany.Domain.Analytics.RecordedControllerDecision.BasisStatement",
+        "MediaCompany.Domain.Analytics.RecordedControllerDecision.TierStatement",
+        "MediaCompany.Domain.Analytics.RecordedControllerDecision.CompanyBasisStatement",
+        "MediaCompany.Domain.Analytics.RecordedControllerDecision.ReservationStatement",
+        "MediaCompany.Deterministic.Analytics.ManagementComposers.TaskName",
+        "MediaCompany.Deterministic.Analytics.RuleCatalogue.TaskName",
+        "MediaCompany.Deterministic.Analytics.BriefComposer.TaskName",
+        "MediaCompany.Deterministic.Analytics.DashboardComposer.TaskName",
+        "MediaCompany.Deterministic.Routing.ComparableRuns.TaskName",
+        "MediaCompany.Deterministic.Routing.ComparableRuns.Unit",
     ];
 
     /// <summary>
@@ -2029,6 +2302,25 @@ internal static class ProbeReadingAChannelKey
 
 /// <summary>An economics-shaped probe carrying a bare utilisation percentage, which the member rule must refuse.</summary>
 internal sealed record ProbeGoverningReadingWithABarePercent(MediaCompany.Domain.Analytics.MeasurementQuantity BookedSpend, decimal UtilisationPercent);
+
+/// <summary>A report-line-shaped probe carrying a bare count, which the member rule must refuse.</summary>
+internal sealed record ProbeReportLineWithABareCount(MediaCompany.Domain.Analytics.LineFigure Figure, long AwaitingCount);
+
+/// <summary>A dashboard-shaped probe that holds a unit of work and records through it, which the management scan must find.</summary>
+internal sealed class ProbeDashboardThatRecords(IUnitOfWork unitOfWork)
+{
+    public async Task ApproveAsync(CancellationToken ct)
+    {
+        await using var transaction = await unitOfWork.BeginAsync(ct);
+        await transaction.CommitAsync(ct);
+    }
+}
+
+/// <summary>A composer-shaped probe that reads the process clock, which the management scan must find.</summary>
+internal static class ProbeComposerReadingTheProcessClock
+{
+    public static DateTimeOffset Instant() => DateTimeOffset.UtcNow;
+}
 
 /// <summary>A probe that reads a base configuration key, which the configuration scan must find.</summary>
 internal static class ProbeReadingAConfigurationKey

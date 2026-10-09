@@ -38,8 +38,8 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
     /// <summary>
     /// The governing readings, as common table expressions over the booking month, shared by the snapshot
     /// read and the readings-only read. The headroom is the delivered minimum over the governing channel and
-    /// department budgets, CAPPED by what remains of the company's metered allotment (the interim answer on
-    /// the allotment: it caps each estimate exactly as channel headroom does).
+    /// department budgets, CAPPED by what remains of the company's metered allotment, the owner's decided company ceiling (the owner's
+    /// decision of 2026-10-09): it caps each estimate exactly as channel headroom does.
     /// </summary>
     private const string ReadingCtes =
         $"""
@@ -351,6 +351,26 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
             header.Parameters.AddWithValue("reservation_statement", decision.ReservationStatement);
             header.Parameters.AddWithValue("observations_ranked_on", (long)selection.ObservationsRankedOn.Count);
             await header.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        // THE HELD OUTCOME (the AI-management change, decision D-006 of its design), beside the decision on the
+        // same transaction, at the reserved instant the operation was booked at; the record's own check refuses
+        // it below the horizon or at any other instant.
+        if (decision.Held is { } held)
+        {
+            await using var row = new NpgsqlCommand(
+                $"""
+                INSERT INTO admission_held_outcomes (operation_id, reason, held_at, escalates_at, hold_timeout, escalates_to_owner)
+                VALUES (@operation_id, @reason, {ReservedInstant}, @escalates_at, @hold_timeout, @escalates_to_owner)
+                """,
+                _connection,
+                _transaction);
+            row.Parameters.AddWithValue("operation_id", decision.Operation.Value);
+            row.Parameters.AddWithValue("reason", held.Reason.ToString());
+            row.Parameters.AddWithValue("escalates_at", held.EscalatesAt);
+            row.Parameters.Add("hold_timeout", NpgsqlDbType.Interval).Value = held.HoldTimeout;
+            row.Parameters.AddWithValue("escalates_to_owner", held.EscalatesToOwner);
+            await row.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
         foreach (var reading in controller.Readings)
