@@ -1863,3 +1863,13 @@ amount, the level-to-tier mapping, one unstated cost refusing the month, provide
 cached-unit price, deferred requests not re-admitted) and the Wave 6 questions in section 3.2
 remain open; the interim rulings stand. **No spend, account, channel creation or publication is
 authorised.**
+
+---
+
+## CEO-C-700 — Correction to the section cited by CEO-D-701
+
+**Recorded 2026-10-09 by the orchestrating session.** `CEO-D-701` and the ticket `MC-9` cite
+master plan section 18 for "ten comparable runs per task". The sentence is in **section 16**
+(Agent Benchmarking, review cadence); section 18 is the content pipeline. The ticket's "section 64"
+is a section of the source brief, not of the master plan, which has 41 sections. The scope agent
+caught both. The owner's decision itself is unchanged. Nothing is renumbered.
