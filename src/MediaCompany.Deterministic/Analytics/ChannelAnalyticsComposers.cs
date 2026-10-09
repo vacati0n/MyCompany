@@ -61,6 +61,12 @@ public static class ChannelAnalyticsComposers
         + "includes is not carried by the operation record and is read as its own quantity, unmeasured while no "
         + "record of a standing commitment exists, so it is neither folded into the utilisation nor presented as zero";
 
+    /// <summary>Where a channel's budget amount is recorded (the AI-economics change, decision D-011).</summary>
+    public const string BudgetRegister = "the budget register";
+
+    /// <summary>Where the approved envelope is recorded (the AI-economics change, decision D-011).</summary>
+    public const string EnvelopeConstant = "the owner-approved monthly envelope, a code constant of the accounting domain";
+
     /// <summary>What an approval listing is and is not.</summary>
     public const string ApprovalListingStatement =
         "a view over the recorded gate state: the item versions of this channel whose latest recorded transition "
@@ -373,7 +379,9 @@ public static class ChannelAnalyticsComposers
             {
                 Channel = row.Channel,
                 Standing = ChannelPartitionStanding.InRegister,
-                BudgetAmount = none,
+
+                // A RECORDED AMOUNT that was not recorded, never an observation and never zero.
+                BudgetAmount = RecordedAmount.Missing(missing),
                 Utilised = AnalyticsComposers.FromOperations(
                     row.Operations, row.Utilised, $"no operation is recorded for {label} in period {month:yyyy-MM}"),
                 Utilisation = none,
@@ -381,7 +389,8 @@ public static class ChannelAnalyticsComposers
             };
         }
 
-        var budgetAmount = MeasurementQuantity.Observed(amount.Amount, amount.Currency);
+        // A recorded amount, labelled as recorded in the budget register: nobody observed a budget.
+        var budgetAmount = RecordedAmount.Of(amount, BudgetRegister);
 
         if (row.Operations == 0 || row.UtilisationPercent is not { } percent)
         {
@@ -431,7 +440,8 @@ public static class ChannelAnalyticsComposers
 
         return new CompanyCeilingReading
         {
-            Ceiling = MeasurementQuantity.Observed(summary.Ceiling.Amount, summary.Ceiling.Currency),
+            // The envelope is a recorded amount, a code constant, never an observation.
+            Ceiling = RecordedAmount.Of(summary.Ceiling, EnvelopeConstant),
             CompanyCost = AnalyticsComposers.FromOperations(
                 summary.CompanyOperations, summary.CompanyCost, $"no operation is recorded for the company in period {month:yyyy-MM}"),
             Utilisation = utilisation,

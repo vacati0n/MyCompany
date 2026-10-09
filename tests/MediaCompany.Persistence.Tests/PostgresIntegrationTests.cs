@@ -122,8 +122,10 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
             await transaction.CommitAsync(CancellationToken.None);
         }
 
+        // Re-pointed by the AI-economics change: the retired item-cost member's figure is the item
+        // summary's total, the same view and the same datastore aggregation.
         var reader = new NpgsqlCostReader(Source);
-        var stored = await reader.CostForItemAsync(Item, CancellationToken.None);
+        var stored = (await reader.ItemSummaryAsync(Item, CancellationToken.None)).Total;
 
         // Recomputed independently from the seeded prices: 1000 * 0.000003 + 500 * 0.000015.
         var expected = (1_000m * 0.000_003m) + (500m * 0.000_015m);
@@ -147,7 +149,7 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
             await transaction.CommitAsync(CancellationToken.None);
         }
 
-        var before = await new NpgsqlCostReader(Source).CostForItemAsync(Item, CancellationToken.None);
+        var before = (await new NpgsqlCostReader(Source).ItemSummaryAsync(Item, CancellationToken.None)).Total;
 
         await ExecuteAsync(
             """
@@ -162,7 +164,7 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
                 c.Parameters.Add("today", NpgsqlDbType.Date).Value = Period;
             });
 
-        var after = await new NpgsqlCostReader(Source).CostForItemAsync(Item, CancellationToken.None);
+        var after = (await new NpgsqlCostReader(Source).ItemSummaryAsync(Item, CancellationToken.None)).Total;
 
         Assert.Equal(before.Amount, after.Amount);
     }
@@ -527,10 +529,12 @@ public sealed class PostgresIntegrationTests : IAsyncLifetime
             await transaction.CommitAsync(CancellationToken.None);
         }
 
-        var cost = await new NpgsqlCostReader(Source)
-            .CostForDeterministicSetAsync(Period, CancellationToken.None);
+        // Re-pointed by the AI-economics change: the retired deterministic-set member's figure is carried
+        // by the operation partition, with the month's finality.
+        var partition = await new NpgsqlChannelPartitionReader(Source).OperationsAsync(Period, CancellationToken.None);
 
-        Assert.Equal(0m, cost.Amount);
+        Assert.Equal(1L, partition.Company.DeterministicOperations);
+        Assert.Equal(0m, partition.Company.DeterministicSetCost.Amount);
     }
 
     // -----------------------------------------------------------------------

@@ -84,6 +84,15 @@ public sealed record OperationRecord
     public ReasoningTier? ReasoningTierServed { get; init; }
 
     /// <summary>
+    /// Whether the datastore could state this operation's cost (the AI-economics change, decision D-004
+    /// of its design): false where a consumed input, output or cached unit had no price row in force at
+    /// the booking instant, or any other unit was consumed; null where the record does not say, as for
+    /// every row recorded before the change, which every reader reads as not stated. A computed cost of
+    /// zero on a row whose cost is not stated is not an observed zero.
+    /// </summary>
+    public bool? CostStated { get; init; }
+
+    /// <summary>
     /// Whether the tier evidence is present for this record. A record where the request named a
     /// tier and the route stated one is testable; anything else is recorded as absent and says so.
     /// </summary>

@@ -54,6 +54,14 @@ public sealed record CapabilityRequest
     public EstimatedUnits EstimatedUnits { get; }
     public TimeSpan HoldTimeout { get; }
     public ReducedFloorPolicy ReducedFloorPolicy { get; }
+
+    /// <summary>
+    /// The representative task this request performs, or none (the AI-economics change, decision D-003
+    /// of its design). Optional, and absent by default, so every delivered construction compiles and
+    /// behaves as before: with no task class there is nothing to compare evidence by, and selection
+    /// returns the configured ordering, labelled as such and naming the absent task class.
+    /// </summary>
+    public TaskClass? TaskClass { get; init; }
 }
 
 /// <summary>

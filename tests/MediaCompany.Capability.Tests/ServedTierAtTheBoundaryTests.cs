@@ -34,8 +34,8 @@ public sealed class ServedTierAtTheBoundaryTests
         var routes = new FakeRouteRegistry();
         var availability = new FakeAvailabilityLedger();
         var registers = new FakeRegisters();
-        var budget = new FakeBudgetReader();
         var work = new FakeUnitOfWork();
+        work.Admission.Instant = Now;
 
         registers.Accounts.Add(new ProviderAccount(
             Account, "alpha", "paid tier", new DateOnly(2026, 9, 1), ProviderAccountStatus.Active));
@@ -46,7 +46,7 @@ public sealed class ServedTierAtTheBoundaryTests
         var broker = new CredentialBroker(secrets, () => clock.UtcNow, TimeSpan.FromMinutes(5));
 
         var gateway = CapabilityGatewayFactory.Create(
-            routes, availability, registers, budget, work, broker, broker, clock,
+            routes, availability, registers, work, broker, broker, clock,
             endpoints: [], httpClient: new HttpClient());
 
         return new Harness(gateway, routes, availability, work);
@@ -83,23 +83,29 @@ public sealed class ServedTierAtTheBoundaryTests
     /// <summary>
     /// The served value is the ROUTE's stated tier, even where it differs from the requested one.
     ///
-    /// The two differ here deliberately: the request asks Deep and the admitting route states
-    /// Light, and the record carries both, which is the only shape in which the split is testable.
+    /// The two differ here deliberately: the request asks Light and the admitting route states
+    /// Deep, and the record carries both, which is the only shape in which the split is testable.
+    ///
+    /// Re-pointed by the AI-economics change (decision D-005 of its design): the delivered shape asked
+    /// Deep of a route stating Light, and a route stating a LOWER tier than requested is no longer
+    /// served except as a recorded controller downgrade, so the request is now held. The property under
+    /// test — the served value is the route's, not the request's — is unchanged, and is shown here with a
+    /// route stating a HIGHER tier, which is served.
     /// </summary>
     [Fact]
     public async Task TheServedTierIsReadFromTheRouteAndNotFromTheRequest()
     {
         var h = Build();
-        var route = HoldRoute(ReasoningTier.Light);
+        var route = HoldRoute(ReasoningTier.Deep);
         h.Routes.Routes.Add(route);
         h.Availability.States[route.Id] = RouteAvailability.Serving(route.Id, Now);
 
-        await h.Gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
+        await h.Gateway.ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None);
 
         var operation = Assert.Single(h.Work.Operations);
 
-        Assert.Equal(ReasoningTier.Deep, operation.ReasoningTierRequested);
-        Assert.Equal(ReasoningTier.Light, operation.ReasoningTierServed);
+        Assert.Equal(ReasoningTier.Light, operation.ReasoningTierRequested);
+        Assert.Equal(ReasoningTier.Deep, operation.ReasoningTierServed);
         Assert.NotEqual(operation.ReasoningTierRequested, operation.ReasoningTierServed);
         Assert.True(operation.CarriesTierEvidence);
     }
@@ -145,7 +151,11 @@ public sealed class ServedTierAtTheBoundaryTests
         Assert.False(operation.CarriesTierEvidence);
     }
 
-    /// <summary>A substitute route's stated tier reaches the record the same way.</summary>
+    /// <summary>
+    /// A substitute route's stated tier reaches the record the same way. Re-pointed by the AI-economics
+    /// change for the same reason as above: the substitute states a higher tier than requested, which is
+    /// served, rather than a lower one, which is no longer served outside a recorded downgrade.
+    /// </summary>
     [Fact]
     public async Task ASubstituteRoutesStatedTierReachesTheRecord()
     {
@@ -155,14 +165,38 @@ public sealed class ServedTierAtTheBoundaryTests
             new RouteTarget.NonAiSubstitute(DeterministicTaskRegistry.MetadataTemplatePopulation),
             new QualityRating(75), new ContextCapacity(int.MaxValue),
             "non-AI substitute", new DateOnly(2026, 9, 20),
-            ReasoningTier.Light);
+            ReasoningTier.Standard);
 
         h.Routes.Routes.Add(substitute);
         h.Availability.States[substitute.Id] = RouteAvailability.Serving(substitute.Id, Now);
 
-        await h.Gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
+        await h.Gateway.ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None);
 
         var operation = Assert.Single(h.Work.Operations);
-        Assert.Equal(ReasoningTier.Light, operation.ReasoningTierServed);
+        Assert.Equal(ReasoningTier.Standard, operation.ReasoningTierServed);
+    }
+
+    /// <summary>
+    /// The tier rule at the boundary (the AI-economics change, decision D-005): a request whose only
+    /// surviving route states a LOWER tier is held with its own reason, recorded at zero cost with no
+    /// served tier, and nothing is served below the requested tier without a recorded downgrade.
+    /// </summary>
+    [Fact]
+    public async Task ARouteStatingALowerTierIsNotServedWithoutADowngrade()
+    {
+        var h = Build();
+        var route = HoldRoute(ReasoningTier.Light);
+        h.Routes.Routes.Add(route);
+        h.Availability.States[route.Id] = RouteAvailability.Serving(route.Id, Now);
+
+        var outcome = await h.Gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
+
+        var held = Assert.IsType<CapabilityOutcome.Held>(outcome);
+        Assert.Equal(RefusalReason.NoRouteAtRequestedTier, held.Reason);
+        var operation = Assert.Single(h.Work.Operations);
+        Assert.Null(operation.ReasoningTierServed);
+        var decision = Assert.Single(h.Work.Decisions);
+        Assert.Null(decision.TierOutcome);
+        Assert.Contains("below Deep", decision.TierStatement, StringComparison.Ordinal);
     }
 }

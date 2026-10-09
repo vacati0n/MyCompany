@@ -30,6 +30,41 @@ public enum RefusalReason
     /// must never fail without one.
     /// </summary>
     CurrencyMismatch = 7,
+
+    // The AI-economics change (decisions D-004 and D-005 of its design). Each is its own reason, so a
+    // refusal names what refused it and is never read as another: in particular a missing budget
+    // amount and unmeasured spend are never read as the budget exceeded.
+
+    /// <summary>
+    /// The governing channel reading has no budget amount recorded for the booking month, so metered
+    /// work is refused; work costing nothing stays admissible.
+    /// </summary>
+    BudgetAmountNotRecorded = 8,
+
+    /// <summary>
+    /// A governing reading's booked spend cannot be stated, because an operation booked into the month
+    /// for its scope carries an unstated cost, so metered work is refused; work costing nothing stays
+    /// admissible.
+    /// </summary>
+    SpendUnmeasured = 9,
+
+    /// <summary>A governing reading reached the 90 percent threshold, so metered work is deferred and held.</summary>
+    DeferredAtThreshold = 10,
+
+    /// <summary>A governing reading reached the 100 percent threshold, so metered work is refused.</summary>
+    RefusedAtThreshold = 11,
+
+    /// <summary>
+    /// A provider route's model has no price in force at the booking instant for one of the input,
+    /// output and cached unit kinds, so it is removed rather than estimated at zero.
+    /// </summary>
+    PriceNotInForce = 12,
+
+    /// <summary>
+    /// Every surviving route states a lower reasoning tier than requested, and no controller downgrade
+    /// was directed, so none is served.
+    /// </summary>
+    NoRouteAtRequestedTier = 13,
 }
 
 /// <summary>
@@ -48,7 +83,14 @@ public abstract record CapabilityResolution
         Route Route,
         QualityRating EffectiveFloorApplied,
         bool FloorWasReduced,
-        IReadOnlyList<RouteId> RoutesTried) : CapabilityResolution;
+        IReadOnlyList<RouteId> RoutesTried) : CapabilityResolution
+    {
+        /// <summary>Where the route stands against the requested reasoning tier (the AI-economics change).</summary>
+        public TierOutcome TierOutcome { get; init; } = TierOutcome.Untiered;
+
+        /// <summary>Whether the route was taken on evidence or on the configured ordering (the AI-economics change).</summary>
+        public SelectionBasis Basis { get; init; } = SelectionBasis.Configured;
+    }
 
     /// <summary>
     /// No route at or above the floor survived. The request is a first-class held state carrying

@@ -57,6 +57,11 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
         Availability = new NpgsqlRouteAvailabilityWriter(connection, transaction);
         Dispatches = new NpgsqlDispatchWriter(connection, transaction);
         Dossiers = new NpgsqlDossierWriter(connection, transaction);
+
+        // The AI-economics change: the admission ledger, whose reservation lives exactly as long as this
+        // transaction, and the benchmark writer.
+        Admission = new NpgsqlAdmissionLedger(connection, transaction);
+        Benchmarks = new NpgsqlBenchmarkWriter(connection, transaction);
     }
 
     public IAuditAppender Audit { get; }
@@ -74,6 +79,10 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
     public IDispatchWriter Dispatches { get; }
 
     public IDossierWriter Dossiers { get; }
+
+    public IAdmissionLedger Admission { get; }
+
+    public IBenchmarkWriter Benchmarks { get; }
 
     public async Task CommitAsync(CancellationToken cancellationToken)
     {

@@ -92,6 +92,20 @@ public readonly record struct RouteId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+/// <summary>A corpus entry of the benchmark record: a reference only, with no content (the AI-economics change).</summary>
+public readonly record struct CorpusEntryId(Guid Value)
+{
+    public static CorpusEntryId New() => new(Guid.NewGuid());
+    public override string ToString() => Value.ToString();
+}
+
+/// <summary>One benchmark observation (the AI-economics change).</summary>
+public readonly record struct BenchmarkObservationId(Guid Value)
+{
+    public static BenchmarkObservationId New() => new(Guid.NewGuid());
+    public override string ToString() => Value.ToString();
+}
+
 /// <summary>
 /// An item version. An approval binds to one of these exactly, per constraint C-016.
 /// </summary>

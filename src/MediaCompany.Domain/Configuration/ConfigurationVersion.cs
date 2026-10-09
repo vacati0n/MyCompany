@@ -204,3 +204,31 @@ public static class ChannelConfigurationKeys
         && scope.StartsWith(ScopePrefix, StringComparison.Ordinal)
         && Guid.TryParseExact(scope[ScopePrefix.Length..], "D", out _);
 }
+
+/// <summary>
+/// The company scope form (the AI-economics change, decision D-010 of its design), beside the channel
+/// scope form.
+///
+/// A company scope names exactly ONE company register identifier. The production and publishing keys
+/// are company-wide settings shared by every channel of the one legal entity — per-channel variation is
+/// carried by the channel key set — so the configuration store admits each of them only under a company
+/// scope, and only where that key's own delivered forbidden-fragment rule finds no control. No fragment
+/// rule changes: the publishing keys carry fragments the channel rule forbids, so admitting them under a
+/// channel scope would weaken that rule, and they are not admitted there.
+///
+/// No value for any company is recorded by this change, in code, seed or migration.
+/// </summary>
+public static class CompanyConfigurationScope
+{
+    /// <summary>The prefix of every company scope; the rest of the scope is the company's register identifier.</summary>
+    public const string ScopePrefix = "company:";
+
+    /// <summary>The scope that holds the company's production and publishing values.</summary>
+    public static string ScopeFor(CompanyId company) => ScopePrefix + company.Value.ToString("D");
+
+    /// <summary>Whether a scope names exactly one company.</summary>
+    public static bool IsCompanyScope(string scope) =>
+        scope is not null
+        && scope.StartsWith(ScopePrefix, StringComparison.Ordinal)
+        && Guid.TryParseExact(scope[ScopePrefix.Length..], "D", out _);
+}

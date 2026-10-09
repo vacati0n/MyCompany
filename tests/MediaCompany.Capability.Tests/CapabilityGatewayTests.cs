@@ -26,7 +26,6 @@ public sealed class CapabilityGatewayTests
         FakeRouteRegistry Routes,
         FakeAvailabilityLedger Availability,
         FakeRegisters Registers,
-        FakeBudgetReader Budget,
         FakeUnitOfWork Work,
         TestClock Clock);
 
@@ -36,24 +35,26 @@ public sealed class CapabilityGatewayTests
         var routes = new FakeRouteRegistry();
         var availability = new FakeAvailabilityLedger();
         var registers = new FakeRegisters();
-        var budget = new FakeBudgetReader();
         var work = new FakeUnitOfWork();
 
         registers.Accounts.Add(new ProviderAccount(Account, "alpha", "paid tier", new DateOnly(2026, 9, 1), ProviderAccountStatus.Active));
         registers.Models.Add(new Model(Model, Account, new QualityRating(90), new ContextCapacity(200_000), "text"));
-        registers.Prices.Add(new ModelPrice(
-            ModelPriceId.New(), Model, PriceUnitKind.InputUnit, 0.000_003m, "USD",
-            "provider price page, ESTIMATE, not verified first-hand", new DateOnly(2026, 9, 1),
-            Now.AddDays(-30), null));
+
+        // Prices are read on the admission transaction at the reserved instant (the AI-economics change),
+        // and a model is estimable only where every metered unit kind is priced; the delivered harness
+        // priced the input unit alone, which would now remove the route as unpriced rather than read the
+        // missing prices as zero. ESTIMATES, demonstration parameters, not verified first-hand.
+        work.Admission.Instant = Now;
+        work.Admission.Price(Model, 0.000_003m, 0.000_015m, 0.000_000_3m, Now.AddDays(-30));
 
         var secrets = new FakeSecretStore();
         var broker = new CredentialBroker(secrets, () => clock.UtcNow, TimeSpan.FromMinutes(5));
 
         var gateway = CapabilityGatewayFactory.Create(
-            routes, availability, registers, budget, work, broker, broker, clock,
+            routes, availability, registers, work, broker, broker, clock,
             endpoints: [], httpClient: new HttpClient());
 
-        return new Harness(gateway, routes, availability, registers, budget, work, clock);
+        return new Harness(gateway, routes, availability, registers, work, clock);
     }
 
     private static CapabilityInvocationContext Context() => new()
@@ -273,7 +274,7 @@ public sealed class CapabilityGatewayTests
         var route = ProviderRoute(RouteTier.Primary);
         h.Routes.Routes.Add(route);
         h.Availability.States[route.Id] = RouteAvailability.Serving(route.Id, Now);
-        h.Budget.Remaining = Money.Zero();
+        h.Work.Admission.Headroom = Money.Zero();
 
         var outcome = await h.Gateway.ExecuteAsync(Request(floor: 70), Context(), CancellationToken.None);
 
@@ -282,8 +283,10 @@ public sealed class CapabilityGatewayTests
     }
 
     /// <summary>
-    /// Admission reads its headroom for the DATASTORE'S booking month, the clock booking and the
-    /// evaluation are decided on, and never for a month taken from the process clock.
+    /// Admission reads its headroom and its controller readings for the DATASTORE'S booking month, on
+    /// the admission transaction, once each, and never for a month taken from the process clock: with
+    /// the process clock in October and the reserved instant in November, the decision is recorded
+    /// against November (re-pointed by the AI-economics change from the retired budget reader).
     /// </summary>
     [Fact]
     public async Task AdmissionReadsHeadroomForTheDatastoresBookingMonth()
@@ -292,12 +295,16 @@ public sealed class CapabilityGatewayTests
         var route = ProviderRoute(RouteTier.Primary);
         h.Routes.Routes.Add(route);
         h.Availability.States[route.Id] = RouteAvailability.Serving(route.Id, Now);
-        h.Budget.Remaining = Money.Zero();
-        h.Budget.BookingMonth = new DateOnly(2026, 11, 1);
+        h.Work.Admission.Headroom = Money.Zero();
+        h.Work.Admission.Instant = DateTimeOffset.Parse("2026-11-01T00:00:01Z");
+        h.Work.Admission.Price(Model, 0.000_003m, 0.000_015m, 0.000_000_3m, Now.AddDays(-30));
 
         await h.Gateway.ExecuteAsync(Request(floor: 70), Context(), CancellationToken.None);
 
-        Assert.Equal(1, h.Budget.BookingMonthReads);
-        Assert.Equal(0, h.Budget.CallerMonthReads);
+        Assert.Equal(1, h.Work.Admission.Reservations);
+        Assert.Equal(1, h.Work.Admission.GoverningReads);
+        var decision = Assert.Single(h.Work.Decisions);
+        Assert.Equal(new DateOnly(2026, 11, 1), decision.Controller.BookingMonth);
+        Assert.Equal(h.Work.Admission.Instant, decision.Controller.DecidedAt);
     }
 }

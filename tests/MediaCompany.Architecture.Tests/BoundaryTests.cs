@@ -824,8 +824,12 @@ public sealed class BoundaryTests
         var declared = new Dictionary<Type, string[]>
         {
             [typeof(IApprovalQueueReader)] = ["AwaitingOwnerApprovalAsync", "DecidedAsync"],
-            [typeof(IChannelPartitionReader)] = ["OperationsAsync", "CloseMonthAsync", "DossiersAsync", "ThroughputAsync", "BudgetsAsync"],
+            [typeof(IChannelPartitionReader)] =
+                ["OperationsAsync", "CloseMonthAsync", "DossiersAsync", "ThroughputAsync", "BudgetsAsync", "TierDistributionAsync"],
             [typeof(IItemRegister)] = ["RecordedChannelAsync"],
+
+            // The AI-economics change: the benchmark record's reader has read members only.
+            [typeof(IBenchmarkReader)] = ["ObservationsAsync", "RecordAsync"],
         };
 
         foreach (var (port, reads) in declared)
@@ -855,11 +859,12 @@ public sealed class BoundaryTests
         foreach (var name in ProductionAssemblies)
         {
             var assembly = Load(name);
-            Assert.Equal(new Version(1, 3, 0, 0), assembly.GetName().Version);
+            // 1.4.0, decided at the Design Gate of the AI-economics change.
+            Assert.Equal(new Version(1, 4, 0, 0), assembly.GetName().Version);
 
             var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             Assert.NotNull(informational);
-            Assert.StartsWith("1.3.0", informational, StringComparison.Ordinal);
+            Assert.StartsWith("1.4.0", informational, StringComparison.Ordinal);
         }
     }
 
@@ -1067,6 +1072,32 @@ public sealed class BoundaryTests
         // The measure catalogue, which is where the six revenue-derived figures are declared as
         // deferred measures and therefore names the closed figure set.
         "MediaCompany.Deterministic.Reporting.MeasureCatalogue",
+
+        // Wave 7, the AI-economics capability. The ports and drafts the benchmark record and the admission
+        // ledger are reached through, declared with the other ports.
+        "MediaCompany.Application.Ports.IAdmissionLedger",
+        "MediaCompany.Application.Ports.AdmissionDecisionDraft",
+        "MediaCompany.Application.Ports.IBenchmarkWriter",
+        "MediaCompany.Application.Ports.BenchmarkObservationDraft",
+        "MediaCompany.Application.Ports.IBenchmarkReader",
+        "MediaCompany.Application.Ports.BenchmarkRecordSummary",
+
+        // The rule-determined rules that read the controller decision and the evidence table: the
+        // resolution function and its inputs and record, the evidence selection and its outcome, and the
+        // cost controller, which is the one composing site of every governing reading's cases.
+        "MediaCompany.Deterministic.Routing.ResolutionInputs",
+        "MediaCompany.Deterministic.Routing.ResolutionRecord",
+        "MediaCompany.Deterministic.Routing.RouteResolver",
+        "MediaCompany.Deterministic.Routing.EvidenceSelection",
+        "MediaCompany.Deterministic.Routing.SelectionOutcome",
+        "MediaCompany.Deterministic.Accounting.CostController",
+
+        // The adapters that implement the added ports, below the boundary, and their one row encoding.
+        "MediaCompany.Persistence.NpgsqlAdmissionLedger",
+        "MediaCompany.Persistence.NpgsqlBenchmarkWriter",
+        "MediaCompany.Persistence.NpgsqlBenchmarkReader",
+        "MediaCompany.Persistence.MeasurementColumns",
+        "MediaCompany.Persistence.BenchmarkRows",
     ];
 
     /// <summary>
@@ -1141,6 +1172,34 @@ public sealed class BoundaryTests
         "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ApprovalListingStatement",
         "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ApprovalWorkloadStatement",
         "MediaCompany.Deterministic.Reporting.MeasureCatalogue.CycleTimeClockLimit",
+
+        // Wave 7, the AI-economics capability. The units an observation is stated in, the statement each
+        // benchmark, selection, controller and tier-distribution reading carries, the assumed split and
+        // the relation statement, the registers a recorded amount names, and the task names, the tier and
+        // reservation statements and the company basis the rules compose; each is authored by the code,
+        // never copied out of a record.
+        "MediaCompany.Domain.Analytics.BenchmarkObservation.QualityRatingUnit",
+        "MediaCompany.Domain.Analytics.BenchmarkObservation.LatencyUnit",
+        "MediaCompany.Domain.Analytics.BenchmarkRecordReading.Statement",
+        "MediaCompany.Domain.Analytics.SelectionRecord.Statement",
+        "MediaCompany.Domain.Analytics.GoverningReading.Statement",
+        "MediaCompany.Domain.Analytics.ControllerDecision.CompanyBasisStatement",
+        "MediaCompany.Domain.Analytics.TierDistributionReading.AssumedSplit",
+        "MediaCompany.Domain.Analytics.TierDistributionReading.RelationStatement",
+        "MediaCompany.Deterministic.Analytics.EconomicsComposers.BenchmarkStatement",
+        "MediaCompany.Deterministic.Analytics.EconomicsComposers.AssumedSplit",
+        "MediaCompany.Deterministic.Analytics.EconomicsComposers.RelationStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.BudgetRegister",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.EnvelopeConstant",
+        "MediaCompany.Application.Ports.AdmissionDecisionDraft.TierStatement",
+        "MediaCompany.Application.Ports.AdmissionDecisionDraft.ReservationStatement",
+        "MediaCompany.Deterministic.Routing.ResolutionRecord.TierStatement",
+        "MediaCompany.Deterministic.Routing.RouteResolver.TaskName",
+        "MediaCompany.Deterministic.Routing.EvidenceSelection.TaskName",
+        "MediaCompany.Deterministic.Accounting.CostController.TaskName",
+        "MediaCompany.Deterministic.Accounting.CostController.CompanyBasisRecordedIn",
+        "MediaCompany.Deterministic.Accounting.CostController.ChannelBudgetRecordedIn",
+        "MediaCompany.Deterministic.Accounting.CostController.CompanyBasisStatement",
     ];
 
     /// <summary>
@@ -1567,6 +1626,8 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         public IRouteAvailabilityWriter Availability { get; } = new NoAvailability();
         public IDispatchWriter Dispatches { get; } = new NoDispatches();
         public IDossierWriter Dossiers { get; } = new NoDossiers();
+        public IAdmissionLedger Admission { get; } = new NoAdmission();
+        public IBenchmarkWriter Benchmarks { get; } = new NoBenchmarks();
 
         public Task CommitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -1596,6 +1657,36 @@ internal sealed class TerminalStateProbe : IUnitOfWork
             owner.Advances.Add((position, state));
             return Task.FromResult(ProbeClock.Instant + claimableAfter);
         }
+    }
+
+    /// <summary>The engine admits no capability request; reaching the admission ledger fails the probe.</summary>
+    private sealed class NoAdmission : IAdmissionLedger
+    {
+        public Task<BookingReservation> ReserveAsync(CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<MediaCompany.Domain.Registry.ModelPrice>> PricesInForceAsync(
+            IReadOnlyCollection<ModelId> models, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<GoverningReadingsSummary> GoverningReadingsAsync(
+            MediaCompany.Domain.Capabilities.Attribution attribution, MediaCompany.Domain.Accounting.Money allotment, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task<IReadOnlyList<MediaCompany.Domain.Analytics.BenchmarkObservation>> EvidenceAsync(
+            IReadOnlyCollection<RouteId> routes, MediaCompany.Domain.Capabilities.TaskClass taskClass,
+            CancellationToken ct) => throw new NotSupportedException();
+
+        public Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken ct) => throw new NotSupportedException();
+    }
+
+    /// <summary>The engine records no observation; reaching the benchmark writer fails the probe.</summary>
+    private sealed class NoBenchmarks : IBenchmarkWriter
+    {
+        public Task<DateTimeOffset> RegisterEntryAsync(
+            CorpusEntryId entry, MediaCompany.Domain.Capabilities.TaskClass taskClass, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task<MediaCompany.Domain.Analytics.BenchmarkObservation> RecordObservationAsync(
+            BenchmarkObservationDraft draft, CancellationToken ct) => throw new NotSupportedException();
     }
 
     private sealed class NoAudit : IAuditAppender

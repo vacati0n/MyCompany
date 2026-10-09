@@ -67,6 +67,94 @@ internal static class RecordHorizonClosure
     }
 }
 
+/// <summary>
+/// The close-then-read transaction every month reading over the operation record takes (the
+/// multi-channel change, decision D-006 of its design), shared by every adapter that reads a month (the
+/// AI-economics change, decision D-007 of its design): the partition reader, the cost reader's period
+/// summary, the served-tier list and the benchmark reader all decide finality from the read that
+/// produced their figure, through this one discipline.
+/// </summary>
+internal static class MonthReads
+{
+    /// <summary>
+    /// Closes the month and reads it. The closure is attempted without waiting; when it is granted
+    /// the horizon is raised and the read is taken while the horizon is held exclusively, so no
+    /// operation can be stamped meanwhile. When every attempt meets an in-flight transaction, the
+    /// horizon is read AS STORED and the read is taken in one snapshot with it, which is still
+    /// sound: a horizon at or after the month's end was set while no writer was in flight, so every
+    /// operation of that month committed before it and is in the snapshot.
+    /// </summary>
+    internal static async Task<(MonthClosure Closure, T Read)> ReadAsync<T>(
+        NpgsqlDataSource dataSource,
+        DateOnly month,
+        Func<NpgsqlConnection, NpgsqlTransaction, CancellationToken, Task<T>> read,
+        CancellationToken cancellationToken)
+    {
+        if (month.Day != 1)
+        {
+            throw new ArgumentException("A month is named by its first day.", nameof(month));
+        }
+
+        for (var attempt = 1; attempt <= RecordHorizonClosure.Attempts; attempt++)
+        {
+            await using (var connection = await dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false))
+            await using (var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false))
+            {
+                var horizon = await RecordHorizonClosure.TryCloseAsync(connection, transaction, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (horizon is { } raised)
+                {
+                    var earliest = await EarliestEntryAsync(connection, transaction, cancellationToken).ConfigureAwait(false);
+                    var result = await read(connection, transaction, cancellationToken).ConfigureAwait(false);
+                    await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                    return (new MonthClosure(month, ClosedByThisRead: true, raised, earliest), result);
+                }
+
+                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            if (attempt < RecordHorizonClosure.Attempts)
+            {
+                await Task.Delay(RecordHorizonClosure.RetryPause, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        await using var fallback = await dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var snapshot = await fallback
+            .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, cancellationToken).ConfigureAwait(false);
+
+        DateTimeOffset stored;
+        await using (var command = new NpgsqlCommand("SELECT horizon FROM audit_record_horizon WHERE only_row", fallback, snapshot))
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException("The record horizon is missing; the fifth schema resource creates it.");
+            }
+
+            stored = reader.GetFieldValue<DateTimeOffset>(0);
+        }
+
+        var first = await EarliestEntryAsync(fallback, snapshot, cancellationToken).ConfigureAwait(false);
+        var value = await read(fallback, snapshot, cancellationToken).ConfigureAwait(false);
+        await snapshot.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+        return (new MonthClosure(month, ClosedByThisRead: false, stored, first), value);
+    }
+
+    internal static async Task<DateTimeOffset?> EarliestEntryAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand("SELECT min(occurred_at) FROM audit_entries", connection, transaction);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+        return reader.IsDBNull(0) ? null : reader.GetFieldValue<DateTimeOffset>(0);
+    }
+}
+
 /// <summary>The item register: which channel an item is recorded against (the multi-channel change).</summary>
 public sealed class NpgsqlItemRegister : IItemRegister
 {
@@ -270,72 +358,87 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             closure, read.channels, read.company.Operations, read.company.Cost, read.company.Percent, ceiling);
     }
 
+    /// <summary>
+    /// The tier distribution of one month (the AI-economics change, decision D-006 of its design): per
+    /// served tier and for the operations stating none, and the period total, by grouping sets over the
+    /// same rows in ONE STATEMENT inside the delivered close-then-read transaction, so every additive
+    /// part sums exactly to the total and finality is the read's own.
+    /// </summary>
+    public async Task<TierDistributionSummary> TierDistributionAsync(DateOnly month, CancellationToken cancellationToken)
+    {
+        RequireMonth(month);
+
+        var (closure, read) = await ReadMonthAsync(
+            month,
+            async (connection, transaction, ct) =>
+            {
+                await using var command = new NpgsqlCommand(
+                    """
+                    SELECT reasoning_tier_served,
+                           GROUPING(reasoning_tier_served)                    AS is_total,
+                           count(*)                                           AS operations,
+                           COALESCE(sum(input_units), 0)::bigint              AS input_units,
+                           COALESCE(sum(output_units), 0)::bigint             AS output_units,
+                           COALESCE(sum(cached_units), 0)::bigint             AS cached_units,
+                           COALESCE(sum(computed_cost), 0)                    AS cost,
+                           COALESCE(min(currency), 'USD')                     AS currency,
+                           count(*) FILTER (WHERE cost_stated IS NOT TRUE)    AS unstated_costs
+                    FROM agent_costs
+                    WHERE period = @month
+                    GROUP BY GROUPING SETS ((reasoning_tier_served), ())
+                    """,
+                    connection,
+                    transaction);
+                command.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
+
+                var parts = new List<TierPartTotals>();
+                TierPartTotals? total = null;
+
+                await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+                while (await reader.ReadAsync(ct).ConfigureAwait(false))
+                {
+                    var totals = new TierPartTotals(
+                        reader.IsDBNull(0) ? null : Enum.Parse<ReasoningTier>(reader.GetString(0)),
+                        reader.GetInt64(2),
+                        reader.GetInt64(3),
+                        reader.GetInt64(4),
+                        reader.GetInt64(5),
+                        new Money(reader.GetDecimal(6), reader.GetString(7)),
+                        reader.GetInt64(8));
+
+                    if (reader.GetInt32(1) == 1)
+                    {
+                        total = totals;
+                    }
+                    else
+                    {
+                        parts.Add(totals);
+                    }
+                }
+
+                return (Parts: parts, Total: total ?? new TierPartTotals(null, 0, 0, 0, 0, Money.Zero(), 0));
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        return new TierDistributionSummary(
+            closure,
+            read.Parts,
+            read.Total,
+            read.Parts.Where(p => p.Tier is not null).Sum(p => p.Operations));
+    }
+
     // -----------------------------------------------------------------------
     // The month closure every month reading over the operation record takes
     // -----------------------------------------------------------------------
 
     private delegate Task<T> MonthRead<T>(NpgsqlConnection connection, NpgsqlTransaction transaction, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Closes the month and reads it. The closure is attempted without waiting; when it is granted
-    /// the horizon is raised and the read is taken while the horizon is held exclusively, so no
-    /// operation can be stamped meanwhile. When every attempt meets an in-flight transaction, the
-    /// horizon is read AS STORED and the read is taken in one snapshot with it, which is still
-    /// sound: a horizon at or after the month's end was set while no writer was in flight, so every
-    /// operation of that month committed before it and is in the snapshot.
-    /// </summary>
-    private async Task<(MonthClosure Closure, T Read)> ReadMonthAsync<T>(
+    /// <summary>Closes the month and reads it, through the one shared close-then-read discipline.</summary>
+    private Task<(MonthClosure Closure, T Read)> ReadMonthAsync<T>(
         DateOnly month,
         MonthRead<T> read,
-        CancellationToken cancellationToken)
-    {
-        for (var attempt = 1; attempt <= RecordHorizonClosure.Attempts; attempt++)
-        {
-            await using (var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false))
-            await using (var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false))
-            {
-                var horizon = await RecordHorizonClosure.TryCloseAsync(connection, transaction, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (horizon is { } raised)
-                {
-                    var earliest = await EarliestEntryAsync(connection, transaction, cancellationToken).ConfigureAwait(false);
-                    var result = await read(connection, transaction, cancellationToken).ConfigureAwait(false);
-                    await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-                    return (new MonthClosure(month, ClosedByThisRead: true, raised, earliest), result);
-                }
-
-                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            if (attempt < RecordHorizonClosure.Attempts)
-            {
-                await Task.Delay(RecordHorizonClosure.RetryPause, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        await using var fallback = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-        await using var snapshot = await fallback
-            .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, cancellationToken).ConfigureAwait(false);
-
-        DateTimeOffset stored;
-        await using (var command = new NpgsqlCommand("SELECT horizon FROM audit_record_horizon WHERE only_row", fallback, snapshot))
-        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
-        {
-            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            {
-                throw new InvalidOperationException("The record horizon is missing; the fifth schema resource creates it.");
-            }
-
-            stored = reader.GetFieldValue<DateTimeOffset>(0);
-        }
-
-        var first = await EarliestEntryAsync(fallback, snapshot, cancellationToken).ConfigureAwait(false);
-        var value = await read(fallback, snapshot, cancellationToken).ConfigureAwait(false);
-        await snapshot.CommitAsync(cancellationToken).ConfigureAwait(false);
-
-        return (new MonthClosure(month, ClosedByThisRead: false, stored, first), value);
-    }
+        CancellationToken cancellationToken) =>
+        MonthReads.ReadAsync(_dataSource, month, (connection, transaction, ct) => read(connection, transaction, ct), cancellationToken);
 
     // -----------------------------------------------------------------------
     // The statements
@@ -362,16 +465,11 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         return register;
     }
 
-    private static async Task<DateTimeOffset?> EarliestEntryAsync(
+    private static Task<DateTimeOffset?> EarliestEntryAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
-        CancellationToken cancellationToken)
-    {
-        await using var command = new NpgsqlCommand("SELECT min(occurred_at) FROM audit_entries", connection, transaction);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-        return reader.IsDBNull(0) ? null : reader.GetFieldValue<DateTimeOffset>(0);
-    }
+        CancellationToken cancellationToken) =>
+        MonthReads.EarliestEntryAsync(connection, transaction, cancellationToken);
 
     private static async Task<(Dictionary<ChannelId, OperationTotals> Channels, OperationTotals Company, Money Variance)> OperationTotalsAsync(
         NpgsqlConnection connection,

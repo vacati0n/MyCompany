@@ -1,5 +1,8 @@
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Audit;
+using MediaCompany.Domain.Capabilities;
+using MediaCompany.Domain.Registry;
 using MediaCompany.Domain.Dossier;
 using MediaCompany.Domain.Work;
 
@@ -68,7 +71,161 @@ public interface IWorkTransaction : IAsyncDisposable
     /// </summary>
     IDossierWriter Dossiers { get; }
 
+    /// <summary>
+    /// The admission ledger (the AI-economics change, decision D-001 of its design): the booking
+    /// instant this transaction reserves, the prices, governing readings and evidence read at it, and
+    /// the decision record written on it.
+    ///
+    /// Reachable ONLY from a transaction, because the reservation IS a property of the transaction: the
+    /// shared hold on the record horizon that keeps the reserved instant bookable lasts exactly as long
+    /// as the transaction does, and the reserved instant is held by the datastore for this transaction
+    /// alone, so no caller code carries it.
+    /// </summary>
+    IAdmissionLedger Admission { get; }
+
+    /// <summary>
+    /// The benchmark record's writer (decision D-002 of the AI-economics design), reachable only from a
+    /// transaction so an observation and the operation it references commit together or not at all.
+    /// </summary>
+    IBenchmarkWriter Benchmarks { get; }
+
     Task CommitAsync(CancellationToken cancellationToken);
+}
+
+// ---------------------------------------------------------------------------
+// The AI-economics change: the admission ledger and the benchmark writer
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// One admission's ledger on its transaction (decision D-001 of the AI-economics design).
+///
+/// ONE BOOKING INSTANT, THE DATASTORE'S. <see cref="ReserveAsync"/> is the first statement of an
+/// admission: it reserves the later of the datastore's clock and the record horizon, under a SHARED
+/// hold on the horizon kept to the end of the transaction, exactly as the operation recorder stamps,
+/// and holds the instant in a transaction-local datastore setting. Every other member reads AT that
+/// instant, the operation recorder books at it, and the decision record is stamped with it, so the
+/// prices, the governing readings, the evidence, the operation and its decision are on one clock and in
+/// one month. Because the horizon is held shared from the reservation to the commit, and every closure
+/// takes it exclusively without waiting, no closure can pass the reserved instant meanwhile, so the
+/// month the operation is admitted against is the month it is booked into.
+///
+/// Each read is ONE STATEMENT, so a ranking or a controller decision never rests on reads taken at
+/// different instants.
+/// </summary>
+public interface IAdmissionLedger
+{
+    /// <summary>
+    /// Reserves the booking instant and returns it with its month. Calling it again on the same
+    /// transaction returns the same reservation.
+    /// </summary>
+    Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken);
+
+    /// <summary>The price rows in force AT THE RESERVED INSTANT for the named models, one per model and unit kind.</summary>
+    Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(IReadOnlyCollection<ModelId> models, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The governing readings of one attribution in the booking month, in one statement at the reserved
+    /// instant: the channel's recorded budget amount, its booked spend and utilisation; the company's
+    /// booked spend and its utilisation of <paramref name="companyAllotment"/>; and the delivered
+    /// headroom over the governing channel and department budgets. Every figure is the datastore's.
+    /// </summary>
+    Task<GoverningReadingsSummary> GoverningReadingsAsync(
+        Attribution attribution,
+        Money companyAllotment,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every observation of the named routes for one task class, with each one's cost and latency from
+    /// the operation it references, in one statement.
+    /// </summary>
+    Task<IReadOnlyList<BenchmarkObservation>> EvidenceAsync(
+        IReadOnlyCollection<RouteId> routes,
+        TaskClass taskClass,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Writes the decision record of one operation recorded on this transaction: the header stamped
+    /// with the reserved instant and month, one row per governing reading, one per candidate and one per
+    /// observation ranked on. The datastore refuses a decision whose instant is not its operation's.
+    /// </summary>
+    Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken);
+}
+
+/// <summary>The booking instant a transaction reserved, and its month (the first day, UTC).</summary>
+public sealed record BookingReservation(DateTimeOffset Instant, DateOnly Month);
+
+/// <summary>
+/// One scope's booked operations in a booking month, as the datastore aggregated them: how many, how
+/// many of them carry a cost that is not stated, and the booked cost.
+/// </summary>
+public sealed record ScopeSpend(long Operations, long UnstatedOperations, Money Booked);
+
+/// <summary>
+/// The governing readings of one attribution in one booking month, BARE, exactly as the datastore
+/// computed them in one statement. Nothing here decides a measurement case or an action: the cost
+/// controller decides both, at one site.
+/// </summary>
+public sealed record GoverningReadingsSummary(
+    DateOnly Month,
+    ChannelId Channel,
+    Money? ChannelBudgetAmount,
+    ScopeSpend ChannelSpend,
+    decimal? ChannelUtilisationPercent,
+    CompanyId? Company,
+    ScopeSpend CompanySpend,
+    decimal? CompanyUtilisationPercent,
+    Money Headroom);
+
+/// <summary>
+/// The decision record of one admission. Its instant and month are not carried: the ledger stamps the
+/// header with the reserved instant the datastore holds for the transaction.
+/// </summary>
+public sealed record AdmissionDecisionDraft
+{
+    public required OperationId Operation { get; init; }
+    public required ControllerDecision Controller { get; init; }
+    public required SelectionRecord Selection { get; init; }
+
+    /// <summary>The resolved route's tier outcome, or null where no route was resolved.</summary>
+    public TierOutcome? TierOutcome { get; init; }
+
+    /// <summary>What the tier rule did, including where no downgrade was available and why. Required.</summary>
+    public required string TierStatement { get; init; }
+
+    /// <summary>Whether the admitted month's reservation held to the booking, or was lost and re-taken. Required.</summary>
+    public required string ReservationStatement { get; init; }
+}
+
+/// <summary>
+/// The benchmark record's writer (decision D-002 of the AI-economics design). There is no update and
+/// no delete: every row is written once, and the datastore refuses an amendment for every writer.
+/// </summary>
+public interface IBenchmarkWriter
+{
+    /// <summary>
+    /// Registers a corpus entry: a REFERENCE ONLY, its identifier and task class, stamped by the
+    /// datastore. There is no member taking content, because the register has no column to hold it.
+    /// </summary>
+    Task<DateTimeOffset> RegisterEntryAsync(CorpusEntryId entry, TaskClass taskClass, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records one observation of an operation already recorded. Its route and model are the operation's
+    /// own, its cost and latency are read through the operation, and its instant is the datastore's.
+    /// </summary>
+    Task<BenchmarkObservation> RecordObservationAsync(BenchmarkObservationDraft draft, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The caller-supplied part of an observation: the entry, its task class, the operation and the
+/// quality in its case. It carries no cost, no latency, no route, no model and no instant.
+/// </summary>
+public sealed record BenchmarkObservationDraft
+{
+    public required BenchmarkObservationId Id { get; init; }
+    public required CorpusEntryId Entry { get; init; }
+    public required TaskClass TaskClass { get; init; }
+    public required OperationId Operation { get; init; }
+    public required MeasurementQuantity Quality { get; init; }
 }
 
 /// <summary>Gate state changes, written inside the transaction that records them.</summary>
@@ -99,9 +256,31 @@ public interface IGateWriter
 public sealed class GateStateConflictException : InvalidOperationException
 {
     public GateStateConflictException(string message, Exception? inner = null)
-        : base(message, inner)
+        : this(GateConflictReason.FromStateNotRecorded, message, inner)
     {
     }
+
+    public GateStateConflictException(GateConflictReason reason, string message, Exception? inner = null)
+        : base(message, inner)
+    {
+        Reason = reason;
+    }
+
+    /// <summary>Which of the datastore's gate checks refused the transition (the AI-economics change).</summary>
+    public GateConflictReason Reason { get; }
+}
+
+/// <summary>Why the record store refused a gate transition. Each is its own named check.</summary>
+public enum GateConflictReason
+{
+    /// <summary>The transition claimed a from-state that is not the item version's latest recorded state.</summary>
+    FromStateNotRecorded = 1,
+
+    /// <summary>
+    /// A transition of the item version is already recorded at the same instant (the AI-economics
+    /// change, decision D-009 of its design); the first admitted under the item hold is the one recorded.
+    /// </summary>
+    InstantAlreadyRecorded = 2,
 }
 
 /// <summary>
@@ -216,6 +395,12 @@ public interface IOperationRecorder
     /// that instant's month. The returned record carries the STORED instant, which is the one a
     /// month reading and a budget evaluation use; the draft's instant is the caller's observation
     /// and is not stored.
+    ///
+    /// WHERE THE TRANSACTION HOLDS A RESERVATION (the AI-economics change, decision D-001 of its
+    /// design) the operation is booked AT THE RESERVED INSTANT, so it lands in the month it was admitted
+    /// against; elsewhere it is stamped exactly as above. The record also states whether its cost is
+    /// stated: not where a consumed input, output or cached unit had no price row in force at the
+    /// booking instant, or any other unit was consumed, so a missing price never reads as a stated zero.
     /// </summary>
     Task<OperationRecord> RecordAsync(OperationDraft draft, CancellationToken cancellationToken);
 }

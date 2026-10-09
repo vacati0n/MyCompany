@@ -224,8 +224,14 @@ public sealed class PublicationGateService
         }
         catch (GateStateConflictException conflict)
         {
+            // Each datastore check is named by its own refusal (the AI-economics change, decision D-009 of
+            // its design): a stale from-state, or a transition already recorded at the same instant.
+            var refusal = conflict.Reason == GateConflictReason.InstantAlreadyRecorded
+                ? GateStepRefusal.TransitionAtRecordedInstant
+                : GateStepRefusal.RecordedStateChanged;
+
             return await RefuseAsync(
-                item, version, actor, step, from, GateStepRefusal.RecordedStateChanged, conflict.Message,
+                item, version, actor, step, from, refusal, conflict.Message,
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -483,7 +489,7 @@ public sealed class PublicationGateService
     }
 }
 
-/// <summary>Why a gate step was refused by name. Closed; a sixth reason is a code change.</summary>
+/// <summary>Why a gate step was refused by name. Closed; a seventh reason is a code change.</summary>
 public enum GateStepRefusal
 {
     /// <summary>The transition table admits no edge from the recorded state to awaiting rights check.</summary>
@@ -500,6 +506,12 @@ public enum GateStepRefusal
 
     /// <summary>Another writer changed the item's recorded state after it was read; the datastore refused the stale state.</summary>
     RecordedStateChanged = 5,
+
+    /// <summary>
+    /// A transition of the item version is already recorded at the same instant; the datastore recorded the first
+    /// admitted under the item hold and refused this one under its own name (the AI-economics change).
+    /// </summary>
+    TransitionAtRecordedInstant = 6,
 }
 
 /// <summary>

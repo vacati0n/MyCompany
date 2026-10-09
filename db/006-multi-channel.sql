@@ -1,18 +1,29 @@
--- Wave 6, the multi-channel capability. Additive throughout.
+-- Wave 6, the multi-channel capability. Additive throughout, with one delivered table extended.
 --
--- No delivered table, column, view or trigger is altered or dropped, every object here is created
--- only where it is absent, and every check it adds binds NEW ROWS ONLY, so every row already
--- recorded keeps the meaning it had. It is applied after every resource it depends on.
+-- No delivered table, column, view or trigger is dropped, and every object here is created only where
+-- it is absent. ONE DELIVERED TABLE IS ALTERED: the gate-transition record gains an order column, and
+-- every transition already recorded is BACK-FILLED once with a position in the order of its recorded
+-- instant (the order sequence is set past the highest position assigned). Every check it adds binds
+-- NEW ROWS ONLY, so every row already recorded keeps the meaning it had. It is applied after every
+-- resource it depends on.
 --
 -- NOTHING HERE RECORDS A CHANNEL, a company, a budget, a configuration value, a payment-account
--- observation, a first-publication condition, an approval or a gate transition. The one row this
--- file writes is the chain-head row, which holds no value of any kind. The company-level
--- payment-account record is created EMPTY, so the payment-account condition of every channel reads
--- ABSENT and refuses until the owner records an observation, exactly as before this file existed.
+-- observation, a first-publication condition, an approval or a gate transition. Two writes reach
+-- rows: the chain-head row, which holds no value of any kind, is inserted; and the back-fill writes
+-- the order column of every gate transition already recorded, changing no other column of any of
+-- them. The company-level payment-account record is created EMPTY, so the payment-account condition
+-- of every channel reads ABSENT and refuses until the owner records an observation, exactly as before
+-- this file existed.
 --
 -- Reversal is by dropping what this file creates, in reverse order. It is lossless while the
--- company-level record is empty; once an observation is recorded there, restore-to-point is the
--- reversal. Each of the checks on delivered records can be dropped on its own without loss.
+-- company-level record is empty and no gate transition has been recorded after this file was applied;
+-- once an observation is recorded there, restore-to-point is the reversal. Dropping the order column
+-- LOSES THE ORDERING once a later transition exists: from then on "latest" is the datastore's position
+-- and not the caller's instant, and a position cannot be reconstructed from the instants. Each of the
+-- other checks on delivered records can be dropped on its own without loss.
+--
+-- (This header was corrected in place by the seventh resource's change, in text only; no statement of
+-- this file changed. The seventh resource makes the order column mandatory.)
 
 BEGIN;
 

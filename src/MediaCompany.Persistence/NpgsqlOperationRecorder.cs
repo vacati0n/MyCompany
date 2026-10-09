@@ -24,15 +24,26 @@ namespace MediaCompany.Persistence;
 /// booked into that instant's month. The record returned carries the stored instant. A datastore
 /// check takes the same hold and refuses an operation stamped below the horizon or booked into any
 /// other month, so the rule binds every writer and a month the horizon has passed is final.
+///
+/// WHERE THE TRANSACTION HOLDS A RESERVATION (the AI-economics change, decision D-001 of its design) the
+/// stamp is the RESERVED INSTANT, read from the transaction-local setting the admission ledger set, so
+/// the operation is booked into the month it was admitted against; the shared hold the reservation took
+/// keeps that instant at or above the horizon. Elsewhere the stamp is exactly as delivered. The row also
+/// states whether its cost is stated: false where a consumed input, output or cached unit had no price
+/// row in force at the booking instant, or any other unit was consumed, so a missing price stored as a
+/// zero applied price never reads as a stated zero cost.
 /// </summary>
 internal sealed class NpgsqlOperationRecorder : IOperationRecorder
 {
     private const string InsertSql =
         """
         WITH stamp AS (
-            -- The datastore's instant, never the caller's: the later of its clock and the record
-            -- horizon, read under a shared hold on the horizon that lasts until this transaction ends.
-            SELECT GREATEST(clock_timestamp(), h.horizon) AS at
+            -- The datastore's instant, never the caller's: the instant this transaction reserved where
+            -- it holds one, and otherwise the later of its clock and the record horizon, read under a
+            -- shared hold on the horizon that lasts until this transaction ends.
+            SELECT COALESCE(
+                       NULLIF(current_setting('mediacompany.booking_instant', true), '')::timestamptz,
+                       GREATEST(clock_timestamp(), h.horizon)) AS at
             FROM audit_record_horizon h
             WHERE h.only_row
             FOR SHARE
@@ -48,7 +59,10 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'InputUnit'), 0)  AS input_price,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'OutputUnit'), 0) AS output_price,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'CachedUnit'), 0) AS cached_price,
-                COALESCE(MAX(p.currency), 'USD') AS currency
+                COALESCE(MAX(p.currency), 'USD') AS currency,
+                COALESCE(bool_or(p.unit_kind = 'InputUnit'), false)  AS has_input,
+                COALESCE(bool_or(p.unit_kind = 'OutputUnit'), false) AS has_output,
+                COALESCE(bool_or(p.unit_kind = 'CachedUnit'), false) AS has_cached
             FROM stamp
             LEFT JOIN model_prices p
                    ON @model_id IS NOT NULL
@@ -64,7 +78,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             input_units, output_units, cached_units, other_units,
             applied_price_id, applied_input_price, applied_output_price, applied_cached_price, currency,
             cost_basis, duration_ms, outcome, failure_reason,
-            reasoning_tier_requested, reasoning_tier_served)
+            reasoning_tier_requested, reasoning_tier_served, cost_stated)
         SELECT
             @operation_id, @run_id, price.at, @attempt,
             @item_id, @channel_id, @department_id, @agent_id, @capability_class,
@@ -77,9 +91,20 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             CASE WHEN @deterministic_task IS NULL THEN price.cached_price  ELSE 0 END,
             price.currency,
             @cost_basis, @duration_ms, @outcome, @failure_reason,
-            @tier_requested, @tier_served
+            @tier_requested, @tier_served,
+            -- Whether the cost is stated. A member of the deterministic set states zero; a row with no
+            -- model states zero only where it consumed nothing; a priced row only where every consumed
+            -- metered unit kind had a price row in force at the stamp and no other unit was consumed.
+            CASE
+                WHEN @deterministic_task IS NOT NULL THEN true
+                WHEN @model_id IS NULL THEN (@input_units = 0 AND @output_units = 0 AND @cached_units = 0 AND @other_units = 0)
+                ELSE (@other_units = 0
+                      AND (@input_units = 0 OR price.has_input)
+                      AND (@output_units = 0 OR price.has_output)
+                      AND (@cached_units = 0 OR price.has_cached))
+            END
         FROM price
-        RETURNING computed_cost, currency, applied_price_id, occurred_at
+        RETURNING computed_cost, currency, applied_price_id, occurred_at, cost_stated
         """;
 
     private readonly NpgsqlConnection _connection;
@@ -137,6 +162,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
         var currency = reader.GetString(1);
         var appliedPriceId = reader.IsDBNull(2) ? (Guid?)null : reader.GetGuid(2);
         var stored = reader.GetFieldValue<DateTimeOffset>(3);
+        var costStated = reader.GetBoolean(4);
 
         return new OperationRecord
         {
@@ -159,6 +185,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             FailureReason = draft.FailureReason,
             ReasoningTierRequested = draft.ReasoningTierRequested,
             ReasoningTierServed = draft.ReasoningTierServed,
+            CostStated = costStated,
         };
     }
 

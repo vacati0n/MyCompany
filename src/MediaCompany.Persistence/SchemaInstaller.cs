@@ -45,6 +45,14 @@ public static class SchemaInstaller
         // recorded-from-state check on the gate-transition record. Every check binds new rows only,
         // and nothing here records a channel, a budget, a configuration value or a condition.
         "MediaCompany.Persistence.Schema.006-multi-channel.sql",
+
+        // Wave 7, the AI-economics capability. Additive: the benchmark record (a content-free corpus-entry
+        // register and write-once observations), the admission decision record, whether an operation's
+        // cost is stated, the two keys an observation's reference names, and on the gate-transition
+        // record a mandatory position, write-once rows and the named same-instant refusal. Every table is
+        // created empty, and nothing here records an observation, an entry, a decision, a budget amount,
+        // a configuration value, a route or a gate transition.
+        "MediaCompany.Persistence.Schema.007-ai-economics.sql",
     ];
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)

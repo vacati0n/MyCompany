@@ -5,6 +5,12 @@ using MediaCompany.Credentials;
 
 [assembly: InternalsVisibleTo("MediaCompany.Capability.Tests")]
 
+// The AI-economics change (decision D-013 of its design): the month-end demonstration runs in the
+// persistence test assembly, against a live throwaway store, with a stand-in provider declared there,
+// so the internals of this assembly are visible to that one test assembly as well. No production
+// assembly gains any visibility.
+[assembly: InternalsVisibleTo("MediaCompany.Persistence.Tests")]
+
 namespace MediaCompany.Capability;
 
 /// <summary>
@@ -28,7 +34,6 @@ public static class CapabilityGatewayFactory
         IRouteRegistry routes,
         IRouteAvailabilityLedger availability,
         IOperatingRegisters registers,
-        IBudgetReader budgets,
         IUnitOfWork unitOfWork,
         ICredentialBroker broker,
         ICredentialExchange exchange,
@@ -39,6 +44,13 @@ public static class CapabilityGatewayFactory
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentNullException.ThrowIfNull(httpClient);
         ArgumentNullException.ThrowIfNull(exchange);
+        ArgumentNullException.ThrowIfNull(clock);
+
+        // The boundary takes no budget reader and reads no process clock (the AI-economics change,
+        // decision D-001 of its design): its headroom and readings are read on the admission
+        // transaction at the booking instant the datastore reserves, and every instant it writes is
+        // that one. The clock stays a parameter of this factory so its delivered callers compose it
+        // unchanged (the design removes the budget reader parameter only); the boundary is given none.
 
         var adapters = endpoints.ToDictionary(
             e => e.ProviderAccount,
@@ -48,10 +60,8 @@ public static class CapabilityGatewayFactory
             routes,
             availability,
             registers,
-            budgets,
             unitOfWork,
             broker,
-            clock,
             adapters);
     }
 }

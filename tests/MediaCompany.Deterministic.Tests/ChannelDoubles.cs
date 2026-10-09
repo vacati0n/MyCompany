@@ -59,4 +59,22 @@ internal sealed class StubPartitions : IChannelPartitionReader
 
     public Task<BudgetPartitionSummary> BudgetsAsync(DateOnly month, Money ceiling, CancellationToken cancellationToken) =>
         Task.FromResult(new BudgetPartitionSummary(Closure(month), [], 0, Money.Zero(), null, ceiling));
+
+    /// <summary>The tier distribution parts a demonstration supplies; by default a month holding no operation.</summary>
+    public IReadOnlyList<TierPartTotals> TierParts { get; set; } = [];
+
+    public Task<TierDistributionSummary> TierDistributionAsync(DateOnly month, CancellationToken cancellationToken)
+    {
+        var total = new TierPartTotals(
+            null,
+            TierParts.Sum(p => p.Operations),
+            TierParts.Sum(p => p.InputUnits),
+            TierParts.Sum(p => p.OutputUnits),
+            TierParts.Sum(p => p.CachedUnits),
+            new Money(TierParts.Sum(p => p.Cost.Amount)),
+            TierParts.Sum(p => p.UnstatedCosts));
+
+        return Task.FromResult(new TierDistributionSummary(
+            Closure(month), TierParts, total, TierParts.Where(p => p.Tier is not null).Sum(p => p.Operations)));
+    }
 }

@@ -103,6 +103,10 @@ internal sealed class InMemoryWork : IUnitOfWork
             Dossiers = new DossierWriter(_pending, owner);
         }
 
+        public IAdmissionLedger Admission { get; } = new NoAdmission();
+
+        public IBenchmarkWriter Benchmarks { get; } = new NoBenchmarks();
+
         public IAuditAppender Audit { get; }
 
         public IOperationRecorder Operations { get; }

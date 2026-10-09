@@ -63,7 +63,11 @@ public static class CompositionRoot
         services.AddSingleton<IConfigurationStore>(sp => new NpgsqlConfigurationStore(sp.GetRequiredService<NpgsqlDataSource>()));
         services.AddSingleton(sp => new NpgsqlCostReader(sp.GetRequiredService<NpgsqlDataSource>()));
         services.AddSingleton<ICostRollupReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
-        services.AddSingleton<IBudgetReader>(sp => sp.GetRequiredService<NpgsqlCostReader>());
+
+        // The AI-economics change: the budget reader is retired (the boundary reads its headroom and the
+        // cost controller's readings on its own admission transaction), and the benchmark record's
+        // reader, which has read members only, is registered for the analytics surface.
+        services.AddSingleton<IBenchmarkReader>(sp => new NpgsqlBenchmarkReader(sp.GetRequiredService<NpgsqlDataSource>()));
 
         // The analytics read ports. The served-tier reader is the same adapter that already reads
         // the cost rollups, because both read the accounted-operation table; the revenue register
@@ -106,7 +110,6 @@ public static class CompositionRoot
             sp.GetRequiredService<IRouteRegistry>(),
             sp.GetRequiredService<IRouteAvailabilityLedger>(),
             sp.GetRequiredService<IOperatingRegisters>(),
-            sp.GetRequiredService<IBudgetReader>(),
             sp.GetRequiredService<IUnitOfWork>(),
             sp.GetRequiredService<ICredentialBroker>(),
             sp.GetRequiredService<ICredentialExchange>(),

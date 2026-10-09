@@ -349,11 +349,14 @@ public sealed class MultiChannelSurfaceTests
         Assert.IsType<MeasurementQuantity.ObservedZero>(a.Thresholds.Single(t => t.Threshold == BudgetThreshold.SeventyFive).AlertsRecorded);
 
         var b = Assert.Single(reading.Channels, c => c.Channel.Equals(ChannelB));
-        Assert.Contains("no budget is recorded", Assert.IsType<MeasurementQuantity.Unmeasured>(b.BudgetAmount).Detail, StringComparison.Ordinal);
+        // A missing budget is a recorded amount that was not recorded, never an observation and never zero
+        // (re-pointed by the AI-economics change, decision D-011); its utilisation still reads unmeasured.
+        Assert.Contains("no budget is recorded", Assert.IsType<RecordedAmount.NotRecorded>(b.BudgetAmount).LookedFor, StringComparison.Ordinal);
+        Assert.Contains("no budget is recorded", Assert.IsType<MeasurementQuantity.Unmeasured>(b.Utilisation).Detail, StringComparison.Ordinal);
         Assert.IsType<MeasurementQuantity.Unmeasured>(b.Utilisation);
         Assert.All(b.Thresholds, t => Assert.IsType<MeasurementQuantity.Unmeasured>(t.Reached));
 
-        Assert.Equal(77.41m, Assert.IsType<MeasurementQuantity.ObservedValue>(reading.Company.Ceiling).Amount);
+        Assert.Equal(77.41m, Assert.IsType<RecordedAmount.Recorded>(reading.Company.Ceiling).Amount.Amount);
         Assert.IsType<MeasurementQuantity.ObservedValue>(reading.Company.Utilisation);
         Assert.All(reading.Company.Thresholds, t => Assert.IsType<MeasurementQuantity.ObservedZero>(t.Reached));
         Assert.All(reading.Company.Thresholds, t => Assert.IsType<MeasurementQuantity.Unmeasured>(t.AlertsRecorded));
@@ -644,24 +647,11 @@ public sealed class MultiChannelSurfaceTests
 
     private sealed class NoCosts : ICostRollupReader
     {
-        public Task<Money> CostForItemAsync(ItemId item, CancellationToken ct) => Task.FromResult(Money.Zero());
-
-        public Task<Money> CostForPeriodAsync(DateOnly period, CancellationToken ct) => Task.FromResult(Money.Zero());
-
-        public Task<PeriodSummary> PeriodSummaryAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult(new PeriodSummary(period, Money.Zero(), new Money(77.41m), new Money(34.42m), new Money(42.99m),
-                new Money(-77.41m), false, 0));
-
-        public Task<IReadOnlyDictionary<CapabilityClass, Money>> CostByCapabilityAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyDictionary<CapabilityClass, Money>>(new Dictionary<CapabilityClass, Money>());
-
-        public Task<Money> CostForDeterministicSetAsync(DateOnly period, CancellationToken ct) => Task.FromResult(Money.Zero());
-
-        public Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken ct) =>
-            Task.FromResult(MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "none"));
-
-        public Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult(MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "none"));
+        public Task<MonthReading<PeriodSummary>> PeriodSummaryAsync(DateOnly period, CancellationToken ct) =>
+            Task.FromResult(new MonthReading<PeriodSummary>(
+                new MonthClosure(period, ClosedByThisRead: true, DateTimeOffset.UnixEpoch, null),
+                new PeriodSummary(period, Money.Zero(), new Money(77.41m), new Money(34.42m), new Money(42.99m),
+                    new Money(-77.41m), false, 0)));
 
         public Task<ItemSummary> ItemSummaryAsync(ItemId item, CancellationToken ct) =>
             Task.FromResult(new ItemSummary(item, Money.Zero(), false, 0));
