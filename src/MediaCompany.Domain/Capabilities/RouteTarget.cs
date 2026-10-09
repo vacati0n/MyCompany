@@ -84,6 +84,13 @@ public sealed record Route
     public ReasoningTier? StatedReasoningTier { get; }
 
     /// <summary>
+    /// The recorded terms positions (the production change, decision D-003 of its design), or null where the
+    /// route records none: every position then reads not recorded, which resolution refuses for a narration or
+    /// a still-image provider route and leaves as delivered for every other route.
+    /// </summary>
+    public RouteTermsPositions? TermsPositions { get; init; }
+
+    /// <summary>
     /// A route whose terms basis is past the re-verification cadence is not admitted, which is
     /// the mitigation recorded against risk R-001.
     /// </summary>

@@ -41,7 +41,38 @@ public sealed record ProviderAccount(
     string Provider,
     string CommercialTermsBasis,
     DateOnly VerifiedOn,
-    ProviderAccountStatus Status);
+    ProviderAccountStatus Status)
+{
+    /// <summary>
+    /// Whether the account is held by the company or per channel (the production change, decision D-002 of its
+    /// design). Null reads as delivered: per channel. A company-level account's credential is issued under the
+    /// GLOBAL form of the variable name, which needs no channel identifier.
+    /// </summary>
+    public CredentialScope? Scope { get; init; }
+
+    /// <summary>How the account's secret is presented to its vendor. Null reads as delivered: a bearer authorization.</summary>
+    public AuthenticationScheme? Scheme { get; init; }
+}
+
+/// <summary>Who holds a provider account (the production change, decision D-002 of its design).</summary>
+public enum CredentialScope
+{
+    /// <summary>One account for the one legal entity; its credential needs no channel identifier.</summary>
+    Company = 1,
+
+    /// <summary>One account per channel, as delivered.</summary>
+    Channel = 2,
+}
+
+/// <summary>How a vendor takes the secret (the production change, decision D-002 of its design).</summary>
+public enum AuthenticationScheme
+{
+    /// <summary>An authorization header carrying the secret as a bearer value, as delivered.</summary>
+    BearerAuthorization = 1,
+
+    /// <summary>The vendor's own key header carrying the secret.</summary>
+    KeyHeader = 2,
+}
 
 public sealed record Model(
     ModelId Id,
@@ -57,6 +88,12 @@ public enum PriceUnitKind
     CachedUnit = 3,
     PerOperation = 4,
     PerSecond = 5,
+
+    /// <summary>One character of a request, as a character-billed speech vendor bills (the production change).</summary>
+    CharacterUnit = 6,
+
+    /// <summary>One image produced, as a per-image vendor bills (the production change).</summary>
+    ImageUnit = 7,
 }
 
 /// <summary>

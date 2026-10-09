@@ -73,6 +73,14 @@ public enum RefusalReason
     /// so no wait duration is chosen and no admission ends in an unnamed timeout.
     /// </summary>
     MeteredAdmissionInProgress = 14,
+
+    /// <summary>
+    /// The production change (decision D-006 of its design): every surviving provider route's WORST CASE would
+    /// take the item's counted total past its recorded cap, so the call is not made. The counted total is the
+    /// stated cost of the item's booked operations plus the worst case of every reservation of the item that no
+    /// booking has reconciled; the refusal names the cap, the counted total and the worst case.
+    /// </summary>
+    ItemCapExceeded = 15,
 }
 
 /// <summary>

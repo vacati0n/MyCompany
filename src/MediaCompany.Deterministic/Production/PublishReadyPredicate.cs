@@ -36,6 +36,12 @@ public enum PublishReadyRefusal
     /// real condition is that nobody measured it.
     /// </summary>
     RuntimeNotRecorded = 17,
+
+    /// <summary>
+    /// A stage recorded HELD (the production change, decision D-010 of its design): a held stage is short of
+    /// publish-ready, and the refusal names the stage and the summary it was held with.
+    /// </summary>
+    StageHeld = 18,
 }
 
 /// <summary>A refusal with the name of the condition and the subject that failed it.</summary>
@@ -134,6 +140,13 @@ public static class PublishReadyPredicate
                 refusals.Add(new PublishReadyRefusalDetail(
                     PublishReadyRefusal.StageOutcomeMissing,
                     "Stage " + stage + " recorded outcome " + evidence.Outcome + "."));
+            }
+
+            if (evidence.Outcome is Domain.Work.StageOutcome.Held)
+            {
+                refusals.Add(new PublishReadyRefusalDetail(
+                    PublishReadyRefusal.StageHeld,
+                    "Stage " + stage + " is held: " + evidence.Summary));
             }
         }
     }
