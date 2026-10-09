@@ -305,7 +305,9 @@ public static class ProductionCommands
         {
             Plan = plan,
             StoreRefusals = guard.Refusals,
-            Controller = controller,
+            ControllerRestriction = controller is not null && CostController.RestrictsToZeroCost(controller.Action)
+                ? $"{controller.Action} for {controller.BookingMonth:yyyy-MM}{(controller.Reason is { } reason ? $" ({reason})" : string.Empty)}"
+                : null,
             Credentials = planned
                 .Select(a => (CredentialBrokerFactory.VariableName(a.Id, a.Scope == CredentialScope.Company ? null : plan.Package.Channel),
                               CredentialBrokerFactory.IsPublished(a.Id, a.Scope == CredentialScope.Company ? null : plan.Package.Channel)))

@@ -19,7 +19,7 @@ namespace MediaCompany.Architecture.Tests;
 /// only demonstrable this way; a check that a call was not made would demonstrate something
 /// weaker.
 /// </summary>
-public sealed class BoundaryTests
+public sealed partial class BoundaryTests
 {
     private const string Domain = "MediaCompany.Domain";
     private const string Application = "MediaCompany.Application";
@@ -169,6 +169,7 @@ public sealed class BoundaryTests
     [InlineData(Application)]
     [InlineData(Deterministic)]
     [InlineData(Persistence)]
+    [InlineData(Production)]
     public void OnlyTheCapabilityAssemblyReachesANetworkEgress(string assembly)
     {
         Assert.Empty(TypesNaming(Load(assembly), t => t == typeof(HttpClient) || t == typeof(HttpRequestMessage)));
@@ -288,6 +289,7 @@ public sealed class BoundaryTests
     [InlineData(Capability)]
     [InlineData(Persistence)]
     [InlineData(Host)]
+    [InlineData(Production)]
     public void NoAssemblyDeclaresAnUploadOrPublishPath(string assembly)
     {
         var forbidden = new[] { "Upload", "PublishTo", "PostTo", "CreateChannel", "CreateAccount" };
@@ -328,6 +330,7 @@ public sealed class BoundaryTests
     [InlineData(Capability)]
     [InlineData(Persistence)]
     [InlineData(Host)]
+    [InlineData(Production)]
     public void NoProductionAssemblyDeclaresADestinationTransportComponent(string assembly)
     {
         var forbidden = new[]
@@ -389,6 +392,7 @@ public sealed class BoundaryTests
     [InlineData(Application)]
     [InlineData(Deterministic)]
     [InlineData(Persistence)]
+    [InlineData(Production)]
     public void NoAssemblyOutsideTheCapabilityBoundaryReferencesANetworkingAssembly(string assembly)
     {
         Assert.Empty(NetworkingReferences(assembly));
@@ -1480,7 +1484,7 @@ public sealed class BoundaryTests
 
     /// <summary>Every production assembly, in the order the other assertions name them.</summary>
     private static readonly string[] ProductionAssemblies =
-        [Domain, Application, Deterministic, Credentials, Capability, Persistence, Host];
+        [Domain, Application, Deterministic, Credentials, Capability, Persistence, Host, Production];
 
     /// <summary>
     /// The types outside the two analytics namespaces that are allowed to carry an analytics type

@@ -1,6 +1,4 @@
-using MediaCompany.Deterministic.Accounting;
 using MediaCompany.Domain.Accounting;
-using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Registry;
 
@@ -14,8 +12,11 @@ public sealed record MeteredReadiness
     /// <summary>The store guard's refusals for metered mode; empty where the store is the configured company store.</summary>
     public required IReadOnlyList<string> StoreRefusals { get; init; }
 
-    /// <summary>The cost controller's decision for the item's channel, read at the datastore's reserved instant.</summary>
-    public ControllerDecision? Controller { get; init; }
+    /// <summary>
+    /// The cost controller's refusal or deferral of metered work for the item's channel, read at the datastore's
+    /// reserved instant and stated in words, or null where the controller restricts nothing.
+    /// </summary>
+    public string? ControllerRestriction { get; init; }
 
     /// <summary>The exact credential variable each planned account's secret is published under, and whether it is set.</summary>
     public required IReadOnlyList<(string Variable, bool Published)> Credentials { get; init; }
@@ -57,10 +58,9 @@ public static class MeteredPreconditions
             unmet.Add($"the planned route {plan.Route.Id} has no price in force for a unit kind it is billed by");
         }
 
-        if (readiness.Controller is { } controller && CostController.RestrictsToZeroCost(controller.Action))
+        if (readiness.ControllerRestriction is { } restriction)
         {
-            unmet.Add($"the cost controller's reading refuses or defers metered work: {controller.Action} for {controller.BookingMonth:yyyy-MM}"
-                + (controller.Reason is { } reason ? $" ({reason})" : string.Empty));
+            unmet.Add($"the cost controller's reading refuses or defers metered work: {restriction}");
         }
 
         foreach (var (variable, published) in readiness.Credentials)
