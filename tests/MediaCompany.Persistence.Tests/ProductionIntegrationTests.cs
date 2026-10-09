@@ -342,14 +342,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     ///     handler and a fake secret: the narration requests reach the stub, the narration repeats byte for byte, and a
     ///     render past its bound ends the Production stage failed by name with no rendered file recorded.
     /// </summary>
-    [RequiresPostgresFact]
+    [RequiresPostgresAndMediaToolFact]
     public async Task TheZeroSpendProductionOfItemOneRendersOneDecodableFileAndRecordsEverything()
     {
-        if (!MediaToolOnPath.Present)
-        {
-            return;
-        }
-
         var record = await PrepareAsync();
         var loaded = await ItemPackageLoader.LoadAsync(Repository(), "wave-2/item-001/item-material.json", CancellationToken.None);
         var settings = MediaToolOnPath.Settings(_output, Repository());
@@ -449,7 +444,8 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         // The metered path below the host command: the vendor adapter over a stub handler, a fake secret, the same
         // service; a render bound of one millisecond ends the Production stage failed by name.
         var variable = CredentialBrokerFactory.VariableName(Speech, null);
-        var previous = Environment.GetEnvironmentVariable(variable);
+        // The variable's existing value is NEVER READ: it could hold a real secret. The fake value is set in this
+        // process only, and removed from this process afterwards; nothing outside the process changes.
         Environment.SetEnvironmentVariable(variable, FakeSecret);
         try
         {
@@ -487,7 +483,7 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         }
         finally
         {
-            Environment.SetEnvironmentVariable(variable, previous);
+            Environment.SetEnvironmentVariable(variable, null);
         }
     }
 
@@ -495,14 +491,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     /// AN INJECTED INTERRUPTION between the promotion of a file and its record leaves ZERO RECORDS for the file: the
     /// file is complete on disk, and nothing claims it.
     /// </summary>
-    [RequiresPostgresFact]
+    [RequiresPostgresAndMediaToolFact]
     public async Task AnInterruptionBeforeTheRecordLeavesNoRecordForTheFile()
     {
-        if (!MediaToolOnPath.Present)
-        {
-            return;
-        }
-
         var record = await PrepareAsync();
         var loaded = await ItemPackageLoader.LoadAsync(Repository(), "wave-2/item-001/item-material.json", CancellationToken.None);
         var settings = MediaToolOnPath.Settings(_output, Repository());
@@ -815,6 +806,22 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         }
 
         public string FullPath(string relativePath) => inner.FullPath(relativePath);
+    }
+}
+
+/// <summary>A datastore demonstration that also needs the media tool and the font: not-run, saying why, where either is absent.</summary>
+public sealed class RequiresPostgresAndMediaToolFactAttribute : FactAttribute
+{
+    public RequiresPostgresAndMediaToolFactAttribute()
+    {
+        if (PostgresIntegrationTests.ConnectionString is null)
+        {
+            Skip = "not-run: no PostgreSQL datastore is reachable. Set MEDIACOMPANY_TEST_CONNECTION_STRING to run.";
+        }
+        else if (!MediaToolOnPath.Present)
+        {
+            Skip = "not-run: the media tool or the fixed font is not installed on this machine.";
+        }
     }
 }
 

@@ -253,7 +253,8 @@ public sealed class VendorPathTests
     public async Task TheDemonstrationCompositionReachesNoNetworkAndReadsNoCredentialVariable()
     {
         var variable = CredentialBrokerFactory.VariableName(SpeechAccount, null);
-        var before = Environment.GetEnvironmentVariable(variable);
+        // The variable's existing value is NEVER READ: it could hold a real secret. The fake value is set in this
+        // process only, and removed from this process afterwards; nothing outside the process changes.
         Environment.SetEnvironmentVariable(variable, FakeSecret);
         try
         {
@@ -278,7 +279,7 @@ public sealed class VendorPathTests
         }
         finally
         {
-            Environment.SetEnvironmentVariable(variable, before);
+            Environment.SetEnvironmentVariable(variable, null);
         }
     }
 
