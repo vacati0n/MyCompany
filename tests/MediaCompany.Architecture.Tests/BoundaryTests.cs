@@ -824,8 +824,12 @@ public sealed class BoundaryTests
         var declared = new Dictionary<Type, string[]>
         {
             [typeof(IApprovalQueueReader)] = ["AwaitingOwnerApprovalAsync", "DecidedAsync"],
-            [typeof(IChannelPartitionReader)] = ["OperationsAsync", "CloseMonthAsync", "DossiersAsync", "ThroughputAsync", "BudgetsAsync"],
+            [typeof(IChannelPartitionReader)] =
+                ["OperationsAsync", "CloseMonthAsync", "DossiersAsync", "ThroughputAsync", "BudgetsAsync", "TierDistributionAsync"],
             [typeof(IItemRegister)] = ["RecordedChannelAsync"],
+
+            // The AI-economics change: the benchmark record's reader has read members only.
+            [typeof(IBenchmarkReader)] = ["ObservationsAsync", "RecordAsync"],
         };
 
         foreach (var (port, reads) in declared)
@@ -855,12 +859,217 @@ public sealed class BoundaryTests
         foreach (var name in ProductionAssemblies)
         {
             var assembly = Load(name);
-            Assert.Equal(new Version(1, 3, 0, 0), assembly.GetName().Version);
+            // 1.4.0, decided at the Design Gate of the AI-economics change.
+            Assert.Equal(new Version(1, 4, 0, 0), assembly.GetName().Version);
 
             var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             Assert.NotNull(informational);
-            Assert.StartsWith("1.3.0", informational, StringComparison.Ordinal);
+            Assert.StartsWith("1.4.0", informational, StringComparison.Ordinal);
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // The AI-economics change — every added type held by the membership assertion, by name
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Every quantity-carrying type the AI-economics change adds, NAMED HERE, is either declared on the
+    /// analytics surface or a named permitted carrier, and passes the member rule that refuses a bare
+    /// numeric and an undeclared string — so the membership assertion covers each of them by name rather
+    /// than by a namespace sweep that would pass over a type nobody noticed.
+    /// </summary>
+    [Fact]
+    public void EveryQuantityCarryingTypeTheAiEconomicsChangeAddsIsHeldByTheMembershipAssertion()
+    {
+        string[] added =
+        [
+            "MediaCompany.Domain.Analytics.BenchmarkObservation",
+            "MediaCompany.Domain.Analytics.BenchmarkReading",
+            "MediaCompany.Domain.Analytics.BenchmarkRecordReading",
+            "MediaCompany.Domain.Analytics.BenchmarkMonthReading",
+            "MediaCompany.Domain.Analytics.SelectionCandidate",
+            "MediaCompany.Domain.Analytics.SelectionRecord",
+            "MediaCompany.Domain.Analytics.GoverningReading",
+            "MediaCompany.Domain.Analytics.ControllerDecision",
+            "MediaCompany.Domain.Analytics.TierDistributionPart",
+            "MediaCompany.Domain.Analytics.TierDistributionReading",
+            "MediaCompany.Domain.Analytics.ServedTierReading",
+            "MediaCompany.Deterministic.Analytics.EconomicsComposers",
+            "MediaCompany.Application.Ports.IAdmissionLedger",
+            "MediaCompany.Application.Ports.AdmissionDecisionDraft",
+            "MediaCompany.Application.Ports.IBenchmarkWriter",
+            "MediaCompany.Application.Ports.BenchmarkObservationDraft",
+            "MediaCompany.Application.Ports.IBenchmarkReader",
+            "MediaCompany.Application.Ports.BenchmarkRecordSummary",
+            "MediaCompany.Deterministic.Routing.ResolutionInputs",
+            "MediaCompany.Deterministic.Routing.ResolutionRecord",
+            "MediaCompany.Deterministic.Routing.EvidenceSelection",
+            "MediaCompany.Deterministic.Routing.SelectionOutcome",
+            "MediaCompany.Deterministic.Accounting.CostController",
+            "MediaCompany.Persistence.NpgsqlAdmissionLedger",
+            "MediaCompany.Persistence.NpgsqlBenchmarkWriter",
+            "MediaCompany.Persistence.NpgsqlBenchmarkReader",
+            "MediaCompany.Persistence.MeasurementColumns",
+            "MediaCompany.Persistence.BenchmarkRows",
+        ];
+
+        var scanned = ScannedAnalyticsTypes().ToDictionary(s => s.Type.FullName!, s => s.PublicOnly);
+
+        foreach (var name in added)
+        {
+            var type = ProductionAssemblies.Select(a => Load(a).GetType(name)).SingleOrDefault(t => t is not null);
+            Assert.True(type is not null, $"{name} is named as an added type and no production assembly declares it");
+            Assert.True(scanned.ContainsKey(name), $"{name} carries an analytics quantity and the member rule does not scan it");
+            Assert.Empty(BareValueMembers(type!, scanned[name]));
+        }
+    }
+
+    /// <summary>
+    /// The member rule applied to an economics-shaped probe carrying a bare utilisation percentage: it is
+    /// refused, naming the type and the member, so the assertion above cannot pass on a rule that matches
+    /// nothing.
+    /// </summary>
+    [Fact]
+    public void TheMemberRuleRefusesABareNumericOnAnEconomicsShapeAndNamesIt()
+    {
+        var offender = Assert.Single(BareValueMembers(typeof(ProbeGoverningReadingWithABarePercent)));
+        Assert.Contains(nameof(ProbeGoverningReadingWithABarePercent), offender, StringComparison.Ordinal);
+        Assert.Contains("UtilisationPercent", offender, StringComparison.Ordinal);
+        Assert.Contains("bare Decimal", offender, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A recorded amount is its own two-shape type and NOT a fourth case of the measurement union, which
+    /// stays closed at three; its not-recorded shape carries no value field of any kind.
+    /// </summary>
+    [Fact]
+    public void ARecordedAmountIsNotAFourthMeasurementCaseAndItsAbsentShapeCarriesNoValue()
+    {
+        var union = Load(Domain).GetType("MediaCompany.Domain.Analytics.MeasurementQuantity", throwOnError: true)!;
+        Assert.Equal(3, union.GetNestedTypes().Count(t => t.BaseType == union));
+
+        var recorded = Load(Domain).GetType("MediaCompany.Domain.Accounting.RecordedAmount", throwOnError: true)!;
+        Assert.NotEqual(union, recorded.BaseType);
+        var notRecorded = recorded.GetNestedType("NotRecorded")!;
+        Assert.Equal(["LookedFor"], notRecorded.GetProperties().Where(p => p.DeclaringType == notRecorded).Select(p => p.Name));
+        Assert.Empty(recorded.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
+    }
+
+    /// <summary>
+    /// The cost controller and the evidence selection are REGISTERED MEMBERS of the rule-determined set and
+    /// sit in the rule-determined assembly, so the dependency-direction proof above — that the assembly
+    /// cannot reach the capability boundary or the credential broker — covers them: neither can express a
+    /// model call.
+    /// </summary>
+    [Fact]
+    public void TheCostControllerAndTheSelectionAreRegisteredRuleDeterminedMembers()
+    {
+        foreach (var rule in new[]
+                 {
+                     typeof(MediaCompany.Deterministic.Accounting.CostController),
+                     typeof(MediaCompany.Deterministic.Routing.EvidenceSelection),
+                     typeof(MediaCompany.Deterministic.Routing.RouteResolver),
+                 })
+        {
+            Assert.Equal(Deterministic, rule.Assembly.GetName().Name);
+            var name = (string)rule.GetField("TaskName", BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
+            Assert.True(DeterministicTaskRegistry.Contains(name), $"{rule.Name} declares '{name}', which is not in the rule-determined set");
+            Assert.True(rule is { IsAbstract: true, IsSealed: true }, $"{rule.Name} is a pure static rule");
+        }
+
+        Assert.True(DeterministicTaskRegistry.Contains(DeterministicTaskRegistry.CostControl));
+        Assert.True(DeterministicTaskRegistry.Contains(DeterministicTaskRegistry.EvidenceSelection));
+    }
+
+    /// <summary>
+    /// NO CONFIGURATION REACHES A THRESHOLD, THE ACTION MAPPING OR AN ADMISSION. The compiled bodies of the
+    /// cost controller, the evidence selection and the resolution function — their compiler-generated
+    /// closures included — name no member of the configuration surface and load no admitted key of any key
+    /// set, and none of them declares a member typed by it; so no key, production, publishing, channel or
+    /// base, can reach the controller's thresholds, its mapping or the admission past a refusal.
+    /// </summary>
+    [Fact]
+    public void NoConfigurationReachesTheControllerItsMappingOrTheSelection()
+    {
+        foreach (var rule in new[]
+                 {
+                     typeof(MediaCompany.Deterministic.Accounting.CostController),
+                     typeof(MediaCompany.Deterministic.Routing.EvidenceSelection),
+                     typeof(MediaCompany.Deterministic.Routing.RouteResolver),
+                     typeof(MediaCompany.Deterministic.Routing.ResolutionInputs),
+                 })
+        {
+            Assert.Empty(ConfigurationReachIn(rule));
+        }
+    }
+
+    /// <summary>The configuration scan applied to a probe that reads a key: it is found and named.</summary>
+    [Fact]
+    public void TheConfigurationScanFindsAProbeReadingAKeyAndNamesIt()
+    {
+        var found = ConfigurationReachIn(typeof(ProbeReadingAConfigurationKey));
+        Assert.NotEmpty(found);
+        Assert.Contains(found, f => f.Contains("budget.amount", StringComparison.Ordinal));
+    }
+
+    /// <summary>Every way a type's compiled code or declared members reach the configuration surface.</summary>
+    private static IReadOnlyList<string> ConfigurationReachIn(Type root)
+    {
+        const string ConfigurationNamespace = "MediaCompany.Domain.Configuration";
+        var keys = ConfigurationKeys.Admitted
+            .Concat(ChannelConfigurationKeys.Admitted)
+            .Concat(PublishingConfigurationKeys.Admitted)
+            .Concat(MediaCompany.Application.Production.ProductionConfigurationKeys.Admitted)
+            .ToHashSet(StringComparer.Ordinal);
+
+        bool Configuration(Type? type) =>
+            type is not null
+            && ((type.Namespace ?? string.Empty).StartsWith(ConfigurationNamespace, StringComparison.Ordinal)
+                || type == typeof(IConfigurationStore)
+                || type == typeof(MediaCompany.Application.Production.ProductionConfigurationKeys));
+
+        var reach = new List<string>();
+        var types = new[] { root }.Concat(root.GetNestedTypes(Declared)).ToArray();
+
+        foreach (var type in types)
+        {
+            foreach (var field in type.GetFields(Declared).Where(f => f.DeclaringType == type))
+            {
+                if (Flatten(field.FieldType).Any(Configuration))
+                {
+                    reach.Add($"{type.FullName}.{field.Name} is typed by the configuration surface");
+                }
+            }
+
+            var bodies = type.GetMethods(Declared).Where(m => m.DeclaringType == type).Cast<MethodBase>()
+                .Concat(type.GetConstructors(Declared));
+
+            foreach (var method in bodies)
+            {
+                foreach (var parameter in method.GetParameters())
+                {
+                    if (Flatten(parameter.ParameterType).Any(Configuration))
+                    {
+                        reach.Add($"{type.FullName}.{method.Name} takes {parameter.ParameterType.Name}");
+                    }
+                }
+
+                foreach (var operand in IlOperands(method))
+                {
+                    switch (operand)
+                    {
+                        case string literal when keys.Contains(literal):
+                            reach.Add($"{type.FullName}.{method.Name} loads the key '{literal}'");
+                            break;
+                        case MemberInfo member when Configuration(member.DeclaringType) || (member is Type t && Configuration(t)):
+                            reach.Add($"{type.FullName}.{method.Name} names {member.DeclaringType?.Name}.{member.Name}");
+                            break;
+                    }
+                }
+            }
+        }
+
+        return reach;
     }
 
     /// <summary>The types allowed to name the channel key set, each for the reason its summary states.</summary>
@@ -1067,6 +1276,36 @@ public sealed class BoundaryTests
         // The measure catalogue, which is where the six revenue-derived figures are declared as
         // deferred measures and therefore names the closed figure set.
         "MediaCompany.Deterministic.Reporting.MeasureCatalogue",
+
+        // Wave 7, the AI-economics capability. The ports and drafts the benchmark record and the admission
+        // ledger are reached through, declared with the other ports.
+        "MediaCompany.Application.Ports.IAdmissionLedger",
+        "MediaCompany.Application.Ports.AdmissionDecisionDraft",
+        "MediaCompany.Application.Ports.IBenchmarkWriter",
+        "MediaCompany.Application.Ports.BenchmarkObservationDraft",
+        "MediaCompany.Application.Ports.IBenchmarkReader",
+        "MediaCompany.Application.Ports.BenchmarkRecordSummary",
+
+        // The correction cycle: the one-statement admission snapshot, and its JSON reader below the port.
+        "MediaCompany.Application.Ports.AdmissionSnapshot",
+        "MediaCompany.Persistence.SnapshotJson",
+
+        // The rule-determined rules that read the controller decision and the evidence table: the
+        // resolution function and its inputs and record, the evidence selection and its outcome, and the
+        // cost controller, which is the one composing site of every governing reading's cases.
+        "MediaCompany.Deterministic.Routing.ResolutionInputs",
+        "MediaCompany.Deterministic.Routing.ResolutionRecord",
+        "MediaCompany.Deterministic.Routing.RouteResolver",
+        "MediaCompany.Deterministic.Routing.EvidenceSelection",
+        "MediaCompany.Deterministic.Routing.SelectionOutcome",
+        "MediaCompany.Deterministic.Accounting.CostController",
+
+        // The adapters that implement the added ports, below the boundary, and their one row encoding.
+        "MediaCompany.Persistence.NpgsqlAdmissionLedger",
+        "MediaCompany.Persistence.NpgsqlBenchmarkWriter",
+        "MediaCompany.Persistence.NpgsqlBenchmarkReader",
+        "MediaCompany.Persistence.MeasurementColumns",
+        "MediaCompany.Persistence.BenchmarkRows",
     ];
 
     /// <summary>
@@ -1141,6 +1380,34 @@ public sealed class BoundaryTests
         "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ApprovalListingStatement",
         "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.ApprovalWorkloadStatement",
         "MediaCompany.Deterministic.Reporting.MeasureCatalogue.CycleTimeClockLimit",
+
+        // Wave 7, the AI-economics capability. The units an observation is stated in, the statement each
+        // benchmark, selection, controller and tier-distribution reading carries, the assumed split and
+        // the relation statement, the registers a recorded amount names, and the task names, the tier and
+        // reservation statements and the company basis the rules compose; each is authored by the code,
+        // never copied out of a record.
+        "MediaCompany.Domain.Analytics.BenchmarkObservation.QualityRatingUnit",
+        "MediaCompany.Domain.Analytics.BenchmarkObservation.LatencyUnit",
+        "MediaCompany.Domain.Analytics.BenchmarkRecordReading.Statement",
+        "MediaCompany.Domain.Analytics.SelectionRecord.Statement",
+        "MediaCompany.Domain.Analytics.GoverningReading.Statement",
+        "MediaCompany.Domain.Analytics.ControllerDecision.CompanyBasisStatement",
+        "MediaCompany.Domain.Analytics.TierDistributionReading.AssumedSplit",
+        "MediaCompany.Domain.Analytics.TierDistributionReading.RelationStatement",
+        "MediaCompany.Deterministic.Analytics.EconomicsComposers.BenchmarkStatement",
+        "MediaCompany.Deterministic.Analytics.EconomicsComposers.AssumedSplit",
+        "MediaCompany.Deterministic.Analytics.EconomicsComposers.RelationStatement",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.BudgetRegister",
+        "MediaCompany.Deterministic.Analytics.ChannelAnalyticsComposers.EnvelopeConstant",
+        "MediaCompany.Application.Ports.AdmissionDecisionDraft.TierStatement",
+        "MediaCompany.Application.Ports.AdmissionDecisionDraft.ReservationStatement",
+        "MediaCompany.Deterministic.Routing.ResolutionRecord.TierStatement",
+        "MediaCompany.Deterministic.Routing.RouteResolver.TaskName",
+        "MediaCompany.Deterministic.Routing.EvidenceSelection.TaskName",
+        "MediaCompany.Deterministic.Accounting.CostController.TaskName",
+        "MediaCompany.Deterministic.Accounting.CostController.CompanyBasisRecordedIn",
+        "MediaCompany.Deterministic.Accounting.CostController.ChannelBudgetRecordedIn",
+        "MediaCompany.Deterministic.Accounting.CostController.CompanyBasisStatement",
     ];
 
     /// <summary>
@@ -1567,6 +1834,8 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         public IRouteAvailabilityWriter Availability { get; } = new NoAvailability();
         public IDispatchWriter Dispatches { get; } = new NoDispatches();
         public IDossierWriter Dossiers { get; } = new NoDossiers();
+        public IAdmissionLedger Admission { get; } = new NoAdmission();
+        public IBenchmarkWriter Benchmarks { get; } = new NoBenchmarks();
 
         public Task CommitAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -1598,6 +1867,39 @@ internal sealed class TerminalStateProbe : IUnitOfWork
         }
     }
 
+    /// <summary>The engine admits no capability request; reaching the admission ledger fails the probe.</summary>
+    private sealed class NoAdmission : IAdmissionLedger
+    {
+        public Task<BookingReservation> ReserveAsync(CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<bool> TryHoldScopesAsync(MediaCompany.Domain.ChannelId channel, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<AdmissionSnapshot> ReadAsync(
+            MediaCompany.Domain.Capabilities.CapabilityClass capability, MediaCompany.Domain.Capabilities.Attribution attribution,
+            MediaCompany.Domain.Accounting.Money allotment, MediaCompany.Domain.Capabilities.TaskClass? taskClass, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task RestorePricesAsync(IReadOnlyList<MediaCompany.Domain.Registry.ModelPrice> prices, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task<GoverningReadingsSummary> GoverningReadingsAsync(
+            MediaCompany.Domain.Capabilities.Attribution attribution, MediaCompany.Domain.Accounting.Money allotment, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken ct) => throw new NotSupportedException();
+    }
+
+    /// <summary>The engine records no observation; reaching the benchmark writer fails the probe.</summary>
+    private sealed class NoBenchmarks : IBenchmarkWriter
+    {
+        public Task<DateTimeOffset> RegisterEntryAsync(
+            CorpusEntryId entry, MediaCompany.Domain.Capabilities.TaskClass taskClass, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task<MediaCompany.Domain.Analytics.BenchmarkObservation> RecordObservationAsync(
+            BenchmarkObservationDraft draft, CancellationToken ct) => throw new NotSupportedException();
+    }
+
     private sealed class NoAudit : IAuditAppender
     {
         public Task<MediaCompany.Domain.Audit.AuditEntry> AppendAsync(
@@ -1620,6 +1922,11 @@ internal sealed class TerminalStateProbe : IUnitOfWork
     private sealed class NoBudgets : IBudgetEvaluator
     {
         public Task<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>> EvaluateAsync(
+            MediaCompany.Domain.Capabilities.Attribution attribution, DateOnly period,
+            DateTimeOffset raisedAt, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>>([]);
+
+        public Task<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>> StoredAlertsAsync(
             MediaCompany.Domain.Capabilities.Attribution attribution, DateOnly period,
             DateTimeOffset raisedAt, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>>([]);
@@ -1718,4 +2025,13 @@ internal sealed record ProbeCarryingOnlyAMeasurementQuantity(
 internal static class ProbeReadingAChannelKey
 {
     public static string Schedule() => ChannelConfigurationKeys.Schedule;
+}
+
+/// <summary>An economics-shaped probe carrying a bare utilisation percentage, which the member rule must refuse.</summary>
+internal sealed record ProbeGoverningReadingWithABarePercent(MediaCompany.Domain.Analytics.MeasurementQuantity BookedSpend, decimal UtilisationPercent);
+
+/// <summary>A probe that reads a base configuration key, which the configuration scan must find.</summary>
+internal static class ProbeReadingAConfigurationKey
+{
+    public static string Key() => ConfigurationKeys.BudgetAmount;
 }

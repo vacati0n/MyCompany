@@ -100,7 +100,9 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheSixthResourceRecordsNothingButTheChainHeadAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^1]);
+        // The seventh resource now installs after it (the AI-economics change); re-applying the sixth over a
+        // store holding the seventh must still succeed and record nothing.
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^2]);
 
         await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.006-multi-channel.sql"));
 
@@ -278,6 +280,8 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
             """,
             c => c.Parameters.AddWithValue("channel", ChannelA.Value));
 
+        // The sixth resource by name, then the seventh, which now installs after it (the AI-economics change).
+        await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.006-multi-channel.sql"));
         await ExecuteAsync(SchemaInstaller.ReadResource(SchemaInstaller.ResourceNames[^1]));
 
         Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM first_publication_conditions WHERE condition = 'PaymentAccount'"));
@@ -434,7 +438,10 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
         Assert.Contains("no budget is recorded", Assert.IsType<MeasurementQuantity.Unmeasured>(b.Utilisation).Detail, StringComparison.Ordinal);
 
         Assert.Equal(0.0105m, Assert.IsType<MeasurementQuantity.ObservedValue>(reading.Company.CompanyCost).Amount);
-        Assert.Equal(77.41m, Assert.IsType<MeasurementQuantity.ObservedValue>(reading.Company.Ceiling).Amount);
+        // A recorded amount, never an observation (the AI-economics change, decision D-011).
+        Assert.Equal(77.41m, Assert.IsType<RecordedAmount.Recorded>(reading.Company.Ceiling).Amount.Amount);
+        Assert.Equal(0.02m, Assert.IsType<RecordedAmount.Recorded>(a.BudgetAmount).Amount.Amount);
+        Assert.IsType<RecordedAmount.NotRecorded>(b.BudgetAmount);
         Assert.IsType<MeasurementQuantity.ObservedValue>(reading.Company.Utilisation);
         Assert.IsType<MeasurementQuantity.Unmeasured>(reading.Company.StandingCommitment);
         Assert.Contains("metered operations", reading.Company.CoverageStatement, StringComparison.Ordinal);
@@ -1012,6 +1019,9 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
 
         public Task<BudgetPartitionSummary> BudgetsAsync(DateOnly month, Money ceiling, CancellationToken cancellationToken) =>
             inner.BudgetsAsync(month, ceiling, cancellationToken);
+
+        public Task<TierDistributionSummary> TierDistributionAsync(DateOnly month, CancellationToken cancellationToken) =>
+            inner.TierDistributionAsync(month, cancellationToken);
     }
 
     // -----------------------------------------------------------------------
@@ -1301,6 +1311,8 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
             public IRouteAvailabilityWriter Availability => inner.Availability;
             public IDispatchWriter Dispatches => inner.Dispatches;
             public IDossierWriter Dossiers => inner.Dossiers;
+            public IAdmissionLedger Admission => inner.Admission;
+            public IBenchmarkWriter Benchmarks => inner.Benchmarks;
 
             public async Task CommitAsync(CancellationToken cancellationToken)
             {

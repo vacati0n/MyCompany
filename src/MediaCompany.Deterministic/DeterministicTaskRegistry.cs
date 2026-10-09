@@ -90,6 +90,12 @@ public static class DeterministicTaskRegistry
     public const string ApprovalQuantitySeparation = "approval-quantity-separation";
     public const string AttemptAnswerCompleteness = "attempt-answer-completeness";
 
+    // The AI-economics change (decisions D-003 and D-004 of its design). The cost controller and the
+    // evidence selection join the SAME named set, so the delivered dependency-direction proof covers
+    // them: each is a pure rule over its inputs and cannot express a model call.
+    public const string CostControl = "cost-control";
+    public const string EvidenceSelection = "evidence-selection";
+
     /// <summary>
     /// The complete named set. The idempotent upload the upstream recommendation also names is
     /// excluded here by constraint C-013: this wave publishes nothing, so no upload path exists.
@@ -144,6 +150,8 @@ public static class DeterministicTaskRegistry
         FirstPublicationConditionEvaluation,
         ApprovalQuantitySeparation,
         AttemptAnswerCompleteness,
+        CostControl,
+        EvidenceSelection,
     }.ToFrozenSet(StringComparer.Ordinal);
 
     // There is deliberately no second list of the publishing members here. A list restating

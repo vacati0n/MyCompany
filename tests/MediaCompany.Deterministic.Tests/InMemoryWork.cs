@@ -103,6 +103,10 @@ internal sealed class InMemoryWork : IUnitOfWork
             Dossiers = new DossierWriter(_pending, owner);
         }
 
+        public IAdmissionLedger Admission { get; } = new NoAdmission();
+
+        public IBenchmarkWriter Benchmarks { get; } = new NoBenchmarks();
+
         public IAuditAppender Audit { get; }
 
         public IOperationRecorder Operations { get; }
@@ -315,6 +319,10 @@ internal sealed class InMemoryWork : IUnitOfWork
         private sealed class NoBudgets : IBudgetEvaluator
         {
             public Task<IReadOnlyList<BudgetAlert>> EvaluateAsync(
+                Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct) =>
+                Task.FromResult<IReadOnlyList<BudgetAlert>>([]);
+
+            public Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
                 Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct) =>
                 Task.FromResult<IReadOnlyList<BudgetAlert>>([]);
         }

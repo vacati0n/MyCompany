@@ -1,3 +1,4 @@
+using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Capabilities;
 
 namespace MediaCompany.Domain.Analytics;
@@ -186,16 +187,17 @@ public sealed record ThresholdReading
 }
 
 /// <summary>
-/// One channel's budget utilisation for one month. Unmeasured, naming the missing budget, where the
-/// budget register holds no budget for the channel and month — no percentage is computed against an
-/// amount nobody recorded — and unmeasured, naming the absent operations, where the channel recorded
-/// none.
+/// One channel's budget utilisation for one month. The budget amount is a RECORDED AMOUNT, recorded in
+/// the budget register or not recorded there, never an observation (the AI-economics change, decision
+/// D-011 of its design); where it is not recorded no percentage is computed against an amount nobody
+/// recorded, and the utilisation reads unmeasured naming the missing budget; and unmeasured, naming the
+/// absent operations, where the channel recorded none.
 /// </summary>
 public sealed record ChannelBudgetReading
 {
     public required ChannelId Channel { get; init; }
     public required ChannelPartitionStanding Standing { get; init; }
-    public required MeasurementQuantity BudgetAmount { get; init; }
+    public required RecordedAmount BudgetAmount { get; init; }
     public required MeasurementQuantity Utilised { get; init; }
     public required MeasurementQuantity Utilisation { get; init; }
     public required IReadOnlyList<ThresholdReading> Thresholds { get; init; }
@@ -212,11 +214,18 @@ public sealed record ChannelBudgetReading
 /// </summary>
 public sealed record CompanyCeilingReading
 {
-    public required MeasurementQuantity Ceiling { get; init; }
+    /// <summary>The approved envelope, a RECORDED AMOUNT (a code constant), never an observation.</summary>
+    public required RecordedAmount Ceiling { get; init; }
     public required MeasurementQuantity CompanyCost { get; init; }
     public required MeasurementQuantity Utilisation { get; init; }
     public required IReadOnlyList<ThresholdReading> Thresholds { get; init; }
     public required MeasurementQuantity StandingCommitment { get; init; }
+
+    /// <summary>
+    /// The basis the cost controller governs metered admission on — the recorded metered allotment, a recorded
+    /// amount — stated beside this reading's envelope (the AI-economics change, correction cycle).
+    /// </summary>
+    public required RecordedAmount ControllerBasis { get; init; }
 
     /// <summary>What the company reading covers and what it does not. Required.</summary>
     public required string CoverageStatement { get; init; }

@@ -225,25 +225,29 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     /// two differ, so a served value copied from the request is excluded. Zero units, no applied
     /// price, a datastore-computed cost of zero: nothing is spent and no provider is reached.
     /// </summary>
+    ///
+    /// Re-pointed by the AI-economics change (decision D-005 of its design): the route states a higher
+    /// tier than requested, because a route stating a lower one is no longer served outside a recorded
+    /// controller downgrade; the two still differ.
     [RequiresPostgresFact]
     public async Task TheComposedPathRecordsTheRouteStatedTierAsServed()
     {
         var route = RouteId.New();
-        await InsertSubstituteRouteAsync(route, "Primary", "'Light'");
+        await InsertSubstituteRouteAsync(route, "Primary", "'Deep'");
         await MarkServingAsync(route);
 
-        var outcome = await ComposedGateway().ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
+        var outcome = await ComposedGateway().ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None);
 
         var substituted = Assert.IsType<CapabilityOutcome.Substituted>(outcome);
         Assert.Equal(UnitCounts.None, substituted.Operation.Units);
         Assert.Null(substituted.Operation.AppliedPrice);
         Assert.Equal(0m, substituted.Operation.ComputedCost.Amount);
 
-        var stored = Assert.Single(await new NpgsqlCostReader(Source)
-            .RecordsForPeriodAsync(Period(substituted.Operation.OccurredAt), CancellationToken.None));
+        var stored = Assert.Single((await new NpgsqlCostReader(Source)
+            .RecordsForPeriodAsync(Period(substituted.Operation.OccurredAt), CancellationToken.None)).Value);
 
-        Assert.Equal(ReasoningTier.Deep, stored.Requested);
-        Assert.Equal(ReasoningTier.Light, stored.Served);
+        Assert.Equal(ReasoningTier.Light, stored.Requested);
+        Assert.Equal(ReasoningTier.Deep, stored.Served);
         Assert.NotEqual(stored.Requested, stored.Served);
         Assert.Equal(0m, await ScalarAsync<decimal>("SELECT COALESCE(SUM(computed_cost), 0) FROM agent_costs"));
     }
@@ -262,8 +266,8 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
         var outcome = await ComposedGateway().ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
 
         var substituted = Assert.IsType<CapabilityOutcome.Substituted>(outcome);
-        var stored = Assert.Single(await new NpgsqlCostReader(Source)
-            .RecordsForPeriodAsync(Period(substituted.Operation.OccurredAt), CancellationToken.None));
+        var stored = Assert.Single((await new NpgsqlCostReader(Source)
+            .RecordsForPeriodAsync(Period(substituted.Operation.OccurredAt), CancellationToken.None)).Value);
 
         Assert.Equal(ReasoningTier.Deep, stored.Requested);
         Assert.Null(stored.Served);
@@ -274,27 +278,32 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     /// two carrying both tiers present the agreement share with its definition, and a recorded
     /// operation carrying a served tier and no requested tier does not enter the denominator.
     /// </summary>
+    ///
+    /// Re-pointed by the AI-economics change (decision D-005 of its design): the route states Deep, and
+    /// the two requests ask Light (served Deep, disagreeing) and Deep (agreeing), because a request for
+    /// a tier above the route's stated one is no longer served. The pairs, the counts and the share are
+    /// the delivered ones.
     [RequiresPostgresFact]
     public async Task TheTierRatioIsReadFromRecordedPairsWithItsDefinition()
     {
         var route = RouteId.New();
-        await InsertSubstituteRouteAsync(route, "Primary", "'Light'");
+        await InsertSubstituteRouteAsync(route, "Primary", "'Deep'");
         await MarkServingAsync(route);
 
         var gateway = ComposedGateway();
         var first = Assert.IsType<CapabilityOutcome.Substituted>(
-            await gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None));
+            await gateway.ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None));
         var period = Period(first.Operation.OccurredAt);
         var reader = new NpgsqlCostReader(Source);
 
-        var one = AnalyticsComposers.TierRatio(period, await reader.RecordsForPeriodAsync(period, CancellationToken.None));
+        var one = AnalyticsComposers.TierRatio(period, (await reader.RecordsForPeriodAsync(period, CancellationToken.None)).Value);
         Assert.IsType<MeasurementQuantity.Unmeasured>(one.Ratio);
         Assert.Equal(AnalyticsComposers.TierRatioDefinition, one.Definition);
 
-        await gateway.ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None);
+        await gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
         await RecordOperationAsync(requested: null, served: ReasoningTier.Light, first.Operation.OccurredAt);
 
-        var records = await reader.RecordsForPeriodAsync(period, CancellationToken.None);
+        var records = (await reader.RecordsForPeriodAsync(period, CancellationToken.None)).Value;
         Assert.Equal(3, records.Count);
 
         var ratio = AnalyticsComposers.TierRatio(period, records);
@@ -632,13 +641,8 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
     private ICapabilityGateway ComposedGateway()
     {
         var broker = CredentialBrokerFactory.Create(new SecretStoreOptions(), () => _clock.UtcNow);
-        var costs = new NpgsqlCostReader(Source);
 
         return CapabilityGatewayFactory.Create(
-            new NpgsqlRouteRegistry(Source),
-            new NpgsqlRouteAvailabilityLedger(Source),
-            new NpgsqlOperatingRegisters(Source),
-            costs,
             new NpgsqlUnitOfWork(Source, _clock),
             broker,
             broker,

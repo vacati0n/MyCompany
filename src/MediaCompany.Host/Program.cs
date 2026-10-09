@@ -84,6 +84,11 @@ switch (command)
         _ = provider.GetRequiredService<MediaCompany.Deterministic.Production.CopyrightCheckStageHandler>();
         _ = provider.GetRequiredService<RightsCheckStep>();
 
+        // The AI-economics capability: the benchmark record's reader, which has read members only. The
+        // admission ledger and the benchmark writer are reached only from a transaction, so there is no
+        // registration of either to resolve.
+        _ = provider.GetRequiredService<IBenchmarkReader>();
+
         Console.WriteLine("Composition root resolved.");
         Console.WriteLine("  capability egress: ICapabilityGateway only; no provider adapter is registered or registrable.");
         Console.WriteLine("  credentials:       opaque scoped handles; no secret value passes through this process boundary.");
@@ -91,6 +96,7 @@ switch (command)
         Console.WriteLine("  analytics surface:  resolved, with its read ports; it writes nothing and reaches no capability.");
         Console.WriteLine("  publishing sequence: resolved; it ends at composition and reaches no capability.");
         Console.WriteLine("  channel readings:   resolved; every reading partitions by channel, and nothing records a channel value.");
+        Console.WriteLine("  benchmark record:   resolved, read members only; nothing records an observation, and no metered call exists to make one.");
         Console.WriteLine($"  declared version:   {typeof(CompositionRoot).Assembly.GetName().Version}");
         return 0;
     }

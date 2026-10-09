@@ -134,12 +134,35 @@ internal sealed class NpgsqlGateWriter : IGateWriter
             // change, decision D-008). Reported as a named conflict rather than a datastore error,
             // so the gate service can name it; this transaction is rolled back by its owner.
             throw new GateStateConflictException(
-                $"{from} to {to} was refused for item {item} version {version}: {refused.MessageText}", refused);
+                GateConflictReason.FromStateNotRecorded,
+                $"{from} to {to} was refused for item {item} version {version}: {refused.MessageText}",
+                refused);
+        }
+        catch (PostgresException refused) when (
+            refused.ConstraintName == RecordedInstantCheck
+            || (refused.SqlState == PostgresErrorCodes.UniqueViolation && refused.ConstraintName == TransitionKey))
+        {
+            // A transition of this item version is already recorded at this instant (the AI-economics
+            // change, decision D-009 of its design). The datastore's same-instant check refuses it under
+            // its own name; the key itself is the backstop and is named the same way, so no unnamed
+            // datastore error reaches a gate caller. The first transition admitted under the item hold is
+            // the one recorded, and this transaction is rolled back by its owner.
+            throw new GateStateConflictException(
+                GateConflictReason.InstantAlreadyRecorded,
+                $"{from} to {to} was refused for item {item} version {version}: a transition is already recorded at {at:O}: "
+                + refused.MessageText,
+                refused);
         }
     }
 
     /// <summary>The name the datastore's recorded-from-state check reports its refusals under.</summary>
     internal const string RecordedFromStateCheck = "gate_transitions_from_recorded_state";
+
+    /// <summary>The name the datastore's same-instant check reports its refusals under (the seventh resource).</summary>
+    internal const string RecordedInstantCheck = "gate_transitions_at_recorded_instant";
+
+    /// <summary>The gate-transition record's key over the item, its version and the instant.</summary>
+    internal const string TransitionKey = "gate_transitions_pkey";
 }
 
 /// <summary>

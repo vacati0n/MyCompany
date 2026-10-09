@@ -36,6 +36,36 @@ public sealed class NpgsqlUnitOfWork : IUnitOfWork
             throw;
         }
     }
+
+    /// <summary>
+    /// Opens a transaction on a connection whose command timeout is the one given (the second correction
+    /// cycle). The connection is a clone of this data source's, carrying its security information, with only
+    /// the command timeout changed, so every statement of the transaction may wait as long as that.
+    /// </summary>
+    public async Task<IWorkTransaction> BeginAsync(TimeSpan commandTimeout, CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(commandTimeout, TimeSpan.Zero);
+
+        await using var template = _dataSource.CreateConnection();
+        var settings = new NpgsqlConnectionStringBuilder(template.ConnectionString)
+        {
+            // Whole seconds, rounded up, so the timeout is never below the one asked for. Zero is no timeout.
+            CommandTimeout = (int)Math.Ceiling(commandTimeout.TotalSeconds),
+        };
+
+        var connection = template.CloneWith(settings.ConnectionString);
+        try
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            return new NpgsqlWorkTransaction(connection, transaction, _clock);
+        }
+        catch
+        {
+            await connection.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
+    }
 }
 
 internal sealed class NpgsqlWorkTransaction : IWorkTransaction
@@ -57,6 +87,11 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
         Availability = new NpgsqlRouteAvailabilityWriter(connection, transaction);
         Dispatches = new NpgsqlDispatchWriter(connection, transaction);
         Dossiers = new NpgsqlDossierWriter(connection, transaction);
+
+        // The AI-economics change: the admission ledger, whose reservation lives exactly as long as this
+        // transaction, and the benchmark writer.
+        Admission = new NpgsqlAdmissionLedger(connection, transaction);
+        Benchmarks = new NpgsqlBenchmarkWriter(connection, transaction);
     }
 
     public IAuditAppender Audit { get; }
@@ -74,6 +109,10 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
     public IDispatchWriter Dispatches { get; }
 
     public IDossierWriter Dossiers { get; }
+
+    public IAdmissionLedger Admission { get; }
+
+    public IBenchmarkWriter Benchmarks { get; }
 
     public async Task CommitAsync(CancellationToken cancellationToken)
     {

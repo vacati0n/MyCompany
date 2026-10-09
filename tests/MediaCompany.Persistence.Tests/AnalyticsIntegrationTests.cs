@@ -103,20 +103,25 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     /// coexistence period, and the two readings side by side are the defect and its correction in
     /// one demonstration.
     /// </summary>
+    ///
+    /// Re-pointed by the AI-economics change (decision D-007 of its design): the delivered currency
+    /// member and the three-state members are retired, having no production caller. The correction is
+    /// read through the members that remain — the period summary with its closure and the item summary —
+    /// composed at the one composing site, and the period reading states its finality.
     [RequiresPostgresFact]
     public async Task APeriodWithNoRecordedOperationReadsUnmeasuredAndTheDeliveredMemberStillReadsZero()
     {
         var reader = new NpgsqlCostReader(Source);
 
-        var delivered = await reader.CostForPeriodAsync(Period, CancellationToken.None);
-        Assert.Equal(0m, delivered.Amount);
+        var period = await reader.PeriodSummaryAsync(Period, CancellationToken.None);
+        Assert.Equal(0m, period.Value.Total.Amount);
+        Assert.Equal(Period, period.Closure.Month);
 
-        var quantity = await reader.PeriodCostQuantityAsync(Period, CancellationToken.None);
-        var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(quantity);
+        var unmeasured = Assert.IsType<MeasurementQuantity.Unmeasured>(AnalyticsComposers.Cost(period.Value).Cost);
         Assert.Equal(UnmeasuredReason.NoObservationExists, unmeasured.Reason);
 
-        var itemQuantity = await reader.ItemCostQuantityAsync(Item, CancellationToken.None);
-        Assert.IsType<MeasurementQuantity.Unmeasured>(itemQuantity);
+        var item = AnalyticsComposers.Cost(await reader.ItemSummaryAsync(Item, CancellationToken.None));
+        Assert.IsType<MeasurementQuantity.Unmeasured>(item.Cost);
     }
 
     /// <summary>
@@ -137,7 +142,7 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         Assert.Equal("1 operations", model.Operations.Describe());
 
         var period = AnalyticsComposers.Cost(
-            await reader.PeriodSummaryAsync(Period, CancellationToken.None));
+            (await reader.PeriodSummaryAsync(Period, CancellationToken.None)).Value);
         Assert.IsType<MeasurementQuantity.ObservedValue>(period.Cost);
     }
 
@@ -160,17 +165,21 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     ///
     /// The requested and served tiers differ on purpose. A record in which they agree cannot
     /// distinguish a served value read from the route from one copied out of the request.
+    ///
+    /// Re-pointed by the AI-economics change (decision D-005 of its design): the route now states a
+    /// HIGHER tier than requested, because a route stating a lower one is no longer served outside a
+    /// recorded downgrade. The served value is still the route's and still differs from the request.
     /// </summary>
     [RequiresPostgresFact]
     public async Task TheBoundaryRecordsBothTiersAgainstTheRecordStoreWithoutReachingAProvider()
     {
-        var gateway = BuildGateway(statedTier: ReasoningTier.Light);
+        var gateway = await BuildGatewayAsync(statedTier: ReasoningTier.Deep);
 
-        var outcome = await gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
+        var outcome = await gateway.ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None);
 
         var substituted = Assert.IsType<CapabilityOutcome.Substituted>(outcome);
-        Assert.Equal(ReasoningTier.Deep, substituted.Operation.ReasoningTierRequested);
-        Assert.Equal(ReasoningTier.Light, substituted.Operation.ReasoningTierServed);
+        Assert.Equal(ReasoningTier.Light, substituted.Operation.ReasoningTierRequested);
+        Assert.Equal(ReasoningTier.Deep, substituted.Operation.ReasoningTierServed);
         Assert.True(substituted.Operation.CarriesTierEvidence);
 
         // No spend: zero units, no applied price, and a cost the datastore computed as zero.
@@ -179,13 +188,13 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         Assert.Equal(0m, substituted.Operation.ComputedCost.Amount);
 
         // And it is in the store, read back through the read port rather than from the return value.
-        var records = await new NpgsqlCostReader(Source)
-            .RecordsForPeriodAsync(Period, CancellationToken.None);
+        var records = (await new NpgsqlCostReader(Source)
+            .RecordsForPeriodAsync(Period, CancellationToken.None)).Value;
 
         var stored = Assert.Single(records);
         Assert.Equal(substituted.Operation.Id, stored.Operation);
-        Assert.Equal(ReasoningTier.Deep, stored.Requested);
-        Assert.Equal(ReasoningTier.Light, stored.Served);
+        Assert.Equal(ReasoningTier.Light, stored.Requested);
+        Assert.Equal(ReasoningTier.Deep, stored.Served);
         Assert.True(stored.CarriesTierEvidence);
 
         // The output reporting it carries the single-record caveat, which no option suppresses.
@@ -206,7 +215,7 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task ARouteStatingNoTierRecordsTheAbsenceMarkerAgainstTheRecordStore()
     {
-        var gateway = BuildGateway(statedTier: null);
+        var gateway = await BuildGatewayAsync(statedTier: null);
 
         var outcome = await gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
 
@@ -216,7 +225,7 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         Assert.False(substituted.Operation.CarriesTierEvidence);
 
         var stored = Assert.Single(
-            await new NpgsqlCostReader(Source).RecordsForPeriodAsync(Period, CancellationToken.None));
+            (await new NpgsqlCostReader(Source).RecordsForPeriodAsync(Period, CancellationToken.None)).Value);
 
         Assert.Equal(ReasoningTier.Deep, stored.Requested);
         Assert.Null(stored.Served);
@@ -439,27 +448,29 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     // Harness
     // -----------------------------------------------------------------------
 
-    private ICapabilityGateway BuildGateway(ReasoningTier? statedTier)
+    /// <summary>
+    /// The delivered boundary over the record store. The admission reads the route register, the
+    /// availability and the accounts in one snapshot of its own transaction (the correction cycle), so the
+    /// stated tier and the serving state are recorded on the fixture route row in the throwaway store rather
+    /// than supplied by a register double. No endpoint is supplied, so no provider adapter exists.
+    /// </summary>
+    private async Task<ICapabilityGateway> BuildGatewayAsync(ReasoningTier? statedTier)
     {
-        var route = new Route(
-            SubstituteRoute,
-            CapabilityClass.EditorialReasoning,
-            RouteTier.Primary,
-            new RouteTarget.NonAiSubstitute(DeterministicTaskRegistry.MetadataTemplatePopulation),
-            new QualityRating(100),
-            new ContextCapacity(int.MaxValue),
-            "non-AI substitute; no provider account and no commercial terms",
-            new DateOnly(2026, 9, 20),
-            statedTier);
+        await ExecuteAsync(
+            """
+            UPDATE routes SET reasoning_tier_stated = @stated WHERE route_id = @route;
+            INSERT INTO route_availability (route_id, effective_from, state, reason)
+            VALUES (@route, now() - interval '1 day', 'Serving', 'demonstration fixture: the substitute route is serving');
+            """,
+            c =>
+            {
+                c.Parameters.AddWithValue("route", SubstituteRoute.Value);
+                c.Parameters.Add("stated", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)statedTier?.ToString() ?? DBNull.Value;
+            });
 
         var broker = CredentialBrokerFactory.Create(new SecretStoreOptions(), () => Now);
 
-        // No endpoint is supplied, so no provider adapter is built and none could be reached.
         return CapabilityGatewayFactory.Create(
-            new RouteRegistryStatingATier(route),
-            new AvailabilityAlwaysServing(),
-            new EmptyRegisters(),
-            new UnconstrainedBudget(),
             new NpgsqlUnitOfWork(Source, _clock),
             broker,
             broker,
@@ -488,60 +499,6 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         new EstimatedUnits(1_000, 500, 0),
         TimeSpan.FromHours(4),
         ReducedFloorPolicy.Forbidden);
-
-    /// <summary>
-    /// Supplies the admitted route to the boundary. It is a test double for the route register
-    /// port and for that port alone: the boundary, the resolver, the operation recorder, the audit
-    /// appender and the record store are the delivered ones, so the record this produces is
-    /// written by the boundary executing rather than composed here.
-    /// </summary>
-    private sealed class RouteRegistryStatingATier(Route route) : IRouteRegistry
-    {
-        public Task<IReadOnlyList<Route>> AdmittedRoutesAsync(CapabilityClass capability, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Route>>(route.Capability == capability ? [route] : []);
-
-        public Task<IReadOnlyList<ForbiddenSource>> ForbiddenSourcesAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<ForbiddenSource>>([]);
-    }
-
-    private sealed class AvailabilityAlwaysServing : IRouteAvailabilityLedger
-    {
-        public Task<IReadOnlyDictionary<RouteId, RouteAvailability>> CurrentAsync(
-            IReadOnlyCollection<RouteId> routes, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyDictionary<RouteId, RouteAvailability>>(
-                routes.ToDictionary(r => r, r => RouteAvailability.Serving(r, Now)));
-    }
-
-    /// <summary>No provider account, no model and no price: there is nothing to reach.</summary>
-    private sealed class EmptyRegisters : IOperatingRegisters
-    {
-        public Task<IReadOnlyList<ProviderAccount>> ProviderAccountsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<ProviderAccount>>([]);
-
-        public Task<IReadOnlyList<Model>> ModelsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Model>>([]);
-
-        public Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(DateTimeOffset asOf, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<ModelPrice>>([]);
-
-        public Task<IReadOnlyList<Channel>> ChannelsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Channel>>([]);
-
-        public Task<IReadOnlyList<Department>> DepartmentsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Department>>([]);
-
-        public Task<IReadOnlyList<WorkforceAgent>> AgentsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<WorkforceAgent>>([]);
-    }
-
-    private sealed class UnconstrainedBudget : IBudgetReader
-    {
-        public Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken ct) =>
-            Task.FromResult(new Money(1_000m));
-
-        public Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken ct) =>
-            Task.FromResult(new BookedHeadroom(new DateOnly(2026, 10, 1), new Money(1_000m)));
-    }
 
     private sealed class TestClock(DateTimeOffset now) : IClock
     {

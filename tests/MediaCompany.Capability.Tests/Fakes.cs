@@ -2,6 +2,7 @@ using MediaCompany.Application.Ports;
 using MediaCompany.Credentials;
 using MediaCompany.Domain;
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Audit;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Registry;
@@ -97,30 +98,161 @@ internal sealed class FakeRegisters : IOperatingRegisters
         Task.FromResult<IReadOnlyList<WorkforceAgent>>([]);
 }
 
-internal sealed class FakeBudgetReader : IBudgetReader
+/// <summary>
+/// What the datastore would answer an admission with (the AI-economics change): the booking instant it
+/// reserves, the prices in force, the governing readings of the booking month and the evidence. It
+/// stands in for the datastore's ONE CLOCK: the reserved instant is set here, never read from a process
+/// clock, so a demonstration can set the process clock anywhere and see which one the boundary used.
+/// </summary>
+internal sealed class FakeAdmission
 {
-    public Money Remaining { get; set; } = new(100m);
+    /// <summary>The booking instant the datastore reserves. Its month is the booking month.</summary>
+    public DateTimeOffset Instant { get; set; } = DateTimeOffset.Parse("2026-10-01T12:00:00Z");
 
-    /// <summary>How many headroom reads were taken for a month the caller supplied, on its own clock.</summary>
-    public int CallerMonthReads { get; private set; }
+    public DateOnly Month => new(Instant.UtcDateTime.Year, Instant.UtcDateTime.Month, 1);
 
-    /// <summary>How many headroom reads were taken for the datastore's booking month.</summary>
-    public int BookingMonthReads { get; private set; }
+    /// <summary>The channel's recorded budget amount for the booking month, or null where none is recorded.</summary>
+    public Money? ChannelBudget { get; set; } = new(100m);
 
-    public Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken ct)
+    public ScopeSpend ChannelSpend { get; set; } = new(0, 0, Money.Zero());
+
+    public ScopeSpend CompanySpend { get; set; } = new(0, 0, Money.Zero());
+
+    public Money Headroom { get; set; } = new(100m);
+
+    public CompanyId? Company { get; set; } = CompanyId.New();
+
+    public List<ModelPrice> Prices { get; } = [];
+
+    public List<BenchmarkObservation> Evidence { get; } = [];
+
+    public int Reservations { get; set; }
+
+    public int GoverningReads { get; set; }
+
+    public int Snapshots { get; set; }
+
+    /// <summary>The scope holds taken, in the order they were taken.</summary>
+    public List<string> Holds { get; } = [];
+
+    /// <summary>Whether another admission holds the company scope, so a try at it is refused (the second correction cycle).</summary>
+    public bool CompanyScopeHeldElsewhere { get; set; }
+
+    /// <summary>The price sets restored on a fresh transaction after a lost one.</summary>
+    public List<IReadOnlyList<ModelPrice>> RestoredPrices { get; } = [];
+
+    /// <summary>The route register the snapshot reads routes and forbidden sources from.</summary>
+    public IRouteRegistry? RouteSource { get; set; }
+
+    /// <summary>The availability ledger the snapshot reads availability from.</summary>
+    public IRouteAvailabilityLedger? AvailabilitySource { get; set; }
+
+    /// <summary>The registers the snapshot reads accounts from.</summary>
+    public IOperatingRegisters? RegisterSource { get; set; }
+
+    /// <summary>Set to make the next operation write fail, standing in for a transaction lost after the provider call.</summary>
+    public bool LoseNextOperationWrite { get; set; }
+
+    /// <summary>Puts a full price row set (input, output and cached) in force for a model.</summary>
+    public void Price(ModelId model, decimal input, decimal output, decimal cached, DateTimeOffset from)
     {
-        CallerMonthReads++;
-        return Task.FromResult(Remaining);
+        foreach (var (kind, price) in new[] { (PriceUnitKind.InputUnit, input), (PriceUnitKind.OutputUnit, output), (PriceUnitKind.CachedUnit, cached) })
+        {
+            Prices.Add(new ModelPrice(
+                ModelPriceId.New(), model, kind, price, "USD", "ESTIMATE, a demonstration parameter",
+                DateOnly.FromDateTime(from.UtcDateTime), from, null));
+        }
     }
 
-    /// <summary>The booking month a demonstration names, and the remaining amount.</summary>
-    public DateOnly BookingMonth { get; set; } = new(2026, 10, 1);
+    /// <summary>The utilisation the datastore computes: booked times one hundred over the amount, to four places.</summary>
+    internal static decimal? Percent(Money? amount, ScopeSpend spend) =>
+        amount is { } a ? Math.Round(spend.Booked.Amount * 100m / a.Amount, 4) : null;
+}
 
-    public Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken ct)
+/// <summary>The admission ledger over <see cref="FakeAdmission"/>, on one transaction.</summary>
+internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDecisionDraft> pending) : IAdmissionLedger
+{
+    private BookingReservation? _reservation;
+
+    public Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken)
     {
-        BookingMonthReads++;
-        return Task.FromResult(new BookedHeadroom(BookingMonth, Remaining));
+        if (_reservation is null)
+        {
+            state.Reservations++;
+            _reservation = new BookingReservation(state.Instant, state.Month);
+        }
+
+        return Task.FromResult(_reservation);
     }
+
+    public Task<bool> TryHoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
+    {
+        // The order the datastore adapter tries the holds in, recorded so a demonstration can read it. Where
+        // the demonstration says another admission holds the company scope, the first try is refused.
+        state.Holds.Add("company");
+        if (state.CompanyScopeHeldElsewhere)
+        {
+            return Task.FromResult(false);
+        }
+
+        state.Holds.Add($"channel:{channel}");
+        return Task.FromResult(true);
+    }
+
+    public async Task<AdmissionSnapshot> ReadAsync(
+        CapabilityClass capability, Attribution attribution, Money companyAllotment, TaskClass? taskClass, CancellationToken cancellationToken)
+    {
+        state.Snapshots++;
+        var at = Reserved().Instant;
+        var routes = state.RouteSource is null
+            ? (IReadOnlyList<Route>)[]
+            : await state.RouteSource.AdmittedRoutesAsync(capability, cancellationToken);
+        var models = routes.Select(r => r.Target).OfType<RouteTarget.ProviderRoute>().Select(p => p.Model).ToHashSet();
+
+        return new AdmissionSnapshot(
+            routes,
+            state.RouteSource is null ? [] : await state.RouteSource.ForbiddenSourcesAsync(cancellationToken),
+            state.AvailabilitySource is null
+                ? new Dictionary<RouteId, RouteAvailability>()
+                : await state.AvailabilitySource.CurrentAsync(routes.Select(r => r.Id).ToArray(), cancellationToken),
+            state.RegisterSource is null ? [] : await state.RegisterSource.ProviderAccountsAsync(cancellationToken),
+            state.Prices.Where(p => models.Contains(p.Model) && p.ValidFrom <= at && (p.ValidTo is null || p.ValidTo > at)).ToArray(),
+            await GoverningReadingsAsync(attribution, companyAllotment, cancellationToken),
+            taskClass is { } task
+                ? state.Evidence.Where(o => routes.Any(r => r.Id == o.Route) && o.TaskClass == task && o.ObservedAt <= at).ToArray()
+                : []);
+    }
+
+    public Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken)
+    {
+        state.RestoredPrices.Add(prices);
+        return Task.CompletedTask;
+    }
+
+    public Task<GoverningReadingsSummary> GoverningReadingsAsync(Attribution attribution, Money companyAllotment, CancellationToken cancellationToken)
+    {
+        state.GoverningReads++;
+        return Task.FromResult(new GoverningReadingsSummary(
+            Reserved().Month,
+            attribution.Channel,
+            state.ChannelBudget,
+            state.ChannelSpend,
+            FakeAdmission.Percent(state.ChannelBudget, state.ChannelSpend),
+            state.Company,
+            state.CompanySpend,
+            FakeAdmission.Percent(companyAllotment, state.CompanySpend),
+            state.Headroom));
+    }
+
+    public Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken)
+    {
+        Reserved();
+        pending.Add(decision);
+        return Task.CompletedTask;
+    }
+
+    private BookingReservation Reserved() =>
+        _reservation ?? throw new InvalidOperationException("No booking instant is reserved on this transaction.");
 }
 
 /// <summary>
@@ -136,6 +268,18 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
     public List<BudgetAlert> Alerts { get; } = [];
 
+    /// <summary>What the datastore answers an admission with (the AI-economics change).</summary>
+    public FakeAdmission Admission { get; } = new();
+
+    /// <summary>The decision records that became durable.</summary>
+    public List<AdmissionDecisionDraft> Decisions { get; } = [];
+
+    /// <summary>The booked month each budget evaluation was asked for.</summary>
+    public List<DateOnly> EvaluatedMonths { get; } = [];
+
+    /// <summary>The stored alerts read back, by booked month and instant, for a recovered outcome.</summary>
+    public List<(DateOnly Period, DateTimeOffset RaisedAt)> StoredAlertReads { get; } = [];
+
     public int Commits { get; private set; }
 
     public int RolledBack { get; private set; }
@@ -149,6 +293,21 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
     /// <summary>Set to make the next commit throw, standing in for a crash mid-transaction.</summary>
     public bool FailNextCommit { get; set; }
 
+    /// <summary>
+    /// Set to make the next commit REACH THE STORE and then throw, standing in for a commit whose reply was
+    /// lost: what it wrote is durable, and the caller cannot know it.
+    /// </summary>
+    public bool LoseNextCommitReply { get; set; }
+
+    /// <summary>Binds the read ports the admission snapshot is composed from (the correction cycle).</summary>
+    public FakeUnitOfWork Bind(IRouteRegistry routes, IRouteAvailabilityLedger availability, IOperatingRegisters registers)
+    {
+        Admission.RouteSource = routes;
+        Admission.AvailabilitySource = availability;
+        Admission.RegisterSource = registers;
+        return this;
+    }
+
     public Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IWorkTransaction>(new Transaction(this));
 
@@ -157,13 +316,16 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         private readonly FakeUnitOfWork _owner;
         private readonly List<OperationRecord> _pendingOperations = [];
         private readonly List<AuditEntry> _pendingEntries = [];
+        private readonly List<AdmissionDecisionDraft> _pendingDecisions = [];
         private bool _committed;
 
         internal Transaction(FakeUnitOfWork owner)
         {
             _owner = owner;
             Audit = new Appender(_pendingEntries);
-            Operations = new Recorder(_pendingOperations);
+            Operations = new Recorder(_pendingOperations, owner);
+            Admission = new FakeAdmissionLedger(owner.Admission, _pendingDecisions);
+            Benchmarks = new Benchmarkless();
             Jobs = new Jobless();
             Budgets = new Budgeter(owner);
             Gates = new Gateless();
@@ -188,6 +350,10 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
         public IDossierWriter Dossiers { get; }
 
+        public IAdmissionLedger Admission { get; }
+
+        public IBenchmarkWriter Benchmarks { get; }
+
         public Task CommitAsync(CancellationToken cancellationToken)
         {
             if (_owner.FailNextCommit)
@@ -198,10 +364,18 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
             _owner.Operations.AddRange(_pendingOperations);
             _owner.AuditEntries.AddRange(_pendingEntries);
+            _owner.Decisions.AddRange(_pendingDecisions);
             _owner.CommittedAvailability.AddRange(_owner.PendingAvailability);
             _owner.PendingAvailability.Clear();
             _owner.Commits++;
             _committed = true;
+
+            if (_owner.LoseNextCommitReply)
+            {
+                _owner.LoseNextCommitReply = false;
+                throw new IOException("induced loss of the commit's reply after the commit reached the store");
+            }
+
             return Task.CompletedTask;
         }
 
@@ -259,10 +433,23 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                     ct);
         }
 
-        private sealed class Recorder(List<OperationRecord> sink) : IOperationRecorder
+        private sealed class Recorder(List<OperationRecord> sink, FakeUnitOfWork owner) : IOperationRecorder
         {
             public Task<OperationRecord> RecordAsync(OperationDraft draft, CancellationToken ct)
             {
+                if (owner.Admission.LoseNextOperationWrite)
+                {
+                    owner.Admission.LoseNextOperationWrite = false;
+                    throw new InvalidOperationException("induced loss of the admission transaction after the provider call");
+                }
+
+                // The datastore's key on the operation identifier: a second write under one identifier books
+                // nothing and says the attempt is already recorded (the correction cycle).
+                if (owner.Operations.FirstOrDefault(o => o.Id == draft.Id) is { } recorded)
+                {
+                    throw new OperationAlreadyRecordedException(recorded);
+                }
+
                 // The production recorder lets the datastore compute the cost. Here the double
                 // records zero, which is correct for every path this fake is used on: refusals,
                 // holds and substitutes reach no provider and carry no units.
@@ -281,7 +468,10 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                     CostBasis = draft.CostBasis,
                     Duration = draft.Duration,
                     Outcome = draft.Outcome,
-                    OccurredAt = draft.OccurredAt,
+
+                    // The datastore books at the instant the transaction reserved; the draft's instant is not
+                    // stored. The double stands in for the datastore here, exactly as the recorder does.
+                    OccurredAt = owner.Admission.Instant,
                     Attempt = draft.Attempt,
                     FailureReason = draft.FailureReason,
 
@@ -346,8 +536,27 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         private sealed class Budgeter(FakeUnitOfWork owner) : IBudgetEvaluator
         {
             public Task<IReadOnlyList<BudgetAlert>> EvaluateAsync(
-                Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct) =>
-                Task.FromResult<IReadOnlyList<BudgetAlert>>(owner.Alerts.ToArray());
+                Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct)
+            {
+                owner.EvaluatedMonths.Add(period);
+                return Task.FromResult<IReadOnlyList<BudgetAlert>>(owner.Alerts.ToArray());
+            }
+
+            public Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
+                Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct)
+            {
+                owner.StoredAlertReads.Add((period, raisedAt));
+                return Task.FromResult<IReadOnlyList<BudgetAlert>>(owner.Alerts.ToArray());
+            }
+        }
+
+        private sealed class Benchmarkless : IBenchmarkWriter
+        {
+            public Task<DateTimeOffset> RegisterEntryAsync(CorpusEntryId entry, TaskClass taskClass, CancellationToken ct) =>
+                throw new NotSupportedException("The resolution boundary registers no corpus entry.");
+
+            public Task<BenchmarkObservation> RecordObservationAsync(BenchmarkObservationDraft draft, CancellationToken ct) =>
+                throw new NotSupportedException("The resolution boundary records no benchmark observation.");
         }
     }
 

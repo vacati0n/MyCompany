@@ -43,7 +43,7 @@ internal static class ChannelTestKit
             costs, costs, new NpgsqlRevenueParameterRegister(source), new NpgsqlThroughputReader(source),
             new NpgsqlItemDossierReader(source), new NpgsqlGateLedger(source), new NpgsqlAssetLedger(source),
             new NpgsqlChannelPartitionReader(source), new NpgsqlApprovalQueueReader(source),
-            new NpgsqlOperatingRegisters(source), clock);
+            new NpgsqlOperatingRegisters(source), new NpgsqlBenchmarkReader(source), clock);
     }
 
     /// <summary>A complete, verified asset decision for one item, naming itself a demonstration fixture.</summary>

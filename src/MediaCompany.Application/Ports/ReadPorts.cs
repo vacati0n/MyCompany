@@ -98,46 +98,26 @@ public interface IConfigurationStore
     Task SupersedeAsync(ConfigurationVersion next, CancellationToken cancellationToken);
 }
 
-/// <summary>Cost rollups (module M-006), aggregated by the datastore over the recorded operations.</summary>
+/// <summary>
+/// Cost rollups (module M-006), aggregated by the datastore over the recorded operations.
+///
+/// THE COEXISTENCE PERIOD HAS ENDED (the AI-economics change, decision D-007 of its design). The
+/// delivered currency-returning members — item cost, period cost, cost by capability class and the
+/// deterministic-set cost — and the three-state item and period cost members are RETIRED, under their
+/// own stated condition: the build shows no production caller of any of them. The operation partition
+/// already carries the cost by capability class and the deterministic-set cost with finality. The two
+/// members that remain each answer for the read that produced their figure: the period summary returns
+/// its month closure from the same close-then-read transaction.
+/// </summary>
 public interface ICostRollupReader
 {
-    Task<Money> CostForItemAsync(ItemId item, CancellationToken cancellationToken);
-
-    Task<Money> CostForPeriodAsync(DateOnly period, CancellationToken cancellationToken);
-
     /// <summary>
-    /// The monthly total against the approved envelope, with the variance. Every figure is
-    /// aggregated and subtracted by the datastore in its exact decimal type, so the reported
-    /// variance and the recorded one are one number rather than two (constraint C-005).
+    /// The monthly total against the approved envelope, with the variance, and the month's closure from
+    /// the SAME close-then-read transaction, so finality is decided by the read that produced the figure.
+    /// Every figure is aggregated and subtracted by the datastore in its exact decimal type, so the
+    /// reported variance and the recorded one are one number rather than two (constraint C-005).
     /// </summary>
-    Task<PeriodSummary> PeriodSummaryAsync(DateOnly period, CancellationToken cancellationToken);
-
-    Task<IReadOnlyDictionary<CapabilityClass, Money>> CostByCapabilityAsync(DateOnly period, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// The total cost attributed to the named deterministic task set over a period. Acceptance
-    /// criterion AC-017 measures this to zero.
-    /// </summary>
-    Task<Money> CostForDeterministicSetAsync(DateOnly period, CancellationToken cancellationToken);
-
-    // -----------------------------------------------------------------------
-    // The parallel three-state members (decision D-005).
-    //
-    // The delivered currency-returning members above keep their signatures and their behaviour, so
-    // every existing caller compiles and behaves unchanged through the coexistence period. They are
-    // removed only once the build shows no caller, which is a condition the build decides rather
-    // than a judgement somebody makes.
-    //
-    // The defect the parallel members exist to correct is concrete: a currency value cannot express
-    // the absence of an observation, so a period holding no recorded operation is returned today as
-    // a zero amount and is indistinguishable from a period that was measured and cost nothing.
-    // -----------------------------------------------------------------------
-
-    /// <summary>One item's cost in three states. Unmeasured where no operation is recorded for it.</summary>
-    Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken cancellationToken);
-
-    /// <summary>One period's cost in three states. Unmeasured where the period holds no recorded operation.</summary>
-    Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken cancellationToken);
+    Task<MonthReading<PeriodSummary>> PeriodSummaryAsync(DateOnly period, CancellationToken cancellationToken);
 
     /// <summary>
     /// One item's cost position as the datastore computes it, mirroring the delivered period
@@ -148,25 +128,11 @@ public interface ICostRollupReader
 }
 
 /// <summary>
-/// What remains of a governing budget, read before a route is admitted at resolution step 4. The
-/// remaining amount is computed by the datastore from the recorded operations and the configured
-/// budget, not here (constraint C-005).
+/// A month reading and the closure of that month, taken in ONE close-then-read transaction (the
+/// AI-economics change, decision D-007 of its design): the closure was taken first and the figure read
+/// afterwards on the same transaction, so a month read as final was final before its figure was read.
 /// </summary>
-public interface IBudgetReader
-{
-    Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// What remains of the governing budgets in the month the datastore would book an operation into
-    /// NOW, and that month (the multi-channel change, as corrected in its review): the month of the
-    /// later of the datastore's clock and the record horizon, decided in the same statement as the
-    /// remaining amount, so admission is decided on the clock booking is decided on.
-    /// </summary>
-    Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken cancellationToken);
-}
-
-/// <summary>The headroom of one attribution in the datastore's booking month, and that month.</summary>
-public sealed record BookedHeadroom(DateOnly Month, Money Remaining);
+public sealed record MonthReading<T>(MonthClosure Closure, T Value);
 
 /// <summary>
 /// One period's cost position as the datastore computes it. <see cref="ContainsEstimates"/> is
@@ -181,7 +147,14 @@ public sealed record PeriodSummary(
     Money EnvelopeStanding,
     Money VarianceAgainstEnvelope,
     bool ContainsEstimates,
-    long Operations);
+    long Operations)
+{
+    /// <summary>
+    /// How many of the operations carry a cost that is not stated (the AI-economics change, correction
+    /// cycle): where any does, the total is a partial sum and is never presented as observed.
+    /// </summary>
+    public long UnstatedOperations { get; init; }
+}
 
 /// <summary>
 /// One item's cost position as the datastore computes it, on the same shape as
@@ -192,7 +165,11 @@ public sealed record ItemSummary(
     ItemId Item,
     Money Total,
     bool ContainsEstimates,
-    long Operations);
+    long Operations)
+{
+    /// <summary>How many of the operations carry a cost that is not stated; where any does, the total is not observed.</summary>
+    public long UnstatedOperations { get; init; }
+}
 
 /// <summary>
 /// The served reasoning tier as recorded, one entry per accounted operation in a period.
@@ -203,8 +180,37 @@ public sealed record ItemSummary(
 /// </summary>
 public interface IServedTierReader
 {
-    Task<IReadOnlyList<ServedTierRecord>> RecordsForPeriodAsync(DateOnly period, CancellationToken cancellationToken);
+    /// <summary>
+    /// The records of one month, with the month's closure from the SAME close-then-read transaction (the
+    /// AI-economics change, decision D-007 of its design), so every reading built on them states the
+    /// finality of the read that produced it.
+    /// </summary>
+    Task<MonthReading<IReadOnlyList<ServedTierRecord>>> RecordsForPeriodAsync(DateOnly period, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// The benchmark record's reader (decision D-002 of the AI-economics design). READ MEMBERS ONLY.
+///
+/// Every member returns the observations as the record holds them, each with its cost and latency read
+/// through the operation it references, in one transaction. The measurement cases of an aggregate are
+/// decided at one composing site; nothing here aggregates.
+/// </summary>
+public interface IBenchmarkReader
+{
+    /// <summary>The observations booked into one month, with the month's closure from the same transaction.</summary>
+    Task<MonthReading<IReadOnlyList<BenchmarkObservation>>> ObservationsAsync(DateOnly month, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Every route the route register holds and every observation recorded, read in one snapshot, so a
+    /// route with no observation for a task class is named and read unmeasured rather than omitted.
+    /// </summary>
+    Task<BenchmarkRecordSummary> RecordAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>Every route the register holds and every observation recorded, as one snapshot read them.</summary>
+public sealed record BenchmarkRecordSummary(
+    IReadOnlyList<RouteId> Routes,
+    IReadOnlyList<BenchmarkObservation> Observations);
 
 /// <summary>
 /// The register in which an observed revenue parameter is recorded with the source observation it
@@ -357,7 +363,39 @@ public interface IChannelPartitionReader
     /// recorded cost against the supplied ceiling, and the alerts the delivered tracking recorded.
     /// </summary>
     Task<BudgetPartitionSummary> BudgetsAsync(DateOnly month, Money ceiling, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The operation record of one month by the reasoning tier each operation's admitting route stated,
+    /// and for the operations whose route stated none, with the period total, all in one statement inside
+    /// the delivered close-then-read transaction (the AI-economics change, decision D-006 of its design).
+    /// </summary>
+    Task<TierDistributionSummary> TierDistributionAsync(DateOnly month, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// One part of a month's operation record by served tier, as the datastore aggregated it: the count,
+/// the input, output and cached unit sums, the cost, and how many of the costs are not stated.
+/// <see cref="Tier"/> is null for the operations whose admitting route stated no tier.
+/// </summary>
+public sealed record TierPartTotals(
+    ReasoningTier? Tier,
+    long Operations,
+    long InputUnits,
+    long OutputUnits,
+    long CachedUnits,
+    Money Cost,
+    long UnstatedCosts);
+
+/// <summary>
+/// The tier distribution of one month: the closure, one part per served tier the rows carry and one for
+/// the untiered rows, and the period total, computed by grouping sets over the same rows in one
+/// statement, so every additive part sums exactly to the total.
+/// </summary>
+public sealed record TierDistributionSummary(
+    MonthClosure Closure,
+    IReadOnlyList<TierPartTotals> Parts,
+    TierPartTotals Total,
+    long ServedTierRecords);
 
 /// <summary>One channel the channel register holds, with its company.</summary>
 public sealed record RegisteredChannel(ChannelId Channel, CompanyId Company);
@@ -384,7 +422,17 @@ public sealed record OperationTotals(
     IReadOnlyDictionary<CapabilityClass, Money> CostByCapability,
     long ServedTierRecords,
     long CarryingBothTiers,
-    long AgreeingTiers);
+    long AgreeingTiers)
+{
+    /// <summary>How many operations of the partition carry a cost that is not stated (correction cycle).</summary>
+    public long UnstatedCosts { get; init; }
+
+    /// <summary>How many operations of the deterministic set carry a cost that is not stated.</summary>
+    public long UnstatedDeterministicCosts { get; init; }
+
+    /// <summary>How many operations of each capability class carry a cost that is not stated.</summary>
+    public IReadOnlyDictionary<CapabilityClass, long> UnstatedByCapability { get; init; } = new Dictionary<CapabilityClass, long>();
+}
 
 /// <summary>One channel's partition of the operation record, and whether the register holds the channel.</summary>
 public sealed record OperationPartitionRow(ChannelId Channel, bool InRegister, OperationTotals Totals);
@@ -441,7 +489,11 @@ public sealed record ChannelBudgetRow(
     Money Utilised,
     Money? BudgetAmount,
     decimal? UtilisationPercent,
-    IReadOnlyDictionary<int, long> AlertsByThreshold);
+    IReadOnlyDictionary<int, long> AlertsByThreshold)
+{
+    /// <summary>How many of the channel's operations in the month carry a cost that is not stated (correction cycle).</summary>
+    public long UnstatedOperations { get; init; }
+}
 
 /// <summary>Every registered channel's budget position, and the company's cost against the ceiling, for one month.</summary>
 public sealed record BudgetPartitionSummary(
@@ -450,7 +502,11 @@ public sealed record BudgetPartitionSummary(
     long CompanyOperations,
     Money CompanyCost,
     decimal? CompanyUtilisationPercent,
-    Money Ceiling);
+    Money Ceiling)
+{
+    /// <summary>How many of the company's operations in the month carry a cost that is not stated (correction cycle).</summary>
+    public long CompanyUnstatedOperations { get; init; }
+}
 
 /// <summary>
 /// The approval queue reader (decision D-005 of the multi-channel design).

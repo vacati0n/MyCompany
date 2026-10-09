@@ -58,8 +58,10 @@ public static class AnalyticsComposers
             Item = summary.Item,
             Cost = FromOperations(
                 summary.Operations,
+                summary.UnstatedOperations,
                 summary.Total,
-                $"no operation is recorded for item {summary.Item}"),
+                $"no operation is recorded for item {summary.Item}",
+                $"item {summary.Item}"),
             Operations = MeasurementQuantity.Count(summary.Operations, "operations"),
             PriceBasis = PriceBasis,
             ContainsEstimates = summary.ContainsEstimates,
@@ -76,8 +78,10 @@ public static class AnalyticsComposers
             Period = summary.Period,
             Cost = FromOperations(
                 summary.Operations,
+                summary.UnstatedOperations,
                 summary.Total,
-                $"no operation is recorded in period {summary.Period:yyyy-MM}"),
+                $"no operation is recorded in period {summary.Period:yyyy-MM}",
+                $"period {summary.Period:yyyy-MM}"),
             Operations = MeasurementQuantity.Count(summary.Operations, "operations"),
             PriceBasis = PriceBasis,
             ContainsEstimates = summary.ContainsEstimates,
@@ -93,6 +97,26 @@ public static class AnalyticsComposers
         operations == 0
             ? MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, absenceDetail)
             : MeasurementQuantity.Observed(total.Amount, total.Currency);
+
+    /// <summary>
+    /// The same rule, HONOURING WHETHER EACH COST IS STATED (the AI-economics change, correction cycle):
+    /// where any operation behind the figure carries a cost that is not stated, its computed cost holds a
+    /// missing price as zero, so the aggregation is a partial sum and reads UNMEASURED, naming how many
+    /// operations, never observed and never a partial sum presented as observed. This is the rule the
+    /// cost controller applies to booked spend, so a reading and the controller agree over one month.
+    /// </summary>
+    public static MeasurementQuantity FromOperations(
+        long operations,
+        long unstated,
+        Domain.Accounting.Money total,
+        string absenceDetail,
+        string scope) =>
+        unstated > 0
+            ? MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.SourceCannotStateOne,
+                $"{unstated} of the {operations} operations of {scope} carry a cost that is not stated, so the cost "
+                + "cannot be stated; a missing price is never read as zero")
+            : FromOperations(operations, total, absenceDetail);
 
     // -----------------------------------------------------------------------
     // Approval effort (plan task T-008)

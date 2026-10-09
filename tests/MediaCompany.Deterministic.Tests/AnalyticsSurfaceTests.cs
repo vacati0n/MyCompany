@@ -608,30 +608,14 @@ public sealed class AnalyticsSurfaceTests
     /// <summary>A cost rollup reader over a period whose recorded operation count is supplied.</summary>
     private sealed class StubCosts(long operations) : ICostRollupReader
     {
-        public Task<Money> CostForItemAsync(ItemId item, CancellationToken ct) =>
-            Task.FromResult(new Money(1.25m));
-
-        public Task<Money> CostForPeriodAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult(new Money(1.25m));
-
-        public Task<PeriodSummary> PeriodSummaryAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult(new PeriodSummary(
-                period, new Money(1.25m), new Money(77.41m), new Money(34.42m), new Money(42.99m),
-                new Money(-76.16m), ContainsEstimates: false, Operations: operations));
-
-        public Task<IReadOnlyDictionary<CapabilityClass, Money>> CostByCapabilityAsync(
-            DateOnly period, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyDictionary<CapabilityClass, Money>>(
-                new Dictionary<CapabilityClass, Money>());
-
-        public Task<Money> CostForDeterministicSetAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult(Money.Zero());
-
-        public Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken ct) =>
-            Task.FromResult(AnalyticsComposers.FromOperations(operations, new Money(1.25m), "no record"));
-
-        public Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken ct) =>
-            Task.FromResult(AnalyticsComposers.FromOperations(operations, new Money(1.25m), "no record"));
+        // The retired members are gone from the port (the AI-economics change); the period summary now
+        // carries its month closure from the read that produced it.
+        public Task<MonthReading<PeriodSummary>> PeriodSummaryAsync(DateOnly period, CancellationToken ct) =>
+            Task.FromResult(new MonthReading<PeriodSummary>(
+                new MonthClosure(period, ClosedByThisRead: true, Now, null),
+                new PeriodSummary(
+                    period, new Money(1.25m), new Money(77.41m), new Money(34.42m), new Money(42.99m),
+                    new Money(-76.16m), ContainsEstimates: false, Operations: operations)));
 
         public Task<ItemSummary> ItemSummaryAsync(ItemId item, CancellationToken ct) =>
             Task.FromResult(new ItemSummary(item, new Money(1.25m), ContainsEstimates: false, Operations: operations));

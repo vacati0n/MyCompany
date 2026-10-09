@@ -33,6 +33,7 @@ public sealed class AnalyticsReportService
     private readonly IChannelPartitionReader _partitions;
     private readonly IApprovalQueueReader _approvals;
     private readonly IOperatingRegisters _registers;
+    private readonly IBenchmarkReader _benchmarks;
     private readonly IClock _clock;
 
     public AnalyticsReportService(
@@ -46,6 +47,7 @@ public sealed class AnalyticsReportService
         IChannelPartitionReader partitions,
         IApprovalQueueReader approvals,
         IOperatingRegisters registers,
+        IBenchmarkReader benchmarks,
         IClock clock)
     {
         _costs = costs;
@@ -58,6 +60,7 @@ public sealed class AnalyticsReportService
         _partitions = partitions;
         _approvals = approvals;
         _registers = registers;
+        _benchmarks = benchmarks;
         _clock = clock;
     }
 
@@ -72,36 +75,66 @@ public sealed class AnalyticsReportService
         AnalyticsComposers.Cost(await _costs.ItemSummaryAsync(item, cancellationToken).ConfigureAwait(false));
 
     /// <summary>
-    /// One calendar period's cost, on the same rule, carrying whether the month can still change.
-    /// The month is closed FIRST and read afterwards, so a month read as final was final before the
-    /// figure was read and the figure cannot change after it (decision D-006 of the multi-channel design).
+    /// One calendar period's cost, on the same rule, carrying whether the month can still change. The
+    /// figure and its finality come from ONE close-then-read transaction (the AI-economics change,
+    /// decision D-007 of its design): the month is closed first and read afterwards on the same
+    /// transaction, so a month read as final was final before the figure was read, and the finality is
+    /// that of the read that produced the figure rather than of a separate closure.
     /// </summary>
     public async Task<CostReadModel> PeriodCostAsync(DateOnly period, CancellationToken cancellationToken)
     {
-        var closure = await _partitions.CloseMonthAsync(period, cancellationToken).ConfigureAwait(false);
-        var cost = AnalyticsComposers.Cost(await _costs.PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false));
-        return cost with { Finality = ChannelAnalyticsComposers.Finality(closure) };
+        var reading = await _costs.PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false);
+        return AnalyticsComposers.Cost(reading.Value) with { Finality = ChannelAnalyticsComposers.Finality(reading.Closure) };
     }
 
-    /// <summary>Every served-tier record of a period, each carrying the single-record caveat.</summary>
-    public async Task<IReadOnlyList<ServedTierReadModel>> ServedTiersAsync(
-        DateOnly period,
-        CancellationToken cancellationToken) =>
-        AnalyticsComposers.ServedTiers(
-            await _tiers.RecordsForPeriodAsync(period, cancellationToken).ConfigureAwait(false));
+    /// <summary>
+    /// Every served-tier record of a period, each carrying the single-record caveat, with the month's
+    /// finality from the read that produced the records.
+    /// </summary>
+    public async Task<ServedTierReading> ServedTiersAsync(DateOnly period, CancellationToken cancellationToken)
+    {
+        var reading = await _tiers.RecordsForPeriodAsync(period, cancellationToken).ConfigureAwait(false);
+        return new ServedTierReading
+        {
+            Month = period,
+            Finality = ChannelAnalyticsComposers.Finality(reading.Closure),
+            Records = AnalyticsComposers.ServedTiers(reading.Value),
+        };
+    }
 
     /// <summary>
     /// The tier ratio, unmeasured while the period holds fewer than two records carrying both a
-    /// requested and a served tier, and carrying its definition either way.
+    /// requested and a served tier, and carrying its definition either way, with the finality of the read
+    /// that produced the records it is computed from.
     /// </summary>
     public async Task<TierRatioReadModel> TierRatioAsync(DateOnly period, CancellationToken cancellationToken)
     {
-        var closure = await _partitions.CloseMonthAsync(period, cancellationToken).ConfigureAwait(false);
-        var ratio = AnalyticsComposers.TierRatio(
-            period,
-            await _tiers.RecordsForPeriodAsync(period, cancellationToken).ConfigureAwait(false));
-        return ratio with { Finality = ChannelAnalyticsComposers.Finality(closure) };
+        var reading = await _tiers.RecordsForPeriodAsync(period, cancellationToken).ConfigureAwait(false);
+        return AnalyticsComposers.TierRatio(period, reading.Value) with
+        {
+            Finality = ChannelAnalyticsComposers.Finality(reading.Closure),
+        };
     }
+
+    /// <summary>
+    /// A month's tier distribution per served tier and untiered (the AI-economics change, decision D-006
+    /// of its design), from one close-then-read transaction, with the assumed split labelled, the count of
+    /// operations carrying a served tier and the month's finality. It decides no split.
+    /// </summary>
+    public async Task<TierDistributionReading> TierDistributionAsync(DateOnly month, CancellationToken cancellationToken) =>
+        EconomicsComposers.TierDistribution(
+            await _partitions.TierDistributionAsync(month, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>
+    /// Every route's benchmark position for every task class (the AI-economics change, decision D-002 of
+    /// its design), unmeasured wherever the benchmark record holds no observation of the pair.
+    /// </summary>
+    public async Task<BenchmarkRecordReading> BenchmarkAsync(CancellationToken cancellationToken) =>
+        EconomicsComposers.Benchmark(await _benchmarks.RecordAsync(cancellationToken).ConfigureAwait(false));
+
+    /// <summary>The benchmark observations booked into one month, with the month's finality from the same read.</summary>
+    public async Task<BenchmarkMonthReading> BenchmarkMonthAsync(DateOnly month, CancellationToken cancellationToken) =>
+        EconomicsComposers.BenchmarkMonth(await _benchmarks.ObservationsAsync(month, cancellationToken).ConfigureAwait(false));
 
     /// <summary>
     /// The revenue-derived figures that are lit. Empty while the register holds no row carrying a

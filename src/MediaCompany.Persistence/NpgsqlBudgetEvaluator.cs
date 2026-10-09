@@ -42,7 +42,14 @@ internal sealed class NpgsqlBudgetEvaluator : IBudgetEvaluator
                 SELECT * FROM fn_budgets_for(@channel_id, @department_id, @period)
             ),
             measured AS (
-                SELECT g.budget_id, g.period, g.amount, g.currency, u.utilized, u.utilization_percent
+                SELECT g.budget_id, g.period, g.amount, g.currency, u.utilized, u.utilization_percent,
+                       -- Whether the budget's scope holds a cost that is not stated in the month (the
+                       -- AI-economics change, correction cycle): where it does, the utilisation is a partial
+                       -- sum, so no threshold is read as reached from it and no alert presents it.
+                       (SELECT count(*) FROM agent_costs c
+                        WHERE c.period = g.period AND c.cost_stated IS NOT TRUE
+                          AND ((g.scope_kind = 'Department' AND c.department_id = g.scope_id)
+                            OR (g.scope_kind = 'Channel' AND c.channel_id = g.scope_id))) AS unstated
                 FROM governing g
                 CROSS JOIN LATERAL fn_budget_utilization(g.budget_id) u
             ),
@@ -50,7 +57,7 @@ internal sealed class NpgsqlBudgetEvaluator : IBudgetEvaluator
                 SELECT m.*, t.threshold
                 FROM measured m
                 CROSS JOIN (VALUES (50), (75), (90), (100)) AS t(threshold)
-                WHERE m.utilization_percent >= t.threshold
+                WHERE m.unstated = 0 AND m.utilization_percent >= t.threshold
             )
             INSERT INTO budget_alerts (budget_id, period, threshold, utilization, utilized, budget_amount, raised_at)
             SELECT budget_id, period, threshold, utilization_percent, utilized, amount, @raised_at
@@ -66,6 +73,41 @@ internal sealed class NpgsqlBudgetEvaluator : IBudgetEvaluator
         command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
         command.Parameters.AddWithValue("raised_at", raisedAt);
 
+        return await ReadAlertsAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
+        Attribution attribution,
+        DateOnly period,
+        DateTimeOffset raisedAt,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(attribution);
+
+        // The alerts the commit that booked an operation raised: those of the budgets governing its
+        // attribution in its booked month, stamped with its booked instant, which is the instant every
+        // alert of that evaluation carries (the second correction cycle).
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT a.budget_id, a.period, a.threshold, a.utilization, a.utilized, a.budget_amount, a.raised_at
+            FROM budget_alerts a
+            JOIN fn_budgets_for(@channel_id, @department_id, @period) g ON g.budget_id = a.budget_id
+            WHERE a.period = @period AND a.raised_at = @raised_at
+            ORDER BY a.budget_id, a.threshold
+            """,
+            _connection,
+            _transaction);
+
+        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
+        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
+        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
+        command.Parameters.AddWithValue("raised_at", raisedAt);
+
+        return await ReadAlertsAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyList<BudgetAlert>> ReadAlertsAsync(NpgsqlCommand command, CancellationToken cancellationToken)
+    {
         var alerts = new List<BudgetAlert>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))

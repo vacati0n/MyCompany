@@ -1,5 +1,5 @@
 using MediaCompany.Application.Ports;
-using MediaCompany.Deterministic.Analytics;
+using MediaCompany.Application.Production;
 using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
@@ -435,11 +435,28 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
             throw new InvalidOperationException(
                 $"'{next.Key}' under scope '{next.Scope}' is not an admitted configuration key and scope. The set is closed, "
                 + "which is what keeps the owner-approval step out of configuration: a base key is admitted under any scope "
-                + "but a channel's, and a channel key only under the scope of exactly one channel.");
+                + "but a channel's, a channel key only under the scope of exactly one channel, and a production or "
+                + "publishing key only under the scope of exactly one company.");
         }
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        // A company scope names a company the register HOLDS (the correction cycle): a value scoped to an
+        // identifier no company carries would be recorded where nothing reads it.
+        if (CompanyConfigurationScope.IsCompanyScope(next.Scope))
+        {
+            var company = Guid.ParseExact(next.Scope[CompanyConfigurationScope.ScopePrefix.Length..], "D");
+            await using var exists = new NpgsqlCommand(
+                "SELECT EXISTS (SELECT 1 FROM companies WHERE company_id = @company)", connection, transaction);
+            exists.Parameters.AddWithValue("company", company);
+            if (await exists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
+            {
+                throw new InvalidOperationException(
+                    $"'{next.Key}' under scope '{next.Scope}' is refused: the company register holds no company {company}, "
+                    + "so a value scoped to it would be read by nothing.");
+            }
+        }
 
         await using (var close = new NpgsqlCommand(
             """
@@ -480,16 +497,31 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
     /// <summary>
     /// The admitted key-and-scope pairings. A base key is admitted under any scope that does not name
     /// a channel; a channel key (the multi-channel change, decision D-001) only under the scope of
-    /// exactly one channel, and only where it reaches no control. Every other pairing is refused, so
-    /// no per-channel value can be written under a base key and no base key can be scoped to a channel.
+    /// exactly one channel, and only where it reaches no control; a production key and a publishing key
+    /// (the AI-economics change, decision D-010) only under the scope of exactly one company, and only
+    /// where that key's OWN delivered forbidden-fragment rule finds no control. Every other pairing is
+    /// refused, so no per-channel value can be written under a base key, no base key can be scoped to a
+    /// channel, and no production or publishing value can be scoped to a channel, whose fragment rule the
+    /// publishing keys would not pass. No fragment rule changes here.
     /// </summary>
     internal static bool IsAdmittedPairing(string key, string scope)
     {
         var channelScope = ChannelConfigurationKeys.IsChannelScope(scope);
+        var companyScope = CompanyConfigurationScope.IsCompanyScope(scope);
 
         if (ChannelConfigurationKeys.IsAdmitted(key))
         {
             return channelScope && !ChannelConfigurationKeys.ReachesAControl(key);
+        }
+
+        if (ProductionConfigurationKeys.IsAdmitted(key))
+        {
+            return companyScope && !ProductionConfigurationKeys.ReachesAControl(key);
+        }
+
+        if (PublishingConfigurationKeys.IsAdmitted(key))
+        {
+            return companyScope && !PublishingConfigurationKeys.ReachesAControl(key);
         }
 
         return ConfigurationKeys.IsAdmitted(key) && !channelScope;
@@ -509,143 +541,72 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
 }
 
 /// <summary>
-/// Cost rollups and budget headroom (module M-006). Every figure here is produced by an
-/// aggregation in the datastore's exact decimal type; this class reads results and performs no
-/// money arithmetic (constraint C-005).
+/// Cost rollups (module M-006). Every figure here is produced by an aggregation in the datastore's exact
+/// decimal type; this class reads results and performs no money arithmetic (constraint C-005).
+///
+/// The AI-economics change (decision D-007 of its design) retired the members without a production
+/// caller and the budget reader with them; the headroom an admission is decided against is read on the
+/// admission transaction instead. The period summary and the served-tier list are each read inside the
+/// one close-then-read transaction every month reading takes, and return the month's closure with their
+/// figures, so finality is decided by the read that produced the figure.
 /// </summary>
-public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServedTierReader
+public sealed class NpgsqlCostReader : ICostRollupReader, IServedTierReader
 {
     private readonly NpgsqlDataSource _dataSource;
 
     public NpgsqlCostReader(NpgsqlDataSource dataSource) => _dataSource = dataSource;
 
-    public async Task<Money> CostForItemAsync(ItemId item, CancellationToken cancellationToken)
+    public async Task<MonthReading<PeriodSummary>> PeriodSummaryAsync(DateOnly period, CancellationToken cancellationToken)
     {
-        await using var command = _dataSource.CreateCommand(
-            "SELECT COALESCE(total_cost, 0), COALESCE(currency, 'USD') FROM v_cost_per_item WHERE item_id = @item_id");
-        command.Parameters.AddWithValue("item_id", item.Value);
-        return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task<Money> CostForPeriodAsync(DateOnly period, CancellationToken cancellationToken)
-    {
-        await using var command = _dataSource.CreateCommand(
-            "SELECT COALESCE(total_cost, 0), 'USD' FROM v_cost_per_period WHERE period = @period");
-        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
-        return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task<PeriodSummary> PeriodSummaryAsync(DateOnly period, CancellationToken cancellationToken)
-    {
-        await using var command = _dataSource.CreateCommand(
-            """
-            SELECT total_cost, envelope_total, envelope_metered, envelope_standing,
-                   variance_against_envelope, contains_estimates, operations
-            FROM v_cost_per_period WHERE period = @period
-            """);
-        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            // No operation was recorded in the period, so the whole envelope is unspent. The
-            // variance is still the datastore's arithmetic on the next read; here there is
-            // nothing to aggregate.
-            return new PeriodSummary(
-                period,
-                Money.Zero(),
-                ApprovedEnvelope.MonthlyTotal,
-                ApprovedEnvelope.Metered,
-                ApprovedEnvelope.Standing,
-                new Money(-ApprovedEnvelope.MonthlyTotal.Amount),
-                ContainsEstimates: false,
-                Operations: 0);
-        }
-
-        return new PeriodSummary(
+        var (closure, summary) = await MonthReads.ReadAsync(
+            _dataSource,
             period,
-            new Money(reader.GetDecimal(0)),
-            new Money(reader.GetDecimal(1)),
-            new Money(reader.GetDecimal(2)),
-            new Money(reader.GetDecimal(3)),
-            new Money(reader.GetDecimal(4)),
-            reader.GetBoolean(5),
-            reader.GetInt64(6));
-    }
+            async (connection, transaction, ct) =>
+            {
+                await using var command = new NpgsqlCommand(
+                    """
+                    SELECT v.total_cost, v.envelope_total, v.envelope_metered, v.envelope_standing,
+                           v.variance_against_envelope, v.contains_estimates, v.operations,
+                           (SELECT count(*) FROM agent_costs a WHERE a.period = v.period AND a.cost_stated IS NOT TRUE)
+                    FROM v_cost_per_period v WHERE v.period = @period
+                    """,
+                    connection,
+                    transaction);
+                command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
 
-    public async Task<IReadOnlyDictionary<CapabilityClass, Money>> CostByCapabilityAsync(DateOnly period, CancellationToken cancellationToken)
-    {
-        await using var command = _dataSource.CreateCommand(
-            "SELECT capability_class, total_cost FROM v_cost_by_capability WHERE period = @period");
-        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
+                await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+                if (!await reader.ReadAsync(ct).ConfigureAwait(false))
+                {
+                    // No operation was recorded in the period, so the whole envelope is unspent. The
+                    // variance is still the datastore's arithmetic on the next read; here there is
+                    // nothing to aggregate, and the count of zero is what makes the figure unmeasured.
+                    return new PeriodSummary(
+                        period,
+                        Money.Zero(),
+                        ApprovedEnvelope.MonthlyTotal,
+                        ApprovedEnvelope.Metered,
+                        ApprovedEnvelope.Standing,
+                        new Money(-ApprovedEnvelope.MonthlyTotal.Amount),
+                        ContainsEstimates: false,
+                        Operations: 0);
+                }
 
-        var result = new Dictionary<CapabilityClass, Money>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            result[Enum.Parse<CapabilityClass>(reader.GetString(0))] = new Money(reader.GetDecimal(1));
-        }
+                return new PeriodSummary(
+                    period,
+                    new Money(reader.GetDecimal(0)),
+                    new Money(reader.GetDecimal(1)),
+                    new Money(reader.GetDecimal(2)),
+                    new Money(reader.GetDecimal(3)),
+                    new Money(reader.GetDecimal(4)),
+                    reader.GetBoolean(5),
+                    reader.GetInt64(6))
+                {
+                    UnstatedOperations = reader.GetInt64(7),
+                };
+            },
+            cancellationToken).ConfigureAwait(false);
 
-        return result;
-    }
-
-    public async Task<Money> CostForDeterministicSetAsync(DateOnly period, CancellationToken cancellationToken)
-    {
-        await using var command = _dataSource.CreateCommand(
-            "SELECT COALESCE(SUM(total_cost), 0), 'USD' FROM v_deterministic_ai_cost WHERE period = @period");
-        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
-        return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(attribution);
-
-        // The subtraction is a numeric expression in the datastore, not application arithmetic.
-        await using var command = _dataSource.CreateCommand(
-            """
-            SELECT COALESCE(MIN(b.amount - u.utilized), 0), COALESCE(MIN(b.currency), 'USD')
-            FROM fn_budgets_for(@channel_id, @department_id, @period) b
-            CROSS JOIN LATERAL fn_budget_utilization(b.budget_id) u
-            """);
-        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
-        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
-        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
-
-        return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// The headroom in the datastore's booking month, the month and the amount in one statement. The
-    /// subtraction is the datastore's, as in the delivered member.
-    /// </summary>
-    public async Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(attribution);
-
-        await using var command = _dataSource.CreateCommand(
-            """
-            WITH booking AS (
-                SELECT (date_trunc('month', GREATEST(clock_timestamp(), horizon) AT TIME ZONE 'UTC'))::date AS month
-                FROM audit_record_horizon WHERE only_row
-            )
-            SELECT booking.month,
-                   COALESCE((SELECT MIN(b.amount - u.utilized)
-                             FROM fn_budgets_for(@channel_id, @department_id, booking.month) b
-                             CROSS JOIN LATERAL fn_budget_utilization(b.budget_id) u), 0),
-                   COALESCE((SELECT MIN(b.currency) FROM fn_budgets_for(@channel_id, @department_id, booking.month) b), 'USD')
-            FROM booking
-            """);
-        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
-        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
-
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            throw new InvalidOperationException("The record horizon is missing; the fifth schema resource creates it.");
-        }
-
-        return new BookedHeadroom(reader.GetFieldValue<DateOnly>(0), new Money(reader.GetDecimal(1), reader.GetString(2)));
+        return new MonthReading<PeriodSummary>(closure, summary);
     }
 
     /// <summary>
@@ -657,8 +618,9 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServed
     {
         await using var command = _dataSource.CreateCommand(
             """
-            SELECT total_cost, COALESCE(currency, 'USD'), contains_estimates, operations
-            FROM v_cost_per_item WHERE item_id = @item_id
+            SELECT v.total_cost, COALESCE(v.currency, 'USD'), v.contains_estimates, v.operations,
+                   (SELECT count(*) FROM agent_costs a WHERE a.item_id = v.item_id AND a.cost_stated IS NOT TRUE)
+            FROM v_cost_per_item v WHERE v.item_id = @item_id
             """);
         command.Parameters.AddWithValue("item_id", item.Value);
 
@@ -672,71 +634,54 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServed
             item,
             new Money(reader.GetDecimal(0), reader.GetString(1)),
             reader.GetBoolean(2),
-            reader.GetInt64(3));
+            reader.GetInt64(3))
+        {
+            UnstatedOperations = reader.GetInt64(4),
+        };
     }
 
     /// <summary>
-    /// The three-state item cost. The rule that turns an aggregation into a measurement state
-    /// lives in one place, in the analytics composer, so the adapter and the surface cannot drift.
+    /// The recorded tier pair of every accounted operation in a period, with the period's closure from
+    /// the same transaction. Both columns are read as recorded; a null served tier is returned as null,
+    /// which is the explicit absence marker the resolution boundary wrote, and nothing here substitutes
+    /// the requested tier for it.
     /// </summary>
-    public async Task<MeasurementQuantity> ItemCostQuantityAsync(ItemId item, CancellationToken cancellationToken)
-    {
-        var summary = await ItemSummaryAsync(item, cancellationToken).ConfigureAwait(false);
-
-        return AnalyticsComposers.FromOperations(
-            summary.Operations, summary.Total, $"no operation is recorded for item {item}");
-    }
-
-    /// <summary>The three-state period cost, on the same rule.</summary>
-    public async Task<MeasurementQuantity> PeriodCostQuantityAsync(DateOnly period, CancellationToken cancellationToken)
-    {
-        var summary = await PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false);
-
-        return AnalyticsComposers.FromOperations(
-            summary.Operations, summary.Total, $"no operation is recorded in period {period:yyyy-MM}");
-    }
-
-    /// <summary>
-    /// The recorded tier pair of every accounted operation in a period. Both columns are read as
-    /// recorded; a null served tier is returned as null, which is the explicit absence marker the
-    /// resolution boundary wrote, and nothing here substitutes the requested tier for it.
-    /// </summary>
-    public async Task<IReadOnlyList<ServedTierRecord>> RecordsForPeriodAsync(
+    public async Task<MonthReading<IReadOnlyList<ServedTierRecord>>> RecordsForPeriodAsync(
         DateOnly period,
         CancellationToken cancellationToken)
     {
-        await using var command = _dataSource.CreateCommand(
-            """
-            SELECT operation_id, period, reasoning_tier_requested, reasoning_tier_served
-            FROM agent_costs WHERE period = @period ORDER BY occurred_at, operation_id
-            """);
-        command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
-
-        var records = new List<ServedTierRecord>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            records.Add(new ServedTierRecord
+        var (closure, records) = await MonthReads.ReadAsync(
+            _dataSource,
+            period,
+            async (connection, transaction, ct) =>
             {
-                Operation = new OperationId(reader.GetGuid(0)),
-                Period = reader.GetFieldValue<DateOnly>(1),
-                Requested = reader.IsDBNull(2) ? null : Enum.Parse<ReasoningTier>(reader.GetString(2)),
-                Served = reader.IsDBNull(3) ? null : Enum.Parse<ReasoningTier>(reader.GetString(3)),
-            });
-        }
+                await using var command = new NpgsqlCommand(
+                    """
+                    SELECT operation_id, period, reasoning_tier_requested, reasoning_tier_served
+                    FROM agent_costs WHERE period = @period ORDER BY occurred_at, operation_id
+                    """,
+                    connection,
+                    transaction);
+                command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
 
-        return records;
-    }
+                var read = new List<ServedTierRecord>();
+                await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+                while (await reader.ReadAsync(ct).ConfigureAwait(false))
+                {
+                    read.Add(new ServedTierRecord
+                    {
+                        Operation = new OperationId(reader.GetGuid(0)),
+                        Period = reader.GetFieldValue<DateOnly>(1),
+                        Requested = reader.IsDBNull(2) ? null : Enum.Parse<ReasoningTier>(reader.GetString(2)),
+                        Served = reader.IsDBNull(3) ? null : Enum.Parse<ReasoningTier>(reader.GetString(3)),
+                    });
+                }
 
-    private static async Task<Money> ReadMoneyAsync(NpgsqlCommand command, CancellationToken cancellationToken)
-    {
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-        {
-            return Money.Zero();
-        }
+                return (IReadOnlyList<ServedTierRecord>)read;
+            },
+            cancellationToken).ConfigureAwait(false);
 
-        return new Money(reader.GetDecimal(0), reader.GetString(1));
+        return new MonthReading<IReadOnlyList<ServedTierRecord>>(closure, records);
     }
 }
 

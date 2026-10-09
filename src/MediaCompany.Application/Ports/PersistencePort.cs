@@ -1,5 +1,8 @@
 using MediaCompany.Domain.Accounting;
+using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Audit;
+using MediaCompany.Domain.Capabilities;
+using MediaCompany.Domain.Registry;
 using MediaCompany.Domain.Dossier;
 using MediaCompany.Domain.Work;
 
@@ -19,6 +22,16 @@ public interface IUnitOfWork
     /// that property: there is no writer that can commit on its own.
     /// </summary>
     Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Opens a transaction whose every statement may run for up to the given command timeout (the
+    /// AI-economics change, second correction cycle). The recording of a provider attempt whose cost is
+    /// already incurred, after its admission transaction was lost, opens its transaction this way, with a
+    /// timeout above the provider-call bound, so a row hold it meets on its path is waited out for longer
+    /// than any admission holds it. A realization without command timeouts opens an ordinary transaction.
+    /// </summary>
+    Task<IWorkTransaction> BeginAsync(TimeSpan commandTimeout, CancellationToken cancellationToken) =>
+        BeginAsync(cancellationToken);
 }
 
 /// <summary>
@@ -68,7 +81,220 @@ public interface IWorkTransaction : IAsyncDisposable
     /// </summary>
     IDossierWriter Dossiers { get; }
 
+    /// <summary>
+    /// The admission ledger (the AI-economics change, decision D-001 of its design): the booking
+    /// instant this transaction reserves, the prices, governing readings and evidence read at it, and
+    /// the decision record written on it.
+    ///
+    /// Reachable ONLY from a transaction, because the reservation IS a property of the transaction: the
+    /// shared hold on the record horizon that keeps the reserved instant bookable lasts exactly as long
+    /// as the transaction does, and the reserved instant is held by the datastore for this transaction
+    /// alone, so no caller code carries it.
+    /// </summary>
+    IAdmissionLedger Admission { get; }
+
+    /// <summary>
+    /// The benchmark record's writer (decision D-002 of the AI-economics design), reachable only from a
+    /// transaction so an observation and the operation it references commit together or not at all.
+    /// </summary>
+    IBenchmarkWriter Benchmarks { get; }
+
     Task CommitAsync(CancellationToken cancellationToken);
+}
+
+// ---------------------------------------------------------------------------
+// The AI-economics change: the admission ledger and the benchmark writer
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// One admission's ledger on its transaction (decision D-001 of the AI-economics design).
+///
+/// ONE BOOKING INSTANT, THE DATASTORE'S. <see cref="ReserveAsync"/> is the first statement of an
+/// admission: it reserves the later of the datastore's clock and the record horizon, under a SHARED
+/// hold on the horizon kept to the end of the transaction, exactly as the operation recorder stamps,
+/// and holds the instant in a transaction-local datastore setting. Every other member reads AT that
+/// instant, the operation recorder books at it, and the decision record is stamped with it, so the
+/// prices, the governing readings, the evidence, the operation and its decision are on one clock and in
+/// one month. Because the horizon is held shared from the reservation to the commit, and every closure
+/// takes it exclusively without waiting, no closure can pass the reserved instant meanwhile, so the
+/// month the operation is admitted against is the month it is booked into.
+///
+/// ONE SNAPSHOT (the correction cycle): <see cref="ReadAsync"/> reads the routes, the forbidden sources,
+/// the availability, the accounts, the prices in force, the governing readings and the evidence in ONE
+/// STATEMENT, so the estimate, the headroom it is compared with and the controller's readings come from
+/// one consistent read; and it captures the prices it read on the transaction, so the operation recorder
+/// applies those prices rather than looking them up again in the editable price register.
+///
+/// SERIALISED PER SCOPE (the correction cycle, on the ruling that no concurrent overshoot is accepted):
+/// <see cref="TryHoldScopesAsync"/> takes the company scope's hold and then the channel scope's, always in
+/// that order, each held to the end of the transaction, so two metered admissions of one scope cannot
+/// both read spend that excludes the other's booking. NEVER WAITING (the second correction cycle): each
+/// hold is TRIED without waiting, and where either is held by another transaction the admission is told
+/// so, and is deferred under its own recorded reason instead of queueing behind a provider call.
+/// </summary>
+public interface IAdmissionLedger
+{
+    /// <summary>
+    /// Reserves the booking instant and returns it with its month. Calling it again on the same
+    /// transaction returns the same reservation.
+    /// </summary>
+    Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Tries the company scope's admission hold and then the attribution channel's, in that fixed order,
+    /// WITHOUT WAITING, each taken held to the end of this transaction; true where both are now held, false
+    /// where either is held by another transaction. A metered admission takes both before the read it
+    /// decides on, so admissions of one scope are serialised; none waits, so none queues behind a provider
+    /// call and none deadlocks.
+    /// </summary>
+    Task<bool> TryHoldScopesAsync(ChannelId channel, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Everything one admission decides by, in ONE STATEMENT at the reserved instant: the capability's
+    /// admitted routes, the forbidden sources, each route's current availability, the provider accounts,
+    /// the prices in force for the routes' models, the governing readings of the attribution with the
+    /// company's metered allotment capping the headroom, and, where a task class is named, the evidence.
+    /// The prices read are captured on the transaction for the operation recorder.
+    /// </summary>
+    Task<AdmissionSnapshot> ReadAsync(
+        CapabilityClass capability,
+        Attribution attribution,
+        Money companyAllotment,
+        TaskClass? taskClass,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Captures price rows read by an earlier admission snapshot on THIS transaction, so an attempt recorded
+    /// on a fresh transaction after a lost one applies the prices it was admitted at.
+    /// </summary>
+    Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The governing readings of one attribution in the booking month, in one statement at the reserved
+    /// instant: the channel's recorded budget amount, its booked spend and utilisation; the company's
+    /// booked spend and its utilisation of <paramref name="companyAllotment"/>; and the delivered
+    /// headroom over the governing channel and department budgets. Every figure is the datastore's.
+    /// </summary>
+    Task<GoverningReadingsSummary> GoverningReadingsAsync(
+        Attribution attribution,
+        Money companyAllotment,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Writes the decision record of one operation recorded on this transaction: the header stamped
+    /// with the reserved instant and month, one row per governing reading, one per candidate and one per
+    /// observation ranked on. The datastore refuses a decision whose instant is not its operation's.
+    /// </summary>
+    Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken);
+}
+
+/// <summary>The booking instant a transaction reserved, and its month (the first day, UTC).</summary>
+public sealed record BookingReservation(DateTimeOffset Instant, DateOnly Month);
+
+/// <summary>
+/// Everything one admission decides by, as one statement read it at the reserved instant (the
+/// AI-economics change, correction cycle).
+/// </summary>
+public sealed record AdmissionSnapshot(
+    IReadOnlyList<Route> Routes,
+    IReadOnlyList<ForbiddenSource> ForbiddenSources,
+    IReadOnlyDictionary<RouteId, RouteAvailability> Availability,
+    IReadOnlyList<ProviderAccount> Accounts,
+    IReadOnlyList<ModelPrice> Prices,
+    GoverningReadingsSummary Readings,
+    IReadOnlyList<BenchmarkObservation> Evidence);
+
+/// <summary>
+/// An operation is already recorded under the identifier a writer presented (the AI-economics change,
+/// correction cycle): one provider attempt is recorded under ONE identifier minted before the call, so a
+/// retry after a commit whose outcome was unknown meets the first record rather than booking a second.
+/// The stored record is carried, and the writing transaction is left usable.
+/// </summary>
+public sealed class OperationAlreadyRecordedException : InvalidOperationException
+{
+    public OperationAlreadyRecordedException(OperationRecord recorded)
+        : base($"Operation {recorded?.Id} is already recorded; one attempt is booked once.")
+    {
+        ArgumentNullException.ThrowIfNull(recorded);
+        Recorded = recorded;
+    }
+
+    /// <summary>The record already stored under the identifier.</summary>
+    public OperationRecord Recorded { get; }
+}
+
+/// <summary>
+/// One scope's booked operations in a booking month, as the datastore aggregated them: how many, how
+/// many of them carry a cost that is not stated, and the booked cost.
+/// </summary>
+public sealed record ScopeSpend(long Operations, long UnstatedOperations, Money Booked);
+
+/// <summary>
+/// The governing readings of one attribution in one booking month, BARE, exactly as the datastore
+/// computed them in one statement. Nothing here decides a measurement case or an action: the cost
+/// controller decides both, at one site.
+/// </summary>
+public sealed record GoverningReadingsSummary(
+    DateOnly Month,
+    ChannelId Channel,
+    Money? ChannelBudgetAmount,
+    ScopeSpend ChannelSpend,
+    decimal? ChannelUtilisationPercent,
+    CompanyId? Company,
+    ScopeSpend CompanySpend,
+    decimal? CompanyUtilisationPercent,
+    Money Headroom);
+
+/// <summary>
+/// The decision record of one admission. Its instant and month are not carried: the ledger stamps the
+/// header with the reserved instant the datastore holds for the transaction.
+/// </summary>
+public sealed record AdmissionDecisionDraft
+{
+    public required OperationId Operation { get; init; }
+    public required ControllerDecision Controller { get; init; }
+    public required SelectionRecord Selection { get; init; }
+
+    /// <summary>The resolved route's tier outcome, or null where no route was resolved.</summary>
+    public TierOutcome? TierOutcome { get; init; }
+
+    /// <summary>What the tier rule did, including where no downgrade was available and why. Required.</summary>
+    public required string TierStatement { get; init; }
+
+    /// <summary>Whether the admitted month's reservation held to the booking, or was lost and re-taken. Required.</summary>
+    public required string ReservationStatement { get; init; }
+}
+
+/// <summary>
+/// The benchmark record's writer (decision D-002 of the AI-economics design). There is no update and
+/// no delete: every row is written once, and the datastore refuses an amendment for every writer.
+/// </summary>
+public interface IBenchmarkWriter
+{
+    /// <summary>
+    /// Registers a corpus entry: a REFERENCE ONLY, its identifier and task class, stamped by the
+    /// datastore. There is no member taking content, because the register has no column to hold it.
+    /// </summary>
+    Task<DateTimeOffset> RegisterEntryAsync(CorpusEntryId entry, TaskClass taskClass, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records one observation of an operation already recorded. Its route and model are the operation's
+    /// own, its cost and latency are read through the operation, and its instant is the datastore's.
+    /// </summary>
+    Task<BenchmarkObservation> RecordObservationAsync(BenchmarkObservationDraft draft, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The caller-supplied part of an observation: the entry, its task class, the operation and the
+/// quality in its case. It carries no cost, no latency, no route, no model and no instant.
+/// </summary>
+public sealed record BenchmarkObservationDraft
+{
+    public required BenchmarkObservationId Id { get; init; }
+    public required CorpusEntryId Entry { get; init; }
+    public required TaskClass TaskClass { get; init; }
+    public required OperationId Operation { get; init; }
+    public required MeasurementQuantity Quality { get; init; }
 }
 
 /// <summary>Gate state changes, written inside the transaction that records them.</summary>
@@ -99,9 +325,31 @@ public interface IGateWriter
 public sealed class GateStateConflictException : InvalidOperationException
 {
     public GateStateConflictException(string message, Exception? inner = null)
-        : base(message, inner)
+        : this(GateConflictReason.FromStateNotRecorded, message, inner)
     {
     }
+
+    public GateStateConflictException(GateConflictReason reason, string message, Exception? inner = null)
+        : base(message, inner)
+    {
+        Reason = reason;
+    }
+
+    /// <summary>Which of the datastore's gate checks refused the transition (the AI-economics change).</summary>
+    public GateConflictReason Reason { get; }
+}
+
+/// <summary>Why the record store refused a gate transition. Each is its own named check.</summary>
+public enum GateConflictReason
+{
+    /// <summary>The transition claimed a from-state that is not the item version's latest recorded state.</summary>
+    FromStateNotRecorded = 1,
+
+    /// <summary>
+    /// A transition of the item version is already recorded at the same instant (the AI-economics
+    /// change, decision D-009 of its design); the first admitted under the item hold is the one recorded.
+    /// </summary>
+    InstantAlreadyRecorded = 2,
 }
 
 /// <summary>
@@ -216,6 +464,17 @@ public interface IOperationRecorder
     /// that instant's month. The returned record carries the STORED instant, which is the one a
     /// month reading and a budget evaluation use; the draft's instant is the caller's observation
     /// and is not stored.
+    ///
+    /// WHERE THE TRANSACTION HOLDS A RESERVATION (the AI-economics change, decision D-001 of its
+    /// design) the operation is booked AT THE RESERVED INSTANT, so it lands in the month it was admitted
+    /// against; elsewhere it is stamped exactly as above. The record also states whether its cost is
+    /// stated: not where a consumed input, output or cached unit had no price row in force at the
+    /// booking instant, or any other unit was consumed, so a missing price never reads as a stated zero.
+    ///
+    /// Where the transaction captured prices at admission (the correction cycle) the recorder applies the
+    /// captured prices, not a later lookup in the editable price register. Where an operation is already
+    /// recorded under the draft's identifier it books nothing and raises
+    /// <see cref="OperationAlreadyRecordedException"/> carrying the stored record.
     /// </summary>
     Task<OperationRecord> RecordAsync(OperationDraft draft, CancellationToken cancellationToken);
 }
@@ -308,6 +567,18 @@ public interface IBudgetEvaluator
     /// the alerts this evaluation raised. An alert is idempotent per budget, period and threshold.
     /// </summary>
     Task<IReadOnlyList<BudgetAlert>> EvaluateAsync(
+        MediaCompany.Domain.Capabilities.Attribution attribution,
+        DateOnly period,
+        DateTimeOffset raisedAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The alerts already stored for the budgets governing the attribution in the period and raised at the
+    /// given instant (the second correction cycle): an operation's booked instant names the alerts the
+    /// commit that booked it raised, so an outcome recovered after a lost commit reply reads them back with
+    /// the operation instead of raising them twice or reporting none.
+    /// </summary>
+    Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
         MediaCompany.Domain.Capabilities.Attribution attribution,
         DateOnly period,
         DateTimeOffset raisedAt,
