@@ -400,6 +400,35 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// UNIT PRICES ARE READ AT THE RESERVED INSTANT. A fixture price row taking effect an hour after the
+    /// datastore's clock, at a price no request's ceiling admits, is not in force at the booking instant,
+    /// so the stand-in is reached and the operation is costed at the price in force at that instant; with
+    /// the process clock two days ahead, a price read on the process clock would have refused it.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task PricesAreReadAtTheReservedInstantAndNotOnTheProcessClock()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        await ExecuteAsync(
+            """
+            INSERT INTO model_prices (model_price_id, model_id, unit_kind, unit_price, currency, source, verified_on, valid_from, valid_to)
+            SELECT gen_random_uuid(), 'alpha-reasoning', kind, 1, 'USD', 'a later fixture price no ceiling admits', CURRENT_DATE,
+                   clock_timestamp() + interval '1 hour', NULL
+            FROM unnest(ARRAY['InputUnit', 'OutputUnit', 'CachedUnit']) AS kind
+            """);
+
+        var standIn = new StandInProvider(Alpha);
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UtcNow.AddDays(2)), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.Equal(1, standIn.Calls);
+        Assert.Equal(0.0105m, completed.Operation.ComputedCost.Amount);
+        Assert.True(completed.Operation.CostStated);
+    }
+
     // -----------------------------------------------------------------------
     // Admission against the booking month, across a month end
     // -----------------------------------------------------------------------
