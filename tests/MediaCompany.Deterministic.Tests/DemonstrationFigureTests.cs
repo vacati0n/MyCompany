@@ -29,7 +29,7 @@ public sealed class DemonstrationFigureTests
         Assert.DoesNotContain(read.Tiles, t => t.Case is FigureCase.Observed or FigureCase.ObservedZero);
         Assert.Contains(read.Tiles, t => t.Rendering.Contains("[demonstration]", StringComparison.Ordinal));
         Assert.DoesNotContain(read.Tiles, t => t.Rendering.Contains("[observed", StringComparison.Ordinal));
-        Assert.All(read.Reports.Outcomes.Where(o => o.Rule == RecommendationRule.CfoCompanyCeiling), o => Assert.IsType<RuleOutcome.Abstained>(o));
+        Assert.All(read.Reports.Outcomes, o => Assert.IsType<RuleOutcome.Abstained>(o));
     }
 
     [Fact]

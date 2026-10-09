@@ -110,7 +110,7 @@ public abstract record LineFigure
             MeasurementQuantity.ObservedValue value => $"{value.Amount} {value.Unit}",
             MeasurementQuantity.ObservedZero zero => $"0 {zero.Unit}",
             var other => other.Describe(),
-        } + ", booked by fake providers in a store designated demonstration; never an observation of the company's work or spend",
+        } + ", read from a store designated demonstration, where fake providers run; never an observation of the company's work or spend",
         _ => throw new InvalidOperationException("Unreachable: a line figure has three shapes."),
     };
 

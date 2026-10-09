@@ -61,8 +61,33 @@ public static class ManagementComposers
             Register = snapshot.RegisterEntries,
         };
 
-        return set with { Outcomes = RuleCatalogue.Evaluate(set, snapshot) };
+        var outcomes = RuleCatalogue.Evaluate(set, snapshot);
+
+        // A rule that issued over a figure of a demonstration store issues nothing: it abstains, naming the designation,
+        // whatever the figure it read was computed from (the production change, decision D-005 of its design).
+        if (snapshot.Designation == MediaCompany.Domain.Production.StoreDesignation.Demonstration)
+        {
+            outcomes = outcomes.Select(AbstainOverDemonstration).ToArray();
+        }
+
+        return set with { Outcomes = outcomes };
     }
+
+    /// <summary>An issued outcome of a demonstration store, as the abstention it must be.</summary>
+    private static RuleOutcome AbstainOverDemonstration(RuleOutcome outcome) => outcome switch
+    {
+        RuleOutcome.Issued issued => new RuleOutcome.Abstained
+        {
+            Rule = issued.Rule,
+            Reading = issued.Reading,
+            Instant = issued.Instant,
+            Informs = issued.Informs,
+            Reason = "the reading is a demonstration figure of a store designated demonstration, where fake providers run, so the "
+                + "rule abstains and issues nothing: "
+                + (issued.Figure is LineFigure.Measured measured ? LineFigure.Demonstrated(measured.Quantity) : issued.Figure).Describe(),
+        },
+        _ => outcome,
+    };
 
     // -----------------------------------------------------------------------
     // Finality, read and never made (decisions D-001 and D-002)
