@@ -1817,3 +1817,49 @@ ordering, labelled as such.
 3. **It authorises no spend, no account, no channel creation and no publication.**
 
 The decision block for Wave 7 is `CEO-D-600`–`CEO-D-699` and `CEO-C-600`–`CEO-C-699`.
+
+---
+
+## CEO-D-700 — No executive model call in Wave 8; the weekly L3 narrative pass is not authorised
+
+**The CEO's own decision, taken 2026-10-09 at the start of the Wave 8 session**, answering the
+question put in section 7 of `wave-7/bao-cao-ceo.md`: whether to authorise a weekly L3 pass that
+writes the recommendation narrative (a metered call, once a week).
+
+**Answer: no, until the first video exists.** Wave 8 builds the AI-management capability as the
+ticket `MC-9` scopes it — the weekly report set, deterministic labelled recommendation rules and
+the read-only CEO dashboard, all as code over recorded data — and **makes no metered model call**.
+No phase may plan, design or perform an executive model call or a narrative pass. The
+single-metered-operation exception stays unspent and available. The question is to be put again
+when the first video has been produced.
+
+The decision block for Wave 8 is `CEO-D-700`–`CEO-D-799` and `CEO-C-700`–`CEO-C-799`.
+
+---
+
+## CEO-D-701 — Ten comparable runs per task before an evidence ranking replaces the configured ordering
+
+**The CEO's own decision, 2026-10-09**, answering owner question 1 of section 3.1 of
+`wave-7/bao-cao-ceo.md`. The observation count is **at least ten comparable runs per task**, the
+figure master plan section 18 already states. Below ten, the router keeps the labelled configured
+ordering and the CTO report keeps its qualitative-review label. The corpus is still unpopulated, so
+today every task stays below the threshold. This is a recorded configured amount, not an
+observation.
+
+---
+
+## CEO-D-702 — The company cost ceiling is the USD 34.42 metered allotment
+
+**The CEO's own decision, 2026-10-09**, answering owner question 2 of section 3.1 of
+`wave-7/bao-cao-ceo.md`. The cost controller's company basis is **USD 34.42 per month**, the
+metered part of option O-002, as Wave 7 applied it on an interim basis; it is now the owner's
+decision, not an interim ruling. The standing charge (USD 42.99 per month) is a separate quantity
+and still has no recorded home. The monthly budget of USD 77.41 is unchanged.
+
+### What these three do not discharge
+
+Owner questions 3 to 7 of section 3.1 of `wave-7/bao-cao-ceo.md` (a channel with no budget
+amount, the level-to-tier mapping, one unstated cost refusing the month, providers without a
+cached-unit price, deferred requests not re-admitted) and the Wave 6 questions in section 3.2
+remain open; the interim rulings stand. **No spend, account, channel creation or publication is
+authorised.**
