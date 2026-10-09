@@ -1893,3 +1893,61 @@ transcribe them from a recorded source. None blocks Wave 8; each is put to the o
    immediately before use, or must the booking re-fetch it? No behaviour changes until answered.
 5. **Register writer:** the register is filled only by transcription in a schema resource, so a
    decision reaches it one release late. Keep transcription, or direct a writer in a later wave?
+
+---
+
+## CEO-D-800 — Produce the first metered video, not published, within a USD 5.95 cap
+
+**The CEO's own decision, 2026-10-09**, answering section 3.1 of `wave-8/bao-cao-ceo.md` at the
+start of the Wave 9 session. The owner **authorises producing the company's first metered video**:
+
+- **Cap: USD 5.95 of metered spend in total for this video**, all attempts, retries and failed
+  calls included. The cap is a hard stop, not a target: reaching it stops production and is
+  reported; it is never exceeded to finish. It sits inside the USD 34.42 company metered ceiling
+  (`CEO-D-702`).
+- **Produced, never published.** No upload, no channel creation, no channel configured as live,
+  no platform account action. The five structural absences on the upload path stay.
+- This is a **new, separate authority**. It does not spend, stretch or replace the earlier
+  single-metered-operation exception (`CEO-D-300`, `CEO-D-301`), which remains unspent.
+- `CEO-D-700` (no executive or narrative model call for reports until the first video exists) is
+  not relaxed for reports. Calls that are production stages of the video are what this authorises.
+- Every spend is recorded through the existing admission, booking and operation record.
+
+Decision block for Wave 9: `CEO-D-800`–`CEO-D-899`, `CEO-C-800`–`CEO-C-899`.
+
+---
+
+## CEO-D-801 — Build the production capability first; the metered run waits for the owner
+
+**The CEO's own decision, 2026-10-09**, in a second answer the same session, after the
+orchestrator's survey showed that no code path can produce a video (no real provider adapter, no
+producing stage, no render) and that option O-002's standing services cost USD 42.99 per month
+outside the USD 5.95 cap.
+
+1. **Wave 9 builds the production capability and proves it at USD 0.00 against fake providers.**
+   No phase makes a metered call.
+2. **The owner holds billed API accounts** and will set the credential variables on this machine
+   when the wave reports their exact names. The single metered run of `CEO-D-800` is then executed
+   by the orchestrator, outside the phases, only on the owner's explicit go.
+3. **No subscription is bought** (stock library, music library, narration-vendor entitlement).
+   The orchestrator's reading, which the owner may overturn: the pipeline uses pay-per-use vendors
+   the owner can bill without a subscription, and the first video carries no stock footage and no
+   music.
+4. **The autonomy capability is deferred** to a later wave; `MC-10` is re-scoped to production.
+5. **`ffmpeg` installed**: the owner approved installing winget package `Gyan.FFmpeg` (user
+   scope) on the development machine; version 9.0.2 was installed 2026-10-09.
+
+---
+
+## CEO-D-802 — Answers to the Wave 8 owner questions (CEO-Q-700)
+
+**The CEO's own decisions, 2026-10-09.**
+
+1. **Report week (question 3): confirmed.** The UTC week, Monday 00:00 UTC (07:00 Vietnam time).
+2. **Recommendation items (question 2): seven.** The seven-item list of master plan sections 9 and
+   29 governs; the delivered seven-rule catalogue stands.
+3. **Platform-policy re-verification (question 1): the orchestrator records the results, once per
+   wave.** No day count for "overdue" was given; beyond "not recorded in the current wave" it stays
+   unmeasured.
+4. **Price capture (question 4) and register writer (question 5): not answered.** Both stay open;
+   the interim behaviour stands.
