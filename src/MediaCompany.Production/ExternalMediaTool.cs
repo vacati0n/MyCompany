@@ -123,8 +123,13 @@ public sealed class ExternalMediaTool : IMediaTool
         var kinds = document.RootElement.TryGetProperty("streams", out var streams)
             ? streams.EnumerateArray().Select(s => s.GetProperty("codec_type").GetString() ?? string.Empty).ToArray()
             : [];
-        var seconds = decimal.Parse(
-            document.RootElement.GetProperty("format").GetProperty("duration").GetString()!, CultureInfo.InvariantCulture);
+        if (!document.RootElement.TryGetProperty("format", out var format)
+            || !format.TryGetProperty("duration", out var duration)
+            || !decimal.TryParse(duration.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var seconds))
+        {
+            throw new MediaToolFailedException("probe", 0, "the probe reported no duration for the file");
+        }
+
         return new MediaProbe(kinds, TimeSpan.FromTicks((long)Math.Round(seconds * TimeSpan.TicksPerSecond)));
     }
 

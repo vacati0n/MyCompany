@@ -15,5 +15,6 @@
     <Project Path="tests/MediaCompany.Deterministic.Tests/MediaCompany.Deterministic.Tests.csproj" />
     <Project Path="tests/MediaCompany.Domain.Tests/MediaCompany.Domain.Tests.csproj" />
     <Project Path="tests/MediaCompany.Persistence.Tests/MediaCompany.Persistence.Tests.csproj" />
+    <Project Path="tests/MediaCompany.Production.Tests/MediaCompany.Production.Tests.csproj" />
   </Folder>
 </Solution>
