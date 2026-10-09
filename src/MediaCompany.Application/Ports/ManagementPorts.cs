@@ -188,6 +188,38 @@ public sealed record CompanySnapshot
     public required IReadOnlyList<PolicyStatementRecord> PolicyStatements { get; init; }
 
     public required IReadOnlyList<ReverificationResult> Reverifications { get; init; }
+
+    /// <summary>
+    /// The latest production of each produced item, read in the same snapshot (the production change, decision
+    /// D-017 of its design). Null where the reader did not read it, which composes nothing, as delivered; empty where
+    /// the production register holds no production, which composes a line reading not recorded and naming it.
+    /// </summary>
+    public IReadOnlyList<ProducedItemReading>? ProducedItems { get; init; }
+}
+
+/// <summary>
+/// One produced item's latest production, BARE, as the snapshot read it (the production change, decision D-017 of
+/// its design): its version, mode and the store's designation, its stage outcomes, its operations and their booked
+/// cost, its recorded cap with the open reservations, and the runtime a probe of the rendered file measured. Nothing
+/// here decides a case: the composer labels every figure of a demonstration store demonstration, never observed.
+/// </summary>
+public sealed record ProducedItemReading
+{
+    public required ItemId Item { get; init; }
+    public required ItemVersion Version { get; init; }
+    public required string Mode { get; init; }
+    public required string Designation { get; init; }
+    public required DateTimeOffset OpenedAt { get; init; }
+    public required IReadOnlyList<MediaCompany.Domain.Production.ProducedStageOutcome> Stages { get; init; }
+    public required long Operations { get; init; }
+    public required long UnstatedOperations { get; init; }
+    public required MediaCompany.Domain.Accounting.Money Booked { get; init; }
+    public MediaCompany.Domain.Accounting.Money? Cap { get; init; }
+    public string? CapSource { get; init; }
+    public required MediaCompany.Domain.Accounting.Money OpenReservations { get; init; }
+    public required long OpenReservationCount { get; init; }
+    public TimeSpan? MeasuredRuntime { get; init; }
+    public string? RenderedPath { get; init; }
 }
 
 /// <summary>One booking month the week touches: its closure as stored, and its readings bounded by the instant.</summary>

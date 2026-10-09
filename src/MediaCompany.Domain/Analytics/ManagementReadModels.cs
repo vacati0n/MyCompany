@@ -174,6 +174,12 @@ public enum ReportLineKey
     ControllerActions = 60,
     RuleOutputsNotShown = 61,
     ChannelAlerts = 62,
+
+    // The production change (decision D-017 of its design): the produced item's lines.
+    ProducedItemStages = 63,
+    ProducedItemOperations = 64,
+    ProducedItemCap = 65,
+    ProducedItemRuntime = 66,
 }
 
 /// <summary>

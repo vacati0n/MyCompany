@@ -209,6 +209,7 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
             RegisterEntries = await RegisterEntriesAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             PolicyStatements = await PolicyStatementsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             Reverifications = await ReverificationsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
+            ProducedItems = await ProducedItemsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
         };
 
         // Nothing was written; ending the read-only transaction releases its share locks and its snapshot.
@@ -742,6 +743,96 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
         }
 
         return register.Select(r => new ChannelCount(r.Channel, counts.TryGetValue(r.Channel, out var n) ? n : 0)).ToArray();
+    }
+
+    /// <summary>
+    /// The latest production of each item at or before the instant (the production change, decision D-017 of its
+    /// design), in one statement: its stage outcomes, its operations and their booked cost, its cap and open
+    /// reservations, and the rendered file's measured runtime. A store the ninth resource was never applied to reads
+    /// none, and the composer composes nothing.
+    /// </summary>
+    private static async Task<IReadOnlyList<ProducedItemReading>?> ProducedItemsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        DateTimeOffset asOf,
+        CancellationToken cancellationToken)
+    {
+        await using (var present = new NpgsqlCommand("SELECT to_regclass('production_versions') IS NOT NULL", connection, transaction))
+        {
+            if (await present.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
+            {
+                return null;
+            }
+        }
+
+        await using var command = new NpgsqlCommand(
+            """
+            WITH latest AS (
+                SELECT DISTINCT ON (v.item_id) v.item_id, v.item_version, v.mode, v.designation, v.recorded_at
+                FROM production_versions v
+                WHERE v.recorded_at <= @as_of
+                ORDER BY v.item_id, v.item_version DESC
+            )
+            SELECT l.item_id, l.item_version, l.mode, l.designation, l.recorded_at,
+                   (SELECT COALESCE(json_agg(json_build_object('stage', e.stage, 'outcome', e.outcome, 'summary', e.summary,
+                                                              'at', e.recorded_at) ORDER BY e.recorded_at), '[]')
+                    FROM dossier_stage_evidence e
+                    WHERE e.item_id = l.item_id AND e.item_version = l.item_version AND e.recorded_at <= @as_of)::text,
+                   (SELECT count(*) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of),
+                   (SELECT count(*) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of AND a.cost_stated IS NOT TRUE),
+                   (SELECT COALESCE(sum(a.computed_cost), 0) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of),
+                   c.amount, c.currency, c.source,
+                   (SELECT COALESCE(sum(r.worst_case_amount), 0) FROM admission_reservations r
+                    WHERE r.item_id = l.item_id AND r.recorded_at <= @as_of
+                      AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.occurred_at <= @as_of)),
+                   (SELECT count(*) FROM admission_reservations r
+                    WHERE r.item_id = l.item_id AND r.recorded_at <= @as_of
+                      AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.occurred_at <= @as_of)),
+                   (SELECT p.measured_duration_ms FROM production_artifacts p
+                    WHERE p.item_id = l.item_id AND p.item_version = l.item_version AND p.role = 'RenderedVideo' AND p.recorded_at <= @as_of
+                    ORDER BY p.recorded_at DESC LIMIT 1),
+                   (SELECT p.relative_path FROM production_artifacts p
+                    WHERE p.item_id = l.item_id AND p.item_version = l.item_version AND p.role = 'RenderedVideo' AND p.recorded_at <= @as_of
+                    ORDER BY p.recorded_at DESC LIMIT 1)
+            FROM latest l
+            LEFT JOIN item_caps c ON c.item_id = l.item_id
+            ORDER BY l.item_id
+            """,
+            connection,
+            transaction);
+        command.Parameters.AddWithValue("as_of", asOf);
+
+        var items = new List<ProducedItemReading>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var currency = reader.IsDBNull(10) ? "USD" : reader.GetString(10);
+            using var stages = System.Text.Json.JsonDocument.Parse(reader.GetString(5));
+            items.Add(new ProducedItemReading
+            {
+                Item = new ItemId(reader.GetGuid(0)),
+                Version = new ItemVersion(reader.GetInt32(1)),
+                Mode = reader.GetString(2),
+                Designation = reader.GetString(3),
+                OpenedAt = reader.GetFieldValue<DateTimeOffset>(4),
+                Stages = stages.RootElement.EnumerateArray().Select(e => new MediaCompany.Domain.Production.ProducedStageOutcome(
+                    Enum.Parse<MediaCompany.Domain.Production.ProductionStage>(e.GetProperty("stage").GetString()!),
+                    Enum.Parse<MediaCompany.Domain.Work.StageOutcome>(e.GetProperty("outcome").GetString()!),
+                    e.GetProperty("summary").GetString()!,
+                    DateTimeOffset.Parse(e.GetProperty("at").GetString()!, System.Globalization.CultureInfo.InvariantCulture))).ToArray(),
+                Operations = reader.GetInt64(6),
+                UnstatedOperations = reader.GetInt64(7),
+                Booked = new Money(reader.GetDecimal(8), currency),
+                Cap = reader.IsDBNull(9) ? null : new Money(reader.GetDecimal(9), currency),
+                CapSource = reader.IsDBNull(11) ? null : reader.GetString(11),
+                OpenReservations = new Money(reader.GetDecimal(12), currency),
+                OpenReservationCount = reader.GetInt64(13),
+                MeasuredRuntime = reader.IsDBNull(14) ? null : TimeSpan.FromMilliseconds(reader.GetInt64(14)),
+                RenderedPath = reader.IsDBNull(15) ? null : reader.GetString(15),
+            });
+        }
+
+        return items;
     }
 
     private static async Task<IReadOnlyList<RegisterEntry>> RegisterEntriesAsync(
