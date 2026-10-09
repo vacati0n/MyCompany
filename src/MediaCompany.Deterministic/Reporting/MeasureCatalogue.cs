@@ -82,10 +82,22 @@ public static class MeasureCatalogue
         // a demonstration store, whose every count is a demonstration parameter rather than an
         // observation, so each waits on a production series of the company's own work. No sizing
         // quantity — buffer depth, concurrency or target rate — is declared at all.
-        new Measure.Deferred("cycle-time", "a production series of items carried through the production path"),
+        new Measure.Deferred("cycle-time", "a production series of items carried through the production path; "
+            + CycleTimeClockLimit),
         new Measure.Deferred("failure-rate", "a production series of stage outcomes from the company's own work"),
         new Measure.Deferred("rework-rate", "a production series of owner send-backs and re-presentations"),
     ];
+
+    /// <summary>
+    /// The two-clock limit on the stage rows a cycle time would be read from (the multi-channel change,
+    /// stated rather than removed). Every stage row recorded so far carries its entry instant from the
+    /// datastore's clock and its exit instant from the process clock, so no stage duration may be read
+    /// from those rows without this limit, and none is computed anywhere.
+    /// </summary>
+    public const string CycleTimeClockLimit =
+        "every stage row recorded so far carries its entry instant from the datastore's clock and its exit instant "
+        + "from the process clock, so a cycle time must not be read from those rows without stating that the two "
+        + "instants of one row come from different clocks; no stage duration is computed";
 
     public static IReadOnlyList<Measure.MeasurableNow> MeasurableNow { get; } =
         All.OfType<Measure.MeasurableNow>().ToArray();

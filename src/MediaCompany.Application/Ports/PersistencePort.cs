@@ -89,6 +89,22 @@ public interface IGateWriter
 }
 
 /// <summary>
+/// A gate transition refused because the state it claims to start from is not the item version's
+/// latest recorded state (the multi-channel change, decision D-008 of its design).
+///
+/// The record store refuses such a transition for every writer; the gate writer reports the refusal
+/// as this type, so a gate decision can name it rather than surfacing a datastore error. The
+/// transaction that attempted the write is rolled back, so nothing it wrote is durable.
+/// </summary>
+public sealed class GateStateConflictException : InvalidOperationException
+{
+    public GateStateConflictException(string message, Exception? inner = null)
+        : base(message, inner)
+    {
+    }
+}
+
+/// <summary>
 /// Publication dispatch and attempt records, written inside the transaction that writes the gate
 /// state change and the queue entry (module M-023, module M-017).
 /// </summary>
@@ -193,6 +209,13 @@ public interface IOperationRecorder
     /// Records one attempt. The computed cost is produced by the datastore from the unit counts
     /// and the applied price row, not by the caller, so the arithmetic stays exact and
     /// re-derivable after the price has changed (constraint C-005).
+    ///
+    /// THE DATASTORE BOOKS THE OPERATION (the multi-channel change, decision D-006 of its design).
+    /// Its instant is stamped by the datastore as the later of its own clock and the record horizon,
+    /// under a shared hold on the horizon kept to the end of this transaction, and it is booked into
+    /// that instant's month. The returned record carries the STORED instant, which is the one a
+    /// month reading and a budget evaluation use; the draft's instant is the caller's observation
+    /// and is not stored.
     /// </summary>
     Task<OperationRecord> RecordAsync(OperationDraft draft, CancellationToken cancellationToken);
 }

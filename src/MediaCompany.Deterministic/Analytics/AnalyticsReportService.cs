@@ -1,6 +1,7 @@
 using MediaCompany.Application.Ports;
 using MediaCompany.Deterministic.Production;
 using MediaCompany.Domain;
+using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Production;
 using MediaCompany.Domain.Work;
@@ -29,6 +30,9 @@ public sealed class AnalyticsReportService
     private readonly IItemDossierReader _dossiers;
     private readonly IGateLedger _gates;
     private readonly IAssetLedger _assets;
+    private readonly IChannelPartitionReader _partitions;
+    private readonly IApprovalQueueReader _approvals;
+    private readonly IOperatingRegisters _registers;
     private readonly IClock _clock;
 
     public AnalyticsReportService(
@@ -39,6 +43,9 @@ public sealed class AnalyticsReportService
         IItemDossierReader dossiers,
         IGateLedger gates,
         IAssetLedger assets,
+        IChannelPartitionReader partitions,
+        IApprovalQueueReader approvals,
+        IOperatingRegisters registers,
         IClock clock)
     {
         _costs = costs;
@@ -48,6 +55,9 @@ public sealed class AnalyticsReportService
         _dossiers = dossiers;
         _gates = gates;
         _assets = assets;
+        _partitions = partitions;
+        _approvals = approvals;
+        _registers = registers;
         _clock = clock;
     }
 
@@ -61,9 +71,17 @@ public sealed class AnalyticsReportService
     public async Task<CostReadModel> ItemCostAsync(ItemId item, CancellationToken cancellationToken) =>
         AnalyticsComposers.Cost(await _costs.ItemSummaryAsync(item, cancellationToken).ConfigureAwait(false));
 
-    /// <summary>One calendar period's cost, on the same rule.</summary>
-    public async Task<CostReadModel> PeriodCostAsync(DateOnly period, CancellationToken cancellationToken) =>
-        AnalyticsComposers.Cost(await _costs.PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false));
+    /// <summary>
+    /// One calendar period's cost, on the same rule, carrying whether the month can still change.
+    /// The month is closed FIRST and read afterwards, so a month read as final was final before the
+    /// figure was read and the figure cannot change after it (decision D-006 of the multi-channel design).
+    /// </summary>
+    public async Task<CostReadModel> PeriodCostAsync(DateOnly period, CancellationToken cancellationToken)
+    {
+        var closure = await _partitions.CloseMonthAsync(period, cancellationToken).ConfigureAwait(false);
+        var cost = AnalyticsComposers.Cost(await _costs.PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false));
+        return cost with { Finality = ChannelAnalyticsComposers.Finality(closure) };
+    }
 
     /// <summary>Every served-tier record of a period, each carrying the single-record caveat.</summary>
     public async Task<IReadOnlyList<ServedTierReadModel>> ServedTiersAsync(
@@ -76,10 +94,14 @@ public sealed class AnalyticsReportService
     /// The tier ratio, unmeasured while the period holds fewer than two records carrying both a
     /// requested and a served tier, and carrying its definition either way.
     /// </summary>
-    public async Task<TierRatioReadModel> TierRatioAsync(DateOnly period, CancellationToken cancellationToken) =>
-        AnalyticsComposers.TierRatio(
+    public async Task<TierRatioReadModel> TierRatioAsync(DateOnly period, CancellationToken cancellationToken)
+    {
+        var closure = await _partitions.CloseMonthAsync(period, cancellationToken).ConfigureAwait(false);
+        var ratio = AnalyticsComposers.TierRatio(
             period,
             await _tiers.RecordsForPeriodAsync(period, cancellationToken).ConfigureAwait(false));
+        return ratio with { Finality = ChannelAnalyticsComposers.Finality(closure) };
+    }
 
     /// <summary>
     /// The revenue-derived figures that are lit. Empty while the register holds no row carrying a
@@ -162,4 +184,68 @@ public sealed class AnalyticsReportService
         CancellationToken cancellationToken) =>
         AnalyticsComposers.DeterminationsRecorded(
             item, version, await _dossiers.DeterminationsAsync(item, version, cancellationToken).ConfigureAwait(false));
+
+    // -----------------------------------------------------------------------
+    // The channel partition of every published reading (the multi-channel change)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// The operation record for one month, by channel and for the company: cost, operations, the
+    /// deterministic-set cost, the variance against the envelope, the cost by capability class, the
+    /// served-tier records and the tier ratio, with the month's finality.
+    /// </summary>
+    public async Task<OperationPartitionReading> OperationsByChannelAsync(DateOnly month, CancellationToken cancellationToken) =>
+        ChannelAnalyticsComposers.Operations(
+            await _partitions.OperationsAsync(month, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>The item dossier register for one month, by the item's channel and for the company.</summary>
+    public async Task<DossierPartitionReading> DossiersByChannelAsync(DateOnly month, CancellationToken cancellationToken) =>
+        ChannelAnalyticsComposers.Dossiers(
+            await _partitions.DossiersAsync(month, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>Throughput and queue quantities for a half-open period, by the channel of each entry's unit.</summary>
+    public async Task<ThroughputPartitionReading> ThroughputByChannelAsync(
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        CancellationToken cancellationToken) =>
+        ChannelAnalyticsComposers.Throughput(
+            await _partitions.ThroughputAsync(periodStart, periodEnd, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>
+    /// Every registered channel's budget utilisation and the company ceiling's for one month, at the
+    /// four thresholds, with the month's finality and the company reading's coverage statement.
+    /// </summary>
+    public async Task<BudgetPartitionReading> BudgetsByChannelAsync(DateOnly month, CancellationToken cancellationToken) =>
+        ChannelAnalyticsComposers.Budgets(
+            await _partitions.BudgetsAsync(month, ApprovedEnvelope.MonthlyTotal, cancellationToken).ConfigureAwait(false));
+
+    /// <summary>One channel's approval queue: a view over recorded gate state.</summary>
+    public async Task<ChannelApprovalListing> ApprovalListingAsync(ChannelId channel, CancellationToken cancellationToken)
+    {
+        var registered = await IsRegisteredAsync(channel, cancellationToken).ConfigureAwait(false);
+        var awaiting = await _approvals.AwaitingOwnerApprovalAsync(channel, cancellationToken).ConfigureAwait(false);
+        return ChannelAnalyticsComposers.Listing(channel, registered, awaiting);
+    }
+
+    /// <summary>Every registered channel's approval queue, each a view over recorded gate state.</summary>
+    public async Task<IReadOnlyList<ChannelApprovalListing>> ApprovalListingsAsync(CancellationToken cancellationToken)
+    {
+        var channels = await _registers.ChannelsAsync(cancellationToken).ConfigureAwait(false);
+        var awaiting = await _approvals.AwaitingOwnerApprovalAsync(cancellationToken).ConfigureAwait(false);
+        return channels.Select(c => ChannelAnalyticsComposers.Listing(c.Id, inRegister: true, awaiting)).ToArray();
+    }
+
+    /// <summary>One channel's approval workload for one month, by decision instant.</summary>
+    public async Task<ChannelApprovalWorkload> ApprovalWorkloadAsync(
+        ChannelId channel,
+        DateOnly month,
+        CancellationToken cancellationToken)
+    {
+        var registered = await IsRegisteredAsync(channel, cancellationToken).ConfigureAwait(false);
+        var decided = await _approvals.DecidedAsync(channel, month, cancellationToken).ConfigureAwait(false);
+        return ChannelAnalyticsComposers.Workload(channel, registered, month, decided);
+    }
+
+    private async Task<bool> IsRegisteredAsync(ChannelId channel, CancellationToken cancellationToken) =>
+        (await _registers.ChannelsAsync(cancellationToken).ConfigureAwait(false)).Any(c => c.Id.Equals(channel));
 }

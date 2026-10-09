@@ -2,6 +2,7 @@ using MediaCompany.Application.Ports;
 using MediaCompany.Capability;
 using MediaCompany.Credentials;
 using MediaCompany.Deterministic.Analytics;
+using MediaCompany.Deterministic.Production;
 using MediaCompany.Deterministic.Services;
 using MediaCompany.Persistence;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,6 +80,15 @@ public static class CompositionRoot
         services.AddSingleton<IItemDossierReader>(sp =>
             new NpgsqlItemDossierReader(sp.GetRequiredService<NpgsqlDataSource>()));
 
+        // The multi-channel change: the item register a gate decision reads the item's channel from,
+        // the channel partition reader every partitioned reading is aggregated by, and the approval
+        // queue reader, which has read members only. None of them writes.
+        services.AddSingleton<IItemRegister>(sp => new NpgsqlItemRegister(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IChannelPartitionReader>(sp =>
+            new NpgsqlChannelPartitionReader(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IApprovalQueueReader>(sp =>
+            new NpgsqlApprovalQueueReader(sp.GetRequiredService<NpgsqlDataSource>()));
+
         // The credential broker — the only module holding a dependency on the secret store.
         services.AddSingleton(sp =>
         {
@@ -118,6 +128,14 @@ public static class CompositionRoot
         // the credential broker, and neither reads a configuration value.
         services.AddSingleton<ItemDossierRecorder>();
         services.AddSingleton<PublishingSequenceService>();
+
+        // The multi-channel change: the channel profile service, the one reader of a channel key; the
+        // copyright-check stage handler; and the rights-check step, the dossier recorder's first
+        // production caller. All three sit in the rule-determined assembly, so none can take the
+        // capability gateway or the credential broker, and none performs a metered operation.
+        services.AddSingleton<ChannelProfileService>();
+        services.AddSingleton<CopyrightCheckStageHandler>();
+        services.AddSingleton<RightsCheckStep>();
 
         // The analytics surface. It takes read ports and a clock and nothing else; it could not
         // take the capability gateway, because its assembly does not reference the one that

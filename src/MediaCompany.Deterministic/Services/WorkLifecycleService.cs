@@ -249,7 +249,7 @@ public sealed class WorkLifecycleService
     {
         Actor = "lifecycle",
         Action = action,
-        Subject = $"job:{job.Id} item:{job.Item}",
+        Subject = LifecycleActions.UnitSubject(job.Id, job.Item),
         Reason = reason,
         InputsReference = $"workflow:{job.Workflow} position:{job.Position}",
         OutputsReference = $"claim-state:{job.ClaimState}",

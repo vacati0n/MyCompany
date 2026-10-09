@@ -139,6 +139,10 @@ public sealed class PublicationDispatchServiceTests
     {
         var (service, work) = Build();
 
+        // The change starts from the state the record holds, recorded first as a fixture: the double
+        // refuses a from-state the record does not hold, exactly as the record store does.
+        work.WithRecordedGateState(Item, Version, GateState.AwaitingRightsCheck);
+
         await service.PersistAsync(
             Composed(), Item, Version, PublishingFixture.Destination, "Owner", new string('b', 64),
             job: null,

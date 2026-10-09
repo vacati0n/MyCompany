@@ -124,8 +124,22 @@ internal sealed class NpgsqlGateWriter : IGateWriter
         command.Parameters.AddWithValue("to", to.ToString());
         command.Parameters.AddWithValue("reason", reason);
 
-        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (PostgresException refused) when (refused.ConstraintName == RecordedFromStateCheck)
+        {
+            // The datastore refused a from-state the record does not hold (the multi-channel
+            // change, decision D-008). Reported as a named conflict rather than a datastore error,
+            // so the gate service can name it; this transaction is rolled back by its owner.
+            throw new GateStateConflictException(
+                $"{from} to {to} was refused for item {item} version {version}: {refused.MessageText}", refused);
+        }
     }
+
+    /// <summary>The name the datastore's recorded-from-state check reports its refusals under.</summary>
+    internal const string RecordedFromStateCheck = "gate_transitions_from_recorded_state";
 }
 
 /// <summary>

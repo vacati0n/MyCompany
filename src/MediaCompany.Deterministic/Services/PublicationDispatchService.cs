@@ -243,7 +243,7 @@ public sealed class PublicationDispatchService
     {
         Actor = "lifecycle",
         Action = LifecycleActions.Completed,
-        Subject = $"job:{job} item:{item}",
+        Subject = LifecycleActions.UnitSubject(job, item),
         Reason = $"{LifecyclePosition.PublishingComposed} was the last position of {PublishingWorkflow.Name}",
         InputsReference = $"workflow:{PublishingWorkflow.Name} position:{LifecyclePosition.PublishingComposed}",
         OutputsReference = $"claim-state:{ClaimState.Done}",

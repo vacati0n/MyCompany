@@ -102,7 +102,6 @@ public sealed class CapabilityGateway : ICapabilityGateway
         ArgumentNullException.ThrowIfNull(context);
 
         var now = _clock.UtcNow;
-        var period = new DateOnly(now.Year, now.Month, 1);
 
         var admitted = await _routes.AdmittedRoutesAsync(request.Capability, cancellationToken).ConfigureAwait(false);
         var forbidden = await _routes.ForbiddenSourcesAsync(cancellationToken).ConfigureAwait(false);
@@ -110,7 +109,12 @@ public sealed class CapabilityGateway : ICapabilityGateway
             .CurrentAsync(admitted.Select(r => r.Id).ToArray(), cancellationToken).ConfigureAwait(false);
         var accounts = await _registers.ProviderAccountsAsync(cancellationToken).ConfigureAwait(false);
         var prices = await _registers.PricesInForceAsync(now, cancellationToken).ConfigureAwait(false);
-        var remaining = await _budgets.RemainingAsync(request.Attribution, period, cancellationToken).ConfigureAwait(false);
+        // Headroom is read for the month the DATASTORE would book this operation into, decided on the
+        // datastore's clock in the same statement (the multi-channel change, as corrected in its
+        // review): admission, booking and evaluation are decided on one clock, the datastore's.
+        var headroom = await _budgets.RemainingInBookingMonthAsync(request.Attribution, cancellationToken).ConfigureAwait(false);
+        var remaining = headroom.Remaining;
+        var period = headroom.Month;
 
         var inputs = new ResolutionInputs
         {
@@ -301,8 +305,15 @@ public sealed class CapabilityGateway : ICapabilityGateway
             },
             cancellationToken).ConfigureAwait(false);
 
+        // Budgets are evaluated for the month the datastore BOOKED the operation in, read from the
+        // stored instant the recorder returned (the multi-channel change, decision D-006), so an
+        // alert is raised against the month the operation counts towards, not the month the process
+        // clock happened to show when the request arrived.
+        var booked = operation.OccurredAt.UtcDateTime;
+        var bookedPeriod = new DateOnly(booked.Year, booked.Month, 1);
+
         var alerts = await transaction.Budgets
-            .EvaluateAsync(request.Attribution, period, now, cancellationToken).ConfigureAwait(false);
+            .EvaluateAsync(request.Attribution, bookedPeriod, operation.OccurredAt, cancellationToken).ConfigureAwait(false);
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

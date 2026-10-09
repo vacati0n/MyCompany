@@ -291,6 +291,7 @@ public sealed class GateBlockPlacementTests
         var service = new PublicationGateService(
             new StubGateLedger(GateState.Approved),
             new StubAssetLedger([incomplete], [new LibraryRegistration(Channel, "stock-library-a", new DateOnly(2026, 9, 1))]),
+            new RecordedItems().Record(Item, Channel),
             work,
             new FixedClock(Now));
 
@@ -315,11 +316,14 @@ public sealed class GateBlockPlacementTests
     [Fact]
     public async Task AnOwnerVerdictItsTransitionAndItsEntryCommitTogether()
     {
-        var work = new InMemoryWork();
+        // The verdict is written from the state the record holds, which a demonstration records first:
+        // the double refuses a from-state the record does not hold, exactly as the record store does.
+        var work = new InMemoryWork().WithRecordedGateState(Item, Version, GateState.AwaitingOwnerApproval);
         var clock = new FixedClock(Now);
         var service = new PublicationGateService(
             new StubGateLedger(GateState.AwaitingOwnerApproval),
             new StubAssetLedger([], []),
+            new RecordedItems().Record(Item, Channel),
             work,
             clock);
 

@@ -35,55 +35,80 @@ public sealed record ReportedMeasure(string Name, MeasurementQuantity Quantity, 
 /// </summary>
 public sealed class ReportingService
 {
-    private readonly ICostRollupReader _costs;
+    private readonly IChannelPartitionReader _partitions;
     private readonly IClock _clock;
 
-    public ReportingService(ICostRollupReader costs, IClock clock)
+    /// <summary>
+    /// The report reads ONE source, the channel partition of the operation record (the multi-channel
+    /// change, decision D-003, as corrected in its review): the company lines and the channel lines are
+    /// the datastore's aggregation of the same rows in the same read, so every additive company line is
+    /// the exact sum of its channel lines by construction, in a month that is not final as in one that is.
+    /// </summary>
+    public ReportingService(IChannelPartitionReader partitions, IClock clock)
     {
-        _costs = costs;
+        _partitions = partitions;
         _clock = clock;
     }
 
     public async Task<IReadOnlyList<ReportedMeasure>> MeasurableNowAsync(DateOnly period, CancellationToken cancellationToken)
     {
-        // Every money figure here is read from the datastore's own aggregation, including the
-        // variance. Nothing in this method performs money arithmetic, so the figure the report
-        // shows and the figure the record carries are one number.
-        var summary = await _costs.PeriodSummaryAsync(period, cancellationToken).ConfigureAwait(false);
-        var byCapability = await _costs.CostByCapabilityAsync(period, cancellationToken).ConfigureAwait(false);
-        var deterministic = await _costs.CostForDeterministicSetAsync(period, cancellationToken).ConfigureAwait(false);
+        // ONE READ, under the record horizon's closure taken first: the company row and every channel
+        // row come from it, and every line states whether the month can still change (decision D-006).
+        // Every money figure is the datastore's own aggregation, the variance included; nothing here
+        // performs money arithmetic, and no second read is taken that an operation booked in between
+        // could make disagree with the first.
+        var partition = ChannelAnalyticsComposers.Operations(
+            await _partitions.OperationsAsync(period, cancellationToken).ConfigureAwait(false));
+        var finality = partition.Finality.Statement;
+        var company = partition.Company;
 
-        // The operation count decides the measurement state of every figure below. A period
-        // holding no recorded operation has nothing to aggregate, so its figures are UNMEASURED
-        // and never a zero amount; a period with records whose aggregation comes to zero is an
-        // observed zero, and the two render differently.
-        var absent = $"no operation is recorded in period {period:yyyy-MM}";
-
+        // The measurement state of every company figure is decided at the one composing site: a period
+        // holding no recorded operation is UNMEASURED and never a zero amount, and a period whose
+        // records aggregate to zero is an observed zero.
         var lines = new List<ReportedMeasure>
         {
-            new("monthly-cost-total",
-                AnalyticsComposers.FromOperations(summary.Operations, summary.Total, absent),
-                "recorded operations, exact decimal aggregation", summary.ContainsEstimates),
+            new("monthly-cost-total", company.Cost,
+                "recorded operations, exact decimal aggregation", company.ContainsEstimates),
 
-            new("cost-variance-against-envelope",
-                AnalyticsComposers.FromOperations(summary.Operations, summary.VarianceAgainstEnvelope, absent),
-                $"recorded operations against the approved envelope of {summary.EnvelopeTotal} "
-                    + $"(metered {summary.EnvelopeMetered}, standing {summary.EnvelopeStanding}), "
+            new("cost-variance-against-envelope", company.VarianceAgainstEnvelope,
+                $"recorded operations against the approved envelope of {ApprovedEnvelope.MonthlyTotal} "
+                    + $"(metered {ApprovedEnvelope.Metered}, standing {ApprovedEnvelope.Standing}), "
                     + "subtracted by the datastore",
-                summary.ContainsEstimates),
+                company.ContainsEstimates),
 
-            new("deterministic-set-ai-cost",
-                AnalyticsComposers.FromOperations(summary.Operations, deterministic, absent),
+            new("deterministic-set-ai-cost", company.DeterministicSetCost,
                 "recorded operations attributed to the named deterministic set", IsEstimate: false),
         };
 
-        lines.AddRange(byCapability.Select(pair => new ReportedMeasure(
+        lines.AddRange(company.CostByCapability.Select(pair => new ReportedMeasure(
             $"cost-by-capability:{pair.Key}",
-            MeasurementQuantity.Observed(pair.Value.Amount, pair.Value.Currency),
+            pair.Value,
             "recorded operations, exact decimal aggregation",
-            summary.ContainsEstimates)));
+            company.ContainsEstimates)));
 
-        return lines;
+        // The same figures for every channel the register holds or the rows name, each the
+        // datastore's aggregation over that channel's rows in the same read as the company's, so the
+        // channel lines of an additive figure sum exactly to the company line.
+        foreach (var channel in partition.Channels)
+        {
+            var name = $"channel:{channel.Channel}";
+            var standing = channel.Standing == ChannelPartitionStanding.InRegister
+                ? string.Empty
+                : " (a channel identifier the channel register does not hold)";
+
+            lines.Add(new ReportedMeasure(
+                $"monthly-cost-total:{name}", channel.Cost,
+                $"recorded operations of the channel{standing}, exact decimal aggregation", channel.ContainsEstimates));
+            lines.Add(new ReportedMeasure(
+                $"deterministic-set-ai-cost:{name}", channel.DeterministicSetCost,
+                $"recorded operations of the channel{standing} attributed to the named deterministic set", IsEstimate: false));
+            lines.AddRange(channel.CostByCapability.Select(pair => new ReportedMeasure(
+                $"cost-by-capability:{pair.Key}:{name}", pair.Value,
+                $"recorded operations of the channel{standing}, exact decimal aggregation", channel.ContainsEstimates)));
+        }
+
+        // Every line says whether its month can still change.
+        return lines.Select(line => line with { Source = $"{line.Source}; {finality}" }).ToArray();
     }
 
     /// <summary>

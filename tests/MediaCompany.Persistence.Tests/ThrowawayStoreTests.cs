@@ -30,7 +30,9 @@ public sealed class ThrowawayStoreTests
             await demonstration.OverTheFixtureStoreTheDriveComposesAndStopsAtTheTerminalPosition();
 
             await using var observer = NpgsqlDataSource.Create(PostgresIntegrationTests.ConnectionString!);
-            Assert.Equal(3L, await CountAsync(observer, "first_publication_conditions WHERE state = 'Satisfied'"));
+            // Two per-channel conditions, and the payment account in the company-level record.
+            Assert.Equal(2L, await CountAsync(observer, "first_publication_conditions WHERE state = 'Satisfied'"));
+            Assert.Equal(1L, await CountAsync(observer, "company_payment_account_observations WHERE state = 'Satisfied'"));
             Assert.Equal(1L, await CountAsync(observer, "approvals"));
             Assert.Equal(1L, await CountAsync(observer, "publication_dispatches"));
             Assert.True(await CountAsync(observer, "gate_transitions") > 0);
@@ -46,8 +48,8 @@ public sealed class ThrowawayStoreTests
 
     /// <summary>
     /// A demonstration that ABORTS part-way — here the composition demonstration run a second time
-    /// over the same store, which the first run's condition rows make fail on their key — still
-    /// leaves no table behind once it completes.
+    /// over the same store, whose fixture submission the gate path refuses because the first run left
+    /// the item approved — still leaves no table behind once it completes.
     /// </summary>
     [RequiresPostgresFact]
     public async Task AnAbortedDemonstrationStillLeavesNoRowBehind()
@@ -58,8 +60,9 @@ public sealed class ThrowawayStoreTests
         try
         {
             await demonstration.OverTheFixtureStoreTheDriveComposesAndStopsAtTheTerminalPosition();
-            await Assert.ThrowsAsync<PostgresException>(
+            var aborted = await Assert.ThrowsAsync<InvalidOperationException>(
                 demonstration.OverTheFixtureStoreTheDriveComposesAndStopsAtTheTerminalPosition);
+            Assert.Contains(nameof(Deterministic.Services.GateStepRefusal.NotSubmittableFromRecordedState), aborted.Message, StringComparison.Ordinal);
         }
         finally
         {

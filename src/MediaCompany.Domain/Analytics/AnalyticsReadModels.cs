@@ -87,6 +87,12 @@ public sealed record CostReadModel
 
     /// <summary>Whether any operation in the figure was accounted from estimated unit counts.</summary>
     public required bool ContainsEstimates { get; init; }
+
+    /// <summary>
+    /// Whether a period figure can still change (the multi-channel change, decision D-006): carried
+    /// wherever the figure covers a month of the operation record, and null for an item's figure.
+    /// </summary>
+    public MonthFinality? Finality { get; init; }
 }
 
 /// <summary>
@@ -267,6 +273,12 @@ public sealed record TierRatioReadModel
 
     /// <summary>What the ratio is. Required; no output presents the ratio without saying what it is.</summary>
     public string Definition { get; }
+
+    /// <summary>
+    /// Whether the month the ratio is read over can still change (the multi-channel change, decision
+    /// D-006), where the surface read it under the month closure.
+    /// </summary>
+    public MonthFinality? Finality { get; init; }
 }
 
 /// <summary>

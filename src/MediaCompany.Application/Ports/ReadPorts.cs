@@ -155,7 +155,18 @@ public interface ICostRollupReader
 public interface IBudgetReader
 {
     Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// What remains of the governing budgets in the month the datastore would book an operation into
+    /// NOW, and that month (the multi-channel change, as corrected in its review): the month of the
+    /// later of the datastore's clock and the record horizon, decided in the same statement as the
+    /// remaining amount, so admission is decided on the clock booking is decided on.
+    /// </summary>
+    Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken cancellationToken);
 }
+
+/// <summary>The headroom of one attribution in the datastore's booking month, and that month.</summary>
+public sealed record BookedHeadroom(DateOnly Month, Money Remaining);
 
 /// <summary>
 /// One period's cost position as the datastore computes it. <see cref="ContainsEstimates"/> is
@@ -290,3 +301,181 @@ public interface IItemDossierReader
 
 /// <summary>A dossier read back from the record store, with the channel its item belongs to.</summary>
 public sealed record RecordedDossier(ItemDossier Dossier, ChannelId Channel, DateTimeOffset OpenedAt);
+
+// ---------------------------------------------------------------------------
+// The multi-channel change: the channel partition, the approval queue and the item's channel
+// ---------------------------------------------------------------------------
+
+/// <summary>
+/// The register an item's channel is read from (the multi-channel change). An item carries a
+/// mandatory channel reference, and a gate decision that concerns an item reads THAT channel rather
+/// than one a caller supplies.
+/// </summary>
+public interface IItemRegister
+{
+    /// <summary>The channel the item is recorded against, or null where no such item is recorded.</summary>
+    Task<ChannelId?> RecordedChannelAsync(ItemId item, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The channel partition reader (decision D-003 of the multi-channel design).
+///
+/// Every member returns BARE AGGREGATIONS on boundary summaries, exactly as the delivered cost and
+/// throughput summaries do: one row per channel identifier present in the channel register or in the
+/// rows read, and the company row, each computed by the datastore over the same rows in one statement,
+/// so every additive company figure is the exact sum of its channel figures. The measurement cases
+/// are decided at one composing site; nothing here decides whether a quantity was observed.
+///
+/// It has READ MEMBERS ONLY. Nothing here records a channel, a budget or a configuration value.
+/// </summary>
+public interface IChannelPartitionReader
+{
+    /// <summary>
+    /// The operation record for one calendar month, partitioned by the operation row's channel, with
+    /// the month's closure taken first: the delivered non-waiting closure of the record horizon,
+    /// raising it when granted and otherwise reading it as stored.
+    /// </summary>
+    Task<OperationPartitionSummary> OperationsAsync(DateOnly month, CancellationToken cancellationToken);
+
+    /// <summary>The closure of one calendar month alone, taken as <see cref="OperationsAsync"/> takes it.</summary>
+    Task<MonthClosure> CloseMonthAsync(DateOnly month, CancellationToken cancellationToken);
+
+    /// <summary>The item dossier register for one calendar month, partitioned by the item's channel.</summary>
+    Task<DossierPartitionSummary> DossiersAsync(DateOnly month, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The lifecycle counts of the append-only record over a half-open period, partitioned by the
+    /// channel of the work unit each entry's declared subject names, under the delivered closure.
+    /// </summary>
+    Task<ThroughputPartitionSummary> ThroughputAsync(
+        DateTimeOffset periodStart,
+        DateTimeOffset periodEnd,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Each registered channel's budget and utilisation for one calendar month, the company's
+    /// recorded cost against the supplied ceiling, and the alerts the delivered tracking recorded.
+    /// </summary>
+    Task<BudgetPartitionSummary> BudgetsAsync(DateOnly month, Money ceiling, CancellationToken cancellationToken);
+}
+
+/// <summary>One channel the channel register holds, with its company.</summary>
+public sealed record RegisteredChannel(ChannelId Channel, CompanyId Company);
+
+/// <summary>
+/// How one calendar month's closure went. <see cref="ClosedByThisRead"/> states whether the read
+/// obtained the record horizon exclusively, which it can only do when no audited or metered
+/// transaction is in flight, and raised it; otherwise <see cref="Horizon"/> is the horizon as stored.
+/// <see cref="EarliestEntry"/> is the append-only record's first instant, or null where it holds none.
+/// </summary>
+public sealed record MonthClosure(
+    DateOnly Month,
+    bool ClosedByThisRead,
+    DateTimeOffset Horizon,
+    DateTimeOffset? EarliestEntry);
+
+/// <summary>One partition's aggregation over the operation record, as the datastore computed it.</summary>
+public sealed record OperationTotals(
+    long Operations,
+    Money Cost,
+    bool ContainsEstimates,
+    long DeterministicOperations,
+    Money DeterministicSetCost,
+    IReadOnlyDictionary<CapabilityClass, Money> CostByCapability,
+    long ServedTierRecords,
+    long CarryingBothTiers,
+    long AgreeingTiers);
+
+/// <summary>One channel's partition of the operation record, and whether the register holds the channel.</summary>
+public sealed record OperationPartitionRow(ChannelId Channel, bool InRegister, OperationTotals Totals);
+
+/// <summary>
+/// The operation record for one month: the closure, the register, each channel's partition and the
+/// company's, and the company's variance against the approved envelope as the datastore subtracted it.
+/// </summary>
+public sealed record OperationPartitionSummary(
+    MonthClosure Closure,
+    IReadOnlyList<RegisteredChannel> Register,
+    IReadOnlyList<OperationPartitionRow> Channels,
+    OperationTotals Company,
+    Money CompanyVarianceAgainstEnvelope);
+
+/// <summary>One partition's counts over the item dossier register for one month.</summary>
+public sealed record DossierTotals(long DossiersOpened, long StageOutcomes, long SupplyAuditEntries, long DeterminationResolutions);
+
+/// <summary>One channel's partition of the item dossier register.</summary>
+public sealed record DossierPartitionRow(ChannelId Channel, bool InRegister, DossierTotals Totals);
+
+/// <summary>The item dossier register for one month, by the item's channel, and for the company.</summary>
+public sealed record DossierPartitionSummary(
+    DateOnly Month,
+    DateTimeOffset? EarliestEntry,
+    IReadOnlyList<RegisteredChannel> Register,
+    IReadOnlyList<DossierPartitionRow> Channels,
+    DossierTotals Company);
+
+/// <summary>
+/// One partition's lifecycle counts, in the delivered throughput summary's shape. The channel is
+/// null for the unattributed partition.
+/// </summary>
+public sealed record ThroughputPartitionRow(ChannelId? Channel, bool InRegister, ThroughputSummary Summary);
+
+/// <summary>
+/// The lifecycle counts of one period, by the channel of the unit each entry names, and for the
+/// company. <see cref="Unattributed"/> holds the entries whose subject names no recorded unit, or
+/// null where there are none.
+/// </summary>
+public sealed record ThroughputPartitionSummary(
+    IReadOnlyList<RegisteredChannel> Register,
+    IReadOnlyList<ThroughputPartitionRow> Channels,
+    ThroughputPartitionRow? Unattributed,
+    ThroughputSummary Company);
+
+/// <summary>
+/// One registered channel's budget position for one month. <see cref="BudgetAmount"/> is null where
+/// the budget register holds no budget for the channel and month, and then no utilisation is computed.
+/// </summary>
+public sealed record ChannelBudgetRow(
+    ChannelId Channel,
+    long Operations,
+    Money Utilised,
+    Money? BudgetAmount,
+    decimal? UtilisationPercent,
+    IReadOnlyDictionary<int, long> AlertsByThreshold);
+
+/// <summary>Every registered channel's budget position, and the company's cost against the ceiling, for one month.</summary>
+public sealed record BudgetPartitionSummary(
+    MonthClosure Closure,
+    IReadOnlyList<ChannelBudgetRow> Channels,
+    long CompanyOperations,
+    Money CompanyCost,
+    decimal? CompanyUtilisationPercent,
+    Money Ceiling);
+
+/// <summary>
+/// The approval queue reader (decision D-005 of the multi-channel design).
+///
+/// READ MEMBERS ONLY, over the gate-transition record and the approval record, through each item's
+/// channel. It reads no configuration, and there is no member here that writes, presents, decides or
+/// transitions, so no route around owner approval exists through it.
+/// </summary>
+public interface IApprovalQueueReader
+{
+    /// <summary>The item versions of one channel whose latest recorded gate state is awaiting owner approval.</summary>
+    Task<IReadOnlyList<AwaitingApproval>> AwaitingOwnerApprovalAsync(ChannelId channel, CancellationToken cancellationToken);
+
+    /// <summary>The item versions of every channel whose latest recorded gate state is awaiting owner approval.</summary>
+    Task<IReadOnlyList<AwaitingApproval>> AwaitingOwnerApprovalAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The approvals of one channel's items decided in one calendar month, by decision instant, each
+    /// with the predecessor its rework mark names where one is recorded.
+    /// </summary>
+    Task<IReadOnlyList<DecidedApproval>> DecidedAsync(ChannelId channel, DateOnly month, CancellationToken cancellationToken);
+}
+
+/// <summary>One item version awaiting owner approval, with its channel and the instant it came to rest there.</summary>
+public sealed record AwaitingApproval(ChannelId Channel, ItemId Item, ItemVersion Version, DateTimeOffset AwaitingSince);
+
+/// <summary>One recorded approval and the predecessor its rework mark names, where that is recorded.</summary>
+public sealed record DecidedApproval(Approval Approval, Approval? ReworkPredecessor);

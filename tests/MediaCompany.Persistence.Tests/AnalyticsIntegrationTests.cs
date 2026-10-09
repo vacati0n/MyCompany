@@ -32,7 +32,11 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         ?? throw new InvalidOperationException("No datastore; this test should have been skipped.");
 
     private static readonly DateTimeOffset Now = DateTimeOffset.Parse("2026-10-01T12:00:00Z");
-    private static readonly DateOnly Period = new(2026, 10, 1);
+    /// <summary>
+    /// The month the datastore books this demonstration's operations into, read back from the store
+    /// rather than fixed: operations are booked at the datastore's instant (the multi-channel change).
+    /// </summary>
+    private DateOnly Period { get; set; }
 
     private static readonly CompanyId Company = CompanyId.New();
     private static readonly ChannelId Channel = ChannelId.New();
@@ -57,6 +61,7 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
             await ThrowawayStore.DropAsync(_dataSource);
             await SchemaInstaller.InstallAsync(_dataSource, CancellationToken.None);
             await SeedAsync();
+            Period = await ChannelTestKit.BookingMonthAsync(_dataSource);
         }
         catch
         {
@@ -533,6 +538,9 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     {
         public Task<Money> RemainingAsync(Attribution attribution, DateOnly period, CancellationToken ct) =>
             Task.FromResult(new Money(1_000m));
+
+        public Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken ct) =>
+            Task.FromResult(new BookedHeadroom(new DateOnly(2026, 10, 1), new Money(1_000m)));
     }
 
     private sealed class TestClock(DateTimeOffset now) : IClock

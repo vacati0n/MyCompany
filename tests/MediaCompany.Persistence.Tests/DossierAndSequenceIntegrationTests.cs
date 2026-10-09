@@ -466,20 +466,31 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// THE KNOWN ISSUE, OBSERVED. Presenting a Draft item for owner approval asks for a transition
-    /// the table does not hold, and on the record store the delivered gate writer refuses it, so
-    /// nothing is recorded. The entry point depends on neither this edge nor the awaiting-rights-
-    /// check state no delivered code writes; the demonstrations below write that state as a
-    /// fixture row instead.
+    /// Presenting a Draft item for owner approval is REFUSED BY NAME (the multi-channel change,
+    /// decision D-008): the gate service reads the recorded state, finds Draft rather than awaiting
+    /// rights check, and writes nothing but the refusal entry. The delivered gate writer still refuses
+    /// the same edge behind it, because the transition table holds no edge from Draft to awaiting
+    /// owner approval.
     /// </summary>
     [RequiresPostgresFact]
-    public async Task PresentingADraftItemIsRefusedByTheDeliveredGateWriter()
+    public async Task PresentingADraftItemIsRefusedByNameAndNothingMoves()
     {
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            Gate().PresentForOwnerApprovalAsync(Item, Version, CancellationToken.None));
+        var outcome = await Gate().PresentForOwnerApprovalAsync(Item, Version, CancellationToken.None);
+
+        var refused = Assert.IsType<GateStepOutcome.Refused>(outcome);
+        Assert.Equal(GateState.Draft, refused.RecordedState);
+        Assert.Equal(GateStepRefusal.NotAwaitingRightsCheck, refused.Reason);
 
         Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM gate_transitions"));
-        Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM audit_entries"));
+        Assert.Equal(1L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM audit_entries WHERE action = @action",
+            c => c.Parameters.AddWithValue("action", PublicationGateService.StepRefusedAction)));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM audit_entries"));
+
+        // The writer behind the service refuses the same edge on its own.
+        await using var transaction = await new NpgsqlUnitOfWork(Source, _clock).BeginAsync(CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => transaction.Gates.RecordTransitionAsync(
+            Item, Version, GateState.Draft, GateState.AwaitingOwnerApproval, "a bypass", _clock.UtcNow, CancellationToken.None));
     }
 
     /// <summary>
@@ -643,7 +654,7 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
         var unitOfWork = new NpgsqlUnitOfWork(Source, offset);
         var sequence = new PublishingSequenceService(
             new WorkLifecycleService(unitOfWork, offset),
-            new PublicationGateService(new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), unitOfWork, offset),
+            ChannelTestKit.Gate(Source, unitOfWork, offset),
             new PublicationDispatchService(unitOfWork, offset),
             offset);
 
@@ -662,8 +673,7 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
 
     private ItemDossierRecorder Recorder() => new(new NpgsqlUnitOfWork(Source, _clock), _clock);
 
-    private PublicationGateService Gate() =>
-        new(new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), new NpgsqlUnitOfWork(Source, _clock), _clock);
+    private PublicationGateService Gate() => ChannelTestKit.Gate(Source, new NpgsqlUnitOfWork(Source, _clock), _clock);
 
     private PublishingSequenceService Sequence()
     {
@@ -675,13 +685,7 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
             _clock);
     }
 
-    private AnalyticsReportService Analytics()
-    {
-        var costs = new NpgsqlCostReader(Source);
-        return new AnalyticsReportService(
-            costs, costs, new NpgsqlRevenueParameterRegister(Source), new NpgsqlThroughputReader(Source),
-            new NpgsqlItemDossierReader(Source), new NpgsqlGateLedger(Source), new NpgsqlAssetLedger(Source), _clock);
-    }
+    private AnalyticsReportService Analytics() => ChannelTestKit.Analytics(Source, _clock);
 
     private static PublishingSequenceRequest Request() => new()
     {
@@ -720,44 +724,29 @@ public sealed class DossierAndSequenceIntegrationTests : IAsyncLifetime
     };
 
     /// <summary>
-    /// The owner verdict, recorded through the DELIVERED gate service as the state the transition
-    /// table holds. The awaiting-rights-check state it is presented from is written first as a
-    /// demonstration fixture row, because no delivered code writes that state; the fixture goes
-    /// through the delivered gate writer, which admits only transitions the table holds.
+    /// The owner verdict, recorded through the DELIVERED gate path on real recorded state (the
+    /// multi-channel change): the item carries a recorded asset decision and its channel's
+    /// registration as demonstration fixture rows, because an item with no recorded asset decision is
+    /// not presentable; the submission writes awaiting rights check, the presentation reads it and the
+    /// rights check, and the verdict is recorded. No gate state is written directly any more.
     /// </summary>
     private async Task RecordOwnerApprovalFixtureAsync()
     {
-        await using (var transaction = await new NpgsqlUnitOfWork(Source, _clock).BeginAsync(CancellationToken.None))
-        {
-            await transaction.Gates.RecordTransitionAsync(
-                Item, Version, GateState.Draft, GateState.AwaitingRightsCheck,
-                "demonstration fixture: the rights check is recorded as reached in this throwaway store",
-                _clock.UtcNow, CancellationToken.None);
-            await transaction.CommitAsync(CancellationToken.None);
-        }
+        await ChannelTestKit.RecordRightsFixtureAsync(Source, Item, Channel);
 
         var gate = Gate();
-        var presentedAt = await gate.PresentForOwnerApprovalAsync(Item, Version, CancellationToken.None);
+        var presentedAt = await ChannelTestKit.PresentAsync(gate, Item, Version);
         await gate.RecordOwnerVerdictAsync(
             Item, Version, ApprovalVerdict.Approved, "demonstration fixture verdict", presentedAt, CancellationToken.None);
     }
 
     /// <summary>
     /// One fixture condition row, carrying the evidence the schema requires and naming itself a
-    /// fixture. It exists only in this throwaway store.
+    /// fixture. It exists only in this throwaway store; the payment account's goes to the
+    /// company-level record, the only home that observation has.
     /// </summary>
-    private async Task RecordConditionFixtureAsync(FirstPublicationCondition condition, ConditionState state) =>
-        await ExecuteAsync(
-            """
-            INSERT INTO first_publication_conditions (channel_id, condition, state, evidence, observed_on)
-            VALUES (@channel, @condition, @state, 'demonstration fixture row in a throwaway store; discharges nothing', CURRENT_DATE)
-            """,
-            c =>
-            {
-                c.Parameters.AddWithValue("channel", Channel.Value);
-                c.Parameters.AddWithValue("condition", condition.ToString());
-                c.Parameters.AddWithValue("state", state.ToString());
-            });
+    private Task RecordConditionFixtureAsync(FirstPublicationCondition condition, ConditionState state) =>
+        ChannelTestKit.RecordConditionFixtureAsync(Source, Channel, condition, state);
 
     private async Task RecordAsync(ItemDossier dossier)
     {

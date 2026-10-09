@@ -280,4 +280,24 @@ public sealed class CapabilityGatewayTests
         var held = Assert.IsType<CapabilityOutcome.Held>(outcome);
         Assert.Equal(RefusalReason.CostCeilingOrBudgetExceeded, held.Reason);
     }
+
+    /// <summary>
+    /// Admission reads its headroom for the DATASTORE'S booking month, the clock booking and the
+    /// evaluation are decided on, and never for a month taken from the process clock.
+    /// </summary>
+    [Fact]
+    public async Task AdmissionReadsHeadroomForTheDatastoresBookingMonth()
+    {
+        var h = Build();
+        var route = ProviderRoute(RouteTier.Primary);
+        h.Routes.Routes.Add(route);
+        h.Availability.States[route.Id] = RouteAvailability.Serving(route.Id, Now);
+        h.Budget.Remaining = Money.Zero();
+        h.Budget.BookingMonth = new DateOnly(2026, 11, 1);
+
+        await h.Gateway.ExecuteAsync(Request(floor: 70), Context(), CancellationToken.None);
+
+        Assert.Equal(1, h.Budget.BookingMonthReads);
+        Assert.Equal(0, h.Budget.CallerMonthReads);
+    }
 }

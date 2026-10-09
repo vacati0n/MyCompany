@@ -38,6 +38,13 @@ public static class SchemaInstaller
         // append-only record by action and instant. Every object is created only where absent,
         // and nothing here records a first-publication condition, an approval or a route.
         "MediaCompany.Persistence.Schema.005-sustained-rate.sql",
+
+        // Wave 6, the multi-channel capability. Additive: the company-level payment-account record,
+        // created empty, with new per-channel payment-account rows refused; the audit chain head and
+        // the check binding every appender to it; the booking check on the operation record; and the
+        // recorded-from-state check on the gate-transition record. Every check binds new rows only,
+        // and nothing here records a channel, a budget, a configuration value or a condition.
+        "MediaCompany.Persistence.Schema.006-multi-channel.sql",
     ];
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)

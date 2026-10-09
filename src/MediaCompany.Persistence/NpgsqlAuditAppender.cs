@@ -29,6 +29,13 @@ internal sealed class NpgsqlAuditAppender : IAuditAppender
     {
         ArgumentNullException.ThrowIfNull(draft);
 
+        // The chain head FIRST, exclusively, held to the end of this transaction: appenders
+        // serialise here, so the head read below is one no other in-flight appender can extend and
+        // two entries can never name the same predecessor. It is the only waited-for exclusive hold
+        // on the record; every exclusive acquisition of the record horizon is non-waiting, so a
+        // transaction waiting here can form no cycle with one holding the horizon shared.
+        await HoldChainHeadAsync(cancellationToken).ConfigureAwait(false);
+
         // The stamp is the DATASTORE'S, taken before the hash is computed so the chain rule is
         // unchanged, and taken under a shared hold on the record horizon that lasts until this
         // transaction ends: no throughput read can close a period over this entry while it is in
@@ -142,6 +149,26 @@ internal sealed class NpgsqlAuditAppender : IAuditAppender
         }
 
         return reader.GetFieldValue<DateTimeOffset>(0);
+    }
+
+    /// <summary>
+    /// Takes the chain head exclusively, waiting for an appender in flight to end. The datastore's
+    /// chain check takes the same hold, so a writer that bypasses this appender waits too, and is
+    /// refused if it names any predecessor other than the head it then reads.
+    /// </summary>
+    private async Task HoldChainHeadAsync(CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand(
+            "SELECT only_row FROM audit_chain_head WHERE only_row FOR UPDATE",
+            _connection,
+            _transaction);
+
+        var held = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        if (held is null)
+        {
+            throw new InvalidOperationException(
+                "The audit chain head is missing; the sixth schema resource creates it, and no entry is chained without it.");
+        }
     }
 
     private async Task<string> HeadHashAsync(CancellationToken cancellationToken)

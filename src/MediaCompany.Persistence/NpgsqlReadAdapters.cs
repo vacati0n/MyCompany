@@ -430,10 +430,12 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
     {
         ArgumentNullException.ThrowIfNull(next);
 
-        if (!ConfigurationKeys.IsAdmitted(next.Key))
+        if (!IsAdmittedPairing(next.Key, next.Scope))
         {
             throw new InvalidOperationException(
-                $"'{next.Key}' is not an admitted configuration key. The set is closed, which is what keeps the owner-approval step out of configuration.");
+                $"'{next.Key}' under scope '{next.Scope}' is not an admitted configuration key and scope. The set is closed, "
+                + "which is what keeps the owner-approval step out of configuration: a base key is admitted under any scope "
+                + "but a channel's, and a channel key only under the scope of exactly one channel.");
         }
 
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
@@ -473,6 +475,24 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
         }
 
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The admitted key-and-scope pairings. A base key is admitted under any scope that does not name
+    /// a channel; a channel key (the multi-channel change, decision D-001) only under the scope of
+    /// exactly one channel, and only where it reaches no control. Every other pairing is refused, so
+    /// no per-channel value can be written under a base key and no base key can be scoped to a channel.
+    /// </summary>
+    internal static bool IsAdmittedPairing(string key, string scope)
+    {
+        var channelScope = ChannelConfigurationKeys.IsChannelScope(scope);
+
+        if (ChannelConfigurationKeys.IsAdmitted(key))
+        {
+            return channelScope && !ChannelConfigurationKeys.ReachesAControl(key);
+        }
+
+        return ConfigurationKeys.IsAdmitted(key) && !channelScope;
     }
 
     private static ConfigurationVersion Map(NpgsqlDataReader reader) => new()
@@ -593,6 +613,39 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IBudgetReader, IServed
         command.Parameters.Add("period", NpgsqlDbType.Date).Value = period;
 
         return await ReadMoneyAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// The headroom in the datastore's booking month, the month and the amount in one statement. The
+    /// subtraction is the datastore's, as in the delivered member.
+    /// </summary>
+    public async Task<BookedHeadroom> RemainingInBookingMonthAsync(Attribution attribution, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(attribution);
+
+        await using var command = _dataSource.CreateCommand(
+            """
+            WITH booking AS (
+                SELECT (date_trunc('month', GREATEST(clock_timestamp(), horizon) AT TIME ZONE 'UTC'))::date AS month
+                FROM audit_record_horizon WHERE only_row
+            )
+            SELECT booking.month,
+                   COALESCE((SELECT MIN(b.amount - u.utilized)
+                             FROM fn_budgets_for(@channel_id, @department_id, booking.month) b
+                             CROSS JOIN LATERAL fn_budget_utilization(b.budget_id) u), 0),
+                   COALESCE((SELECT MIN(b.currency) FROM fn_budgets_for(@channel_id, @department_id, booking.month) b), 'USD')
+            FROM booking
+            """);
+        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
+        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOperationException("The record horizon is missing; the fifth schema resource creates it.");
+        }
+
+        return new BookedHeadroom(reader.GetFieldValue<DateOnly>(0), new Money(reader.GetDecimal(1), reader.GetString(2)));
     }
 
     /// <summary>
@@ -859,35 +912,14 @@ public sealed class NpgsqlThroughputReader : IThroughputReader
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
-        try
-        {
-            await using var hold = new NpgsqlCommand(
-                "SELECT horizon FROM audit_record_horizon WHERE only_row FOR UPDATE NOWAIT",
-                connection,
-                transaction);
-            await hold.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (PostgresException refused) when (refused.SqlState == PostgresErrorCodes.LockNotAvailable)
+        // The delivered closure, now shared with the month readings over the operation record (the
+        // multi-channel change): taken without waiting, and raised when granted.
+        if (await RecordHorizonClosure.TryCloseAsync(connection, transaction, cancellationToken).ConfigureAwait(false)
+            is not { } horizon)
         {
             // An audited transaction is in flight. Never wait on it: report the attempt failed.
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
             return null;
-        }
-
-        DateTimeOffset horizon;
-        await using (var raise = new NpgsqlCommand(
-            """
-            UPDATE audit_record_horizon
-               SET horizon = GREATEST(clock_timestamp(), horizon)
-             WHERE only_row
-            RETURNING horizon
-            """,
-            connection,
-            transaction))
-        {
-            await using var raised = await raise.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-            await raised.ReadAsync(cancellationToken).ConfigureAwait(false);
-            horizon = raised.GetFieldValue<DateTimeOffset>(0);
         }
 
         await using var command = new NpgsqlCommand(
