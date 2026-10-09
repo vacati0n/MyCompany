@@ -1104,6 +1104,10 @@ public sealed class BoundaryTests
         typeof(MediaCompany.Deterministic.Analytics.ManagementRendering),
         typeof(MediaCompany.Deterministic.Analytics.ManagementReportService),
         typeof(MediaCompany.Deterministic.Routing.ComparableRuns),
+
+        // The console runner the host delegates the weekly and dashboard printing to (the second correction cycle):
+        // it writes text to the writer the host gives it and nothing else.
+        typeof(MediaCompany.Deterministic.Services.ManagementConsole),
     ];
 
     /// <summary>
@@ -1168,6 +1172,9 @@ public sealed class BoundaryTests
 
         var reading = ManagementReach(typeof(ProbeComposerReadingTheProcessClock));
         Assert.Contains(reading, f => f.Contains("UtcNow", StringComparison.Ordinal));
+
+        var writing = ManagementReach(typeof(ProbeConsoleWritingAFile));
+        Assert.Contains(writing, f => f.Contains("File.WriteAllText", StringComparison.Ordinal));
     }
 
     /// <summary>Every way a type's declared members or compiled bodies reach a write path, a clock, configuration or an action.</summary>
@@ -1186,7 +1193,9 @@ public sealed class BoundaryTests
                 || (type.Namespace ?? string.Empty).StartsWith("MediaCompany.Domain.Configuration", StringComparison.Ordinal)
                 || (type.Name.EndsWith("Writer", StringComparison.Ordinal) && (type.Namespace ?? string.Empty).StartsWith("MediaCompany", StringComparison.Ordinal))
                 || (type.Namespace ?? string.Empty).StartsWith("System.Net", StringComparison.Ordinal)
-                || (type.Namespace ?? string.Empty).StartsWith("System.IO", StringComparison.Ordinal)
+                // A text writer is the sink the host hands the console runner; every other file-system type is refused.
+                || ((type.Namespace ?? string.Empty).StartsWith("System.IO", StringComparison.Ordinal)
+                    && type != typeof(TextWriter))
                 || type == typeof(Console)
                 || type == typeof(System.Diagnostics.Process));
 
@@ -2317,6 +2326,16 @@ internal sealed class ProbeDashboardThatRecords(IUnitOfWork unitOfWork)
     {
         await using var transaction = await unitOfWork.BeginAsync(ct);
         await transaction.CommitAsync(ct);
+    }
+}
+
+/// <summary>A console-shaped probe that writes a file beside its text output, which the management scan must find.</summary>
+internal static class ProbeConsoleWritingAFile
+{
+    public static void Print(TextWriter output, string text)
+    {
+        output.WriteLine(text);
+        File.WriteAllText("dashboard.txt", text);
     }
 }
 

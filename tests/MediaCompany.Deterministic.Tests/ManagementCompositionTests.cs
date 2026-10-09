@@ -262,6 +262,42 @@ public sealed class ManagementCompositionTests
     }
 
     /// <summary>
+    /// A ROUTE REACHING NO PROVIDER KEEPS ITS EXACT CONFIGURED POSITION (the tech lead's ruling, second correction
+    /// cycle). A hold-and-escalate route configured ahead of every provider of its class is still selected first when
+    /// every provider holds ten comparable runs; evidence swaps the two providers only within the positions providers
+    /// hold; below ten the configured ordering applies unchanged.
+    /// </summary>
+    [Fact]
+    public void ANonProviderRouteKeepsItsConfiguredPositionAndEvidenceReordersOnlyProviderPositions()
+    {
+        var hold = Fixture.HoldAndEscalate(RouteTier.Primary);
+        var dearer = Fixture.Provider(RouteTier.Secondary, Fixture.PrimaryAccount, Fixture.PrimaryModel, 90);
+        var cheaper = Fixture.Provider(RouteTier.Emergency, Fixture.SecondaryAccount, Fixture.SecondaryModel, 85);
+        var ten = Runs(dearer.Id, 10, cost: 0.02m).Concat(Runs(cheaper.Id, 10, cost: 0.01m)).ToArray();
+
+        var outcome = EvidenceSelection.Select([hold, dearer, cheaper], TaskClass.ScriptPass, new QualityRating(80), "USD", ten);
+        Assert.Equal(SelectionBasis.Evidence, outcome.Record.Basis);
+        Assert.Equal(hold.Id, outcome.Selected!.Id);
+        Assert.Equal(new[] { hold.Id, cheaper.Id, dearer.Id }, outcome.Record.Candidates.Select(c => c.Route));
+
+        // The non-provider route between the providers keeps its middle position; the providers swap around it.
+        var middle = Fixture.HoldAndEscalate(RouteTier.Secondary);
+        var first = Fixture.Provider(RouteTier.Primary, Fixture.PrimaryAccount, Fixture.PrimaryModel, 90);
+        var last = Fixture.Provider(RouteTier.Emergency, Fixture.SecondaryAccount, Fixture.SecondaryModel, 85);
+        var swapped = EvidenceSelection.Select([first, middle, last], TaskClass.ScriptPass, new QualityRating(80), "USD",
+            Runs(first.Id, 10, cost: 0.02m).Concat(Runs(last.Id, 10, cost: 0.01m)).ToArray());
+        Assert.Equal(new[] { last.Id, middle.Id, first.Id }, swapped.Record.Candidates.Select(c => c.Route));
+        Assert.Equal(last.Id, swapped.Selected!.Id);
+
+        // Below ten: the configured ordering exactly.
+        var nine = Runs(dearer.Id, 10, cost: 0.02m).Concat(Runs(cheaper.Id, 9, cost: 0.01m)).ToArray();
+        var configured = EvidenceSelection.Select([hold, dearer, cheaper], TaskClass.ScriptPass, new QualityRating(80), "USD", nine);
+        Assert.Equal(SelectionBasis.Configured, configured.Record.Basis);
+        Assert.Equal(hold.Id, configured.Selected!.Id);
+        Assert.Equal(new[] { hold.Id, dearer.Id, cheaper.Id }, configured.Record.Candidates.Select(c => c.Route));
+    }
+
+    /// <summary>
     /// THE BRIEF IS BOUNDED (correction cycle): held requests, escalated deferrals and controller actions appear as
     /// counts in their measurement case with the single most urgent item per kind, and the brief's size is the same
     /// with two of each as with fifty; every held request and decision stays listed in the reports.

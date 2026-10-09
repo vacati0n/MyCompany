@@ -120,16 +120,24 @@ public static class EvidenceSelection
                 });
         }
 
-        // Every compared quantity of every counted candidate is observed in one unit: rank on evidence. The
-        // candidates reaching no provider keep their configured order after the ranked providers.
+        // Every compared quantity of every counted candidate is observed in one unit: rank on evidence. EVIDENCE
+        // REORDERS THE PROVIDERS ONLY AMONG THE POSITIONS PROVIDERS ALREADY HOLD in the configured ordering (the
+        // tech lead's ruling on the second correction cycle): a candidate reaching no provider keeps its exact
+        // configured position, is never moved after the ranked providers and is never skipped for a metered one.
         var meeting = compared.Where(f => f.MinimumQuality >= floor.Value).ToArray();
-        var ranked = meeting
+        var providerOrder = new Queue<CandidateFigures>(meeting
             .OrderBy(f => f.MaximumCost)
             .ThenBy(f => (int)f.Route.Tier)
             .ThenBy(f => f.Route.Id.Value)
-            .Concat(compared.Where(f => f.MinimumQuality < floor.Value))
-            .Concat(excluded)
+            .Concat(compared.Where(f => f.MinimumQuality < floor.Value)));
+        var ranked = figures
+            .Select(f => counted.Contains(f.Route.Id) ? providerOrder.Dequeue() : f)
             .ToArray();
+
+        // The first position that may be served: a candidate reaching no provider, which met the floor at the
+        // resolution's floor step, or a provider meeting the floor on observation; with none, nothing is served
+        // below the floor.
+        var served = ranked.FirstOrDefault(f => !counted.Contains(f.Route.Id) || f.MinimumQuality >= floor.Value);
 
         var rankedOn = compared.SelectMany(f => f.Observations).Select(o => o.Id).ToArray();
 
@@ -141,14 +149,12 @@ public static class EvidenceSelection
             : $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {compared.Length} "
               + $"candidates, each candidate's minimum observed quality against the floor of {floor.Value} on the "
               + $"{BenchmarkObservation.QualityRatingUnit} and its maximum observed cost in {currency}; the cheapest "
-              + "candidate meeting the floor was taken, ties by route tier then identifier; every candidate holds at "
+              + "candidate meeting the floor fills the first provider position, ties by route tier then identifier, and "
+              + "every candidate reaching no provider keeps its configured position; every candidate holds at "
               + $"least the owner's ten comparable runs: {countStatement}";
 
         return new SelectionOutcome(
-            // Where no provider meets the floor on observation, a candidate reaching no provider, which already
-            // met the floor at the resolution's floor step, is taken in its configured position; with none,
-            // nothing is selected and nothing is served below the floor.
-            meeting.Length > 0 ? ranked[0].Route : excluded.FirstOrDefault()?.Route,
+            served?.Route,
             new SelectionRecord
             {
                 Basis = SelectionBasis.Evidence,
