@@ -316,7 +316,14 @@ public sealed class CapabilityGateway : ICapabilityGateway
             // so it is never dropped: it is recorded on a fresh transaction under a fresh reservation,
             // and the decision record says the admitted month's reservation was lost and re-evaluates the
             // governing readings against the month the attempt is booked into.
-            await held.DisposeAsync().ConfigureAwait(false);
+            try
+            {
+                await held.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (Exception disposal) when (disposal is not OperationCanceledException)
+            {
+                // The lost transaction is already gone; disposing it can fail and changes nothing durable.
+            }
 
             await using var fresh = new HeldTransaction(await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false));
             var reservation = await fresh.Transaction.Admission.ReserveAsync(cancellationToken).ConfigureAwait(false);

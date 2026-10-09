@@ -868,6 +868,210 @@ public sealed class BoundaryTests
         }
     }
 
+    // -----------------------------------------------------------------------
+    // The AI-economics change — every added type held by the membership assertion, by name
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Every quantity-carrying type the AI-economics change adds, NAMED HERE, is either declared on the
+    /// analytics surface or a named permitted carrier, and passes the member rule that refuses a bare
+    /// numeric and an undeclared string — so the membership assertion covers each of them by name rather
+    /// than by a namespace sweep that would pass over a type nobody noticed.
+    /// </summary>
+    [Fact]
+    public void EveryQuantityCarryingTypeTheAiEconomicsChangeAddsIsHeldByTheMembershipAssertion()
+    {
+        string[] added =
+        [
+            "MediaCompany.Domain.Analytics.BenchmarkObservation",
+            "MediaCompany.Domain.Analytics.BenchmarkReading",
+            "MediaCompany.Domain.Analytics.BenchmarkRecordReading",
+            "MediaCompany.Domain.Analytics.BenchmarkMonthReading",
+            "MediaCompany.Domain.Analytics.SelectionCandidate",
+            "MediaCompany.Domain.Analytics.SelectionRecord",
+            "MediaCompany.Domain.Analytics.GoverningReading",
+            "MediaCompany.Domain.Analytics.ControllerDecision",
+            "MediaCompany.Domain.Analytics.TierDistributionPart",
+            "MediaCompany.Domain.Analytics.TierDistributionReading",
+            "MediaCompany.Domain.Analytics.ServedTierReading",
+            "MediaCompany.Deterministic.Analytics.EconomicsComposers",
+            "MediaCompany.Application.Ports.IAdmissionLedger",
+            "MediaCompany.Application.Ports.AdmissionDecisionDraft",
+            "MediaCompany.Application.Ports.IBenchmarkWriter",
+            "MediaCompany.Application.Ports.BenchmarkObservationDraft",
+            "MediaCompany.Application.Ports.IBenchmarkReader",
+            "MediaCompany.Application.Ports.BenchmarkRecordSummary",
+            "MediaCompany.Deterministic.Routing.ResolutionInputs",
+            "MediaCompany.Deterministic.Routing.ResolutionRecord",
+            "MediaCompany.Deterministic.Routing.EvidenceSelection",
+            "MediaCompany.Deterministic.Routing.SelectionOutcome",
+            "MediaCompany.Deterministic.Accounting.CostController",
+            "MediaCompany.Persistence.NpgsqlAdmissionLedger",
+            "MediaCompany.Persistence.NpgsqlBenchmarkWriter",
+            "MediaCompany.Persistence.NpgsqlBenchmarkReader",
+            "MediaCompany.Persistence.MeasurementColumns",
+            "MediaCompany.Persistence.BenchmarkRows",
+        ];
+
+        var scanned = ScannedAnalyticsTypes().ToDictionary(s => s.Type.FullName!, s => s.PublicOnly);
+
+        foreach (var name in added)
+        {
+            var type = ProductionAssemblies.Select(a => Load(a).GetType(name)).SingleOrDefault(t => t is not null);
+            Assert.True(type is not null, $"{name} is named as an added type and no production assembly declares it");
+            Assert.True(scanned.ContainsKey(name), $"{name} carries an analytics quantity and the member rule does not scan it");
+            Assert.Empty(BareValueMembers(type!, scanned[name]));
+        }
+    }
+
+    /// <summary>
+    /// The member rule applied to an economics-shaped probe carrying a bare utilisation percentage: it is
+    /// refused, naming the type and the member, so the assertion above cannot pass on a rule that matches
+    /// nothing.
+    /// </summary>
+    [Fact]
+    public void TheMemberRuleRefusesABareNumericOnAnEconomicsShapeAndNamesIt()
+    {
+        var offender = Assert.Single(BareValueMembers(typeof(ProbeGoverningReadingWithABarePercent)));
+        Assert.Contains(nameof(ProbeGoverningReadingWithABarePercent), offender, StringComparison.Ordinal);
+        Assert.Contains("UtilisationPercent", offender, StringComparison.Ordinal);
+        Assert.Contains("bare Decimal", offender, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A recorded amount is its own two-shape type and NOT a fourth case of the measurement union, which
+    /// stays closed at three; its not-recorded shape carries no value field of any kind.
+    /// </summary>
+    [Fact]
+    public void ARecordedAmountIsNotAFourthMeasurementCaseAndItsAbsentShapeCarriesNoValue()
+    {
+        var union = Load(Domain).GetType("MediaCompany.Domain.Analytics.MeasurementQuantity", throwOnError: true)!;
+        Assert.Equal(3, union.GetNestedTypes().Count(t => t.BaseType == union));
+
+        var recorded = Load(Domain).GetType("MediaCompany.Domain.Accounting.RecordedAmount", throwOnError: true)!;
+        Assert.NotEqual(union, recorded.BaseType);
+        var notRecorded = recorded.GetNestedType("NotRecorded")!;
+        Assert.Equal(["LookedFor"], notRecorded.GetProperties().Where(p => p.DeclaringType == notRecorded).Select(p => p.Name));
+        Assert.Empty(recorded.GetConstructors(BindingFlags.Public | BindingFlags.Instance));
+    }
+
+    /// <summary>
+    /// The cost controller and the evidence selection are REGISTERED MEMBERS of the rule-determined set and
+    /// sit in the rule-determined assembly, so the dependency-direction proof above — that the assembly
+    /// cannot reach the capability boundary or the credential broker — covers them: neither can express a
+    /// model call.
+    /// </summary>
+    [Fact]
+    public void TheCostControllerAndTheSelectionAreRegisteredRuleDeterminedMembers()
+    {
+        foreach (var rule in new[]
+                 {
+                     typeof(MediaCompany.Deterministic.Accounting.CostController),
+                     typeof(MediaCompany.Deterministic.Routing.EvidenceSelection),
+                     typeof(MediaCompany.Deterministic.Routing.RouteResolver),
+                 })
+        {
+            Assert.Equal(Deterministic, rule.Assembly.GetName().Name);
+            var name = (string)rule.GetField("TaskName", BindingFlags.Public | BindingFlags.Static)!.GetValue(null)!;
+            Assert.True(DeterministicTaskRegistry.Contains(name), $"{rule.Name} declares '{name}', which is not in the rule-determined set");
+            Assert.True(rule is { IsAbstract: true, IsSealed: true }, $"{rule.Name} is a pure static rule");
+        }
+
+        Assert.True(DeterministicTaskRegistry.Contains(DeterministicTaskRegistry.CostControl));
+        Assert.True(DeterministicTaskRegistry.Contains(DeterministicTaskRegistry.EvidenceSelection));
+    }
+
+    /// <summary>
+    /// NO CONFIGURATION REACHES A THRESHOLD, THE ACTION MAPPING OR AN ADMISSION. The compiled bodies of the
+    /// cost controller, the evidence selection and the resolution function — their compiler-generated
+    /// closures included — name no member of the configuration surface and load no admitted key of any key
+    /// set, and none of them declares a member typed by it; so no key, production, publishing, channel or
+    /// base, can reach the controller's thresholds, its mapping or the admission past a refusal.
+    /// </summary>
+    [Fact]
+    public void NoConfigurationReachesTheControllerItsMappingOrTheSelection()
+    {
+        foreach (var rule in new[]
+                 {
+                     typeof(MediaCompany.Deterministic.Accounting.CostController),
+                     typeof(MediaCompany.Deterministic.Routing.EvidenceSelection),
+                     typeof(MediaCompany.Deterministic.Routing.RouteResolver),
+                     typeof(MediaCompany.Deterministic.Routing.ResolutionInputs),
+                 })
+        {
+            Assert.Empty(ConfigurationReachIn(rule));
+        }
+    }
+
+    /// <summary>The configuration scan applied to a probe that reads a key: it is found and named.</summary>
+    [Fact]
+    public void TheConfigurationScanFindsAProbeReadingAKeyAndNamesIt()
+    {
+        var found = ConfigurationReachIn(typeof(ProbeReadingAConfigurationKey));
+        Assert.NotEmpty(found);
+        Assert.Contains(found, f => f.Contains("budget.amount", StringComparison.Ordinal));
+    }
+
+    /// <summary>Every way a type's compiled code or declared members reach the configuration surface.</summary>
+    private static IReadOnlyList<string> ConfigurationReachIn(Type root)
+    {
+        const string ConfigurationNamespace = "MediaCompany.Domain.Configuration";
+        var keys = ConfigurationKeys.Admitted
+            .Concat(ChannelConfigurationKeys.Admitted)
+            .Concat(PublishingConfigurationKeys.Admitted)
+            .Concat(MediaCompany.Application.Production.ProductionConfigurationKeys.Admitted)
+            .ToHashSet(StringComparer.Ordinal);
+
+        bool Configuration(Type? type) =>
+            type is not null
+            && ((type.Namespace ?? string.Empty).StartsWith(ConfigurationNamespace, StringComparison.Ordinal)
+                || type == typeof(IConfigurationStore)
+                || type == typeof(MediaCompany.Application.Production.ProductionConfigurationKeys));
+
+        var reach = new List<string>();
+        var types = new[] { root }.Concat(root.GetNestedTypes(Declared)).ToArray();
+
+        foreach (var type in types)
+        {
+            foreach (var field in type.GetFields(Declared).Where(f => f.DeclaringType == type))
+            {
+                if (Flatten(field.FieldType).Any(Configuration))
+                {
+                    reach.Add($"{type.FullName}.{field.Name} is typed by the configuration surface");
+                }
+            }
+
+            var bodies = type.GetMethods(Declared).Where(m => m.DeclaringType == type).Cast<MethodBase>()
+                .Concat(type.GetConstructors(Declared));
+
+            foreach (var method in bodies)
+            {
+                foreach (var parameter in method.GetParameters())
+                {
+                    if (Flatten(parameter.ParameterType).Any(Configuration))
+                    {
+                        reach.Add($"{type.FullName}.{method.Name} takes {parameter.ParameterType.Name}");
+                    }
+                }
+
+                foreach (var operand in IlOperands(method))
+                {
+                    switch (operand)
+                    {
+                        case string literal when keys.Contains(literal):
+                            reach.Add($"{type.FullName}.{method.Name} loads the key '{literal}'");
+                            break;
+                        case MemberInfo member when Configuration(member.DeclaringType) || (member is Type t && Configuration(t)):
+                            reach.Add($"{type.FullName}.{method.Name} names {member.DeclaringType?.Name}.{member.Name}");
+                            break;
+                    }
+                }
+            }
+        }
+
+        return reach;
+    }
+
     /// <summary>The types allowed to name the channel key set, each for the reason its summary states.</summary>
     private static readonly string[] PermittedChannelKeyReaders =
     [
@@ -1809,4 +2013,13 @@ internal sealed record ProbeCarryingOnlyAMeasurementQuantity(
 internal static class ProbeReadingAChannelKey
 {
     public static string Schedule() => ChannelConfigurationKeys.Schedule;
+}
+
+/// <summary>An economics-shaped probe carrying a bare utilisation percentage, which the member rule must refuse.</summary>
+internal sealed record ProbeGoverningReadingWithABarePercent(MediaCompany.Domain.Analytics.MeasurementQuantity BookedSpend, decimal UtilisationPercent);
+
+/// <summary>A probe that reads a base configuration key, which the configuration scan must find.</summary>
+internal static class ProbeReadingAConfigurationKey
+{
+    public static string Key() => ConfigurationKeys.BudgetAmount;
 }
