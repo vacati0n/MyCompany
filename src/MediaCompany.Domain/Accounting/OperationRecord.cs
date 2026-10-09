@@ -93,9 +93,34 @@ public sealed record OperationRecord
     public bool? CostStated { get; init; }
 
     /// <summary>
+    /// Why the cost is not stated, where the recorder states a reason (the second correction cycle): null
+    /// where the cost is stated, and on rows recorded before the reason was kept.
+    /// </summary>
+    public CostUnstatedReason? CostUnstatedReason { get; init; }
+
+    /// <summary>
     /// Whether the tier evidence is present for this record. A record where the request named a
     /// tier and the route stated one is testable; anything else is recorded as absent and says so.
     /// </summary>
     public bool CarriesTierEvidence =>
         ReasoningTierRequested is not null && ReasoningTierServed is not null;
+}
+
+/// <summary>
+/// Why the datastore did not state an operation's cost (the AI-economics change, second correction cycle).
+/// Each is its own reason, so an unstated cost names what left it unstated.
+/// </summary>
+public enum CostUnstatedReason
+{
+    /// <summary>A consumed input, output or cached unit had no price row in force at the booking instant.</summary>
+    PriceNotInForce = 1,
+
+    /// <summary>A unit of another kind was consumed, and no price applies to it.</summary>
+    UnpricedUnitConsumed = 2,
+
+    /// <summary>
+    /// The units at the applied prices come to a cost the cost column cannot hold, so the cost is refused
+    /// before the insert and the attempt is recorded with its cost not stated, never as an overflow.
+    /// </summary>
+    CostOutOfRange = 3,
 }

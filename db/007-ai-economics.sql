@@ -92,6 +92,13 @@ $$ LANGUAGE plpgsql;
 -- where every consumed input, output and cached unit had a price row in force at the booking instant
 -- and no other unit was consumed; otherwise false, so a missing price never reads as a stated zero.
 ALTER TABLE agent_costs ADD COLUMN IF NOT EXISTS cost_stated boolean;
+ALTER TABLE agent_costs ADD COLUMN IF NOT EXISTS cost_unstated_reason text;
+
+-- An alert states the utilisation and the utilised amount it was raised at (the second correction cycle):
+-- both are widened to the unbounded decimal the utilisation function returns, so a scope spent far past a
+-- small budget raises its alert rather than failing the transaction that books the operation with an
+-- unnamed overflow. Widening loses no stored value.
+ALTER TABLE budget_alerts ALTER COLUMN utilization TYPE numeric, ALTER COLUMN utilized TYPE numeric;
 
 DO $$
 BEGIN
@@ -100,6 +107,17 @@ BEGIN
         ALTER TABLE agent_costs
             ADD CONSTRAINT agent_costs_deterministic_states_cost
             CHECK (deterministic_task IS NULL OR cost_stated IS TRUE) NOT VALID;
+    END IF;
+
+    -- Why a cost is not stated (the second correction cycle): named on every unstated cost the recorder
+    -- writes, and never on a stated one. NOT VALID: binds new rows only.
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'agent_costs_unstated_reason_named') THEN
+        ALTER TABLE agent_costs
+            ADD CONSTRAINT agent_costs_unstated_reason_named
+            CHECK (cost_unstated_reason IS NULL
+                   OR (cost_stated IS FALSE
+                       AND cost_unstated_reason IN ('PriceNotInForce', 'UnpricedUnitConsumed', 'CostOutOfRange')))
+            NOT VALID;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'agent_costs_operation_route_model_key') THEN

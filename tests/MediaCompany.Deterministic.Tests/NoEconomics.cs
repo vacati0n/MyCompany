@@ -16,7 +16,7 @@ internal sealed class NoAdmission : IAdmissionLedger
     public Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken) =>
         throw new NotSupportedException("No service under this demonstration admits a capability request.");
 
-    public Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken) =>
+    public Task<bool> TryHoldScopesAsync(ChannelId channel, CancellationToken cancellationToken) =>
         throw new NotSupportedException("No service under this demonstration holds an admission scope.");
 
     public Task<AdmissionSnapshot> ReadAsync(

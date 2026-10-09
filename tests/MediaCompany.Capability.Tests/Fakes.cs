@@ -135,6 +135,9 @@ internal sealed class FakeAdmission
     /// <summary>The scope holds taken, in the order they were taken.</summary>
     public List<string> Holds { get; } = [];
 
+    /// <summary>Whether another admission holds the company scope, so a try at it is refused (the second correction cycle).</summary>
+    public bool CompanyScopeHeldElsewhere { get; set; }
+
     /// <summary>The price sets restored on a fresh transaction after a lost one.</summary>
     public List<IReadOnlyList<ModelPrice>> RestoredPrices { get; } = [];
 
@@ -182,12 +185,18 @@ internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDec
         return Task.FromResult(_reservation);
     }
 
-    public Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
+    public Task<bool> TryHoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
     {
-        // The order the datastore adapter takes the holds in, recorded so a demonstration can read it.
+        // The order the datastore adapter tries the holds in, recorded so a demonstration can read it. Where
+        // the demonstration says another admission holds the company scope, the first try is refused.
         state.Holds.Add("company");
+        if (state.CompanyScopeHeldElsewhere)
+        {
+            return Task.FromResult(false);
+        }
+
         state.Holds.Add($"channel:{channel}");
-        return Task.CompletedTask;
+        return Task.FromResult(true);
     }
 
     public async Task<AdmissionSnapshot> ReadAsync(
@@ -267,6 +276,9 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
     /// <summary>The booked month each budget evaluation was asked for.</summary>
     public List<DateOnly> EvaluatedMonths { get; } = [];
+
+    /// <summary>The stored alerts read back, by booked month and instant, for a recovered outcome.</summary>
+    public List<(DateOnly Period, DateTimeOffset RaisedAt)> StoredAlertReads { get; } = [];
 
     public int Commits { get; private set; }
 
@@ -527,6 +539,13 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                 Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct)
             {
                 owner.EvaluatedMonths.Add(period);
+                return Task.FromResult<IReadOnlyList<BudgetAlert>>(owner.Alerts.ToArray());
+            }
+
+            public Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
+                Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct)
+            {
+                owner.StoredAlertReads.Add((period, raisedAt));
                 return Task.FromResult<IReadOnlyList<BudgetAlert>>(owner.Alerts.ToArray());
             }
         }

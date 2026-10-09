@@ -1872,7 +1872,7 @@ internal sealed class TerminalStateProbe : IUnitOfWork
     {
         public Task<BookingReservation> ReserveAsync(CancellationToken ct) => throw new NotSupportedException();
 
-        public Task HoldScopesAsync(MediaCompany.Domain.ChannelId channel, CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> TryHoldScopesAsync(MediaCompany.Domain.ChannelId channel, CancellationToken ct) => throw new NotSupportedException();
 
         public Task<AdmissionSnapshot> ReadAsync(
             MediaCompany.Domain.Capabilities.CapabilityClass capability, MediaCompany.Domain.Capabilities.Attribution attribution,
@@ -1922,6 +1922,11 @@ internal sealed class TerminalStateProbe : IUnitOfWork
     private sealed class NoBudgets : IBudgetEvaluator
     {
         public Task<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>> EvaluateAsync(
+            MediaCompany.Domain.Capabilities.Attribution attribution, DateOnly period,
+            DateTimeOffset raisedAt, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>>([]);
+
+        public Task<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>> StoredAlertsAsync(
             MediaCompany.Domain.Capabilities.Attribution attribution, DateOnly period,
             DateTimeOffset raisedAt, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<MediaCompany.Domain.Accounting.BudgetAlert>>([]);

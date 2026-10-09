@@ -56,9 +56,13 @@ public static class CapabilityGatewayFactory
         // The routes, forbidden sources, availability, accounts and prices are read by the admission ledger
         // in one snapshot of the admission transaction (the correction cycle), so the boundary takes none of
         // the register ports that read them on other connections.
+        // The provider-call bound is the client's own timeout, which every adapter call runs under; the
+        // recording of an incurred attempt after a lost transaction waits longer than it (the second
+        // correction cycle).
         return new CapabilityGateway(
             unitOfWork,
             broker,
-            adapters);
+            adapters,
+            httpClient.Timeout);
     }
 }

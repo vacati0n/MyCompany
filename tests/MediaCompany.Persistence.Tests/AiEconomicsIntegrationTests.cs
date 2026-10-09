@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using MediaCompany.Application.Ports;
 using MediaCompany.Application.Production;
@@ -49,6 +50,10 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     private static readonly ItemId ItemA = ItemId.New();
     private static readonly ItemId ItemB = ItemId.New();
     private static readonly ProviderAccountId Alpha = new("provider-alpha");
+
+    /// <summary>The provider-call bound the composition root gives the client (the second correction cycle).</summary>
+    private static readonly TimeSpan ProviderCallBound = TimeSpan.FromSeconds(60);
+
     private static readonly ProviderAccountId Beta = new("provider-beta");
     private static readonly ModelId AlphaModel = new("alpha-reasoning");
     private static readonly ModelId BetaModel = new("beta-reasoning");
@@ -809,7 +814,8 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         var gateway = new CapabilityGateway(
             new LostReplyUnitOfWork(new NpgsqlUnitOfWork(Source, new FixedClock(DateTimeOffset.UnixEpoch))),
             new StandInBroker(),
-            new Dictionary<ProviderAccountId, IProviderAdapter> { [Alpha] = standIn });
+            new Dictionary<ProviderAccountId, IProviderAdapter> { [Alpha] = standIn },
+            ProviderCallBound);
 
         var completed = Assert.IsType<CapabilityOutcome.Completed>(
             await gateway.ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
@@ -849,9 +855,9 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
 
     /// <summary>
     /// TWO SESSIONS, ONE SCOPE. A second metered admission of the same channel starts while the first is in
-    /// its provider call. It waits on the scope hold rather than reading spend that excludes the first's
-    /// booking; once the first commits it reads that booking, the headroom left is below its estimate, and it
-    /// is held under the exceeded reason: booked spend never passes a budget that neither reading reached.
+    /// its provider call. It neither reads spend that excludes the first's booking nor waits on the scope hold
+    /// (the second correction cycle): it is deferred at once, during the first's call, under its own reason,
+    /// so booked spend never passes a budget that neither reading reached.
     /// </summary>
     [RequiresPostgresFact]
     public async Task TwoConcurrentMeteredAdmissionsOfOneScopeCannotTogetherPassTheBudget()
@@ -866,8 +872,8 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         {
             second = Task.Run(() => Gateway(new FixedClock(DateTimeOffset.UnixEpoch), secondStandIn)
                 .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
-            await Task.Delay(500);
-            Assert.False(second.IsCompleted, "the second admission of the scope decided while the first was in its call");
+            var decided = await Task.WhenAny(second, Task.Delay(TimeSpan.FromSeconds(10)));
+            Assert.True(decided == second, "the second admission of the scope waited on the first's call");
         });
 
         Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), first)
@@ -875,7 +881,7 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         var outcome = await second!;
 
         var held = Assert.IsType<CapabilityOutcome.Held>(outcome);
-        Assert.Equal(RefusalReason.CostCeilingOrBudgetExceeded, held.Reason);
+        Assert.Equal(RefusalReason.MeteredAdmissionInProgress, held.Reason);
         Assert.Equal(0, secondStandIn.Calls);
         Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
         Assert.True(await ScalarAsync<decimal>("SELECT COALESCE(SUM(computed_cost), 0) FROM agent_costs") <= 0.0150m);
@@ -1237,8 +1243,309 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     }
 
     // -----------------------------------------------------------------------
+    // The second correction cycle
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// NO ADMISSION WAITS ON A SCOPE HOLD. Another session takes the company scope's hold and keeps it for
+    /// longer than the default command timeout. A metered admission made at once, and another made after that
+    /// timeout has passed while the hold is still kept, are each deferred at once under their own recorded
+    /// reason, from the reserved instant, with nothing reaching the provider; once the hold is released a
+    /// metered admission completes.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AMeteredAdmissionMeetingAHeldScopeIsDeferredAtOnceWhileTheHolderKeepsItPastTheCommandTimeout()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        var standIn = new StandInProvider(Alpha);
+        var holder = await HoldAsync(CompanyScopeHold, HeldPastTheCommandTimeout);
+        var since = Stopwatch.StartNew();
+
+        var early = Assert.IsType<CapabilityOutcome.Held>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+        Assert.True(since.Elapsed < TimeSpan.FromSeconds(10), $"the admission waited {since.Elapsed} on the held scope");
+
+        await Task.Delay(DefaultCommandTimeout + TimeSpan.FromSeconds(1) - since.Elapsed);
+        Assert.False(holder.IsCompleted, "the holder released the scope before the command timeout passed");
+        var asked = since.Elapsed;
+        var late = Assert.IsType<CapabilityOutcome.Held>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+        Assert.True(since.Elapsed - asked < TimeSpan.FromSeconds(10), "the later admission waited on the held scope");
+        Assert.False(holder.IsCompleted, "the holder released the scope before the later admission was decided");
+
+        Assert.Equal(RefusalReason.MeteredAdmissionInProgress, early.Reason);
+        Assert.Equal(RefusalReason.MeteredAdmissionInProgress, late.Reason);
+        Assert.Equal(0, standIn.Calls);
+        var deferred = await OperationInstantAsync(Outcome: "Held", latest: true);
+        Assert.Equal(deferred.At + TimeSpan.FromHours(4), late.EscalatesAt);
+        Assert.Equal(2L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM agent_costs WHERE outcome = 'Held' AND failure_reason LIKE '%MeteredAdmissionInProgress%'"));
+        Assert.Equal(2L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM admission_decisions d JOIN agent_costs c USING (operation_id) WHERE c.outcome = 'Held' AND d.tier_statement LIKE '%already in progress%'"));
+        var (decidedAt, _) = await DecisionInstantAsync(deferred.Id);
+        Assert.Equal(deferred.At, decidedAt);
+
+        await holder;
+        Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+        Assert.Equal(1, standIn.Calls);
+    }
+
+    /// <summary>The channel scope's hold alone, held by another session, defers a metered admission of that channel the same way.</summary>
+    [RequiresPostgresFact]
+    public async Task AHeldChannelScopeAloneDefersAMeteredAdmissionOfThatChannel()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        var standIn = new StandInProvider(Alpha);
+        var holder = await HoldAsync(
+            "SELECT pg_advisory_xact_lock(hashtextextended('mediacompany.admission.channel:' || @channel::text, 0))",
+            TimeSpan.FromSeconds(3),
+            c => c.Parameters.AddWithValue("channel", ChannelA.Value));
+
+        var held = Assert.IsType<CapabilityOutcome.Held>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.False(holder.IsCompleted);
+        Assert.Equal(RefusalReason.MeteredAdmissionInProgress, held.Reason);
+        Assert.Equal(0, standIn.Calls);
+        await holder;
+    }
+
+    /// <summary>
+    /// THE RECOVERY TAKES NO SCOPE HOLD. The admission's session is ended during the provider call, and
+    /// another session then takes the company scope's hold and keeps it for longer than the default command
+    /// timeout. The incurred attempt is recorded on a fresh transaction at once, while the hold is still kept:
+    /// the recovery is neither delayed nor refused by it.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task TheRecoveryRecordsTheIncurredAttemptAtOnceWhileAnotherSessionHoldsTheScope()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        Task? holder = null;
+        var standIn = new StandInProvider(Alpha, async () =>
+        {
+            await EndTheAdmissionSessionAsync();
+            holder = await HoldAsync(CompanyScopeHold, HeldPastTheCommandTimeout);
+        });
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.False(holder!.IsCompleted, "the recovery waited for the scope hold to be released");
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
+        Assert.Contains("was lost after the provider was called", (await ReadDecisionAsync(completed.Operation.Id)).ReservationStatement, StringComparison.Ordinal);
+        await holder;
+    }
+
+    /// <summary>
+    /// A ROW HOLD ON THE RECOVERY'S PATH IS WAITED OUT. The admission's session is ended during the provider
+    /// call, and another session then takes the audit chain head, which the recording must take, and keeps it
+    /// for longer than the default command timeout. The recording runs with a command timeout above the
+    /// provider-call bound, so it waits the hold out and records the attempt once it is released.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task TheRecoveryWaitsOutARowHoldKeptPastTheDefaultCommandTimeout()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        Task? holder = null;
+        var since = new Stopwatch();
+        var standIn = new StandInProvider(Alpha, async () =>
+        {
+            await EndTheAdmissionSessionAsync();
+            holder = await HoldAsync(ChainHeadHold, HeldPastTheCommandTimeout);
+            since.Start();
+        });
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.True(holder!.IsCompleted);
+        Assert.True(since.Elapsed > DefaultCommandTimeout, $"the recording completed after {since.Elapsed}, inside the default command timeout");
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
+        Assert.Equal(1L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM audit_entries WHERE outputs_reference = @o",
+            c => c.Parameters.AddWithValue("o", $"operation:{completed.Operation.Id}")));
+    }
+
+    /// <summary>
+    /// A RECORDING THAT STILL TIMES OUT IS NAMED. With a provider-call bound of three seconds, the recording's
+    /// command timeout is six; a row hold on its path kept for twelve cuts it, and the failure carries its
+    /// named reason and the attempt's one identifier, never an unnamed timeout.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ARecoveryCutByItsCommandTimeoutEndsUnderItsNamedReason()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        Task? holder = null;
+        var standIn = new StandInProvider(Alpha, async () =>
+        {
+            await EndTheAdmissionSessionAsync();
+            holder = await HoldAsync(ChainHeadHold, TimeSpan.FromSeconds(12));
+        });
+        var gateway = new CapabilityGateway(
+            new NpgsqlUnitOfWork(Source, new FixedClock(DateTimeOffset.UnixEpoch)),
+            new StandInBroker(),
+            new Dictionary<ProviderAccountId, IProviderAdapter> { [Alpha] = standIn },
+            TimeSpan.FromSeconds(3));
+        Assert.Equal(TimeSpan.FromSeconds(6), gateway.RecoveryCommandTimeout);
+
+        var failure = await Assert.ThrowsAsync<IncurredAttemptNotRecordedException>(() =>
+            gateway.ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.Equal(IncurredAttemptRecordingFailure.RecordingTimedOut, failure.Reason);
+        Assert.Equal(new UnitCounts(1_000, 500, 0, 0), failure.Units);
+        Assert.Contains("RecordingTimedOut", failure.Message, StringComparison.Ordinal);
+        await holder!;
+        Assert.Equal(0L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM agent_costs WHERE operation_id = @o", c => c.Parameters.AddWithValue("o", failure.Operation.Value)));
+    }
+
+    /// <summary>
+    /// A RECOVERED OUTCOME CARRIES ITS ALERTS. The admission's commit reaches the store and raises the
+    /// 50 percent alert, and its reply is lost; the recovered outcome carries that stored alert, read back with
+    /// the operation, and the alert is stored once.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ARecoveredOutcomeCarriesTheAlertsItsFirstCommitStored()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 0.0150m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        var standIn = new StandInProvider(Alpha);
+        var gateway = new CapabilityGateway(
+            new LostReplyUnitOfWork(new NpgsqlUnitOfWork(Source, new FixedClock(DateTimeOffset.UnixEpoch))),
+            new StandInBroker(),
+            new Dictionary<ProviderAccountId, IProviderAdapter> { [Alpha] = standIn },
+            ProviderCallBound);
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(
+            await gateway.ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        var alert = Assert.Single(completed.Alerts);
+        Assert.Equal(50, alert.Threshold);
+        Assert.Equal(completed.Operation.OccurredAt, alert.RaisedAt);
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM budget_alerts"));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
+    }
+
+    /// <summary>
+    /// A COST OUT OF RANGE IS NEVER AN OVERFLOW. A stand-in attempt whose units at the captured prices come to
+    /// more than the cost column holds is recorded, with its cost refused before the insert: zero applied
+    /// prices, its cost not stated and the named reason; the outcome is completed and says so, and no alert is
+    /// read from the month.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AnAttemptWhoseCostTheColumnCannotHoldIsRecordedUnderItsNamedReason()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        var standIn = new StandInProvider(Alpha, units: new UnitCounts(4_000_000_000_000_000, 0, 0, 0));
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.False(completed.Operation.CostStated);
+        Assert.Equal(CostUnstatedReason.CostOutOfRange, completed.Operation.CostUnstatedReason);
+        Assert.Equal(0m, completed.Operation.ComputedCost.Amount);
+        Assert.Empty(completed.Alerts);
+        Assert.Equal(1L, await ScalarAsync<long>(
+            """
+            SELECT COUNT(*) FROM agent_costs
+            WHERE operation_id = @o AND cost_stated = false AND cost_unstated_reason = 'CostOutOfRange'
+              AND computed_cost = 0 AND applied_input_price = 0 AND input_units = 4000000000000000
+            """,
+            c => c.Parameters.AddWithValue("o", completed.Operation.Id.Value)));
+        Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM budget_alerts"));
+    }
+
+    /// <summary>
+    /// An alert on a scope spent far past a small budget is raised with its utilisation as computed, more than
+    /// a hundred thousand percent, rather than failing the transaction that booked the operation.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AnAlertFarPastASmallBudgetIsRaisedRatherThanOverflowing()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 0.00001m);
+        var alpha = await InsertProviderRouteAsync(CapabilityClass.EditorialReasoning, "Primary", Alpha, AlphaModel, 90);
+        var booked = await RecordOperationAsync(alpha, AlphaModel, ChannelA, ItemA, input: 1_000, output: 500, other: 0, durationMs: 1_200);
+        var at = booked.OccurredAt.UtcDateTime;
+
+        await using var transaction = await new NpgsqlUnitOfWork(Source, new FixedClock(DateTimeOffset.UnixEpoch)).BeginAsync(CancellationToken.None);
+        var alerts = await transaction.Budgets.EvaluateAsync(
+            booked.Attribution, new DateOnly(at.Year, at.Month, 1), booked.OccurredAt, CancellationToken.None);
+        await transaction.CommitAsync(CancellationToken.None);
+
+        Assert.Equal([50, 75, 90, 100], alerts.Select(a => a.Threshold).Order());
+        Assert.All(alerts, a => Assert.Equal(105_000m, a.UtilizationPercent));
+    }
+
+    // -----------------------------------------------------------------------
     // Harness
     // -----------------------------------------------------------------------
+
+    /// <summary>The data source's default command timeout, which nothing in the repository raises.</summary>
+    private static readonly TimeSpan DefaultCommandTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>How long a demonstration holder keeps a hold: longer than the default command timeout.</summary>
+    private static readonly TimeSpan HeldPastTheCommandTimeout = TimeSpan.FromSeconds(35);
+
+    private const string CompanyScopeHold =
+        "SELECT pg_advisory_xact_lock(hashtextextended('mediacompany.admission.company', 0))";
+
+    private const string ChainHeadHold = "SELECT only_row FROM audit_chain_head WHERE only_row FOR UPDATE";
+
+    /// <summary>
+    /// Takes a hold on a session of its own and keeps it for the given time, waiting client-side so no
+    /// command of the holder runs that long; the returned task ends when the hold is released.
+    /// </summary>
+    private async Task<Task> HoldAsync(string sql, TimeSpan keep, Action<NpgsqlCommand>? bind = null)
+    {
+        var connection = await Source.OpenConnectionAsync();
+        var transaction = await connection.BeginTransactionAsync();
+        await using (var command = new NpgsqlCommand(sql, connection, transaction))
+        {
+            bind?.Invoke(command);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        return Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(keep);
+                await transaction.CommitAsync();
+            }
+            finally
+            {
+                await transaction.DisposeAsync();
+                await connection.DisposeAsync();
+            }
+        });
+    }
+
+    /// <summary>Ends every other session idle in a transaction, which during a provider call is the admission's.</summary>
+    private static async Task EndTheAdmissionSessionAsync()
+    {
+        await using var killer = NpgsqlDataSource.Create(PostgresIntegrationTests.ConnectionString!);
+        await using var command = killer.CreateCommand(
+            """
+            SELECT count(pg_terminate_backend(pid)) FROM pg_stat_activity
+            WHERE datname = current_database() AND pid <> pg_backend_pid() AND state = 'idle in transaction'
+            """);
+        Assert.True((long)(await command.ExecuteScalarAsync())! >= 1);
+    }
 
     private CapabilityGateway Gateway(IClock clock, StandInProvider? standIn = null)
     {
@@ -1251,7 +1558,8 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         return new CapabilityGateway(
             new NpgsqlUnitOfWork(Source, clock),
             new StandInBroker(),
-            adapters);
+            adapters,
+            ProviderCallBound);
     }
 
     private static CapabilityInvocationContext Context() => new()
@@ -1723,7 +2031,7 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     /// units, measured, in 1.2 seconds. A demonstration may run a step during the call, which is when the
     /// admission transaction is open and holds the record horizon shared.
     /// </summary>
-    private sealed class StandInProvider(ProviderAccountId account, Func<Task>? during = null) : IProviderAdapter
+    private sealed class StandInProvider(ProviderAccountId account, Func<Task>? during = null, UnitCounts? units = null) : IProviderAdapter
     {
         public int Calls { get; private set; }
 
@@ -1738,7 +2046,7 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
                 await during();
             }
 
-            return new ProviderAttempt(true, new UnitCounts(1_000, 500, 0, 0), CostBasis.Measurement, TimeSpan.FromMilliseconds(1_200), null, null);
+            return new ProviderAttempt(true, units ?? new UnitCounts(1_000, 500, 0, 0), CostBasis.Measurement, TimeSpan.FromMilliseconds(1_200), null, null);
         }
     }
 

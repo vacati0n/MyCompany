@@ -321,6 +321,10 @@ internal sealed class InMemoryWork : IUnitOfWork
             public Task<IReadOnlyList<BudgetAlert>> EvaluateAsync(
                 Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct) =>
                 Task.FromResult<IReadOnlyList<BudgetAlert>>([]);
+
+            public Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
+                Attribution attribution, DateOnly period, DateTimeOffset raisedAt, CancellationToken ct) =>
+                Task.FromResult<IReadOnlyList<BudgetAlert>>([]);
         }
 
         private sealed class NoAvailability : IRouteAvailabilityWriter

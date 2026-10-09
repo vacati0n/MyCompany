@@ -220,6 +220,62 @@ public sealed class AdmissionAtTheBoundaryTests
         Assert.Equal(1, free.Work.Admission.Snapshots);
     }
 
+    /// <summary>
+    /// NO ADMISSION WAITS ON A SCOPE HOLD (the second correction cycle). Where another admission holds the
+    /// company scope, the try is refused at once and the metered admission is deferred under its own reason,
+    /// escalating from the reserved instant on the request's declared timeout: no provider is reached, no
+    /// second snapshot is read, and the held operation, its decision and its audit entry commit together.
+    /// </summary>
+    [Fact]
+    public async Task AMeteredAdmissionMeetingAHeldScopeIsDeferredUnderItsOwnReasonWithoutWaiting()
+    {
+        var h = Build(processClock: DateTimeOffset.UnixEpoch);
+        var adapter = new AdapterDouble(Account);
+        h.Adapters[Account] = adapter;
+        AddProviderRoute(h);
+        h.Work.Admission.CompanyScopeHeldElsewhere = true;
+        var request = Request(floor: 70);
+
+        var held = Assert.IsType<CapabilityOutcome.Held>(await h.Gateway.ExecuteAsync(request, Context(), CancellationToken.None));
+
+        Assert.Equal(RefusalReason.MeteredAdmissionInProgress, held.Reason);
+        Assert.Equal(Reserved + request.HoldTimeout, held.EscalatesAt);
+        Assert.Equal(0, adapter.Calls);
+        Assert.Equal(["company"], h.Work.Admission.Holds);
+        Assert.Equal(1, h.Work.Admission.Snapshots);
+        var operation = Assert.Single(h.Work.Operations);
+        Assert.Equal(OperationOutcome.Held, operation.Outcome);
+        Assert.Equal(Reserved, operation.OccurredAt);
+        Assert.Contains(nameof(RefusalReason.MeteredAdmissionInProgress), operation.FailureReason, StringComparison.Ordinal);
+        Assert.Contains("already in progress", Assert.Single(h.Work.Decisions).TierStatement, StringComparison.Ordinal);
+        Assert.Single(h.Work.AuditEntries);
+        Assert.Equal(1, h.Work.Commits);
+    }
+
+    /// <summary>
+    /// THE RECOVERY TAKES NO SCOPE HOLD AND CARRIES ITS ALERTS (the second correction cycle). After a lost
+    /// commit reply the recovery takes no admission hold, and the recovered outcome carries the alerts the
+    /// first commit stored, read back by the operation's booked month and instant.
+    /// </summary>
+    [Fact]
+    public async Task ARecoveredOutcomeTakesNoScopeHoldAndCarriesTheStoredAlerts()
+    {
+        var h = Build(processClock: Reserved);
+        var adapter = new AdapterDouble(Account, () => h.Work.LoseNextCommitReply = true);
+        h.Adapters[Account] = adapter;
+        AddProviderRoute(h);
+        var alert = new BudgetAlert(
+            BudgetId.New(), new DateOnly(2026, 10, 1), 50, 70m, new Money(0.0105m), new Money(0.0150m), Reserved);
+        h.Work.Alerts.Add(alert);
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await h.Gateway.ExecuteAsync(Request(floor: 70), Context(), CancellationToken.None));
+
+        Assert.Equal([alert], completed.Alerts);
+        Assert.Equal([(new DateOnly(2026, 10, 1), completed.Operation.OccurredAt)], h.Work.StoredAlertReads);
+        Assert.Equal(2, h.Work.Admission.Holds.Count);
+        Assert.Single(h.Work.Operations);
+    }
+
     // -----------------------------------------------------------------------
 
     private sealed record Harness(
@@ -243,7 +299,7 @@ public sealed class AdmissionAtTheBoundaryTests
         var adapters = new Dictionary<ProviderAccountId, IProviderAdapter>();
 
         work.Bind(routes, availability, registers);
-        var gateway = new CapabilityGateway(work, new StandInBroker(clock), adapters);
+        var gateway = new CapabilityGateway(work, new StandInBroker(clock), adapters, TimeSpan.FromSeconds(60));
         return new Harness(gateway, routes, availability, work, adapters);
     }
 

@@ -21,8 +21,9 @@ namespace MediaCompany.Persistence;
 /// THE CORRECTION CYCLE. <see cref="ReadAsync"/> is ONE STATEMENT: routes, forbidden sources, availability,
 /// accounts, prices in force, governing readings and evidence all come from one snapshot at the reserved
 /// instant, and the prices it read are captured in a second transaction-local setting that the operation
-/// recorder applies. <see cref="HoldScopesAsync"/> serialises metered admissions per scope with two
-/// transaction-scoped advisory holds taken in one fixed order, the company's first.
+/// recorder applies. <see cref="TryHoldScopesAsync"/> serialises metered admissions per scope with two
+/// transaction-scoped advisory holds tried in one fixed order, the company's first, never waiting on either
+/// (the second correction cycle).
 /// </summary>
 internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
 {
@@ -139,25 +140,31 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
         return _reservation;
     }
 
-    public async Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
+    public async Task<bool> TryHoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
     {
         // Two statements, so the order is the order they are sent in: the company scope first, then the
-        // channel scope. Each hold is transaction-scoped and released at commit or rollback; holding one
-        // already held by this transaction is a no-op, and a hold is never taken in the other order.
+        // channel scope. Each is TRIED (the second correction cycle): `pg_try_advisory_xact_lock` takes the
+        // hold where it is free and answers false at once where another transaction holds it, so no
+        // admission waits on a scope hold, whatever the holder's provider call takes. A hold taken is
+        // transaction-scoped and released at commit or rollback; where the channel's is refused after the
+        // company's was taken, the company's is released with the transaction that records the deferral.
         await using (var company = new NpgsqlCommand(
-            "SELECT pg_advisory_xact_lock(hashtextextended('mediacompany.admission.company', 0))",
+            "SELECT pg_try_advisory_xact_lock(hashtextextended('mediacompany.admission.company', 0))",
             _connection,
             _transaction))
         {
-            await company.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            if (await company.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
+            {
+                return false;
+            }
         }
 
         await using var scope = new NpgsqlCommand(
-            "SELECT pg_advisory_xact_lock(hashtextextended('mediacompany.admission.channel:' || @channel::text, 0))",
+            "SELECT pg_try_advisory_xact_lock(hashtextextended('mediacompany.admission.channel:' || @channel::text, 0))",
             _connection,
             _transaction);
         scope.Parameters.AddWithValue("channel", channel.Value);
-        await scope.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return await scope.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is true;
     }
 
     public async Task<AdmissionSnapshot> ReadAsync(

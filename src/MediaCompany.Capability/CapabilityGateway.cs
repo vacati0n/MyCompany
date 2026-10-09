@@ -88,6 +88,15 @@ public sealed record CapabilityInvocationContext
 /// identifier minted before the call: a retry after a commit whose outcome is unknown meets the first
 /// record and books nothing. Once the provider has returned, recording is not cancellable, so a cancellation
 /// never rolls back the record of a cost already incurred.
+///
+/// THE SECOND CORRECTION CYCLE. A metered admission NEVER WAITS on a scope hold: it tries the company's and
+/// then the channel's without waiting, and where either is held by an admission in progress it is deferred
+/// and held from the reserved instant under its own recorded reason, so it can never queue behind a provider
+/// call into an unnamed timeout, and no wait duration is chosen. The recording of an incurred attempt after a
+/// lost transaction takes no scope hold at all; it runs with a command timeout above the provider-call bound,
+/// so a row hold it meets is waited out for longer than any admission keeps it, and a recording that still
+/// cannot complete ends under a named reason carrying the attempt. A recovered outcome carries the alerts its
+/// first commit stored, read back with the operation.
 /// </summary>
 public sealed class CapabilityGateway : ICapabilityGateway
 {
@@ -99,16 +108,30 @@ public sealed class CapabilityGateway : ICapabilityGateway
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICredentialBroker _broker;
     private readonly IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> _adapters;
+    private readonly TimeSpan _recoveryCommandTimeout;
 
+    /// <param name="providerCallBound">
+    /// The bound on one provider call, the provider client's own timeout. The recording of an incurred
+    /// attempt after a lost transaction runs with twice this as its command timeout, so it exceeds the bound
+    /// by a whole provider call: a row hold kept by an admission across its call and its writes is waited
+    /// out. An infinite bound gives the recording no command timeout.
+    /// </param>
     internal CapabilityGateway(
         IUnitOfWork unitOfWork,
         ICredentialBroker broker,
-        IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> adapters)
+        IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> adapters,
+        TimeSpan providerCallBound)
     {
         _unitOfWork = unitOfWork;
         _broker = broker;
         _adapters = adapters;
+        _recoveryCommandTimeout = providerCallBound == Timeout.InfiniteTimeSpan || providerCallBound <= TimeSpan.Zero
+            ? TimeSpan.Zero
+            : providerCallBound + providerCallBound;
     }
+
+    /// <summary>The command timeout the recording of an incurred attempt after a lost transaction runs with; zero is none.</summary>
+    internal TimeSpan RecoveryCommandTimeout => _recoveryCommandTimeout;
 
     public async Task<CapabilityOutcome> ExecuteAsync(
         CapabilityRequest request,
@@ -125,10 +148,16 @@ public sealed class CapabilityGateway : ICapabilityGateway
         // A METERED ADMISSION IS SERIALISED PER SCOPE (the correction cycle): where the first snapshot
         // resolves to a provider route, the company scope's hold and then the channel scope's are taken, and
         // the admission is decided again on a snapshot read after both are held, so it reads every booking
-        // of an admission of the same scope that committed before it.
-        if (admission.Record.Resolution is CapabilityResolution.Resolved { Route.Target: RouteTarget.ProviderRoute })
+        // of an admission of the same scope that committed before it. The holds are TRIED, never waited on
+        // (the second correction cycle): where an admission in progress holds either, this one is deferred.
+        if (admission.Record.Resolution is CapabilityResolution.Resolved { Route.Target: RouteTarget.ProviderRoute } first)
         {
-            await held.Transaction.Admission.HoldScopesAsync(request.Attribution.Channel, cancellationToken).ConfigureAwait(false);
+            if (!await held.Transaction.Admission.TryHoldScopesAsync(request.Attribution.Channel, cancellationToken).ConfigureAwait(false))
+            {
+                return await RecordDeferralAsync(held.Transaction, admission, request, context, first, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
             admission = await AdmitAsync(held.Transaction, request, cancellationToken).ConfigureAwait(false);
         }
 
@@ -154,6 +183,47 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
             _ => throw new InvalidOperationException("Unreachable: the resolution union has three members."),
         };
+    }
+
+    /// <summary>
+    /// Records a metered admission deferred because another metered admission of its scope is in progress
+    /// (the second correction cycle): held under its own reason, escalating on the request's declared hold
+    /// timeout from the reserved instant, with the zero-cost operation, the decision record and the audit
+    /// entry on the admission transaction. No provider is reached and nothing waited.
+    /// </summary>
+    private static Task<CapabilityOutcome> RecordDeferralAsync(
+        IWorkTransaction transaction,
+        Admission admission,
+        CapabilityRequest request,
+        CapabilityInvocationContext context,
+        CapabilityResolution.Resolved first,
+        CancellationToken cancellationToken)
+    {
+        var hold = new CapabilityResolution.Held(
+            RefusalReason.MeteredAdmissionInProgress,
+            request.QualityFloor,
+            first.RoutesTried,
+            admission.Reservation.Instant + request.HoldTimeout,
+            request.Criticality == Criticality.Critical);
+
+        var deferred = admission with
+        {
+            Record = admission.Record with
+            {
+                Resolution = hold,
+                TierStatement = "no route was served: a metered admission of the company scope or of channel "
+                    + $"{request.Attribution.Channel} was already in progress, so this admission was deferred without waiting",
+            },
+        };
+
+        return RecordNonProviderOutcomeAsync(
+            transaction, deferred, request, context, OperationOutcome.Held,
+            $"held at floor {hold.FloorRequired}: {hold.Reason} - a metered admission of the company scope or of channel "
+            + $"{request.Attribution.Channel} holds the admission scope, so this one is deferred from the reserved instant "
+            + $"and escalates at {hold.EscalatesAt:O}; routes tried: {string.Join(",", hold.RoutesTried)}",
+            null, null, null,
+            _ => new CapabilityOutcome.Held(hold.Reason, hold.FloorRequired, hold.EscalatesAt, hold.EscalateToOwner),
+            cancellationToken);
     }
 
     /// <summary>
@@ -321,8 +391,36 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 // The lost transaction is already gone; disposing it can fail and changes nothing durable.
             }
 
-            await using var fresh = new HeldTransaction(await _unitOfWork.BeginAsync(recording).ConfigureAwait(false));
-            await fresh.Transaction.Admission.HoldScopesAsync(request.Attribution.Channel, recording).ConfigureAwait(false);
+            return await RecordIncurredAttemptAsync(
+                admission, request, context, resolved, provider, attempt, operationId, lost).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Records an incurred attempt on a fresh transaction after its admission transaction was lost (the second
+    /// correction cycle). It takes NO admission scope hold, so an admission in progress can neither delay nor
+    /// refuse it, and its transaction runs with a command timeout above the provider-call bound, so a row hold
+    /// it meets (the horizon, the chain head, the operation key) is waited out for longer than any admission
+    /// keeps one. Where the first commit reached the datastore, the stored operation is returned with the
+    /// alerts that commit stored. Any other failure ends under a named reason carrying the attempt.
+    /// </summary>
+    private async Task<CapabilityOutcome> RecordIncurredAttemptAsync(
+        Admission admission,
+        CapabilityRequest request,
+        CapabilityInvocationContext context,
+        CapabilityResolution.Resolved resolved,
+        RouteTarget.ProviderRoute provider,
+        ProviderAttempt attempt,
+        OperationId operationId,
+        Exception lost)
+    {
+        // The cost is incurred, so nothing here is cancellable.
+        var recording = CancellationToken.None;
+
+        try
+        {
+            await using var fresh = new HeldTransaction(
+                await _unitOfWork.BeginAsync(_recoveryCommandTimeout, recording).ConfigureAwait(false));
             var reservation = await fresh.Transaction.Admission.ReserveAsync(recording).ConfigureAwait(false);
             await fresh.Transaction.Admission.RestorePricesAsync(admission.Prices, recording).ConfigureAwait(false);
             var readings = await fresh.Transaction.Admission
@@ -345,11 +443,43 @@ public sealed class CapabilityGateway : ICapabilityGateway
             {
                 // The first commit reached the datastore although its reply was lost: the attempt is already
                 // booked under its one identifier, with its decision, audit entry and alerts, so nothing more
-                // is written and the fresh transaction is rolled back. The alerts that commit raised are in
-                // the record; they are not raised twice.
-                return new CapabilityOutcome.Completed(already.Recorded, []);
+                // is written and the fresh transaction is rolled back. The alerts that commit stored are read
+                // back with the operation, by its booked month and instant, and are not raised twice.
+                var booked = already.Recorded.OccurredAt.UtcDateTime;
+                var alerts = await fresh.Transaction.Budgets
+                    .StoredAlertsAsync(
+                        request.Attribution, new DateOnly(booked.Year, booked.Month, 1), already.Recorded.OccurredAt, recording)
+                    .ConfigureAwait(false);
+                return new CapabilityOutcome.Completed(already.Recorded, alerts);
             }
         }
+        catch (Exception failure)
+        {
+            throw new IncurredAttemptNotRecordedException(
+                IsTimeout(failure) ? IncurredAttemptRecordingFailure.RecordingTimedOut : IncurredAttemptRecordingFailure.RecordingFailed,
+                operationId,
+                request.Attribution,
+                resolved.Route.Id,
+                provider.Model,
+                attempt.Units,
+                admission.Reservation.Instant,
+                lost,
+                failure);
+        }
+    }
+
+    /// <summary>Whether a failure is, or was caused by, a timeout.</summary>
+    private static bool IsTimeout(Exception failure)
+    {
+        for (var cause = failure; cause is not null; cause = cause.InnerException)
+        {
+            if (cause is TimeoutException)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

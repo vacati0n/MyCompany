@@ -65,6 +65,14 @@ public enum RefusalReason
     /// was directed, so none is served.
     /// </summary>
     NoRouteAtRequestedTier = 13,
+
+    /// <summary>
+    /// A metered admission of the company scope, or of the attribution channel's scope, is already in
+    /// progress, so this metered admission is deferred and held from the reserved booking instant rather than
+    /// waiting on the scope's hold (the second correction cycle): an admission never waits on a scope hold,
+    /// so no wait duration is chosen and no admission ends in an unnamed timeout.
+    /// </summary>
+    MeteredAdmissionInProgress = 14,
 }
 
 /// <summary>

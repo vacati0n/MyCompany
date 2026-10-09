@@ -32,6 +32,11 @@ namespace MediaCompany.Persistence;
 /// states whether its cost is stated: false where a consumed input, output or cached unit had no price
 /// row in force at the booking instant, or any other unit was consumed, so a missing price stored as a
 /// zero applied price never reads as a stated zero cost.
+///
+/// THE COST IN RANGE (the second correction cycle): the cost is computed in the statement, before the
+/// insert, in unbounded precision; a cost the cost column cannot hold is refused, and the attempt is recorded
+/// with zero applied prices, its cost not stated and the named reason <c>CostOutOfRange</c>, so an incurred
+/// attempt is never lost to an unnamed overflow. Every unstated cost now carries its reason.
 /// </summary>
 internal sealed class NpgsqlOperationRecorder : IOperationRecorder
 {
@@ -90,6 +95,38 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             FROM stamp
             LEFT JOIN applicable p ON @model_id IS NOT NULL
             GROUP BY stamp.at
+        ),
+        -- THE COST IN RANGE (the second correction cycle): the units at the applied prices, rounded as the
+        -- generated cost column rounds them, computed here in unbounded precision BEFORE the insert, so a
+        -- cost the column cannot hold (ten billion or more) is refused rather than overflowing the insert.
+        ranged AS (
+            SELECT price.*,
+                   round(@input_units * price.input_price + @output_units * price.output_price
+                         + @cached_units * price.cached_price, 8) < 1e10 AS in_range
+            FROM price
+        ),
+        -- Why the cost is not stated, or null where it is. A member of the deterministic set states zero; a
+        -- row with no model states zero only where it consumed nothing; a priced row only where every consumed
+        -- metered unit kind had a price row in force at the stamp, no other unit was consumed, and the cost is
+        -- in range. An out-of-range cost is recorded with zero applied prices and its reason, never as a cost.
+        verdict AS (
+            SELECT ranged.*,
+                   CASE
+                       WHEN @deterministic_task IS NOT NULL THEN NULL
+                       WHEN @model_id IS NULL THEN
+                           CASE
+                               WHEN @input_units > 0 OR @output_units > 0 OR @cached_units > 0 THEN 'PriceNotInForce'
+                               WHEN @other_units > 0 THEN 'UnpricedUnitConsumed'
+                               ELSE NULL
+                           END
+                       WHEN (@input_units > 0 AND NOT ranged.has_input)
+                         OR (@output_units > 0 AND NOT ranged.has_output)
+                         OR (@cached_units > 0 AND NOT ranged.has_cached) THEN 'PriceNotInForce'
+                       WHEN @other_units > 0 THEN 'UnpricedUnitConsumed'
+                       WHEN NOT ranged.in_range THEN 'CostOutOfRange'
+                       ELSE NULL
+                   END AS unstated_reason
+            FROM ranged
         )
         INSERT INTO agent_costs (
             operation_id, run_id, occurred_at, attempt,
@@ -98,7 +135,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             input_units, output_units, cached_units, other_units,
             applied_price_id, applied_input_price, applied_output_price, applied_cached_price, currency,
             cost_basis, duration_ms, outcome, failure_reason,
-            reasoning_tier_requested, reasoning_tier_served, cost_stated)
+            reasoning_tier_requested, reasoning_tier_served, cost_stated, cost_unstated_reason)
         SELECT
             @operation_id, @run_id, price.at, @attempt,
             @item_id, @channel_id, @department_id, @agent_id, @capability_class,
@@ -106,28 +143,19 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             @route_id, @model_id, @deterministic_task,
             @input_units, @output_units, @cached_units, @other_units,
             CASE WHEN @deterministic_task IS NULL THEN price.reference_id  ELSE NULL END,
-            CASE WHEN @deterministic_task IS NULL THEN price.input_price   ELSE 0 END,
-            CASE WHEN @deterministic_task IS NULL THEN price.output_price  ELSE 0 END,
-            CASE WHEN @deterministic_task IS NULL THEN price.cached_price  ELSE 0 END,
+            CASE WHEN @deterministic_task IS NULL AND price.in_range THEN price.input_price  ELSE 0 END,
+            CASE WHEN @deterministic_task IS NULL AND price.in_range THEN price.output_price ELSE 0 END,
+            CASE WHEN @deterministic_task IS NULL AND price.in_range THEN price.cached_price ELSE 0 END,
             price.currency,
             @cost_basis, @duration_ms, @outcome, @failure_reason,
             @tier_requested, @tier_served,
-            -- Whether the cost is stated. A member of the deterministic set states zero; a row with no
-            -- model states zero only where it consumed nothing; a priced row only where every consumed
-            -- metered unit kind had a price row in force at the stamp and no other unit was consumed.
-            CASE
-                WHEN @deterministic_task IS NOT NULL THEN true
-                WHEN @model_id IS NULL THEN (@input_units = 0 AND @output_units = 0 AND @cached_units = 0 AND @other_units = 0)
-                ELSE (@other_units = 0
-                      AND (@input_units = 0 OR price.has_input)
-                      AND (@output_units = 0 OR price.has_output)
-                      AND (@cached_units = 0 OR price.has_cached))
-            END
-        FROM price
+            price.unstated_reason IS NULL,
+            price.unstated_reason
+        FROM verdict price
         -- One attempt is booked once (the correction cycle): a second write under the identifier minted
         -- before the provider call books nothing, and the writer is told the attempt is already recorded.
         ON CONFLICT (operation_id) DO NOTHING
-        RETURNING computed_cost, currency, applied_price_id, occurred_at, cost_stated
+        RETURNING computed_cost, currency, applied_price_id, occurred_at, cost_stated, cost_unstated_reason
         """;
 
     private readonly NpgsqlConnection _connection;
@@ -195,6 +223,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
         var appliedPriceId = reader.IsDBNull(2) ? (Guid?)null : reader.GetGuid(2);
         var stored = reader.GetFieldValue<DateTimeOffset>(3);
         var costStated = reader.GetBoolean(4);
+        var unstatedReason = reader.IsDBNull(5) ? (CostUnstatedReason?)null : Enum.Parse<CostUnstatedReason>(reader.GetString(5));
 
         return new OperationRecord
         {
@@ -218,6 +247,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             ReasoningTierRequested = draft.ReasoningTierRequested,
             ReasoningTierServed = draft.ReasoningTierServed,
             CostStated = costStated,
+            CostUnstatedReason = unstatedReason,
         };
     }
 
@@ -229,7 +259,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             SELECT run_id, item_id, channel_id, department_id, agent_id, capability_class, route_id, model_id,
                    deterministic_task, input_units, output_units, cached_units, other_units, applied_price_id,
                    computed_cost, currency, cost_basis, duration_ms, outcome, occurred_at, attempt, failure_reason,
-                   reasoning_tier_requested, reasoning_tier_served, cost_stated
+                   reasoning_tier_requested, reasoning_tier_served, cost_stated, cost_unstated_reason
             FROM agent_costs WHERE operation_id = @operation_id
             """,
             _connection,
@@ -265,6 +295,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             ReasoningTierRequested = reader.IsDBNull(22) ? null : Enum.Parse<MediaCompany.Domain.Capabilities.ReasoningTier>(reader.GetString(22)),
             ReasoningTierServed = reader.IsDBNull(23) ? null : Enum.Parse<MediaCompany.Domain.Capabilities.ReasoningTier>(reader.GetString(23)),
             CostStated = reader.IsDBNull(24) ? null : reader.GetBoolean(24),
+            CostUnstatedReason = reader.IsDBNull(25) ? null : Enum.Parse<CostUnstatedReason>(reader.GetString(25)),
         };
     }
 

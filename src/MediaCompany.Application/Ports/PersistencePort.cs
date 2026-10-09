@@ -22,6 +22,16 @@ public interface IUnitOfWork
     /// that property: there is no writer that can commit on its own.
     /// </summary>
     Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Opens a transaction whose every statement may run for up to the given command timeout (the
+    /// AI-economics change, second correction cycle). The recording of a provider attempt whose cost is
+    /// already incurred, after its admission transaction was lost, opens its transaction this way, with a
+    /// timeout above the provider-call bound, so a row hold it meets on its path is waited out for longer
+    /// than any admission holds it. A realization without command timeouts opens an ordinary transaction.
+    /// </summary>
+    Task<IWorkTransaction> BeginAsync(TimeSpan commandTimeout, CancellationToken cancellationToken) =>
+        BeginAsync(cancellationToken);
 }
 
 /// <summary>
@@ -116,9 +126,11 @@ public interface IWorkTransaction : IAsyncDisposable
 /// applies those prices rather than looking them up again in the editable price register.
 ///
 /// SERIALISED PER SCOPE (the correction cycle, on the ruling that no concurrent overshoot is accepted):
-/// <see cref="HoldScopesAsync"/> takes the company scope's hold and then the channel scope's, always in
+/// <see cref="TryHoldScopesAsync"/> takes the company scope's hold and then the channel scope's, always in
 /// that order, each held to the end of the transaction, so two metered admissions of one scope cannot
-/// both read spend that excludes the other's booking.
+/// both read spend that excludes the other's booking. NEVER WAITING (the second correction cycle): each
+/// hold is TRIED without waiting, and where either is held by another transaction the admission is told
+/// so, and is deferred under its own recorded reason instead of queueing behind a provider call.
 /// </summary>
 public interface IAdmissionLedger
 {
@@ -129,11 +141,13 @@ public interface IAdmissionLedger
     Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Takes the company scope's admission hold and then the attribution channel's, in that fixed order,
-    /// each held to the end of this transaction. A metered admission takes both before the read it decides
-    /// on, so admissions of one scope are serialised and no deadlock between them is possible.
+    /// Tries the company scope's admission hold and then the attribution channel's, in that fixed order,
+    /// WITHOUT WAITING, each taken held to the end of this transaction; true where both are now held, false
+    /// where either is held by another transaction. A metered admission takes both before the read it
+    /// decides on, so admissions of one scope are serialised; none waits, so none queues behind a provider
+    /// call and none deadlocks.
     /// </summary>
-    Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken);
+    Task<bool> TryHoldScopesAsync(ChannelId channel, CancellationToken cancellationToken);
 
     /// <summary>
     /// Everything one admission decides by, in ONE STATEMENT at the reserved instant: the capability's
@@ -553,6 +567,18 @@ public interface IBudgetEvaluator
     /// the alerts this evaluation raised. An alert is idempotent per budget, period and threshold.
     /// </summary>
     Task<IReadOnlyList<BudgetAlert>> EvaluateAsync(
+        MediaCompany.Domain.Capabilities.Attribution attribution,
+        DateOnly period,
+        DateTimeOffset raisedAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The alerts already stored for the budgets governing the attribution in the period and raised at the
+    /// given instant (the second correction cycle): an operation's booked instant names the alerts the
+    /// commit that booked it raised, so an outcome recovered after a lost commit reply reads them back with
+    /// the operation instead of raising them twice or reporting none.
+    /// </summary>
+    Task<IReadOnlyList<BudgetAlert>> StoredAlertsAsync(
         MediaCompany.Domain.Capabilities.Attribution attribution,
         DateOnly period,
         DateTimeOffset raisedAt,
