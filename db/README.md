@@ -38,6 +38,20 @@ before it is applied read their cost as not stated, so applying it mid-month to 
 already holds operations refuses metered admission until that month ends. Apply it to an empty
 store, or at a month boundary.
 
+**All eight resources are applied in order, before any process starts.** The eighth resource
+(`008-management.sql`) adds the open-decisions register, seeded with a transcription of the
+owner's recorded decisions and open questions; the platform-policy statement register and the
+re-verification result record, both created empty; and the held-outcome record, created empty,
+that the admission path writes for every held or deferred request from then on. It also widens
+the admission decision readings' amount, spend and utilisation columns to an unbounded decimal,
+keeping every stored value. A held operation booked before it is applied reads its reason,
+escalation and hold timeout as not recorded. The eighth resource can be re-applied on its own and
+changes nothing the second time; the first four resources cannot, so a full install is not
+repeatable on a store that already holds them. Its reversal is dropping what it creates in reverse
+order and restoring the column bound while no stored value exceeds it; after that, restore-to-point.
+The register has no writer: a decision the owner records later reaches it only through a later
+resource.
+
 Establish the backup and restore position **before** the first append-only entry is written. The
 recorded history refuses update and delete, so from that point the store has no in-place
 correction and restore-to-point is the only reversal.
@@ -72,6 +86,30 @@ Resolves every registration without opening a connection: the cheapest confirmat
 deployment is wired before it touches the datastore. `registers` prints what the company is
 configured to operate, and `report` prints the measurable-now set with every deferred measure
 naming the parameter it waits on.
+
+```bash
+dotnet run --project src/MediaCompany.Host -- weekly 2026-W41
+dotnet run --project src/MediaCompany.Host -- dashboard 2026-W41
+```
+
+`weekly` prints the COO, CTO and CFO reports, channel performance, the risk summary and the CEO
+brief; `dashboard` prints the read-only dashboard, one tile per brief line. Both need
+`MEDIACOMPANY_CONNECTION_STRING` and compose everything from one read-only read of the store at
+one datastore instant: they write nothing, advance nothing, open no listener and call no model.
+The week is an ISO week, the UTC week from Monday 00:00 to the next Monday 00:00 (Monday 07:00
+Vietnam time); without the argument it is the week containing the datastore's current instant.
+A week reads NOT FINAL until `report` has run after the week ended; that run is the closure that
+makes it final.
+
+Exit codes: `0` printed; `2` a malformed week, or a well-formed week that does not exist such as
+`2027-W53`, refused by name with nothing read; `3` the read ended in a named outcome instead of
+printing: the store being changed (the 2-second lock bound), a read too slow (the 5-second
+statement bound), a store without the eighth resource, or another datastore failure named by its
+class. The read never waits on a hold kept elsewhere; it ends instead.
+
+Every figure reads as exactly one of observed, observed zero, unmeasured (naming what was looked
+for), recorded (naming where it is recorded) or not recorded. Recommendations come only from a
+fixed catalogue of seven rules, and a rule abstains over an unmeasured reading.
 
 ## Stop and remove
 
