@@ -281,6 +281,7 @@ public sealed class ProductionRulesTests
     [InlineData(ProductionMode.Fake, StoreDesignation.Demonstration, "mediacompany_demo", true)]
     [InlineData(ProductionMode.Fake, StoreDesignation.Company, "mediacompany", false)]
     [InlineData(ProductionMode.Metered, StoreDesignation.Demonstration, "mediacompany_demo", false)]
+    [InlineData(ProductionMode.Metered, StoreDesignation.Demonstration, "mediacompany", false)]
     [InlineData(ProductionMode.Metered, StoreDesignation.Company, "mediacompany", true)]
     [InlineData(ProductionMode.Metered, StoreDesignation.Company, "another_store", false)]
     [InlineData(ProductionMode.PlanOnly, StoreDesignation.Demonstration, "mediacompany_demo", true)]
