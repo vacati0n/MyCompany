@@ -210,6 +210,7 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
             PolicyStatements = await PolicyStatementsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             Reverifications = await ReverificationsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             ProducedItems = await ProducedItemsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
+            Designation = await DesignationAsync(connection, transaction, cancellationToken).ConfigureAwait(false),
         };
 
         // Nothing was written; ending the read-only transaction releases its share locks and its snapshot.
@@ -751,6 +752,26 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
     /// reservations, and the rendered file's measured runtime. A store the ninth resource was never applied to reads
     /// none, and the composer composes nothing.
     /// </summary>
+    /// <summary>The store's recorded designation in the same snapshot, or null where none is recorded or the record is absent.</summary>
+    private static async Task<MediaCompany.Domain.Production.StoreDesignation?> DesignationAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using (var present = new NpgsqlCommand("SELECT to_regclass('store_designation') IS NOT NULL", connection, transaction))
+        {
+            if (await present.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
+            {
+                return null;
+            }
+        }
+
+        await using var command = new NpgsqlCommand("SELECT designation FROM store_designation", connection, transaction);
+        return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is string designation
+            ? Enum.Parse<MediaCompany.Domain.Production.StoreDesignation>(designation)
+            : null;
+    }
+
     private static async Task<IReadOnlyList<ProducedItemReading>?> ProducedItemsAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,

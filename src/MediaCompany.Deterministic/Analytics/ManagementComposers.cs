@@ -38,6 +38,15 @@ public static class ManagementComposers
         lines.AddRange(ChannelPerformance(snapshot));
         lines.AddRange(Risk(snapshot));
 
+        // THE DEMONSTRATION RULE (the production change, decision D-005 of its design): in a store designated
+        // demonstration every observed figure — spend, utilisation, counts and durations alike, all booked or recorded
+        // by fake providers — becomes a demonstration figure BEFORE any rule reads it, so no rule, total, brief line or
+        // tile can read a fake operation's zero as observed. Unmeasured and recorded figures keep their case.
+        if (snapshot.Designation == MediaCompany.Domain.Production.StoreDesignation.Demonstration)
+        {
+            lines = lines.Select(Demonstrated).ToList();
+        }
+
         var set = new ManagementReportSet
         {
             Instant = snapshot.Instant,
@@ -132,10 +141,8 @@ public static class ManagementComposers
             var demonstration = !string.Equals(item.Designation, "Company", StringComparison.Ordinal);
             var tag = $"item {item.Item} version {item.Version} ({item.Mode} mode, {item.Designation} store)";
 
-            MeasurementQuantity Figure(MeasurementQuantity company, string what) => demonstration
-                ? MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists,
-                    $"DEMONSTRATION: {what} in a store designated {item.Designation}; a demonstration figure is never an observation of the company's work or spend")
-                : company;
+            // A demonstration store's figures become demonstration figures by the one rule applied to every line.
+            MeasurementQuantity Figure(MeasurementQuantity measured, string what) => measured;
 
             var stages = string.Join("; ", item.Stages.Select(st => $"{st.Stage} {st.Outcome}"));
             yield return line(ReportLineKey.ProducedItemStages, Heading, $"stage outcomes of {tag}",
@@ -169,6 +176,12 @@ public static class ManagementComposers
                 RestsOn, "as of the snapshot", Informs, item.RenderedPath, item.OpenedAt);
         }
     }
+
+    /// <summary>A line of a demonstration store: its observed figure becomes a demonstration figure; nothing else changes.</summary>
+    private static ReportLine Demonstrated(ReportLine line) =>
+        line.Figure is LineFigure.Measured { Quantity: MeasurementQuantity.ObservedValue or MeasurementQuantity.ObservedZero } measured
+            ? line with { Figure = LineFigure.Demonstrated(measured.Quantity) }
+            : line;
 
     private static ReportLine Line(
         ReportKind report,

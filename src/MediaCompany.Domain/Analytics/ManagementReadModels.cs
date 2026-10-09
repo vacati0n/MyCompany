@@ -27,6 +27,13 @@ public enum FigureCase
     Unmeasured = 3,
     Recorded = 4,
     NotRecorded = 5,
+
+    /// <summary>
+    /// A figure read from a store designated DEMONSTRATION (the production change, decision D-005 of its design): what fake
+    /// providers booked there. Never an observation of the company's work or spend, never counted, and rendered apart
+    /// from observed, observed zero and unmeasured.
+    /// </summary>
+    Demonstration = 6,
 }
 
 /// <summary>
@@ -56,6 +63,22 @@ public abstract record LineFigure
         public RecordedAmount Amount { get; }
     }
 
+    /// <summary>
+    /// A figure of a DEMONSTRATION store (the production change, decision D-005 of its design): the quantity the store
+    /// holds, booked by fake providers, carried only so a reader sees what the demonstration did. It carries no value a
+    /// rule, a total or a surface may read as an observation.
+    /// </summary>
+    public sealed record Demonstration : LineFigure
+    {
+        internal Demonstration(MeasurementQuantity quantity) => Quantity = quantity;
+
+        public MeasurementQuantity Quantity { get; }
+    }
+
+    /// <summary>The figure of a demonstration store for a measured quantity.</summary>
+    public static LineFigure Demonstrated(MeasurementQuantity quantity) =>
+        new Demonstration(quantity ?? throw new ArgumentNullException(nameof(quantity)));
+
     public static LineFigure Of(MeasurementQuantity quantity) =>
         new Measured(quantity ?? throw new ArgumentNullException(nameof(quantity)));
 
@@ -70,7 +93,8 @@ public abstract record LineFigure
         Measured => FigureCase.Unmeasured,
         Recorded { Amount: RecordedAmount.NotRecorded } => FigureCase.NotRecorded,
         Recorded => FigureCase.Recorded,
-        _ => throw new InvalidOperationException("Unreachable: a line figure has two shapes."),
+        Demonstration => FigureCase.Demonstration,
+        _ => throw new InvalidOperationException("Unreachable: a line figure has three shapes."),
     };
 
     /// <summary>Whether the figure carries a value at all: false for an unmeasured reading and an amount nobody recorded.</summary>
@@ -81,10 +105,16 @@ public abstract record LineFigure
     {
         Measured measured => measured.Quantity.Describe(),
         Recorded recorded => recorded.Amount.Describe(),
-        _ => throw new InvalidOperationException("Unreachable: a line figure has two shapes."),
+        Demonstration demonstration => "a DEMONSTRATION figure of " + demonstration.Quantity switch
+        {
+            MeasurementQuantity.ObservedValue value => $"{value.Amount} {value.Unit}",
+            MeasurementQuantity.ObservedZero zero => $"0 {zero.Unit}",
+            var other => other.Describe(),
+        } + ", booked by fake providers in a store designated demonstration; never an observation of the company's work or spend",
+        _ => throw new InvalidOperationException("Unreachable: a line figure has three shapes."),
     };
 
-    /// <summary>The word every surface prints for a case. Five words, all different.</summary>
+    /// <summary>The word every surface prints for a case. Six words, all different.</summary>
     public static string CaseWord(FigureCase figureCase) => figureCase switch
     {
         FigureCase.Observed => "observed",
@@ -92,6 +122,7 @@ public abstract record LineFigure
         FigureCase.Unmeasured => "unmeasured",
         FigureCase.Recorded => "recorded",
         FigureCase.NotRecorded => "not recorded",
+        FigureCase.Demonstration => "demonstration",
         _ => throw new ArgumentOutOfRangeException(nameof(figureCase)),
     };
 }

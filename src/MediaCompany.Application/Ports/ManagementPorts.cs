@@ -195,6 +195,13 @@ public sealed record CompanySnapshot
     /// the production register holds no production, which composes a line reading not recorded and naming it.
     /// </summary>
     public IReadOnlyList<ProducedItemReading>? ProducedItems { get; init; }
+
+    /// <summary>
+    /// The store's recorded designation, read in the same snapshot (the production change, decision D-005 of its design),
+    /// or null where none is recorded. In a DEMONSTRATION store every observed figure of every report is a demonstration
+    /// figure and is never read, counted or rendered as an observation.
+    /// </summary>
+    public MediaCompany.Domain.Production.StoreDesignation? Designation { get; init; }
 }
 
 /// <summary>

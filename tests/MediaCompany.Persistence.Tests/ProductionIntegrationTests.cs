@@ -420,8 +420,16 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         var lines = ManagementComposers.Compose(await new NpgsqlCompanyRecordReader(Source).ReadAsync(null, CancellationToken.None)).Lines
             .Where(l => l.Key is ReportLineKey.ProducedItemOperations or ReportLineKey.ProducedItemRuntime or ReportLineKey.ProducedItemStages).ToArray();
         Assert.Equal(3, lines.Length);
-        Assert.All(lines, l => Assert.Equal(FigureCase.Unmeasured, l.Figure.Case));
-        Assert.All(lines, l => Assert.Contains("DEMONSTRATION", ((LineFigure.Measured)l.Figure).Quantity.Describe(), StringComparison.Ordinal));
+        Assert.All(lines, l => Assert.Equal(FigureCase.Demonstration, l.Figure.Case));
+        Assert.All(lines, l => Assert.Contains("DEMONSTRATION", l.Figure.Describe(), StringComparison.Ordinal));
+
+        // The delivered weekly cost lines, every brief line and every dashboard tile of the demonstration store read the
+        // fake operations as demonstration, never as observed spend.
+        var managed = ManagementReportService.Compose(await new NpgsqlCompanyRecordReader(Source).ReadAsync(null, CancellationToken.None));
+        Assert.DoesNotContain(managed.Reports.Lines, l => l.Figure.Case is FigureCase.Observed or FigureCase.ObservedZero);
+        Assert.Equal(FigureCase.Demonstration, managed.Reports.Lines.First(l => l.Key == ReportLineKey.WeekCost).Figure.Case);
+        Assert.DoesNotContain(managed.Tiles, t => t.Case is FigureCase.Observed or FigureCase.ObservedZero);
+        Assert.DoesNotContain(managed.Tiles, t => t.Rendering.Contains("[observed", StringComparison.Ordinal));
 
         // The publish-ready predicate refuses, naming the held stages.
         var dossier = (await new NpgsqlItemDossierReader(Source).DossierAsync(record.Item, version, CancellationToken.None))!;
