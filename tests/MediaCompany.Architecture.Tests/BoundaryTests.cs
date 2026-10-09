@@ -1539,6 +1539,10 @@ public sealed class BoundaryTests
         "MediaCompany.Application.Ports.CompanySnapshot",
         "MediaCompany.Deterministic.Routing.ComparableRuns",
         "MediaCompany.Persistence.NpgsqlCompanyRecordReader",
+
+        // The correction cycle: the weekly and dashboard console commands, which print one read's composition to the
+        // writer the host gives them and return a named exit.
+        "MediaCompany.Deterministic.Services.ManagementConsole",
     ];
 
     /// <summary>

@@ -115,9 +115,31 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM platform_policy_reverifications"));
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM admission_held_outcomes"));
 
-        var entries = (await Reader().ReadAsync(null, CancellationToken.None)).RegisterEntries;
-        Assert.Equal(Enumerable.Range(1, 14).Select(n => $"REG-{n:D3}"), entries.Select(e => e.Identifier));
+        var read = await Reader().ReadAsync(null, CancellationToken.None);
+        var entries = read.RegisterEntries.OrderBy(e => e.Identifier, StringComparer.Ordinal).ToArray();
+        Assert.Equal(Enumerable.Range(1, 21).Select(n => $"REG-{n:D3}"), entries.Select(e => e.Identifier));
         Assert.Equal(["REG-001", "REG-002", "REG-003"], entries.Where(e => e.Status == RegisterEntryStatus.Decided).Select(e => e.Identifier));
+
+        // The owner's decisions of 2026-10-09 answered the Wave 7 observation-count and ceiling questions: the
+        // questions are recorded as they were and superseded by the decisions, never deleted (correction cycle).
+        Assert.Equal("REG-015", entries[1].Supersedes);
+        Assert.Equal("REG-016", entries[2].Supersedes);
+        Assert.Contains("wave-7/bao-cao-ceo.md section 3.1, question 1", entries[14].Statement, StringComparison.Ordinal);
+        Assert.Contains("wave-7/bao-cao-ceo.md section 3.1, question 2", entries[15].Statement, StringComparison.Ordinal);
+
+        // The five owner questions this wave opened, each citing the record that holds them; the price-capture
+        // question's entry supersedes the one the transcription first recorded and stays open.
+        for (var item = 1; item <= 5; item++)
+        {
+            Assert.Contains($"CEO-Q-700 item {item}, research/ceo-decision-record.md", entries[15 + item].Statement, StringComparison.Ordinal);
+            Assert.Equal(RegisterEntryStatus.Open, entries[15 + item].Status);
+        }
+
+        Assert.Equal("REG-014", entries[19].Supersedes);
+        var open = read.RegisterEntries.Where(e => RuleCatalogue.IsOpen(e, read.RegisterEntries)).Select(e => e.Identifier).Order(StringComparer.Ordinal);
+        Assert.Equal(
+            Enumerable.Range(4, 10).Concat(Enumerable.Range(17, 5)).Select(n => $"REG-{n:D3}"),
+            open);
         Assert.All(entries.Where(e => e.Status == RegisterEntryStatus.Decided), e =>
         {
             Assert.Equal("the owner", e.DecidedBy);
@@ -139,6 +161,7 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         Assert.Contains("Not re-admitted", entries[7].InterimRuling, StringComparison.Ordinal);
         Assert.Contains("the tech lead prepares the ruling", entries[13].Owner, StringComparison.Ordinal);
         Assert.Contains("no record states the re-fetch rule honoured", entries[13].InterimRuling, StringComparison.Ordinal);
+        Assert.Contains("the tech lead prepares the ruling", entries[19].Owner, StringComparison.Ordinal);
         Assert.DoesNotContain(entries, e => e.Statement.Contains("34.42", StringComparison.Ordinal) && e.Statement.Contains("interim", StringComparison.OrdinalIgnoreCase));
 
         // The reading columns lose their precision bound; every other column keeps its type.
@@ -152,7 +175,7 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         // Re-applied: nothing is re-inserted and no entry changes, its instant included.
         var instants = entries.Select(e => e.EnteredAt).ToArray();
         await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.008-management.sql"));
-        var again = (await Reader().ReadAsync(null, CancellationToken.None)).RegisterEntries;
+        var again = (await Reader().ReadAsync(null, CancellationToken.None)).RegisterEntries.OrderBy(e => e.Identifier, StringComparer.Ordinal).ToArray();
         Assert.Equal(instants, again.Select(e => e.EnteredAt));
         Assert.Equal(entries, again);
     }
@@ -202,7 +225,9 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         Assert.DoesNotContain("REG-008", required);
         Assert.DoesNotContain("REG-100", required);
         Assert.Equal(read.Reports.Register.Where(e => RuleCatalogue.IsOpen(e, read.Reports.Register)).Select(e => e.Identifier), required);
-        Assert.Equal(Enumerable.Range(4, 11).Where(n => n != 8).Select(n => $"REG-{n:D3}"), required);
+        Assert.Equal(
+            Enumerable.Range(4, 10).Where(n => n != 8).Concat(Enumerable.Range(17, 5)).Select(n => $"REG-{n:D3}"),
+            required.Order(StringComparer.Ordinal));
     }
 
     // -----------------------------------------------------------------------
@@ -263,6 +288,147 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         Assert.Equal(0.0315m, Amount(second, ReportKind.Coo, ReportLineKey.WeekCost));
         Assert.Equal(0.0315m, Amount(second, ReportKind.Cfo, ReportLineKey.CompanySpend));
         Assert.Equal(0.0315m, Amount(second, ReportKind.Cfo, ReportLineKey.ChannelSpend, ChannelA));
+    }
+
+    /// <summary>
+    /// A GATE TRANSITION COMMITTED DURING COMPOSITION REACHES EVERY AFFECTED LINE OR NONE (correction cycle). A
+    /// presentation for owner approval — a gate transition, read snapshot-bound in the awaiting listing, and its audit
+    /// entry, read instant-filtered in the owner send-back rate's denominator — committed on another session after the
+    /// first statement is in neither; the next read has it in both, together. A presentation made BEFORE the read under a
+    /// process clock a day ahead, its transition carrying that caller instant, is read snapshot-bound all the same.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AGateTransitionCommittedDuringCompositionReachesEveryAffectedLineOrNone()
+    {
+        await ChannelTestKit.RecordRightsFixtureAsync(Source, ItemB, ChannelB);
+
+        var during = new NpgsqlCompanyRecordReader(Source)
+        {
+            AfterFirstStatement = async _ =>
+            {
+                var clock = SteppingClock.HoursAgo(1);
+                await ChannelTestKit.PresentAsync(ChannelTestKit.Gate(Source, new NpgsqlUnitOfWork(Source, clock), clock), ItemB, new ItemVersion(1));
+            },
+        };
+
+        // None: the snapshot-bound listing and the instant-filtered rate both read no presentation.
+        var first = await ReadAsync(during);
+        Assert.Equal(FigureCase.ObservedZero, Figure(first, ReportKind.Coo, ReportLineKey.AwaitingApproval).Case);
+        Assert.Equal(FigureCase.ObservedZero, Figure(first, ReportKind.Coo, ReportLineKey.ChannelAwaitingApproval, ChannelB).Case);
+        Assert.Equal(FigureCase.Unmeasured, Figure(first, ReportKind.Coo, ReportLineKey.OwnerSendBackRate).Case);
+
+        // All: the next read has the presentation in the listing, the channel's listing and the rate's denominator.
+        var second = await ReadAsync();
+        Assert.Equal("1 item versions awaiting owner approval", Figure(second, ReportKind.Coo, ReportLineKey.AwaitingApproval).Describe());
+        Assert.Equal("1 item versions awaiting owner approval", Figure(second, ReportKind.Coo, ReportLineKey.ChannelAwaitingApproval, ChannelB).Describe());
+        Assert.Equal(FigureCase.ObservedZero, Figure(second, ReportKind.Coo, ReportLineKey.OwnerSendBackRate).Case);
+        var snapshot = await Reader().ReadAsync(null, CancellationToken.None);
+        Assert.Equal(1L, snapshot.AuditActions.Where(a => a.Action == PublicationGateService.PresentedAction).Sum(a => a.Count));
+
+        // Snapshot-bound: a presentation made under a process clock a day ahead carries that caller instant on its
+        // transition and is read all the same; its audit entry is the datastore's and is counted in the week.
+        var ahead = new SteppingClock(DateTimeOffset.UtcNow.AddDays(1));
+        await ChannelTestKit.RecordRightsFixtureAsync(Source, ItemA, ChannelA);
+        await ChannelTestKit.PresentAsync(ChannelTestKit.Gate(Source, new NpgsqlUnitOfWork(Source, ahead), ahead), ItemA, new ItemVersion(1));
+        var third = await ReadAsync();
+        Assert.Equal("2 item versions awaiting owner approval", Figure(third, ReportKind.Coo, ReportLineKey.AwaitingApproval).Describe());
+        Assert.Equal(2L, (await Reader().ReadAsync(null, CancellationToken.None)).AuditActions
+            .Where(a => a.Action == PublicationGateService.PresentedAction).Sum(a => a.Count));
+    }
+
+    /// <summary>
+    /// A BUDGET ALERT COMMITTED DURING COMPOSITION REACHES EVERY AFFECTED LINE OR NONE (correction cycle). An admission
+    /// that books an operation and raises the channel's 50 percent alert, committed on another session after the first
+    /// statement, is in no line: neither the channel's spend nor its alert count; the next read has both. An alert
+    /// row stamped after the report instant — visible to the snapshot — is counted by no line (instant-filtered).
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ABudgetAlertCommittedDuringCompositionReachesEveryAffectedLineOrNone()
+    {
+        var month = await BookingMonthAsync();
+        await InsertBudgetAsync(ChannelA, month, 0.0200m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", 90);
+
+        var during = new NpgsqlCompanyRecordReader(Source)
+        {
+            AfterFirstStatement = async _ =>
+                Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new StandInProvider(Alpha))
+                    .ExecuteAsync(Request(CapabilityClass.BulkClassification, 60), Context(), CancellationToken.None)),
+        };
+
+        var first = await ReadAsync(during);
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT count(*) FROM budget_alerts"));
+        Assert.Equal(FigureCase.Unmeasured, Figure(first, ReportKind.Cfo, ReportLineKey.ChannelSpend, ChannelA).Case);
+        Assert.Equal(FigureCase.ObservedZero, Figure(first, ReportKind.Cfo, ReportLineKey.ChannelAlerts, ChannelA).Case);
+
+        var second = await ReadAsync();
+        Assert.Equal(0.0105m, Amount(second, ReportKind.Cfo, ReportLineKey.ChannelSpend, ChannelA));
+        Assert.Equal("1 alerts recorded", Figure(second, ReportKind.Cfo, ReportLineKey.ChannelAlerts, ChannelA).Describe());
+
+        // A DEMONSTRATION FIXTURE written past the delivered tracking: an alert of the 75 percent threshold stamped ten
+        // minutes ahead of the datastore's clock, visible to the next snapshot and recorded after its instant.
+        await ExecuteAsync(
+            """
+            INSERT INTO budget_alerts (budget_id, period, threshold, utilization, utilized, budget_amount, raised_at)
+            SELECT budget_id, period, 75, 80, 0.016, amount, clock_timestamp() + interval '10 minutes' FROM budgets
+            """);
+        var third = await ReadAsync();
+        Assert.Equal("1 alerts recorded", Figure(third, ReportKind.Cfo, ReportLineKey.ChannelAlerts, ChannelA).Describe());
+        Assert.Equal(2L, await ScalarAsync<long>("SELECT count(*) FROM budget_alerts"));
+    }
+
+    /// <summary>
+    /// A WELL-FORMED WEEK THAT DOES NOT EXIST IS REFUSED BY NAME (correction cycle): 2027-W53 ends the weekly and the
+    /// dashboard command with the week refused and the malformed-week exit, as 2026-W99 does, and nothing is printed
+    /// but the refusal; an existing week prints.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AWeekThatDoesNotExistEndsTheConsoleCommandsInANamedRefusal()
+    {
+        var service = new ManagementReportService(Reader());
+        foreach (var command in new[] { "weekly", "dashboard" })
+        {
+            foreach (var (week, named) in new[] { ("2027-W53", "ISO week 2027-W53 does not exist"), ("2026-W99", "does not name an ISO week") })
+            {
+                var output = new StringWriter();
+                var error = new StringWriter();
+                var exit = await MediaCompany.Deterministic.Services.ManagementConsole.RunAsync(service, command, week, output, error, CancellationToken.None);
+                Assert.Equal(MediaCompany.Deterministic.Services.ConsoleExit.WeekRefused, exit);
+                Assert.Equal(2, (int)exit);
+                Assert.Contains(named, error.ToString(), StringComparison.Ordinal);
+                Assert.Equal(string.Empty, output.ToString());
+            }
+
+            var printed = new StringWriter();
+            Assert.Equal(
+                MediaCompany.Deterministic.Services.ConsoleExit.Printed,
+                await MediaCompany.Deterministic.Services.ManagementConsole.RunAsync(service, command, "2026-W40", printed, new StringWriter(), CancellationToken.None));
+            Assert.Contains("the UTC week 2026-W40", printed.ToString(), StringComparison.Ordinal);
+        }
+
+        var missing = await Assert.ThrowsAsync<ReportWeekNotFoundException>(() => Reader().ReadAsync(new ReportWeek(2027, 53), CancellationToken.None));
+        Assert.Equal(new ReportWeek(2027, 53), missing.Named);
+    }
+
+    /// <summary>
+    /// THE TWO BOUNDS ARE NAMED APART (correction cycle): the lock bound reports the store being changed, the statement
+    /// bound a read too slow, any other failure its class.
+    /// </summary>
+    [Fact]
+    public void TheLockBoundAndTheStatementBoundAreNamedApart()
+    {
+        var locked = NpgsqlCompanyRecordReader.Named(new PostgresException("lock timeout", "ERROR", "ERROR", PostgresErrorCodes.LockNotAvailable));
+        Assert.Equal(CompanyReadFailure.StoreBeingChanged, locked.Failure);
+        Assert.Contains("the store is being changed", locked.Detail, StringComparison.Ordinal);
+
+        var slow = NpgsqlCompanyRecordReader.Named(new PostgresException("statement timeout", "ERROR", "ERROR", PostgresErrorCodes.QueryCanceled));
+        Assert.Equal(CompanyReadFailure.ReadTooSlow, slow.Failure);
+        Assert.Contains("the read was too slow", slow.Detail, StringComparison.Ordinal);
+        Assert.DoesNotContain("the store is being changed", slow.Detail, StringComparison.Ordinal);
+
+        var other = NpgsqlCompanyRecordReader.Named(new PostgresException("conflict", "ERROR", "ERROR", PostgresErrorCodes.SerializationFailure));
+        Assert.Equal(CompanyReadFailure.ReadFailed, other.Failure);
+        Assert.Contains(PostgresErrorCodes.SerializationFailure, other.Detail, StringComparison.Ordinal);
     }
 
     /// <summary>

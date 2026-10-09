@@ -185,6 +185,158 @@ public sealed class ManagementCompositionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => RecordedAmount.Figure(0m, "runs", "a fixture source"));
         Assert.Throws<ArgumentException>(() => RecordedAmount.Figure(10m, "runs", " "));
         Assert.Throws<ArgumentOutOfRangeException>(() => RecordedProgrammeFacts.ControllerThreshold(60));
+
+        // Each dated change names the master plan section that states it (correction cycle).
+        Assert.Contains("MASTER-PLAN.md section 3.3", RecordedProgrammeFacts.DatedChanges[0].Describe(), StringComparison.Ordinal);
+        Assert.Contains("2026-09-24", RecordedProgrammeFacts.DatedChanges[0].Describe(), StringComparison.Ordinal);
+        Assert.Contains("sections 2 and 5", RecordedProgrammeFacts.DatedChanges[1].Describe(), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// ONE COUNT OVER ONE CANDIDATE SET (correction cycle). A capability holds a provider route with ten comparable
+    /// runs and, in the same reasoning-tier class, a non-AI substitute and a disabled provider route that hold none,
+    /// and in another tier class a provider route with three: the label of the first class is not qualitative and
+    /// the router ranks a request of that class on evidence; the label of the other class is qualitative and the
+    /// router keeps the configured ordering for it. The excluded routes change neither.
+    /// </summary>
+    [Fact]
+    public void TheLabelAndTheRouterCountTheSameCandidatesWhereAClassHoldsExcludedRoutes()
+    {
+        Route Provider(RouteTier tier, ProviderAccountId account, ModelId model, ReasoningTier stated) =>
+            new(RouteId.New(), CapabilityClass.EditorialReasoning, tier, new RouteTarget.ProviderRoute(account, model),
+                new QualityRating(90), new ContextCapacity(100_000), "commercial terms, paid tier", Fixture.Today.AddDays(-10), stated);
+
+        var counted = Provider(RouteTier.Primary, Fixture.PrimaryAccount, Fixture.PrimaryModel, ReasoningTier.Standard);
+        var substitute = new Route(RouteId.New(), CapabilityClass.EditorialReasoning, RouteTier.Secondary,
+            new RouteTarget.NonAiSubstitute("metadata-template-population"), new QualityRating(80), new ContextCapacity(int.MaxValue),
+            "non-AI substitute", Fixture.Today.AddDays(-10), ReasoningTier.Standard);
+        var disabled = Provider(RouteTier.Emergency, Fixture.EmergencyAccount, Fixture.EmergencyModel, ReasoningTier.Standard);
+        var otherTier = Provider(RouteTier.Secondary, Fixture.SecondaryAccount, Fixture.SecondaryModel, ReasoningTier.Deep);
+        Route[] routes = [counted, substitute, disabled, otherTier];
+
+        var observations = Enum.GetValues<TaskClass>()
+            .SelectMany(task => Enumerable.Range(0, 10).Select(_ => Run(counted.Id, task: task)))
+            .Concat(Enumerable.Range(0, 3).Select(_ => Run(otherTier.Id)))
+            .ToArray();
+        var accounts = new Dictionary<ProviderAccountId, ProviderAccountStatus>(Fixture.AllActive())
+        {
+            [Fixture.EmergencyAccount] = ProviderAccountStatus.Disabled,
+        };
+
+        var snapshot = SnapshotFixture.Build(routes: routes, observations: observations) with { AccountStatus = accounts };
+        var reports = ManagementComposers.Compose(snapshot);
+
+        var standard = Assert.Single(reports.Lines, l => l.Key == ReportLineKey.TaskComparableRuns
+            && l.Label.Contains("routes stating Standard / ScriptPass:", StringComparison.Ordinal));
+        var deep = Assert.Single(reports.Lines, l => l.Key == ReportLineKey.TaskComparableRuns
+            && l.Label.Contains("routes stating Deep / ScriptPass:", StringComparison.Ordinal));
+        Assert.Equal("10 comparable runs", standard.Figure.Describe());
+        Assert.DoesNotContain("QUALITATIVE", standard.Label, StringComparison.Ordinal);
+        Assert.Equal("3 comparable runs", deep.Figure.Describe());
+        Assert.Contains("QUALITATIVE", deep.Label, StringComparison.Ordinal);
+
+        // The router, over the same inputs: a Standard request ranks on evidence with the same count.
+        var inputs = Fixture.Inputs(routes, accounts: accounts) with { Evidence = observations };
+        var standardRecord = RouteResolver.ResolveWithRecord(Fixture.Request(floor: 60) with { TaskClass = TaskClass.ScriptPass }, inputs);
+        Assert.Equal(SelectionBasis.Evidence, standardRecord.Selection.Basis);
+        Assert.Equal(counted.Id, Assert.IsType<CapabilityResolution.Resolved>(standardRecord.Resolution).Route.Id);
+        Assert.Equal(
+            Assert.IsType<LineFigure.Measured>(standard.Figure).Quantity,
+            ComparableRuns.OfCandidates([counted, substitute], TaskClass.ScriptPass, observations));
+
+        // A Deep request compares the Deep class and keeps the configured ordering, as the label says.
+        var deepRequest = new CapabilityRequest(
+            CapabilityClass.EditorialReasoning, ReasoningTier.Deep, new QualityRating(60), new ContextCapacity(8_000), new Money(1.00m),
+            Criticality.Routine, Fixture.Attribution(), new EstimatedUnits(1_000, 500, 0), TimeSpan.FromHours(4), ReducedFloorPolicy.Forbidden)
+        {
+            TaskClass = TaskClass.ScriptPass,
+        };
+        var deepRecord = RouteResolver.ResolveWithRecord(deepRequest, inputs);
+        Assert.Equal(SelectionBasis.Configured, deepRecord.Selection.Basis);
+        Assert.Contains("fewer comparable runs than the owner's ten", deepRecord.Selection.Statement, StringComparison.Ordinal);
+
+        // The qualitative-review rule names the Deep class and not the Standard one.
+        var rule = Assert.IsType<RuleOutcome.Issued>(Assert.Single(reports.Outcomes, o => o.Rule == RecommendationRule.CtoQualitativeReview));
+        Assert.Contains("routes stating Deep / ScriptPass", rule.Statement, StringComparison.Ordinal);
+        Assert.DoesNotContain("routes stating Standard / ScriptPass", rule.Statement, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// THE BRIEF IS BOUNDED (correction cycle): held requests, escalated deferrals and controller actions appear as
+    /// counts in their measurement case with the single most urgent item per kind, and the brief's size is the same
+    /// with two of each as with fifty; every held request and decision stays listed in the reports.
+    /// </summary>
+    [Fact]
+    public void TheBriefDoesNotGrowWithHeldRequestsOrControllerActions()
+    {
+        CeoBrief Brief(int rows, out ManagementReportSet reports)
+        {
+            var held = Enumerable.Range(0, rows).Select(n => new HeldOutcomeRecord
+            {
+                Operation = OperationId.New(),
+                Channel = SnapshotFixture.ChannelOne,
+                Item = ItemId.New(),
+                HeldAt = SnapshotFixture.Instant.AddHours(-10),
+                Reason = RefusalReason.DeferredAtThreshold,
+                EscalatesAt = SnapshotFixture.Instant.AddHours(-9).AddMinutes(n),
+                HoldTimeout = TimeSpan.FromHours(1),
+                EscalatesToOwner = false,
+                RecordedFailureReason = "fixture",
+            }).ToArray();
+            var decisions = Enumerable.Range(0, rows).Select(n => new RecordedControllerDecision
+            {
+                Operation = OperationId.New(),
+                Channel = SnapshotFixture.ChannelOne,
+                DecidedAt = SnapshotFixture.Instant.AddMinutes(-n - 1),
+                BookingMonth = SnapshotFixture.October,
+                Action = n == rows - 1 ? ControllerAction.Refuse : ControllerAction.Defer,
+                Basis = SelectionBasis.Configured,
+                BasisStatement = "fixture",
+                TierStatement = "fixture",
+                CompanyBasisStatement = "fixture",
+                ReservationStatement = "fixture",
+                ObservationsRankedOn = MeasurementQuantity.Count(0, "observations ranked on"),
+                Readings =
+                [
+                    new RecordedDecisionReading
+                    {
+                        Scope = GoverningScope.Channel,
+                        Amount = RecordedAmount.Of(new Money(1m), "the budget register"),
+                        BookedSpend = MeasurementQuantity.Observed(0.95m, "USD"),
+                        Utilisation = MeasurementQuantity.Observed(95m, "percent"),
+                        Threshold = BudgetThreshold.Ninety,
+                        Action = n == rows - 1 ? ControllerAction.Refuse : ControllerAction.Defer,
+                    },
+                ],
+                Candidates = [],
+            }).ToArray();
+
+            reports = ManagementComposers.Compose(SnapshotFixture.Build(held: held, decisions: decisions));
+            return BriefComposer.Compose(reports);
+        }
+
+        var two = Brief(2, out var twoReports);
+        var fifty = Brief(50, out var fiftyReports);
+
+        Assert.Equal(two.Sections.Sum(s => s.Items.Count), fifty.Sections.Sum(s => s.Items.Count));
+        Assert.Equal(50, fiftyReports.Lines.Count(l => l.Key == ReportLineKey.HeldRequest));
+        Assert.Equal(50, fiftyReports.Outcomes.Count(o => o.Rule == RecommendationRule.CooEscalatedDeferral));
+
+        var items = fifty.Sections.SelectMany(s => s.Items).ToArray();
+        var lines = items.OfType<BriefItem.LineItem>().Select(i => i.Line).ToArray();
+        Assert.Equal("50 held operations", Assert.Single(lines, l => l.Key == ReportLineKey.HeldOperations).Figure.Describe());
+        Assert.Equal("50 escalated deferrals", Assert.Single(lines, l => l.Key == ReportLineKey.EscalatedDeferrals).Figure.Describe());
+        Assert.Single(lines, l => l.Key == ReportLineKey.HeldRequest);
+        Assert.Contains("49 further rule outcomes", Assert.Single(lines, l => l.Key == ReportLineKey.RuleOutputsNotShown
+            && l.Label.StartsWith(nameof(RecommendationRule.CooEscalatedDeferral), StringComparison.Ordinal)).Figure.Describe(), StringComparison.Ordinal);
+
+        // The one shown of each kind is the most urgent: the earliest escalation and the most severe action.
+        var shownDeferral = Assert.IsType<RuleOutcome.Issued>(Assert.Single(items.OfType<BriefItem.RuleItem>(),
+            i => i.Outcome.Rule == RecommendationRule.CooEscalatedDeferral).Outcome);
+        Assert.Equal(fiftyReports.Outcomes.First(o => o.Rule == RecommendationRule.CooEscalatedDeferral), shownDeferral);
+        var shownAction = Assert.IsType<RuleOutcome.Issued>(Assert.Single(items.OfType<BriefItem.RuleItem>(),
+            i => i.Outcome.Rule == RecommendationRule.CtoControllerAction).Outcome);
+        Assert.Contains("refuses metered work", shownAction.Statement, StringComparison.Ordinal);
     }
 
     // -----------------------------------------------------------------------
@@ -350,7 +502,7 @@ public sealed class ManagementCompositionTests
     public void TheReverificationLineIsUnmeasuredUntilARecordAndACadenceExist()
     {
         var none = ManagementComposers.Reverification(SnapshotFixture.Build());
-        Assert.Contains("no platform-policy statement is recorded", Assert.Single(none, l => l.Key == ReportLineKey.ReverificationRechecked).Figure.Describe(), StringComparison.Ordinal);
+        Assert.Contains("no platform-policy re-verification result is recorded", Assert.Single(none, l => l.Key == ReportLineKey.ReverificationRechecked).Figure.Describe(), StringComparison.Ordinal);
         Assert.Contains("no re-verification cadence is confirmed by the owner", Assert.Single(none, l => l.Key == ReportLineKey.ReverificationOverdue).Figure.Describe(), StringComparison.Ordinal);
 
         var statement = new PolicyStatementRecord
@@ -374,8 +526,17 @@ public sealed class ManagementCompositionTests
         Assert.Equal("1 statements re-checked", Assert.Single(recorded, l => l.Key == ReportLineKey.ReverificationRechecked).Figure.Describe());
         Assert.Equal(FigureCase.Unmeasured, Assert.Single(recorded, l => l.Key == ReportLineKey.ReverificationOverdue).Figure.Case);
 
+        // A registered statement with NO result ever recorded is a reading nobody took: unmeasured, never an observed
+        // zero (Design Gate ruling on the re-verification record, correction cycle).
         var unchecked_ = ManagementComposers.Reverification(SnapshotFixture.Build(statements: [statement]));
-        Assert.Equal(FigureCase.ObservedZero, Assert.Single(unchecked_, l => l.Key == ReportLineKey.ReverificationRechecked).Figure.Case);
+        var neverRechecked = Assert.Single(unchecked_, l => l.Key == ReportLineKey.ReverificationRechecked);
+        Assert.Equal(FigureCase.Unmeasured, neverRechecked.Figure.Case);
+        Assert.Contains("no platform-policy re-verification result is recorded", neverRechecked.Figure.Describe(), StringComparison.Ordinal);
+
+        // With a result recorded in an earlier week, a week with none re-checked is an observed zero.
+        var earlier = result with { RecordedAt = SnapshotFixture.WeekStart.AddDays(-3) };
+        var quietWeek = ManagementComposers.Reverification(SnapshotFixture.Build(statements: [statement], results: [earlier]));
+        Assert.Equal(FigureCase.ObservedZero, Assert.Single(quietWeek, l => l.Key == ReportLineKey.ReverificationRechecked).Figure.Case);
 
         var after = SnapshotFixture.Build() with
         {
@@ -424,11 +585,23 @@ public sealed class ManagementCompositionTests
         Assert.Contains("REG-004", issued.AnchorStatement, StringComparison.Ordinal);
         Assert.Null(issued.Anchor);
 
-        var superseded = SnapshotFixture.Register()
-            .Append(SnapshotFixture.Entry("REG-099", RegisterEntryStatus.Decided, "fixture: an answer superseding REG-004", supersedes: "REG-004"))
+        // A re-worded question recorded as a superseding OPEN entry keeps the lineage open: the rule cites the
+        // current entry, never the transcribed identifier (correction cycle).
+        var reworded = SnapshotFixture.Register()
+            .Append(SnapshotFixture.Entry("REG-098", RegisterEntryStatus.Open, "fixture: the question re-worded", "still refused", supersedes: "REG-004"))
             .ToArray();
-        var abstained = ManagementComposers.Compose(SnapshotFixture.Build(register: superseded)).Outcomes;
-        Assert.IsType<RuleOutcome.Abstained>(Assert.Single(abstained, o => o.Rule == RecommendationRule.CfoUnbudgetedChannel));
+        var current = Assert.IsType<RuleOutcome.Issued>(Assert.Single(
+            ManagementComposers.Compose(SnapshotFixture.Build(register: reworded)).Outcomes, o => o.Rule == RecommendationRule.CfoUnbudgetedChannel));
+        Assert.Contains("REG-098", current.AnchorStatement, StringComparison.Ordinal);
+        Assert.Contains("still refused", current.AnchorStatement, StringComparison.Ordinal);
+
+        // A decided entry at the end of the lineage closes it, and the rule abstains naming it.
+        var superseded = reworded
+            .Append(SnapshotFixture.Entry("REG-099", RegisterEntryStatus.Decided, "fixture: an answer superseding REG-098", supersedes: "REG-098"))
+            .ToArray();
+        var abstained = Assert.IsType<RuleOutcome.Abstained>(Assert.Single(
+            ManagementComposers.Compose(SnapshotFixture.Build(register: superseded)).Outcomes, o => o.Rule == RecommendationRule.CfoUnbudgetedChannel));
+        Assert.Contains("REG-099", abstained.Reason, StringComparison.Ordinal);
 
         var budgeted = ManagementComposers.Compose(SnapshotFixture.Build(channelBudget: 5m)).Outcomes;
         Assert.DoesNotContain(budgeted, o => o.Rule == RecommendationRule.CfoUnbudgetedChannel);
@@ -499,8 +672,21 @@ public sealed class ManagementCompositionTests
             SourceReference = "a fixture source",
             RegisteredAt = SnapshotFixture.Instant.AddDays(-30),
         };
-        var issued = Assert.IsType<RuleOutcome.Issued>(Assert.Single(
+        // A statement with no result ever recorded: the reading is unmeasured, so the rule still abstains.
+        Assert.IsType<RuleOutcome.Abstained>(Assert.Single(
             ManagementComposers.Compose(SnapshotFixture.Build(statements: [statement])).Outcomes, o => o.Rule == RecommendationRule.CtoReverification));
+
+        var earlier = new ReverificationResult
+        {
+            Id = Guid.NewGuid(),
+            Statement = "fixture-statement",
+            VerifiedOn = new DateOnly(2026, 9, 30),
+            Changed = false,
+            RecordedAt = SnapshotFixture.WeekStart.AddDays(-3),
+        };
+        var issued = Assert.IsType<RuleOutcome.Issued>(Assert.Single(
+            ManagementComposers.Compose(SnapshotFixture.Build(statements: [statement], results: [earlier])).Outcomes,
+            o => o.Rule == RecommendationRule.CtoReverification));
         Assert.Contains("never that the statement is overdue", issued.AnchorStatement, StringComparison.Ordinal);
     }
 

@@ -117,6 +117,8 @@ internal static class SnapshotFixture
             RevenueParameters = [],
             Benchmark = new BenchmarkRecordSummary((routes ?? []).Select(r => r.Id).ToArray(), observations ?? []),
             Routes = routes ?? [],
+            Availability = (routes ?? []).ToDictionary(r => r.Id, r => RouteAvailability.Serving(r.Id, Instant.AddDays(-1))),
+            AccountStatus = Fixture.AllActive(),
             Decisions = decisions ?? [],
             Held = held ?? [],
             FailedOperations = [new ChannelCount(ChannelOne, 0)],
