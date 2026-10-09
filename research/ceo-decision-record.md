@@ -1792,3 +1792,28 @@ whole of Wave 6, is the union of both lists**, with one qualification the Scope 
 approval queue is a per-channel *view* over the gate transition-table state, never configuration.
 The owner's decision itself — one legal entity, several channels — is unchanged. Nothing is
 renumbered.
+
+---
+
+## CEO-D-600 — No metered benchmark in Wave 7; the AI-economics capability only
+
+**The CEO's own decision, taken 2026-10-09 at the start of the Wave 7 session**, answering the
+question put in section 7 of `wave-6/bao-cao-ceo.md`: whether to spend the authorised
+single-metered-operation exception, or authorise a new small amount, on the first real benchmark.
+
+**Answer: no.** Wave 7 builds the AI-economics capability as the ticket `MC-8` scopes it — the
+benchmark record, selection that refuses to rank on an unmeasured quantity, and the deterministic
+cost controller — and **makes no metered model call**. The single-metered-operation exception
+stays unspent and available. The benchmark corpus stays unpopulated; every benchmark quantity in
+the company's own store reads unmeasured, and every ranking the router produces is the configured
+ordering, labelled as such.
+
+### What it discharges, and what it does not
+
+1. **It discharges the open question of whether Wave 7 runs a metered benchmark.** It does not;
+   no phase may plan, design or perform one, and no scope phase need raise it as blocking.
+2. **It does not discharge the tier-split question.** The assumed reasoning-tier split behind
+   every per-item cost figure remains untested for the fifth consecutive wave.
+3. **It authorises no spend, no account, no channel creation and no publication.**
+
+The decision block for Wave 7 is `CEO-D-600`–`CEO-D-699` and `CEO-C-600`–`CEO-C-699`.
