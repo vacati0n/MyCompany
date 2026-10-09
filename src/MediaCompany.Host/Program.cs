@@ -170,7 +170,15 @@ switch (command)
         return (int)exit;
     }
 
+    case "prepare":
+        // The production change (decision D-016 of its design): recorded configuration and the package into this store.
+        return await ProductionCommands.PrepareAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
+
+    case "produce":
+        // The production change (decision D-015 of its design): fake, plan-only or metered; nothing is published.
+        return await ProductionCommands.ProduceAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
+
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard.");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard, prepare, produce.");
         return 2;
 }

@@ -98,7 +98,13 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         command.Parameters.Add("duration_ms", NpgsqlDbType.Bigint).Value =
             draft.MeasuredDuration is { } d ? (long)Math.Round(d.TotalMilliseconds) : DBNull.Value;
 
-        var at = (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        DateTimeOffset at;
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+            at = reader.GetFieldValue<DateTimeOffset>(0);
+        }
+
         return draft with { RecordedAt = at };
     }
 }

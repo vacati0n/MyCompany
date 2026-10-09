@@ -1,0 +1,23 @@
+{
+  "about": "A SAMPLE of the produce command's settings (the production change, decisions D-008, D-013, D-014 and D-015 of its design). Copy it OUTSIDE the repository, set every <...> value, and pass its path as --settings. The bounds, the profile and the character maximum are the values ruled at the Design Gate and are configured amounts, never measurements. It holds no secret: credentials are read only from the process environment, by name.",
+  "outputRoot": "<a folder OUTSIDE the repository, for example C:/MediaCompanyOutput>",
+  "repositoryRoot": "<the repository's root folder>",
+  "rendererPath": "<the full path of ffmpeg.exe>",
+  "probePath": "<the full path of ffprobe.exe>",
+  "fontFile": "C:/Windows/Fonts/arial.ttf",
+  "width": 1920,
+  "height": 1080,
+  "framesPerSecond": 30,
+  "renderBoundMinutes": 60,
+  "decodeBoundMinutes": 60,
+  "probeBoundSeconds": 60,
+  "stillBoundSeconds": 60,
+  "providerCallBoundSeconds": 60,
+  "narrationCharacterMaximum": 1500,
+  "narrationVoice": null,
+  "companyStoreIdentity": "mediacompany",
+  "materialPath": "wave-2/item-001/item-material.json",
+  "preparationPath": "config/preparation-item-001.json",
+  "demonstrationProviders": [ { "account": "openai", "contract": "SpeechAudio" } ],
+  "endpoints": [ { "account": "openai", "endpoint": "<the speech vendor's API base address, verified first hand>", "contract": "SpeechAudio" } ]
+}

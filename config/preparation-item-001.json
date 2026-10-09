@@ -1,0 +1,91 @@
+{
+  "about": "The recorded configuration the preparation command loads (the production change, decision D-016 of its design). Every row is inserted where absent; a present row that differs refuses the whole preparation. It records NO channel budget amount and NO channel configuration value. Prices and terms positions are the implementing role's recorded knowledge of 2026-10-09 and are NOT verified first hand: the orchestrator re-fetches every price and verifies every terms position against the vendors' own pages before the owner's go.",
+  "company": { "id": "799f35ac-6794-483e-9c4d-252023cb0c5a", "name": "the company, one legal entity (the owner's decision of one legal entity, several channels)", "operatingState": "pre-revenue: nothing published" },
+  "channel": { "id": "b3b7f3df-881a-4d70-b066-451a333228a6", "platform": "YouTube", "language": "English" },
+  "department": { "id": "7d9091c0-d267-4079-9158-4e0d280dff89", "name": "Production", "budgetHolder": "Producer" },
+  "agent": { "id": "82da4d44-8410-4d52-b27d-c747b8a5abbf", "name": "Narration stage", "role": "Producer" },
+  "accounts": [
+    {
+      "id": "openai",
+      "provider": "OpenAI",
+      "termsBasis": "the speech-and-image vendor's pay-per-use API terms, under the owner's billed account (the owner's decision of 2026-10-09); not verified first hand by any phase",
+      "verifiedOn": "2026-10-09",
+      "scope": "Company",
+      "scheme": "BearerAuthorization"
+    },
+    {
+      "id": "anthropic",
+      "provider": "Anthropic",
+      "termsBasis": "the reasoning vendor's pay-per-use API terms, under the owner's billed account (the owner's decision of 2026-10-09); not verified first hand by any phase; no route of item 001's run uses it",
+      "verifiedOn": "2026-10-09",
+      "scope": "Company",
+      "scheme": "KeyHeader"
+    }
+  ],
+  "models": [
+    {
+      "id": "tts-1",
+      "account": "openai",
+      "ratedQuality": 0,
+      "contextCapacity": 0,
+      "modality": "speech",
+      "billedKinds": [ "CharacterUnit" ],
+      "note": "rated quality 0 and context capacity 0 record that no rating and no capacity is claimed; the narration request's floor is 0 for the same reason"
+    }
+  ],
+  "routes": [
+    {
+      "id": "89cb1606-6a09-48b0-9369-e6adcc5ecea7",
+      "capability": "Narration",
+      "tier": "Primary",
+      "account": "openai",
+      "model": "tts-1",
+      "ratedQuality": 0,
+      "contextCapacity": 0,
+      "termsBasis": "the speech-and-image vendor's pay-per-use API terms; not verified first hand by any phase",
+      "termsVerifiedOn": "2026-10-09",
+      "automatedAccess": "Permits",
+      "customerContent": "NoLicenceTaken",
+      "positionsEvidence": "the implementing role's recorded knowledge of the vendor's API terms, 2026-10-09: an API offered for programmatic use, and output owned by the customer; to be verified first hand by the orchestrator before the go",
+      "positionsReadOn": "2026-10-09"
+    }
+  ],
+  "prices": [
+    {
+      "id": "9abf993a-bb4d-428e-a394-4f2d41aa43cd",
+      "model": "tts-1",
+      "kind": "CharacterUnit",
+      "unitPrice": 0.000015,
+      "currency": "USD",
+      "source": "ESTIMATE: the speech vendor's published price of USD 15.00 per million characters for this model, as recorded by the implementing role on 2026-10-09; not verified first hand; re-fetched by the orchestrator immediately before any spend",
+      "verifiedOn": "2026-10-09",
+      "validFrom": "2026-10-09T00:00:00Z"
+    }
+  ],
+  "item": {
+    "id": "7425ffb3-8ad3-4d93-9132-2c9997d7a2fb",
+    "title": "The Waggle Dance: How a Honey Bee Encodes a Vector",
+    "titleSource": "wave-2/item-001/metadata-and-thumbnails.md",
+    "packageVersion": 1,
+    "stagesSource": "wave-2/item-001/item-dossier.md",
+    "stages": [
+      { "stage": "Idea", "outcome": "Succeeded", "summary": "Subject settled by owner decision `D-017`, \"First video: the honey bee waggle dance, as a coordinate-encoding mechanism\"" },
+      { "stage": "IdeaScoring", "outcome": "Succeeded", "summary": "Scored against the five pillar criteria; pillar 1, format F5. Supply criterion scored **conditional**, not satisfied — see §4" },
+      { "stage": "Research", "outcome": "Succeeded", "summary": "23 claims, each attributed — `claim-to-source.md`" },
+      { "stage": "Script", "outcome": "Succeeded", "summary": "`script.md`, `narration.txt`; committed after the supply audit" },
+      { "stage": "OriginalityCheck", "outcome": "Succeeded", "summary": "Footage-removal assessment: 23 of 23 claims survive — `claim-to-source.md` §2" },
+      { "stage": "Design", "outcome": "Succeeded", "summary": "22 original motion graphics specified — `shot-list.md` §1" },
+      { "stage": "Production", "outcome": "Held", "summary": "Cut specified, not assembled: three waggle-run clips unsourced, no subscription session" },
+      { "stage": "Audio", "outcome": "Held", "summary": "Narration text final at 11,096 characters; audio not commissioned, because commissioning it is spend" },
+      { "stage": "Thumbnail", "outcome": "Succeeded", "summary": "6 candidates specified — `shot-list.md` §4" },
+      { "stage": "QualityCheck", "outcome": "Succeeded", "summary": "Treatment conditions assessed; metadata screened clean" },
+      { "stage": "CopyrightCheck", "outcome": "Held", "summary": "Library registration not performed for this channel; per-clip licence records cannot exist before the clips do" },
+      { "stage": "PolicyCheck", "outcome": "Succeeded", "summary": "Five determinations resolved — `compliance-determinations.md`" }
+    ]
+  },
+  "cap": {
+    "amount": 5.95,
+    "currency": "USD",
+    "source": "the owner's decision of 2026-10-09 authorising the first metered video under a hard cap of USD 5.95, all attempts included (CEO-D-800, research/ceo-decision-record.md)"
+  }
+}

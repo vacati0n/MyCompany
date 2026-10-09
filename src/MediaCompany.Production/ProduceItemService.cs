@@ -177,6 +177,9 @@ public sealed class ProduceItemService
 
         private ItemMaterial Material => _request.Loaded.Material;
 
+        /// <summary>A path inside this production's own folder under the output root.</summary>
+        private string Rel(string inRun) => $"{Folder}/{inRun}";
+
         private TextWriter Output => _service._output;
 
         public static async Task<ProductionRun> OpenAsync(
@@ -268,7 +271,7 @@ public sealed class ProduceItemService
                     var text = Wrap([graphic.Id, string.Empty, .. graphic.Lines]);
                     var stored = await DrawAsync(name, text, StillStyle.Graphic, $"design/{name}.png", cancellationToken).ConfigureAwait(false);
                     await RecordArtifactAsync(ProductionStage.Design, ArtifactRole.GraphicStill, graphic.Id, stored, null, cancellationToken).ConfigureAwait(false);
-                    stills[graphic.Id] = stored.RelativePath;
+                    stills[graphic.Id] = $"design/{name}.png";
                 }
             }
             catch (Exception failure) when (failure is MediaToolBoundExceededException or MediaToolFailedException)
@@ -301,7 +304,7 @@ public sealed class ProduceItemService
                 }
 
                 var content = outcome.Content!;
-                var stored = await _service._store.StoreAsync(Staging, content.Bytes, $"audio/part-{part.Ordinal:000}.wav", cancellationToken).ConfigureAwait(false);
+                var stored = await _service._store.StoreAsync(Staging, content.Bytes, Rel($"audio/part-{part.Ordinal:000}.wav"), cancellationToken).ConfigureAwait(false);
                 var probe = await ProbeAsync(stored.FullPath, ProductionStage.Audio, cancellationToken).ConfigureAwait(false);
                 await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.NarrationPart, $"part {part.Ordinal} of beat {part.Beat}", stored, probe.Duration, cancellationToken).ConfigureAwait(false);
                 partFiles.Add((part, stored, probe.Duration));
@@ -319,7 +322,7 @@ public sealed class ProduceItemService
             {
                 await _service._store.WriteStagingTextAsync(Staging, "narration-parts.txt", list.ToString(), cancellationToken).ConfigureAwait(false);
                 await _service._tool.ConcatenateAudioAsync(Staging, "narration-parts.txt", "narration.wav", cancellationToken).ConfigureAwait(false);
-                narration = await _service._store.PromoteAsync(Staging, "narration.wav", "audio/narration.wav", cancellationToken).ConfigureAwait(false);
+                narration = await _service._store.PromoteAsync(Staging, "narration.wav", Rel("audio/narration.wav"), cancellationToken).ConfigureAwait(false);
                 measured = await _service._tool.ProbeAsync(narration.FullPath, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception failure) when (failure is MediaToolBoundExceededException or MediaToolFailedException)
@@ -516,7 +519,7 @@ public sealed class ProduceItemService
                         unsourced ? "specified, not sourced" : "licensed clip not included in this video"]);
                     var stored = await DrawAsync(name, text, StillStyle.Placeholder, $"production/{name}.png", cancellationToken).ConfigureAwait(false);
                     await RecordArtifactAsync(ProductionStage.Production, ArtifactRole.ClipPlaceholder, clip.Id, stored, null, cancellationToken).ConfigureAwait(false);
-                    visuals.Add((clip.Id, clip.Beat, stored.RelativePath));
+                    visuals.Add((clip.Id, clip.Beat, $"production/{name}.png"));
                 }
 
                 timeline = BeatTimeline.Compose(beatDurations, visuals, settings.FramesPerSecond);
@@ -536,7 +539,7 @@ public sealed class ProduceItemService
                 await _service._tool.RenderAsync(
                     new RenderSpecification(Staging, "segments.txt", $"../audio/{Path.GetFileName(narration.RelativePath)}", name2, total),
                     cancellationToken).ConfigureAwait(false);
-                rendered = await _service._store.PromoteAsync(Staging, name2, $"production/{name2}", cancellationToken).ConfigureAwait(false);
+                rendered = await _service._store.PromoteAsync(Staging, name2, Rel($"production/{name2}"), cancellationToken).ConfigureAwait(false);
                 probe = await _service._tool.ProbeAsync(rendered.FullPath, cancellationToken).ConfigureAwait(false);
                 decode = await _service._tool.DecodeAsync(rendered.FullPath, cancellationToken).ConfigureAwait(false);
             }
@@ -598,7 +601,7 @@ public sealed class ProduceItemService
         {
             await _service._store.WriteStagingTextAsync(Staging, name + ".txt", text, cancellationToken).ConfigureAwait(false);
             await _service._tool.DrawStillAsync(new StillSpecification(Staging, name + ".txt", name + ".png", style), cancellationToken).ConfigureAwait(false);
-            return await _service._store.PromoteAsync(Staging, name + ".png", relativePath, cancellationToken).ConfigureAwait(false);
+            return await _service._store.PromoteAsync(Staging, name + ".png", Rel(relativePath), cancellationToken).ConfigureAwait(false);
         }
 
         private async Task<MediaProbe> ProbeAsync(string file, ProductionStage stage, CancellationToken cancellationToken)

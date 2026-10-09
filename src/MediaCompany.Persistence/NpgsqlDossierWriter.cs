@@ -98,7 +98,9 @@ internal sealed class NpgsqlDossierWriter : IDossierWriter
         command.Parameters.AddWithValue("summary", summary);
         Text(command, "evidence_reference", evidenceReference);
 
-        return (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+        return reader.GetFieldValue<DateTimeOffset>(0);
     }
 
     public async Task RecordSupplyAuditAsync(
