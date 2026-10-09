@@ -1873,3 +1873,23 @@ master plan section 18 for "ten comparable runs per task". The sentence is in **
 (Agent Benchmarking, review cadence); section 18 is the content pipeline. The ticket's "section 64"
 is a section of the source brief, not of the master plan, which has 41 sections. The scope agent
 caught both. The owner's decision itself is unchanged. Nothing is renumbered.
+
+---
+
+## CEO-Q-700 — Owner questions opened by Wave 8, recorded for the register
+
+**Recorded 2026-10-09 by the orchestrating session**, so that the open-decisions register can
+transcribe them from a recorded source. None blocks Wave 8; each is put to the owner in
+`wave-8/bao-cao-ceo.md`. Nothing is decided by recording them.
+
+1. **Platform-policy re-verification:** who records the re-verification results, and at what
+   cadence a statement counts as overdue. Until answered, the re-verification line reads
+   unmeasured and "overdue" stays unmeasured.
+2. **Recommendation items:** master plan sections 9 and 29 list seven CTO recommendation items,
+   section 33 lists ten. The delivered rule catalogue is seven rules; which list governs?
+3. **Report week:** the report period is the UTC week, Monday 00:00 to the next Monday 00:00
+   (Monday 07:00 Vietnam time). Confirm or change.
+4. **Price capture:** does capturing a unit price at admission honour the rule of re-fetching it
+   immediately before use, or must the booking re-fetch it? No behaviour changes until answered.
+5. **Register writer:** the register is filled only by transcription in a schema resource, so a
+   decision reaches it one release late. Keep transcription, or direct a writer in a later wave?
