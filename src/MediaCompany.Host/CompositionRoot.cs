@@ -93,6 +93,11 @@ public static class CompositionRoot
         services.AddSingleton<IApprovalQueueReader>(sp =>
             new NpgsqlApprovalQueueReader(sp.GetRequiredService<NpgsqlDataSource>()));
 
+        // The AI-management change: the company record reader, which reads every source of the management
+        // reports in one read-only snapshot and has read members only.
+        services.AddSingleton<ICompanyRecordReader>(sp =>
+            new NpgsqlCompanyRecordReader(sp.GetRequiredService<NpgsqlDataSource>()));
+
         // The credential broker — the only module holding a dependency on the secret store.
         services.AddSingleton(sp =>
         {
@@ -141,6 +146,10 @@ public static class CompositionRoot
         // take the capability gateway, because its assembly does not reference the one that
         // declares it.
         services.AddSingleton<AnalyticsReportService>();
+
+        // The management surface: the reports, the brief and the dashboard over one read. It takes the company
+        // record reader and nothing else, and its assembly cannot reference the capability boundary.
+        services.AddSingleton<ManagementReportService>();
 
         return services.BuildServiceProvider();
     }

@@ -163,6 +163,22 @@ public sealed class NpgsqlBenchmarkReader : IBenchmarkReader
         await using var transaction = await connection
             .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, cancellationToken).ConfigureAwait(false);
 
+        var summary = await RecordOnAsync(connection, transaction, null, cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return summary;
+    }
+
+    /// <summary>
+    /// The benchmark record's two statements on a supplied transaction. With <paramref name="asOf"/> null they
+    /// are the delivered statements; with an instant every observation is read only where stamped at or before
+    /// it, which is how the company record reader's snapshot reads them (the AI-management change).
+    /// </summary>
+    internal static async Task<BenchmarkRecordSummary> RecordOnAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        DateTimeOffset? asOf,
+        CancellationToken cancellationToken)
+    {
         var routes = new List<RouteId>();
         await using (var command = new NpgsqlCommand("SELECT route_id FROM routes ORDER BY route_id", connection, transaction))
         await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
@@ -177,15 +193,16 @@ public sealed class NpgsqlBenchmarkReader : IBenchmarkReader
         await using (var command = new NpgsqlCommand(
             $"""
             {BenchmarkRows.Select}
+            WHERE @as_of IS NULL OR o.observed_at <= @as_of
             ORDER BY o.observation_id
             """,
             connection,
             transaction))
         {
+            NpgsqlChannelPartitionReader.AsOf(command, asOf);
             observations = await BenchmarkRows.ReadAllAsync(command, cancellationToken).ConfigureAwait(false);
         }
 
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return new BenchmarkRecordSummary(routes, observations);
     }
 }

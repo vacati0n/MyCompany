@@ -647,3 +647,33 @@ the contradiction is impossible.
 Tell every dispatched agent, in its briefing, that a `failure-envelope.json` of class
 `gate-approval-required` in its folder is stale once its dispatch prompt exists, and to ignore it.
 This wave did so from the implementation phase onward.
+
+---
+
+## Finding 12 — a recorded policy exception does not widen the write scope the completion check applies
+
+**Measured 2026-10-09, run `run-79ce8c121936`, phase `documentation-and-release-handoff`.**
+
+The orchestrator's briefing told the documentation agent to write and commit the store guide note
+`db/README.md`. The agent declared it honestly in `declared_side_effects`. The validator passed
+32/32, but `complete` rejected the hand-back: `db/README.md` is outside the documentation role's
+`permitted_writes`, classified `policy-failure`, blocked `awaiting_policy_exception`.
+
+`policy-exception` cleared the block and returned the phase to the queue, as documented. But
+`permitted_write()` in `runtime/framework_runtime.py` reads only the envelope's
+`expected_output_schema` and `constraints`; it never consults the item's `policy_exceptions`.
+Re-dispatching creates a new invocation, and re-completing with the same honest declaration is
+rejected again. The exception records the judgement but cannot let the evidence through.
+
+### Workaround
+
+Re-dispatch, and have the agent re-issue its result for the new invocation with only the paths its
+role may write; the out-of-scope file is carried as an orchestrator closing record under the
+recorded exception. Better: never brief a non-implementing role to write a repository file. The
+orchestrator writes such files in the closing commit, as Waves 6 and 7 did.
+
+### Fix
+
+`permitted_write()` should treat a path named in a recorded policy exception for the same phase as
+permitted, or `policy-exception` should take the excepted paths and record them where the
+completion check reads them.

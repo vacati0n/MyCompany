@@ -38,6 +38,12 @@ public sealed class PublicationGateService
     /// <summary>The audit action of a gate step the service refused by name, writing nothing else.</summary>
     public const string StepRefusedAction = "gate.step-refused";
 
+    /// <summary>The audit action of an owner approval (named here by the AI-management change, which counts it).</summary>
+    public const string OwnerApprovedAction = "gate.owner-approved";
+
+    /// <summary>The audit action of an owner send-back (named here by the AI-management change, which counts it).</summary>
+    public const string OwnerSentBackAction = "gate.owner-sentback";
+
     private readonly IGateLedger _gates;
     private readonly IAssetLedger _assets;
     private readonly IItemRegister _items;
@@ -317,7 +323,7 @@ public sealed class PublicationGateService
             new AuditEntryDraft
             {
                 Actor = WorkforceRole.Owner.ToString(),
-                Action = $"gate.owner-{verdict.ToString().ToLowerInvariant()}",
+                Action = verdict == ApprovalVerdict.Approved ? OwnerApprovedAction : OwnerSentBackAction,
                 Subject = $"item:{item} version:{version}",
                 Reason = reason,
                 InputsReference = $"presented-at:{presentedAt:O}",

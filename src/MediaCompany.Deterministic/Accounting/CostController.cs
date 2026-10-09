@@ -25,8 +25,9 @@ namespace MediaCompany.Deterministic.Accounting;
 /// the first metered operation of a month is admissible.
 ///
 /// The company reading is governed against the RECORDED METERED ALLOTMENT, the metered line of the
-/// owner-approved envelope, as the interim basis while the standing charge has no recorded home, and
-/// every decision states it. Its only effects are the action and the reason it returns, which the
+/// owner-approved envelope, which the owner decided on 2026-10-09 is the company ceiling (the AI-management
+/// change; the standing charge stays separate with no recorded home), and every decision states it. A
+/// decision recorded before that change stored the statement it stored; it is read back exactly as recorded. Its only effects are the action and the reason it returns, which the
 /// resolution function reads to restrict route choice; it reaches no compliance or copyright control.
 /// </summary>
 public static class CostController
@@ -35,21 +36,22 @@ public static class CostController
 
     /// <summary>Where the company basis is recorded. A code constant, owner-approved, never an invention.</summary>
     public const string CompanyBasisRecordedIn =
-        "the metered line of the owner-approved monthly envelope, a code constant of the accounting domain";
+        "the metered line of the owner-approved monthly envelope, a code constant of the accounting domain, decided by "
+        + "the owner on 2026-10-09 as the company ceiling";
 
     /// <summary>Where a channel's budget amount is recorded.</summary>
     public const string ChannelBudgetRecordedIn = "the budget register";
 
-    /// <summary>The interim company basis: the recorded metered allotment, as a recorded amount.</summary>
+    /// <summary>The company basis: the recorded metered allotment, the owner's decided ceiling, as a recorded amount.</summary>
     public static RecordedAmount CompanyBasis { get; } = RecordedAmount.Of(ApprovedEnvelope.Metered, CompanyBasisRecordedIn);
 
     /// <summary>What the company reading is governed against, stated on every decision.</summary>
     public static string CompanyBasisStatement { get; } =
         $"the company reading is governed against the recorded metered allotment of {ApprovedEnvelope.Metered}, the "
         + $"metered line of the owner-approved monthly envelope of {ApprovedEnvelope.MonthlyTotal} ({ApprovedEnvelope.Metered} "
-        + $"metered and {ApprovedEnvelope.Standing} standing), as the interim basis while the standing charge has no "
-        + "recorded home; governing against the whole envelope would admit metered spend the standing charge then "
-        + "carries past it. Booked spend covers the metered operations the operation record carries, which is the "
+        + $"metered and {ApprovedEnvelope.Standing} standing), which the owner decided on 2026-10-09 is the company "
+        + "ceiling; the standing charge is a separate quantity with no recorded home, and governing against the whole "
+        + "envelope would admit metered spend the standing charge then carries past it. Booked spend covers the metered operations the operation record carries, which is the "
         + "complete ledger of the company's booked metered operations, and nothing else; a budget, the envelope and "
         + "the allotment are recorded amounts, never observations";
 

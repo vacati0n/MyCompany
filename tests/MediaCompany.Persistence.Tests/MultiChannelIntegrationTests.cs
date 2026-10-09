@@ -100,9 +100,9 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheSixthResourceRecordsNothingButTheChainHeadAndReappliesCleanly()
     {
-        // The seventh resource now installs after it (the AI-economics change); re-applying the sixth over a
-        // store holding the seventh must still succeed and record nothing.
-        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^2]);
+        // The seventh and eighth resources now install after it (the AI-economics and AI-management changes);
+        // re-applying the sixth over a store holding both must still succeed and record nothing.
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^3]);
 
         await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.006-multi-channel.sql"));
 
@@ -280,9 +280,11 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
             """,
             c => c.Parameters.AddWithValue("channel", ChannelA.Value));
 
-        // The sixth resource by name, then the seventh, which now installs after it (the AI-economics change).
+        // The sixth resource by name, then the seventh and the eighth, which now install after it (the AI-economics
+        // and AI-management changes).
         await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.006-multi-channel.sql"));
-        await ExecuteAsync(SchemaInstaller.ReadResource(SchemaInstaller.ResourceNames[^1]));
+        await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.007-ai-economics.sql"));
+        await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.008-management.sql"));
 
         Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM first_publication_conditions WHERE condition = 'PaymentAccount'"));
         Assert.Equal("an observation recorded before the change", await ScalarAsync<string>(
@@ -934,7 +936,7 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
         var month = await ChannelTestKit.BookingMonthAsync(Source);
 
         var interleaving = new WriteAfterFirstRead(new NpgsqlChannelPartitionReader(Source), () => RecordOperationAsync(ChannelA, ItemA, 3_000, 3_000));
-        var lines = await new ReportingService(interleaving, _clock).MeasurableNowAsync(month, CancellationToken.None);
+        var lines = await new ReportingService(interleaving, new NpgsqlCompanyRecordReader(Source)).MeasurableNowAsync(month, CancellationToken.None);
 
         decimal Amount(MeasurementQuantity q) => q is MeasurementQuantity.ObservedValue v ? v.Amount : 0m;
         var company = Amount(lines.Single(l => l.Name == "monthly-cost-total").Quantity);

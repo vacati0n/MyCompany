@@ -176,7 +176,8 @@ public sealed class CapabilityGateway : ICapabilityGateway
                     $"held at floor {hold.FloorRequired}: {hold.Reason}; routes tried: {string.Join(",", hold.RoutesTried)}",
                     null, null, null,
                     _ => new CapabilityOutcome.Held(hold.Reason, hold.FloorRequired, hold.EscalatesAt, hold.EscalateToOwner),
-                    cancellationToken).ConfigureAwait(false),
+                    cancellationToken,
+                    new HeldOutcomeDraft(hold.Reason, hold.EscalatesAt, request.HoldTimeout, hold.EscalateToOwner)).ConfigureAwait(false),
 
             CapabilityResolution.Resolved resolved =>
                 await ExecuteResolvedAsync(held, admission, request, context, resolved, cancellationToken).ConfigureAwait(false),
@@ -223,7 +224,8 @@ public sealed class CapabilityGateway : ICapabilityGateway
             + $"and escalates at {hold.EscalatesAt:O}; routes tried: {string.Join(",", hold.RoutesTried)}",
             null, null, null,
             _ => new CapabilityOutcome.Held(hold.Reason, hold.FloorRequired, hold.EscalatesAt, hold.EscalateToOwner),
-            cancellationToken);
+            cancellationToken,
+            new HeldOutcomeDraft(hold.Reason, hold.EscalatesAt, request.HoldTimeout, hold.EscalateToOwner));
     }
 
     /// <summary>
@@ -289,7 +291,12 @@ public sealed class CapabilityGateway : ICapabilityGateway
                         resolved.EffectiveFloorApplied,
                         admission.Reservation.Instant + request.HoldTimeout,
                         EscalatedToOwner: true),
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken,
+                    new HeldOutcomeDraft(
+                        RefusalReason.NoAvailableRoute,
+                        admission.Reservation.Instant + request.HoldTimeout,
+                        request.HoldTimeout,
+                        EscalatesToOwner: true)).ConfigureAwait(false);
 
             case RouteTarget.NonAiSubstitute substitute:
                 // Routes to a member of the deterministic task set, which holds no dependency on
@@ -597,7 +604,8 @@ public sealed class CapabilityGateway : ICapabilityGateway
         MediaCompany.Domain.Capabilities.ReasoningTier? servedTier,
         string? deterministicTaskName,
         Func<OperationRecord, CapabilityOutcome> project,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        HeldOutcomeDraft? held = null)
     {
         var operation = await transaction.Operations.RecordAsync(
             new OperationDraft
@@ -621,7 +629,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
             },
             cancellationToken).ConfigureAwait(false);
 
-        await RecordDecisionAsync(transaction, admission, operation, ReservationHeld, cancellationToken).ConfigureAwait(false);
+        await RecordDecisionAsync(transaction, admission, operation, ReservationHeld, cancellationToken, held).ConfigureAwait(false);
 
         await transaction.Audit.AppendAsync(
             new AuditEntryDraft
@@ -649,10 +657,14 @@ public sealed class CapabilityGateway : ICapabilityGateway
         Admission admission,
         OperationRecord operation,
         string reservationStatement,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        HeldOutcomeDraft? held = null) =>
         transaction.Admission.RecordDecisionAsync(
             new AdmissionDecisionDraft
             {
+                // The held outcome, on a held admission only, written beside the decision on this transaction
+                // (the AI-management change, decision D-006 of its design).
+                Held = held,
                 Operation = operation.Id,
                 Controller = admission.Controller,
                 Selection = admission.Record.Selection,

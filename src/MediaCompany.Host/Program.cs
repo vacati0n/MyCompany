@@ -9,9 +9,11 @@ using Npgsql;
 // The one long-running service on one node (stack O-005).
 //
 // This wave publishes nothing, creates no channel and no account, and commits no spend
-// (constraint C-013). The entry point therefore does three things and stops: it installs the
-// record store, it produces the operating registers from the company's own records, and it prints
-// the measurable-now report with every deferred measure named. Nothing here reaches a provider.
+// (constraint C-013). The entry point installs the record store, produces the operating registers
+// from the company's own records, prints the measurable-now report with every deferred measure
+// named, and, from the AI-management change, prints the weekly management reports and the CEO brief
+// and the read-only dashboard from one read of the company's records. Nothing here reaches a
+// provider, calls a model, writes a file or opens a listener.
 
 var connectionString = Environment.GetEnvironmentVariable("MEDIACOMPANY_CONNECTION_STRING");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -89,6 +91,11 @@ switch (command)
         // registration of either to resolve.
         _ = provider.GetRequiredService<IBenchmarkReader>();
 
+        // The AI-management capability: the company record reader, read members only, and the management
+        // surface over it, which takes that reader and nothing else.
+        _ = provider.GetRequiredService<ICompanyRecordReader>();
+        _ = provider.GetRequiredService<ManagementReportService>();
+
         Console.WriteLine("Composition root resolved.");
         Console.WriteLine("  capability egress: ICapabilityGateway only; no provider adapter is registered or registrable.");
         Console.WriteLine("  credentials:       opaque scoped handles; no secret value passes through this process boundary.");
@@ -97,6 +104,7 @@ switch (command)
         Console.WriteLine("  publishing sequence: resolved; it ends at composition and reaches no capability.");
         Console.WriteLine("  channel readings:   resolved; every reading partitions by channel, and nothing records a channel value.");
         Console.WriteLine("  benchmark record:   resolved, read members only; nothing records an observation, and no metered call exists to make one.");
+        Console.WriteLine("  management surface: resolved over one read-only snapshot; it writes nothing, calls no model and offers no action.");
         Console.WriteLine($"  declared version:   {typeof(CompositionRoot).Assembly.GetName().Version}");
         return 0;
     }
@@ -125,7 +133,9 @@ switch (command)
     case "report":
     {
         var reporting = provider.GetRequiredService<ReportingService>();
-        var period = reporting.CurrentPeriod();
+
+        // The month on the DATASTORE'S clock, never the process clock (the AI-management change, decision D-015).
+        var period = await reporting.CurrentPeriodAsync(cancellation.Token);
 
         Console.WriteLine($"Measurable now, period {period:yyyy-MM}:");
         foreach (var measure in await reporting.MeasurableNowAsync(period, cancellation.Token))
@@ -143,7 +153,24 @@ switch (command)
         return 0;
     }
 
+    case "weekly":
+    case "dashboard":
+    {
+        // ONE READ of the company's records, composed into every surface (the AI-management change). An optional
+        // second argument names an ISO week, as 2026-W41; without it the week is the one containing the
+        // datastore's instant. A malformed week and a week that does not exist are refused by name with exit 2.
+        // Console text only: no file is written and no listener is opened.
+        var exit = await ManagementConsole.RunAsync(
+            provider.GetRequiredService<ManagementReportService>(),
+            command,
+            args.Length > 1 ? args[1] : null,
+            Console.Out,
+            Console.Error,
+            cancellation.Token);
+        return (int)exit;
+    }
+
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report.");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard.");
         return 2;
 }

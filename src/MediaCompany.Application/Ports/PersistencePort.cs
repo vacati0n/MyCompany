@@ -263,7 +263,21 @@ public sealed record AdmissionDecisionDraft
 
     /// <summary>Whether the admitted month's reservation held to the booking, or was lost and re-taken. Required.</summary>
     public required string ReservationStatement { get; init; }
+
+    /// <summary>
+    /// The held outcome, on a held admission only (the AI-management change, decision D-006 of its design):
+    /// the ledger writes it to the held-outcome record beside the decision, on the same transaction, so a held
+    /// outcome and its record commit or roll back together. Null on every other outcome.
+    /// </summary>
+    public HeldOutcomeDraft? Held { get; init; }
 }
+
+/// <summary>
+/// What one held admission outcome records: its reason from the closed refusal set, the instant it escalates
+/// at as the boundary computed it from the reserved instant, the hold timeout the request declared, and
+/// whether it escalates to the owner.
+/// </summary>
+public sealed record HeldOutcomeDraft(RefusalReason Reason, DateTimeOffset EscalatesAt, TimeSpan HoldTimeout, bool EscalatesToOwner);
 
 /// <summary>
 /// The benchmark record's writer (decision D-002 of the AI-economics design). There is no update and

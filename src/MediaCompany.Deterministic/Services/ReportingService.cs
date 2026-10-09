@@ -36,18 +36,22 @@ public sealed record ReportedMeasure(string Name, MeasurementQuantity Quantity, 
 public sealed class ReportingService
 {
     private readonly IChannelPartitionReader _partitions;
-    private readonly IClock _clock;
+    private readonly ICompanyRecordReader _records;
 
     /// <summary>
     /// The report reads ONE source, the channel partition of the operation record (the multi-channel
     /// change, decision D-003, as corrected in its review): the company lines and the channel lines are
     /// the datastore's aggregation of the same rows in the same read, so every additive company line is
     /// the exact sum of its channel lines by construction, in a month that is not final as in one that is.
+    ///
+    /// Its current month comes from the datastore's clock through the company record reader (the
+    /// AI-management change, decision D-015 of its design), never from the process clock; the closure the
+    /// partition reading takes is unchanged.
     /// </summary>
-    public ReportingService(IChannelPartitionReader partitions, IClock clock)
+    public ReportingService(IChannelPartitionReader partitions, ICompanyRecordReader records)
     {
         _partitions = partitions;
-        _clock = clock;
+        _records = records;
     }
 
     public async Task<IReadOnlyList<ReportedMeasure>> MeasurableNowAsync(DateOnly period, CancellationToken cancellationToken)
@@ -130,11 +134,12 @@ public sealed class ReportingService
         return reported.Any(r => deferredNames.Contains(r.Name));
     }
 
-    public DateOnly CurrentPeriod()
-    {
-        var now = _clock.UtcNow;
-        return new DateOnly(now.Year, now.Month, 1);
-    }
+    /// <summary>
+    /// The current month on the DATASTORE'S clock (the AI-management change, decision D-015 of its design): a
+    /// process clock running a day ahead of or behind the datastore names the same month as the datastore.
+    /// </summary>
+    public Task<DateOnly> CurrentPeriodAsync(CancellationToken cancellationToken) =>
+        _records.CurrentMonthAsync(cancellationToken);
 }
 
 /// <summary>
