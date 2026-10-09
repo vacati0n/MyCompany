@@ -153,6 +153,45 @@ internal sealed class FakeAdmission
     /// <summary>Set to make the next operation write fail, standing in for a transaction lost after the provider call.</summary>
     public bool LoseNextOperationWrite { get; set; }
 
+    /// <summary>
+    /// The item's recorded cap as the datastore would read it (the production change), or null for no cap. The open
+    /// reservations it reports grow with every committed reservation no committed operation has reconciled.
+    /// </summary>
+    public ItemCapReading? ItemCap { get; set; }
+
+    /// <summary>The reservations that became durable, on the companion transactions that committed them.</summary>
+    public List<ReservationDraft> CommittedReservations { get; } = [];
+
+    /// <summary>The operations that became durable, by identifier, so an open reservation is one with none.</summary>
+    public Func<IReadOnlyCollection<OperationId>>? Booked { get; set; }
+
+    /// <summary>The billed kinds of each model (the production change), as the snapshot reads them.</summary>
+    public Dictionary<ModelId, IReadOnlyList<PriceUnitKind>> BilledKinds { get; } = [];
+
+    /// <summary>Set to make the next reservation write fail, standing in for a companion transaction that cannot commit.</summary>
+    public bool FailNextReservation { get; set; }
+
+    /// <summary>The item cap reading with every open reservation counted at its worst case.</summary>
+    internal ItemCapReading? CapReading()
+    {
+        if (ItemCap is not { } cap)
+        {
+            return null;
+        }
+
+        // The in-memory recorder books every operation at zero, so a reconciled reservation stands in for its booked
+        // cost: a booking at the worst case costs exactly the worst case the datastore would compute.
+        var booked = Booked?.Invoke() ?? [];
+        var open = CommittedReservations.Where(r => !booked.Contains(r.Operation)).ToArray();
+        var reconciled = CommittedReservations.Where(r => booked.Contains(r.Operation)).ToArray();
+        return cap with
+        {
+            Booked = new Money(cap.Booked.Amount + reconciled.Sum(r => r.WorstCaseAmount.Amount), cap.Cap.Currency),
+            OpenReservations = new Money(cap.OpenReservations.Amount + open.Sum(r => r.WorstCaseAmount.Amount), cap.Cap.Currency),
+            OpenReservationCount = cap.OpenReservationCount + open.Length,
+        };
+    }
+
     /// <summary>Puts a full price row set (input, output and cached) in force for a model.</summary>
     public void Price(ModelId model, decimal input, decimal output, decimal cached, DateTimeOffset from)
     {
@@ -170,8 +209,20 @@ internal sealed class FakeAdmission
 }
 
 /// <summary>The admission ledger over <see cref="FakeAdmission"/>, on one transaction.</summary>
-internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDecisionDraft> pending) : IAdmissionLedger
+internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDecisionDraft> pending, List<ReservationDraft>? reservations = null) : IAdmissionLedger
 {
+    public Task RecordReservationAsync(ReservationDraft reservation, CancellationToken cancellationToken)
+    {
+        if (state.FailNextReservation)
+        {
+            state.FailNextReservation = false;
+            throw new InvalidOperationException("induced failure of the companion transaction's reservation write");
+        }
+
+        (reservations ?? throw new InvalidOperationException("This ledger records no reservation.")).Add(reservation);
+        return Task.CompletedTask;
+    }
+
     private BookingReservation? _reservation;
 
     public Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken)
@@ -220,7 +271,11 @@ internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDec
             await GoverningReadingsAsync(attribution, companyAllotment, cancellationToken),
             taskClass is { } task
                 ? state.Evidence.Where(o => routes.Any(r => r.Id == o.Route) && o.TaskClass == task && o.ObservedAt <= at).ToArray()
-                : []);
+                : [])
+        {
+            ItemCap = state.CapReading(),
+            BilledKinds = state.BilledKinds.Where(k => models.Contains(k.Key)).ToDictionary(k => k.Key, k => k.Value),
+        };
     }
 
     public Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken)
@@ -317,6 +372,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
         private readonly List<OperationRecord> _pendingOperations = [];
         private readonly List<AuditEntry> _pendingEntries = [];
         private readonly List<AdmissionDecisionDraft> _pendingDecisions = [];
+        private readonly List<ReservationDraft> _pendingReservations = [];
         private bool _committed;
 
         internal Transaction(FakeUnitOfWork owner)
@@ -324,7 +380,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             _owner = owner;
             Audit = new Appender(_pendingEntries);
             Operations = new Recorder(_pendingOperations, owner);
-            Admission = new FakeAdmissionLedger(owner.Admission, _pendingDecisions);
+            Admission = new FakeAdmissionLedger(owner.Admission, _pendingDecisions, _pendingReservations);
             Benchmarks = new Benchmarkless();
             Jobs = new Jobless();
             Budgets = new Budgeter(owner);
@@ -365,6 +421,7 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             _owner.Operations.AddRange(_pendingOperations);
             _owner.AuditEntries.AddRange(_pendingEntries);
             _owner.Decisions.AddRange(_pendingDecisions);
+            _owner.Admission.CommittedReservations.AddRange(_pendingReservations);
             _owner.CommittedAvailability.AddRange(_owner.PendingAvailability);
             _owner.PendingAvailability.Clear();
             _owner.Commits++;

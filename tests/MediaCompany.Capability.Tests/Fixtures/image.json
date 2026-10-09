@@ -1,0 +1,17 @@
+{
+  "source": "the implementing role's recorded knowledge of the speech-and-image vendor's published API reference for its image endpoint",
+  "recordedOn": "2026-10-09",
+  "verifiedFirstHand": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/images/generations",
+    "authentication": "Authorization: Bearer <secret>",
+    "bodyMembers": [ "model", "prompt", "size", "n" ]
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": { "created": 1760000000, "data": [ { "b64_json": "<a base64 PNG>" } ], "usage": { "input_tokens": 20, "output_tokens": 4160 } },
+    "usageInBody": true
+  }
+}
