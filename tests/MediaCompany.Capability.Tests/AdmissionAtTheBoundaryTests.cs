@@ -149,6 +149,77 @@ public sealed class AdmissionAtTheBoundaryTests
         Assert.Equal(new DateOnly(2026, 11, 1), Assert.Single(h.Work.EvaluatedMonths));
     }
 
+    /// <summary>
+    /// ONE ATTEMPT, BOOKED ONCE (the correction cycle). The admission's commit reaches the store and its
+    /// reply is lost: the recovery meets the first record under the attempt's one identifier and books
+    /// nothing more — one operation, one decision, one audit entry — and returns the recorded operation.
+    /// </summary>
+    [Fact]
+    public async Task ACommitWhoseReplyIsLostBooksTheAttemptOnce()
+    {
+        var h = Build(processClock: Reserved);
+        var adapter = new AdapterDouble(Account, () => h.Work.LoseNextCommitReply = true);
+        h.Adapters[Account] = adapter;
+        AddProviderRoute(h);
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await h.Gateway.ExecuteAsync(Request(floor: 70), Context(), CancellationToken.None));
+
+        Assert.Equal(1, adapter.Calls);
+        var operation = Assert.Single(h.Work.Operations);
+        Assert.Equal(operation.Id, completed.Operation.Id);
+        Assert.Single(h.Work.Decisions);
+        Assert.Single(h.Work.AuditEntries);
+    }
+
+    /// <summary>
+    /// A cancellation that arrives once the provider has returned does not roll back the record of the cost
+    /// already incurred: the attempt is recorded and committed.
+    /// </summary>
+    [Fact]
+    public async Task ACancellationAfterTheProviderReturnedStillRecordsTheAttempt()
+    {
+        var h = Build(processClock: Reserved);
+        using var cancellation = new CancellationTokenSource();
+        var adapter = new AdapterDouble(Account, cancellation.Cancel);
+        h.Adapters[Account] = adapter;
+        AddProviderRoute(h);
+
+        Assert.IsType<CapabilityOutcome.Completed>(await h.Gateway.ExecuteAsync(Request(floor: 70), Context(), cancellation.Token));
+
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.Single(h.Work.Operations);
+        Assert.Equal(1, h.Work.Commits);
+    }
+
+    /// <summary>
+    /// A METERED admission takes the company scope's hold and then the channel scope's, in that order, and
+    /// is decided on a snapshot read after both are held; an admission costing nothing takes neither.
+    /// </summary>
+    [Fact]
+    public async Task AMeteredAdmissionHoldsTheCompanyScopeThenTheChannelScopeBeforeItDecides()
+    {
+        var h = Build(processClock: Reserved);
+        h.Adapters[Account] = new AdapterDouble(Account);
+        AddProviderRoute(h);
+        var request = Request(floor: 70);
+
+        Assert.IsType<CapabilityOutcome.Completed>(await h.Gateway.ExecuteAsync(request, Context(), CancellationToken.None));
+        Assert.Equal(["company", $"channel:{request.Attribution.Channel}"], h.Work.Admission.Holds);
+        Assert.Equal(2, h.Work.Admission.Snapshots);
+
+        var free = Build(processClock: Reserved);
+        var hold = new Route(
+            RouteId.New(), CapabilityClass.EditorialReasoning, RouteTier.Primary,
+            new RouteTarget.HoldAndEscalate("the recorded emergency position"),
+            new QualityRating(100), new ContextCapacity(int.MaxValue), "no provider", new DateOnly(2026, 9, 20));
+        free.Routes.Routes.Add(hold);
+        free.Availability.States[hold.Id] = RouteAvailability.Serving(hold.Id, Reserved);
+
+        Assert.IsType<CapabilityOutcome.Held>(await free.Gateway.ExecuteAsync(Request(floor: 70), Context(), CancellationToken.None));
+        Assert.Empty(free.Work.Admission.Holds);
+        Assert.Equal(1, free.Work.Admission.Snapshots);
+    }
+
     // -----------------------------------------------------------------------
 
     private sealed record Harness(

@@ -790,6 +790,204 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     }
 
     // -----------------------------------------------------------------------
+    // The correction cycle
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// ONE ATTEMPT, BOOKED ONCE, AGAINST THE STORE. The admission's commit reaches the store and its reply is
+    /// lost (the unit of work commits and then fails, as a dropped connection would after the commit). The
+    /// recovery meets the stored operation under the attempt's one identifier and books nothing more: one
+    /// metered operation, one decision, one audit entry naming it.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ACommitWhoseReplyIsLostBooksTheAttemptOnce()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        var standIn = new StandInProvider(Alpha);
+        var gateway = new CapabilityGateway(
+            new LostReplyUnitOfWork(new NpgsqlUnitOfWork(Source, new FixedClock(DateTimeOffset.UnixEpoch))),
+            new StandInBroker(),
+            new Dictionary<ProviderAccountId, IProviderAdapter> { [Alpha] = standIn });
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(
+            await gateway.ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.Equal(1, standIn.Calls);
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM admission_decisions"));
+        Assert.Equal(1L, await ScalarAsync<long>(
+            "SELECT COUNT(*) FROM audit_entries WHERE outputs_reference = @o",
+            c => c.Parameters.AddWithValue("o", $"operation:{completed.Operation.Id}")));
+        Assert.Equal(0.0105m, completed.Operation.ComputedCost.Amount);
+    }
+
+    /// <summary>
+    /// A cancellation requested once the stand-in has returned does not roll back the record of the cost the
+    /// attempt incurred: the operation is booked and committed.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ACancellationAfterTheProviderReturnedStillRecordsTheAttempt()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        using var cancellation = new CancellationTokenSource();
+        var standIn = new StandInProvider(Alpha, () =>
+        {
+            cancellation.Cancel();
+            return Task.CompletedTask;
+        });
+
+        Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), cancellation.Token));
+
+        Assert.True(cancellation.IsCancellationRequested);
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
+    }
+
+    /// <summary>
+    /// TWO SESSIONS, ONE SCOPE. A second metered admission of the same channel starts while the first is in
+    /// its provider call. It waits on the scope hold rather than reading spend that excludes the first's
+    /// booking; once the first commits it reads that booking, the headroom left is below its estimate, and it
+    /// is held under the exceeded reason: booked spend never passes a budget that neither reading reached.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task TwoConcurrentMeteredAdmissionsOfOneScopeCannotTogetherPassTheBudget()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 0.0150m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+
+        Task<CapabilityOutcome>? second = null;
+        var secondStandIn = new StandInProvider(Alpha);
+        var first = new StandInProvider(Alpha, async () =>
+        {
+            second = Task.Run(() => Gateway(new FixedClock(DateTimeOffset.UnixEpoch), secondStandIn)
+                .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+            await Task.Delay(500);
+            Assert.False(second.IsCompleted, "the second admission of the scope decided while the first was in its call");
+        });
+
+        Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), first)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+        var outcome = await second!;
+
+        var held = Assert.IsType<CapabilityOutcome.Held>(outcome);
+        Assert.Equal(RefusalReason.CostCeilingOrBudgetExceeded, held.Reason);
+        Assert.Equal(0, secondStandIn.Calls);
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT COUNT(*) FROM agent_costs WHERE model_id IS NOT NULL"));
+        Assert.True(await ScalarAsync<decimal>("SELECT COALESCE(SUM(computed_cost), 0) FROM agent_costs") <= 0.0150m);
+    }
+
+    /// <summary>
+    /// The company's metered allotment caps each estimate exactly as channel headroom does (the interim
+    /// answer to the allotment question): with the company's booked spend at about 58 percent of the allotment,
+    /// so the controller demands only the alert, an estimate larger than what remains of the allotment is held
+    /// under the exceeded reason although the channel's own budget would admit it.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task TheCompanyAllotmentCapsEachEstimate()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 100m);
+        var alpha = await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        await RecordOperationAsync(alpha, AlphaModel, ChannelB, ItemB, 0, 1_333_334, 0, 10);
+        var standIn = new StandInProvider(Alpha);
+
+        var request = new CapabilityRequest(
+            CapabilityClass.BulkClassification, ReasoningTier.Standard, new QualityRating(60), new ContextCapacity(8_000),
+            new Money(100m), Criticality.Routine, new Attribution(ItemA, ChannelA, Department, Agent),
+            new EstimatedUnits(0, 1_000_000, 0), TimeSpan.FromHours(4), ReducedFloorPolicy.Forbidden);
+
+        var held = Assert.IsType<CapabilityOutcome.Held>(
+            await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn).ExecuteAsync(request, Context(), CancellationToken.None));
+
+        Assert.Equal(RefusalReason.CostCeilingOrBudgetExceeded, held.Reason);
+        Assert.Equal(0, standIn.Calls);
+        var operation = await OperationInstantAsync(Outcome: "Held", latest: true);
+        Assert.Equal("AlertOnly", (await ReadReadingAsync(operation.Id, "Company")).Action);
+    }
+
+    /// <summary>
+    /// ONE MONTH, ONE ANSWER. With an operation whose cost is not stated booked into the month, the cost
+    /// controller reads the channel's and the company's spend unmeasured, and so does every delivered reading
+    /// that sums cost: the operation partition's cost, variance and cost by capability class, the budget
+    /// partition's utilisation, the company ceiling's cost and utilisation, the period cost and the item cost;
+    /// no alert is raised from the partial sum; and the ceiling reading states the controller's basis.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AMonthHoldingAnUnstatedCostReadsUnmeasuredInEveryReadingAsTheControllerDoes()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 0.0200m);
+        var alpha = await InsertProviderRouteAsync(CapabilityClass.EditorialReasoning, "Primary", Alpha, AlphaModel, 90);
+        await InsertSubstituteRouteAsync(CapabilityClass.EditorialReasoning, "Emergency", null);
+        await RecordOperationAsync(alpha, AlphaModel, ChannelA, ItemA, 1_000, 500, 0, 10);
+        await RecordOperationAsync(alpha, AlphaModel, ChannelA, ItemA, 1_000, 0, 1, 10);
+
+        var substituted = Assert.IsType<CapabilityOutcome.Substituted>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch))
+            .ExecuteAsync(Request(CapabilityClass.EditorialReasoning, floor: 60), Context(), CancellationToken.None));
+        Assert.Equal("Unmeasured", (await ReadReadingAsync(substituted.Operation.Id, "Channel")).SpendCase);
+        Assert.Equal("Unmeasured", (await ReadReadingAsync(substituted.Operation.Id, "Company")).SpendCase);
+
+        var analytics = ChannelTestKit.Analytics(Source, new FixedClock(DateTimeOffset.UnixEpoch));
+        var operations = await analytics.OperationsByChannelAsync(month, CancellationToken.None);
+        var channel = operations.Channels.Single(c => c.Channel is { } id && id.Equals(ChannelA));
+        Assert.IsType<MeasurementQuantity.Unmeasured>(channel.Cost);
+        Assert.IsType<MeasurementQuantity.Unmeasured>(operations.Company.Cost);
+        Assert.IsType<MeasurementQuantity.Unmeasured>(operations.Company.VarianceAgainstEnvelope);
+        Assert.IsType<MeasurementQuantity.Unmeasured>(operations.Company.CostByCapability[CapabilityClass.EditorialReasoning]);
+        Assert.Contains("not stated", Assert.IsType<MeasurementQuantity.Unmeasured>(channel.Cost).Detail, StringComparison.Ordinal);
+
+        var budgets = await analytics.BudgetsByChannelAsync(month, CancellationToken.None);
+        var budget = budgets.Channels.Single(c => c.Channel.Equals(ChannelA));
+        Assert.IsType<MeasurementQuantity.Unmeasured>(budget.Utilised);
+        Assert.IsType<MeasurementQuantity.Unmeasured>(budget.Utilisation);
+        Assert.All(budget.Thresholds, t => Assert.IsType<MeasurementQuantity.Unmeasured>(t.Reached));
+        Assert.IsType<MeasurementQuantity.Unmeasured>(budgets.Company.CompanyCost);
+        Assert.IsType<MeasurementQuantity.Unmeasured>(budgets.Company.Utilisation);
+        Assert.Equal(34.42m, Assert.IsType<RecordedAmount.Recorded>(budgets.Company.ControllerBasis).Amount.Amount);
+        Assert.Contains("cost controller governs metered admission", budgets.Company.CoverageStatement, StringComparison.Ordinal);
+
+        Assert.IsType<MeasurementQuantity.Unmeasured>((await analytics.PeriodCostAsync(month, CancellationToken.None)).Cost);
+        Assert.IsType<MeasurementQuantity.Unmeasured>((await analytics.ItemCostAsync(ItemA, CancellationToken.None)).Cost);
+
+        await using (var transaction = await new NpgsqlUnitOfWork(Source, new FixedClock(DateTimeOffset.UnixEpoch)).BeginAsync(CancellationToken.None))
+        {
+            var alerts = await transaction.Budgets.EvaluateAsync(
+                new Attribution(ItemA, ChannelA, Department, Agent), month, await DatastoreNowAsync(), CancellationToken.None);
+            Assert.Empty(alerts);
+            await transaction.CommitAsync(CancellationToken.None);
+        }
+
+        Assert.Equal(0L, await ScalarAsync<long>("SELECT COUNT(*) FROM budget_alerts"));
+    }
+
+    /// <summary>
+    /// THE PRICE ADMITTED IS THE PRICE BOOKED. During the stand-in's call another session rewrites the price
+    /// rows in force in place; the operation is costed at the prices the admission's one snapshot read, its
+    /// cost stated, not at a later lookup in the editable register.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task APriceEditedDuringTheCallDoesNotChangeTheBookedCost()
+    {
+        var month = MonthOf(await DatastoreNowAsync());
+        await InsertBudgetAsync(ChannelA, month, 1.00m);
+        await InsertProviderRouteAsync(CapabilityClass.BulkClassification, "Primary", Alpha, AlphaModel, 90);
+        var standIn = new StandInProvider(Alpha, () =>
+            ExecuteAsync("UPDATE model_prices SET unit_price = 1 WHERE model_id = 'alpha-reasoning'"));
+
+        var completed = Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new FixedClock(DateTimeOffset.UnixEpoch), standIn)
+            .ExecuteAsync(Request(CapabilityClass.BulkClassification, floor: 60), Context(), CancellationToken.None));
+
+        Assert.Equal(0.0105m, completed.Operation.ComputedCost.Amount);
+        Assert.True(completed.Operation.CostStated);
+        Assert.Equal(1m, await ScalarAsync<decimal>("SELECT max(unit_price) FROM model_prices WHERE model_id = 'alpha-reasoning'"));
+    }
+
+    // -----------------------------------------------------------------------
     // The tier distribution and month finality
     // -----------------------------------------------------------------------
 
@@ -979,8 +1177,10 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         await Task.Delay(300);
         Assert.False(second.IsCompleted);
         await first.CommitAsync(CancellationToken.None);
+        // The pair starts from one recorded state, so the sixth resource's from-state check, which fires
+        // first, refuses the second writer: its named outcome is the stale-state reason, not the same-instant one.
         var named = await Assert.ThrowsAsync<GateStateConflictException>(() => second);
-        Assert.True(Enum.IsDefined(named.Reason));
+        Assert.Equal(GateConflictReason.FromStateNotRecorded, named.Reason);
         Assert.Equal(1L, await CountTransitionsAsync(ItemA, 3));
     }
 
@@ -1023,6 +1223,12 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             store.SupersedeAsync(Value(ConfigurationKeys.BudgetAmount, channelScope, "x", from), CancellationToken.None));
         await store.SupersedeAsync(Value(ConfigurationKeys.CredentialTtlSeconds, companyScope, "fixture", from), CancellationToken.None);
+
+        // A well-formed company scope naming a company the register does not hold is refused (the correction cycle).
+        var unregistered = CompanyConfigurationScope.ScopeFor(CompanyId.New());
+        var refused = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            store.SupersedeAsync(Value(ProductionConfigurationKeys.Pillars, unregistered, "x", from), CancellationToken.None));
+        Assert.Contains("holds no company", refused.Message, StringComparison.Ordinal);
 
         Assert.True(PublishingConfigurationKeys.Admitted.All(k => ChannelConfigurationKeys.ReachesAControl(k)));
         Assert.Equal(
@@ -1462,6 +1668,49 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
             c.Parameters.AddWithValue("itemA", ItemA.Value);
             c.Parameters.AddWithValue("itemB", ItemB.Value);
         });
+
+    /// <summary>
+    /// A unit of work whose FIRST transaction's commit reaches the store and then fails, as a dropped
+    /// connection after a commit would: what the commit wrote is durable and the caller cannot know it.
+    /// </summary>
+    private sealed class LostReplyUnitOfWork(IUnitOfWork inner) : IUnitOfWork
+    {
+        private bool _lost;
+
+        public async Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken)
+        {
+            var transaction = await inner.BeginAsync(cancellationToken);
+            if (_lost)
+            {
+                return transaction;
+            }
+
+            _lost = true;
+            return new LosingReply(transaction);
+        }
+
+        private sealed class LosingReply(IWorkTransaction inner) : IWorkTransaction
+        {
+            public IAuditAppender Audit => inner.Audit;
+            public IOperationRecorder Operations => inner.Operations;
+            public IJobWriter Jobs => inner.Jobs;
+            public IBudgetEvaluator Budgets => inner.Budgets;
+            public IGateWriter Gates => inner.Gates;
+            public IRouteAvailabilityWriter Availability => inner.Availability;
+            public IDispatchWriter Dispatches => inner.Dispatches;
+            public IDossierWriter Dossiers => inner.Dossiers;
+            public IAdmissionLedger Admission => inner.Admission;
+            public IBenchmarkWriter Benchmarks => inner.Benchmarks;
+
+            public async Task CommitAsync(CancellationToken cancellationToken)
+            {
+                await inner.CommitAsync(cancellationToken);
+                throw new IOException("induced loss of the commit's reply after the commit reached the store");
+            }
+
+            public ValueTask DisposeAsync() => inner.DisposeAsync();
+        }
+    }
 
     private sealed class FixedClock(DateTimeOffset now) : IClock
     {
