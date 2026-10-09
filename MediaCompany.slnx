@@ -7,6 +7,7 @@
     <Project Path="src/MediaCompany.Domain/MediaCompany.Domain.csproj" />
     <Project Path="src/MediaCompany.Host/MediaCompany.Host.csproj" />
     <Project Path="src/MediaCompany.Persistence/MediaCompany.Persistence.csproj" />
+    <Project Path="src/MediaCompany.Production/MediaCompany.Production.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MediaCompany.Architecture.Tests/MediaCompany.Architecture.Tests.csproj" />
