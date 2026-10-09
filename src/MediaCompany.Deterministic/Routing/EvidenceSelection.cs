@@ -60,19 +60,31 @@ public static class EvidenceSelection
             .Select(route => Figures(route, taskClass, currency, evidence))
             .ToArray();
 
-        var gaps = figures.SelectMany(f => f.Gaps).ToArray();
+        // THE COUNTED CANDIDATES (the AI-management change, correction cycle): the provider routes of the class,
+        // the only routes that can hold an observation. A non-AI substitute or a hold-and-escalate candidate is
+        // excluded from the evidence comparison and from the count, exactly as the CTO report excludes it, and
+        // keeps its configured position after the ranked providers.
+        var counted = ComparableRuns.CountedCandidates(configured).ToHashSet();
+        var compared = figures.Where(f => counted.Contains(f.Route.Id)).ToArray();
+        var excluded = figures.Where(f => !counted.Contains(f.Route.Id)).ToArray();
+        var gaps = compared.SelectMany(f => f.Gaps).ToArray();
 
-        // Every candidate's count of comparable runs against the owner's ten, stated in every basis.
-        var counts = taskClass is { } counted
-            ? configured.Select(route => (Route: route.Id, Count: ComparableRuns.Of(route.Id, counted, evidence))).ToArray()
+        // Every counted candidate's count of comparable runs against the owner's ten, stated in every basis, and
+        // THE count of the class, the one function the CTO report uses.
+        var counts = taskClass is { } named
+            ? compared.Select(f => (Route: f.Route.Id, Count: ComparableRuns.Of(f.Route.Id, named, evidence))).ToArray()
             : [];
-        var belowTen = counts.Where(c => !ComparableRuns.ReachesOwnersTen(c.Count)).ToArray();
-        var countStatement = counts.Length == 0
+        var classCount = taskClass is { } task ? ComparableRuns.OfCandidates(configured, task, evidence) : null;
+        var belowTen = classCount is not null && !ComparableRuns.ReachesOwnersTen(classCount);
+        var countStatement = classCount is null
             ? "no comparable run is counted, because no task class is named"
-            : "comparable runs of task class " + taskClass + ": " + string.Join(
-                "; ", counts.Select(c => $"route {c.Route} {ComparableRuns.AgainstOwnersTen(c.Count)}"));
+            : $"comparable runs of task class {taskClass}, least over the {compared.Length} provider candidates: "
+              + ComparableRuns.AgainstOwnersTen(classCount)
+              + (counts.Length == 0 ? string.Empty : " (" + string.Join(
+                  "; ", counts.Select(c => $"route {c.Route} {ComparableRuns.AgainstOwnersTen(c.Count)}")) + ")")
+              + (excluded.Length == 0 ? string.Empty : $"; {excluded.Length} candidates reaching no provider are not counted");
 
-        if (taskClass is null || gaps.Length > 0 || belowTen.Length > 0)
+        if (taskClass is null || gaps.Length > 0 || belowTen)
         {
             var reasons = new List<string>();
             if (taskClass is null)
@@ -82,11 +94,13 @@ public static class EvidenceSelection
 
             reasons.AddRange(gaps);
 
-            if (belowTen.Length > 0)
+            if (belowTen)
             {
                 reasons.Add(
-                    $"{belowTen.Length} of the {counts.Length} candidates hold fewer comparable runs than the owner's ten, "
-                    + "so no evidence ranking replaces the configured ordering");
+                    compared.Length == 0
+                        ? "no candidate reaches a provider, so there is no evidence to rank on"
+                        : "the candidates hold fewer comparable runs than the owner's ten, so no evidence ranking replaces "
+                          + "the configured ordering");
             }
 
             var why = string.Join("; ", reasons);
@@ -106,30 +120,35 @@ public static class EvidenceSelection
                 });
         }
 
-        // Every compared quantity of every candidate is observed in one unit: rank on evidence.
-        var meeting = figures.Where(f => f.MinimumQuality >= floor.Value).ToArray();
+        // Every compared quantity of every counted candidate is observed in one unit: rank on evidence. The
+        // candidates reaching no provider keep their configured order after the ranked providers.
+        var meeting = compared.Where(f => f.MinimumQuality >= floor.Value).ToArray();
         var ranked = meeting
             .OrderBy(f => f.MaximumCost)
             .ThenBy(f => (int)f.Route.Tier)
             .ThenBy(f => f.Route.Id.Value)
-            .Concat(figures.Where(f => f.MinimumQuality < floor.Value))
+            .Concat(compared.Where(f => f.MinimumQuality < floor.Value))
+            .Concat(excluded)
             .ToArray();
 
-        var rankedOn = figures.SelectMany(f => f.Observations).Select(o => o.Id).ToArray();
+        var rankedOn = compared.SelectMany(f => f.Observations).Select(o => o.Id).ToArray();
 
         var statement = meeting.Length == 0
-            ? $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {figures.Length} "
+            ? $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {compared.Length} "
               + $"candidates; no candidate's minimum observed quality meets the floor of {floor.Value} on the "
-              + $"{BenchmarkObservation.QualityRatingUnit}, so none is selected and nothing is served below the floor; "
+              + $"{BenchmarkObservation.QualityRatingUnit}, so {(excluded.Length > 0 ? "the first candidate reaching no provider is taken in its configured position" : "none is selected")} and nothing is served below the floor; "
               + $"every candidate holds at least the owner's ten comparable runs: {countStatement}"
-            : $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {figures.Length} "
+            : $"ranked on evidence: {rankedOn.Length} observations of task class {taskClass} across {compared.Length} "
               + $"candidates, each candidate's minimum observed quality against the floor of {floor.Value} on the "
               + $"{BenchmarkObservation.QualityRatingUnit} and its maximum observed cost in {currency}; the cheapest "
               + "candidate meeting the floor was taken, ties by route tier then identifier; every candidate holds at "
               + $"least the owner's ten comparable runs: {countStatement}";
 
         return new SelectionOutcome(
-            meeting.Length == 0 ? null : ranked[0].Route,
+            // Where no provider meets the floor on observation, a candidate reaching no provider, which already
+            // met the floor at the resolution's floor step, is taken in its configured position; with none,
+            // nothing is selected and nothing is served below the floor.
+            meeting.Length > 0 ? ranked[0].Route : excluded.FirstOrDefault()?.Route,
             new SelectionRecord
             {
                 Basis = SelectionBasis.Evidence,

@@ -158,74 +158,16 @@ switch (command)
     {
         // ONE READ of the company's records, composed into every surface (the AI-management change). An optional
         // second argument names an ISO week, as 2026-W41; without it the week is the one containing the
-        // datastore's instant. Console text only: no file is written and no listener is opened.
-        ReportWeek? week;
-        try
-        {
-            week = ReportWeek.Parse(args.Length > 1 ? args[1] : null);
-        }
-        catch (FormatException invalid)
-        {
-            Console.Error.WriteLine(invalid.Message);
-            return 2;
-        }
-
-        ManagementRead read;
-        try
-        {
-            read = await provider.GetRequiredService<ManagementReportService>().ReadAsync(week, cancellation.Token);
-        }
-        catch (CompanyReadException ended)
-        {
-            Console.Error.WriteLine($"The read ended without a snapshot ({ended.Failure}): {ended.Detail}");
-            return 3;
-        }
-
-        var reports = read.Reports;
-        foreach (var line in ManagementRendering.Header(
-                     reports.Instant, reports.StoredHorizon, reports.Week, reports.PeriodStart, reports.PeriodEnd, reports.FinalityStatement))
-        {
-            Console.WriteLine(line);
-        }
-
-        if (command == "weekly")
-        {
-            foreach (var report in reports.Lines.GroupBy(l => l.Report))
-            {
-                Console.WriteLine();
-                Console.WriteLine($"=== {report.Key} report ===");
-                foreach (var section in report.GroupBy(l => l.Heading))
-                {
-                    Console.WriteLine($"--- {section.Key} ---");
-                    foreach (var line in section)
-                    {
-                        Console.WriteLine($"  {ManagementRendering.Render(line)}");
-                    }
-                }
-            }
-
-            Console.WriteLine();
-            Console.WriteLine("=== CEO brief ===");
-            foreach (var section in read.Brief.Sections)
-            {
-                Console.WriteLine($"--- {section.Section} ---");
-                foreach (var item in section.Items)
-                {
-                    Console.WriteLine($"  {ManagementRendering.Render(item)}");
-                }
-            }
-        }
-        else
-        {
-            Console.WriteLine();
-            Console.WriteLine("=== CEO dashboard (read-only; one tile per brief line, from the same read) ===");
-            foreach (var tile in read.Tiles)
-            {
-                Console.WriteLine($"[{tile.Section}] {tile.Rendering}");
-            }
-        }
-
-        return 0;
+        // datastore's instant. A malformed week and a week that does not exist are refused by name with exit 2.
+        // Console text only: no file is written and no listener is opened.
+        var exit = await ManagementConsole.RunAsync(
+            provider.GetRequiredService<ManagementReportService>(),
+            command,
+            args.Length > 1 ? args[1] : null,
+            Console.Out,
+            Console.Error,
+            cancellation.Token);
+        return (int)exit;
     }
 
     default:

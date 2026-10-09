@@ -381,26 +381,12 @@ public static class RouteResolver
         return route.RatedQuality;
     }
 
-    private static bool IsAvailable(Route route, ResolutionInputs inputs)
-    {
-        if (route.Target is RouteTarget.ProviderRoute provider)
-        {
-            if (!inputs.AccountStatus.TryGetValue(provider.ProviderAccount, out var status) ||
-                status != ProviderAccountStatus.Active)
-            {
-                return false;
-            }
-        }
-
-        if (!inputs.Availability.TryGetValue(route.Id, out var availability))
-        {
-            // An unrecorded route has no serving state, so it is not a candidate. Decision D-008
-            // makes availability explicit rather than inferred, and absence is not "serving".
-            return false;
-        }
-
-        return availability.State == AvailabilityState.Serving;
-    }
+    // An unrecorded route has no serving state, so it is not a candidate. Decision D-008 makes availability
+    // explicit rather than inferred, and absence is not "serving". The step is defined once, beside the
+    // comparable-run count, so the CTO report excludes exactly the routes this step removes (the AI-management
+    // change, correction cycle).
+    private static bool IsAvailable(Route route, ResolutionInputs inputs) =>
+        ComparableRuns.IsAvailable(route, inputs.Availability, inputs.AccountStatus);
 
     /// <summary>
     /// Whether a route can be estimated at all: a target reaching no provider costs nothing, and a

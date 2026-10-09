@@ -2,6 +2,7 @@ using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Management;
 using MediaCompany.Domain.Publication;
+using MediaCompany.Domain.Registry;
 
 namespace MediaCompany.Application.Ports;
 
@@ -56,6 +57,21 @@ public sealed record ReportWeek(int IsoYear, int Week)
     }
 }
 
+/// <summary>
+/// A well-formed ISO week that does not exist, such as 2027-W53 (correction cycle): named, so the operator commands
+/// refuse it exactly as they refuse a malformed one.
+/// </summary>
+public sealed class ReportWeekNotFoundException : ArgumentException
+{
+    public ReportWeekNotFoundException(ReportWeek named, ReportWeek resolved)
+        : base($"ISO week {named} does not exist; the datastore resolves its Monday to week {resolved}. Name a week that exists.")
+    {
+        Named = named;
+    }
+
+    public ReportWeek Named { get; }
+}
+
 /// <summary>Why a company read ended without a snapshot. Each outcome is named; no other ends it.</summary>
 public enum CompanyReadFailure
 {
@@ -67,6 +83,12 @@ public enum CompanyReadFailure
 
     /// <summary>Any other datastore failure, its class named.</summary>
     ReadFailed = 3,
+
+    /// <summary>
+    /// The transaction-local statement bound was reached: the read itself was too slow. A lock wait ends at the
+    /// lower lock bound first, so this bound names slow execution, never a store being changed (correction cycle).
+    /// </summary>
+    ReadTooSlow = 4,
 }
 
 /// <summary>A company read that ended in one of its named outcomes, carrying what ended it.</summary>
@@ -142,6 +164,15 @@ public sealed record CompanySnapshot
 
     /// <summary>Every route the register holds, with its capability class.</summary>
     public required IReadOnlyList<Route> Routes { get; init; }
+
+    /// <summary>
+    /// Each route's latest recorded availability state and each provider account's status, as the snapshot holds
+    /// them (correction cycle): the CTO report counts comparable runs over the same available provider routes the
+    /// resolution function's availability step admits.
+    /// </summary>
+    public required IReadOnlyDictionary<RouteId, RouteAvailability> Availability { get; init; }
+
+    public required IReadOnlyDictionary<ProviderAccountId, ProviderAccountStatus> AccountStatus { get; init; }
 
     /// <summary>Every controller decision booked inside the week, as recorded.</summary>
     public required IReadOnlyList<RecordedControllerDecision> Decisions { get; init; }

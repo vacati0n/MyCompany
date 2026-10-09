@@ -170,6 +170,10 @@ public enum ReportLineKey
     HeldWork = 56,
     NextDatedChange = 57,
     DaysToNextDatedChange = 58,
+    EscalatedDeferrals = 59,
+    ControllerActions = 60,
+    RuleOutputsNotShown = 61,
+    ChannelAlerts = 62,
 }
 
 /// <summary>

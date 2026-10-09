@@ -8,7 +8,7 @@
 --   * the open-decisions register: write-once entries of the owner's decisions and open questions, a
 --     change being a NEW entry naming the one it supersedes, seeded below with the transcription of the
 --     decisions and open questions the company decision record and the previous wave's owner report
---     carry. No other writer of it exists in this release. An entry changes no threshold, budget,
+--     carry, with the Wave 8 owner questions of CEO-Q-700. No other writer of it exists in this release. An entry changes no threshold, budget,
 --     configuration value, approval or control: nothing reads it except the management reports.
 --   * the platform-policy statement register and the write-once re-verification result record, both
 --     created EMPTY. No writer exists in this release and nothing here records a statement or a result,
@@ -107,6 +107,23 @@ CREATE OR REPLACE TRIGGER owner_decision_register_write_once
 
 -- THE INITIAL TRANSCRIPTION, inserted only where absent. Each statement cites the record it is transcribed
 -- from; nothing here is a new decision. The entry instant is stamped by the trigger above.
+--
+-- First the two Wave 7 owner questions the owner's decisions of 2026-10-09 answered: they are recorded as the
+-- questions they were, and the decisions below supersede them, so the answer is a new entry and the question is
+-- never deleted or rewritten.
+INSERT INTO owner_decision_register
+    (entry_id, statement, kind, status, owner, recorded_on, interim_ruling, decided_by, decided_on, supersedes, entered_at)
+VALUES
+    ('REG-015',
+     'How many comparable observations must a task hold before an evidence ranking replaces the configured ordering? (wave-7/bao-cao-ceo.md section 3.1, question 1)',
+     'Question', 'Open', 'the owner', '2026-10-09',
+     'No observation minimum was applied; the corpus is unpopulated, so every ranking is the labelled configured ordering.', NULL, NULL, NULL, clock_timestamp()),
+    ('REG-016',
+     'On which figure is the company cost ceiling governed: the USD 34.42 metered allotment or the whole USD 77.41 budget? (wave-7/bao-cao-ceo.md section 3.1, question 2)',
+     'Question', 'Open', 'the owner', '2026-10-09',
+     'The USD 34.42 metered allotment, applied on an interim basis by Wave 7.', NULL, NULL, NULL, clock_timestamp())
+ON CONFLICT (entry_id) DO NOTHING;
+
 INSERT INTO owner_decision_register
     (entry_id, statement, kind, status, owner, recorded_on, interim_ruling, decided_by, decided_on, supersedes, entered_at)
 VALUES
@@ -115,10 +132,10 @@ VALUES
      'Decision', 'Decided', 'the owner', '2026-10-09', NULL, 'the owner', '2026-10-09', NULL, clock_timestamp()),
     ('REG-002',
      'Ten comparable runs per task before an evidence ranking replaces the labelled configured ordering; below ten the router keeps the configured ordering and the CTO report keeps its qualitative-review label; a recorded configured amount, not an observation (CEO-D-701, the figure master plan section 16 states, per CEO-C-700).',
-     'Decision', 'Decided', 'the owner', '2026-10-09', NULL, 'the owner', '2026-10-09', NULL, clock_timestamp()),
+     'Decision', 'Decided', 'the owner', '2026-10-09', NULL, 'the owner', '2026-10-09', 'REG-015', clock_timestamp()),
     ('REG-003',
      'The company cost ceiling is the USD 34.42 metered allotment, decided by the owner as the company ceiling; the standing charge of USD 42.99 is separate and has no recorded home; the monthly budget of USD 77.41 is unchanged (CEO-D-702).',
-     'Decision', 'Decided', 'the owner', '2026-10-09', NULL, 'the owner', '2026-10-09', NULL, clock_timestamp()),
+     'Decision', 'Decided', 'the owner', '2026-10-09', NULL, 'the owner', '2026-10-09', 'REG-016', clock_timestamp()),
     ('REG-004',
      'May a channel with no recorded budget amount rely on the company ceiling alone? (wave-7/bao-cao-ceo.md section 3.1, question 3)',
      'Question', 'Open', 'the owner', '2026-10-09',
@@ -163,6 +180,35 @@ VALUES
      'Does capturing the unit prices once at the reserved booking instant honour the owner''s rule that a price is re-fetched immediately before any spend, or must the booking re-fetch the price in force? (previous release record, known issue on price capture; left open at the Wave 8 Design Gate)',
      'Question', 'Open', 'the owner; the tech lead prepares the ruling', '2026-10-09',
      'Delivered behaviour stands: prices are captured at the reserved instant and applied at booking; no record states the re-fetch rule honoured.', NULL, NULL, NULL, clock_timestamp())
+ON CONFLICT (entry_id) DO NOTHING;
+
+-- The owner questions Wave 8 opened, recorded as CEO-Q-700 in research/ceo-decision-record.md, each citing it. The
+-- price-capture question is the one REG-014 already holds, re-recorded there: its entry supersedes REG-014 and
+-- stays open, so the lineage keeps one current entry.
+INSERT INTO owner_decision_register
+    (entry_id, statement, kind, status, owner, recorded_on, interim_ruling, decided_by, decided_on, supersedes, entered_at)
+VALUES
+    ('REG-017',
+     'Who records the platform-policy re-verification results, and at what cadence does a statement count as overdue? (CEO-Q-700 item 1, research/ceo-decision-record.md)',
+     'Question', 'Open', 'the owner', '2026-10-09',
+     'No writer and no cadence: the re-verification line reads unmeasured and overdue stays unmeasured.', NULL, NULL, NULL, clock_timestamp()),
+    ('REG-018',
+     'Master plan sections 9 and 29 list seven CTO recommendation items and section 33 lists ten; which list governs? (CEO-Q-700 item 2, research/ceo-decision-record.md)',
+     'Question', 'Open', 'the owner', '2026-10-09',
+     'The ten fields of section 33 are carried on every CTO rule output; the catalogue holds seven rules.', NULL, NULL, NULL, clock_timestamp()),
+    ('REG-019',
+     'Confirm or change the report week: the UTC week from Monday 00:00 to the next Monday 00:00 (Monday 07:00 Vietnam time). (CEO-Q-700 item 3, research/ceo-decision-record.md)',
+     'Question', 'Open', 'the owner', '2026-10-09',
+     'The UTC Monday week, as ruled at the Wave 8 Design Gate.', NULL, NULL, NULL, clock_timestamp()),
+    ('REG-020',
+     'Does capturing a unit price at admission honour the rule of re-fetching it immediately before use, or must the booking re-fetch it? (CEO-Q-700 item 4, research/ceo-decision-record.md)',
+     'Question', 'Open', 'the owner; the tech lead prepares the ruling', '2026-10-09',
+     'Delivered behaviour stands: prices are captured at the reserved instant and applied at booking; no record states the re-fetch rule honoured.',
+     NULL, NULL, 'REG-014', clock_timestamp()),
+    ('REG-021',
+     'The register is filled only by transcription in a schema resource, so a decision reaches it one release late: keep transcription, or direct a writer in a later wave? (CEO-Q-700 item 5, research/ceo-decision-record.md)',
+     'Question', 'Open', 'the owner', '2026-10-09',
+     'Transcription by a schema resource; no other writer exists.', NULL, NULL, NULL, clock_timestamp())
 ON CONFLICT (entry_id) DO NOTHING;
 
 -- ---------------------------------------------------------------------------

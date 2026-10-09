@@ -5,6 +5,7 @@ using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Management;
+using MediaCompany.Domain.Registry;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -76,28 +77,9 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
         {
             return await ReadCoreAsync(week, cancellationToken).ConfigureAwait(false);
         }
-        catch (PostgresException bound) when (bound.SqlState == PostgresErrorCodes.LockNotAvailable)
-        {
-            throw new CompanyReadException(
-                CompanyReadFailure.StoreBeingChanged,
-                $"the transaction-local lock bound of {LockBound.TotalSeconds:0} seconds was reached ({bound.SqlState}): "
-                + "the store is being changed, and the read ended rather than wait",
-                bound);
-        }
-        catch (PostgresException bound) when (bound.SqlState == PostgresErrorCodes.QueryCanceled)
-        {
-            throw new CompanyReadException(
-                CompanyReadFailure.StoreBeingChanged,
-                $"the transaction-local statement bound of {StatementBound.TotalSeconds:0} seconds was reached ({bound.SqlState}): "
-                + "the store is being changed, and the read ended rather than wait",
-                bound);
-        }
         catch (PostgresException failed)
         {
-            throw new CompanyReadException(
-                CompanyReadFailure.ReadFailed,
-                $"the datastore failed the read with class {failed.SqlState}: {failed.MessageText}",
-                failed);
+            throw Named(failed);
         }
         catch (NpgsqlException failed)
         {
@@ -107,6 +89,28 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
                 failed);
         }
     }
+
+    /// <summary>
+    /// The named outcome of a datastore failure (correction cycle): the lock bound reports the store being changed,
+    /// the statement bound a read too slow, any other failure its class.
+    /// </summary>
+    internal static CompanyReadException Named(PostgresException failed) => failed.SqlState switch
+    {
+        PostgresErrorCodes.LockNotAvailable => new CompanyReadException(
+            CompanyReadFailure.StoreBeingChanged,
+            $"the transaction-local lock bound of {LockBound.TotalSeconds:0} seconds was reached ({failed.SqlState}): "
+            + "the store is being changed, and the read ended rather than wait",
+            failed),
+        PostgresErrorCodes.QueryCanceled => new CompanyReadException(
+            CompanyReadFailure.ReadTooSlow,
+            $"the transaction-local statement bound of {StatementBound.TotalSeconds:0} seconds was reached ({failed.SqlState}): "
+            + "the read was too slow; no lock was waited on, since a lock wait ends at the lower lock bound first",
+            failed),
+        _ => new CompanyReadException(
+            CompanyReadFailure.ReadFailed,
+            $"the datastore failed the read with class {failed.SqlState}: {failed.MessageText}",
+            failed),
+    };
 
     private async Task<CompanySnapshot> ReadCoreAsync(ReportWeek? week, CancellationToken cancellationToken)
     {
@@ -197,6 +201,8 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
             RevenueParameters = await RevenueAsync(connection, transaction, cancellationToken).ConfigureAwait(false),
             Benchmark = await NpgsqlBenchmarkReader.RecordOnAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             Routes = await RoutesAsync(connection, transaction, cancellationToken).ConfigureAwait(false),
+            Availability = await AvailabilityAsync(connection, transaction, cancellationToken).ConfigureAwait(false),
+            AccountStatus = await AccountsAsync(connection, transaction, cancellationToken).ConfigureAwait(false),
             Decisions = await DecisionsAsync(connection, transaction, head, cancellationToken).ConfigureAwait(false),
             Held = await HeldAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             FailedOperations = await FailedAsync(connection, transaction, head, register, cancellationToken).ConfigureAwait(false),
@@ -276,8 +282,7 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
         var read = new ReportWeek(reader.GetInt32(5), reader.GetInt32(6));
         if (week is not null && read != week)
         {
-            throw new ArgumentException(
-                $"ISO week {week} does not exist; the datastore resolves it to {read}.", nameof(week));
+            throw new ReportWeekNotFoundException(week, read);
         }
 
         var first = reader.GetFieldValue<DateOnly>(8);
@@ -480,6 +485,55 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
             connection,
             transaction);
         return await NpgsqlRouteRegistry.ReadRoutesAsync(command, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyDictionary<RouteId, RouteAvailability>> AvailabilityAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        // The latest recorded state per route, as the admission snapshot reads it; current state, bounded by the
+        // snapshot (its instants are the writer's).
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT DISTINCT ON (route_id) route_id, state, effective_from, reason, reset_or_probe_point, observed_quality
+            FROM route_availability
+            ORDER BY route_id, effective_from DESC
+            """,
+            connection,
+            transaction);
+
+        var states = new Dictionary<RouteId, RouteAvailability>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var route = new RouteId(reader.GetGuid(0));
+            states[route] = new RouteAvailability(
+                route,
+                Enum.Parse<AvailabilityState>(reader.GetString(1)),
+                reader.GetFieldValue<DateTimeOffset>(2),
+                reader.GetString(3),
+                reader.IsDBNull(4) ? null : reader.GetFieldValue<DateTimeOffset>(4),
+                reader.IsDBNull(5) ? null : new QualityRating(reader.GetInt32(5)));
+        }
+
+        return states;
+    }
+
+    private static async Task<IReadOnlyDictionary<ProviderAccountId, ProviderAccountStatus>> AccountsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand("SELECT provider_account_id, status FROM provider_accounts", connection, transaction);
+        var accounts = new Dictionary<ProviderAccountId, ProviderAccountStatus>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            accounts[new ProviderAccountId(reader.GetString(0))] = Enum.Parse<ProviderAccountStatus>(reader.GetString(1));
+        }
+
+        return accounts;
     }
 
     // -----------------------------------------------------------------------

@@ -259,12 +259,20 @@ public static class ManagementComposers
         lines.Add(L(ReportLineKey.OperationsFailed, "Operations", "operations failed in the week",
             LineFigure.Of(MeasurementQuantity.Count(s.FailedOperations.Sum(f => f.Count), "operations failed")),
             "the operation record, outcome failed, booked inside the week", week));
-        lines.Add(L(ReportLineKey.HeldOperations, "Operations", "held operations, none re-admitted",
+        lines.Add(L(ReportLineKey.HeldOperations, "Operations", "held operations, none re-admitted (the full list is in the COO report)",
             LineFigure.Of(MeasurementQuantity.Count(s.Held.Count, "held operations")),
             "the operation record, outcome held, booked at or before the instant, with the held-outcome record", "as of the snapshot",
             "whether deferred requests are re-admitted (owner)"));
+        lines.Add(L(ReportLineKey.EscalatedDeferrals, "Operations",
+            "deferred requests past their recorded escalation instant (the full list is in the COO report)",
+            LineFigure.Of(MeasurementQuantity.Count(
+                s.Held.LongCount(h => h.IsDeferral && h.EscalatesAt is { } at && s.Instant >= at), "escalated deferrals")),
+            "the held-outcome record's escalation instants against the report instant; a held operation recorded before the "
+            + "record holds no instant and is counted under held operations only",
+            "as of the snapshot", "whether deferred requests are re-admitted (owner)"));
 
-        foreach (var held in s.Held)
+        // The most urgent first: the earliest recorded escalation, then the held operations with none recorded.
+        foreach (var held in Urgency(s.Held))
         {
             lines.Add(L(ReportLineKey.HeldRequest, "Operations",
                 $"{(held.IsDeferral ? "deferred metered request" : "held request")}, operation {held.Operation}, channel {held.Channel}: hold age",
@@ -300,6 +308,24 @@ public static class ManagementComposers
         }
 
         return lines;
+    }
+
+    /// <summary>Held requests in order of urgency: the earliest recorded escalation first, those with none after, by held instant.</summary>
+    public static IReadOnlyList<HeldOutcomeRecord> Urgency(IReadOnlyList<HeldOutcomeRecord> held)
+    {
+        ArgumentNullException.ThrowIfNull(held);
+        return held
+            .OrderBy(h => h.EscalatesAt is null)
+            .ThenBy(h => h.EscalatesAt ?? h.HeldAt)
+            .ThenBy(h => h.Operation.Value)
+            .ToArray();
+    }
+
+    /// <summary>Recorded controller decisions in order of severity: the most severe action first, then by instant.</summary>
+    public static IReadOnlyList<RecordedControllerDecision> Severity(IReadOnlyList<RecordedControllerDecision> decisions)
+    {
+        ArgumentNullException.ThrowIfNull(decisions);
+        return decisions.OrderByDescending(d => d.Action).ThenBy(d => d.DecidedAt).ThenBy(d => d.Operation.Value).ToArray();
     }
 
     /// <summary>
@@ -361,21 +387,33 @@ public static class ManagementComposers
         lines.Add(L(ReportLineKey.OwnersTen, "Cost and quality per task", "the owner's comparable-run threshold",
             LineFigure.Of(RecordedProgrammeFacts.ComparableRunsPerTask), "the owner's decision of 2026-10-09", RecordedTag()));
 
+        // ONE COUNT OVER ONE CANDIDATE SET (correction cycle): per capability, per reasoning-tier class of its
+        // available routes, the count selection uses over the class it compares, ComparableRuns.OfCandidates; a
+        // report knows no request, so it states every class.
         foreach (var capability in s.Routes.Select(r => r.Capability).Distinct().OrderBy(c => c))
         {
-            var routes = s.Routes.Where(r => r.Capability == capability).Select(r => r.Id).ToArray();
+            foreach (var tierClass in ComparableRuns.TierClasses(s.Routes, capability, s.Availability, s.AccountStatus))
+            {
+                var tier = TierClassName(tierClass[0].StatedReasoningTier);
+                var routes = tierClass.Select(r => r.Id).ToArray();
+                foreach (var task in Enum.GetValues<TaskClass>())
+                {
+                    var count = ComparableRuns.OfCandidates(tierClass, task, s.Benchmark.Observations);
+                    var label = ComparableRuns.ReachesOwnersTen(count)
+                        ? "at or above the owner's ten: the router may rank on evidence where its all-observed rule holds"
+                        : "QUALITATIVE REVIEW: below the owner's ten, the router keeps the labelled configured ordering";
+                    lines.Add(L(ReportLineKey.TaskComparableRuns, "Cost and quality per task",
+                        $"{capability} / {tier} / {task}: comparable runs, least over the class's available provider routes ({label})",
+                        LineFigure.Of(count),
+                        "the benchmark record at or before the instant; ComparableRuns.OfCandidates, the count selection uses over the class it compares",
+                        "as of the snapshot", "whether to authorise benchmark runs (owner)"));
+                }
+            }
+
+            var capabilityRoutes = s.Routes.Where(r => r.Capability == capability).Select(r => r.Id).ToArray();
             foreach (var task in Enum.GetValues<TaskClass>())
             {
-                var count = ComparableRuns.LeastOver(routes, task, s.Benchmark.Observations);
-                var label = ComparableRuns.ReachesOwnersTen(count)
-                    ? "at or above the owner's ten: the router may rank on evidence where its all-observed rule holds"
-                    : "QUALITATIVE REVIEW: below the owner's ten, the router keeps the labelled configured ordering";
-                lines.Add(L(ReportLineKey.TaskComparableRuns, "Cost and quality per task",
-                    $"{capability} / {task}: comparable runs, least over the class's routes ({label})",
-                    LineFigure.Of(count), "the benchmark record at or before the instant; ComparableRuns.LeastOver, the count selection uses",
-                    "as of the snapshot", "whether to authorise benchmark runs (owner)"));
-
-                foreach (var reading in benchmark.Readings.Where(r => routes.Contains(r.Route) && r.TaskClass == task))
+                foreach (var reading in benchmark.Readings.Where(r => capabilityRoutes.Contains(r.Route) && r.TaskClass == task))
                 {
                     lines.Add(L(ReportLineKey.RouteQuality, "Cost and quality per task", $"{capability} / {task}: route {reading.Route} quality",
                         LineFigure.Of(reading.Quality), "the benchmark record; EconomicsComposers.Benchmark", "as of the snapshot"));
@@ -389,7 +427,11 @@ public static class ManagementComposers
         lines.Add(L(ReportLineKey.ControllerDecisions, "Controller decisions", "controller decisions booked inside the week",
             LineFigure.Of(MeasurementQuantity.Count(s.Decisions.Count, "decisions")),
             "the admission decision record, read inside the snapshot", week, "whether the ceiling or a budget needs changing (owner)"));
-        foreach (var decision in s.Decisions)
+        lines.Add(L(ReportLineKey.ControllerActions, "Controller decisions",
+            "controller downgrades, deferrals and refusals booked inside the week (the full list is in the CTO report)",
+            LineFigure.Of(MeasurementQuantity.Count(s.Decisions.LongCount(d => d.Action >= ControllerAction.Downgrade), "controller actions")),
+            "the admission decision record, read inside the snapshot", week, "whether the ceiling or a budget needs changing (owner)"));
+        foreach (var decision in Severity(s.Decisions))
         {
             lines.Add(L(ReportLineKey.ControllerDecision, "Controller decisions",
                 $"decision for operation {decision.Operation}, channel {decision.Channel}, booking month {decision.BookingMonth:yyyy-MM}: "
@@ -440,6 +482,10 @@ public static class ManagementComposers
         return lines;
     }
 
+    /// <summary>The name of a reasoning-tier class: the tier the routes state, or none.</summary>
+    public static string TierClassName(ReasoningTier? stated) =>
+        stated is { } tier ? $"routes stating {tier}" : "routes stating no tier";
+
     /// <summary>
     /// The re-verification line (decision D-007): for a week beginning before 2027-02-01, the statements re-checked
     /// and changed from the results recorded inside the week, unmeasured naming the missing record where no
@@ -459,11 +505,13 @@ public static class ManagementComposers
         var inWeek = s.Reverifications.Where(r => r.RecordedAt >= s.PeriodStart && r.RecordedAt < s.PeriodEnd).ToArray();
         var restsOn = "the platform-policy statement register and the re-verification result record, at or before the instant";
 
-        MeasurementQuantity Counted(int count, string unit) => s.PolicyStatements.Count == 0
+        // Unmeasured until at least one re-verification RESULT is recorded (Design Gate ruling on the re-verification
+        // record): a registered statement with no result ever recorded is a reading nobody took, never an observed zero.
+        MeasurementQuantity Counted(int count, string unit) => s.Reverifications.Count == 0
             ? MeasurementQuantity.NotMeasured(
                 UnmeasuredReason.NoObservationExists,
-                "no platform-policy statement is recorded in the statement register, and no re-verification result is recorded, "
-                + "so no re-verification can be stated; who records results is the owner's to direct")
+                "no platform-policy re-verification result is recorded in the result record, so no re-verification count can be "
+                + "stated, whether or not statements are registered; who records results is the owner's to direct")
             : MeasurementQuantity.Count(count, unit);
 
         var lines = new List<ReportLine>
@@ -540,6 +588,9 @@ public static class ManagementComposers
                 lines.Add(L(ReportLineKey.ChannelUtilisation, "Channel spend", $"channel {channel.Channel}: utilisation of its budget, {name}",
                     LineFigure.Of(channel.Utilisation), "the channel budget reading; ChannelAnalyticsComposers.Budgets", tag,
                     "what each channel's budget amount is (owner)"));
+                lines.Add(L(ReportLineKey.ChannelAlerts, "Channel spend", $"channel {channel.Channel}: budget alerts recorded, {name}",
+                    LineFigure.Of(Alerts(channel)), "the budget alerts the delivered tracking raised, at or before the instant; "
+                    + "ChannelAnalyticsComposers.Budgets", tag));
             }
         }
 
@@ -558,6 +609,22 @@ public static class ManagementComposers
         }
 
         return lines;
+    }
+
+    /// <summary>
+    /// The alerts recorded for one channel budget: the sum of the delivered per-threshold alert counts where every one
+    /// is observed, and the first unmeasured one otherwise (no budget recorded, so no alert can be).
+    /// </summary>
+    private static MeasurementQuantity Alerts(ChannelBudgetReading channel)
+    {
+        var unmeasured = channel.Thresholds.Select(t => t.AlertsRecorded).OfType<MeasurementQuantity.Unmeasured>().FirstOrDefault();
+        if (unmeasured is not null)
+        {
+            return unmeasured;
+        }
+
+        var sum = channel.Thresholds.Sum(t => t.AlertsRecorded is MeasurementQuantity.ObservedValue v ? v.Amount : 0m);
+        return MeasurementQuantity.Count((long)sum, "alerts recorded");
     }
 
     // -----------------------------------------------------------------------

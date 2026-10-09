@@ -1,6 +1,7 @@
 using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
 using MediaCompany.Domain.Capabilities;
+using MediaCompany.Domain.Registry;
 
 namespace MediaCompany.Deterministic.Routing;
 
@@ -18,6 +19,14 @@ namespace MediaCompany.Deterministic.Routing;
 /// The same pure count keys the evidence selection's owner's ten and the CTO report's qualitative-review
 /// label, so the report and the router cannot disagree on a task's standing. The ten is the owner's recorded
 /// figure, never an observation.
+///
+/// ONE COUNT, ONE FUNCTION, ONE CANDIDATE SET (the AI-management change, correction cycle). The count is
+/// <see cref="OfCandidates"/>: the least count over the COUNTED CANDIDATES of one reasoning-tier class — the
+/// provider routes of the class that are available (<see cref="IsAvailable"/>, the resolution function's own
+/// availability step, which delegates here). A non-AI substitute or a hold-and-escalate route can hold no
+/// observation and is never counted; a disabled or non-serving route never reaches selection and is never
+/// counted; a route of another tier class is counted in its own class. Selection counts the class it actually
+/// compares; the CTO report, which knows no request, counts every class.
 /// </summary>
 public static class ComparableRuns
 {
@@ -66,6 +75,58 @@ public static class ComparableRuns
             : routes.Min(route => evidence.LongCount(o => o.Route.Equals(route) && o.TaskClass == taskClass && IsComparable(o)));
         return MeasurementQuantity.Count(least, Unit);
     }
+
+    /// <summary>
+    /// The resolution function's availability step, defined once: a provider route only where its account is
+    /// active, and any route only where its recorded state is serving; an unrecorded route is not available.
+    /// </summary>
+    public static bool IsAvailable(
+        Route route,
+        IReadOnlyDictionary<RouteId, RouteAvailability> availability,
+        IReadOnlyDictionary<ProviderAccountId, ProviderAccountStatus> accounts)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(availability);
+        ArgumentNullException.ThrowIfNull(accounts);
+
+        if (route.Target is RouteTarget.ProviderRoute provider
+            && (!accounts.TryGetValue(provider.ProviderAccount, out var status) || status != ProviderAccountStatus.Active))
+        {
+            return false;
+        }
+
+        return availability.TryGetValue(route.Id, out var state) && state.State == AvailabilityState.Serving;
+    }
+
+    /// <summary>The counted candidates of a candidate set: its provider routes, the only routes that can hold an observation.</summary>
+    public static IReadOnlyList<RouteId> CountedCandidates(IEnumerable<Route> candidates)
+    {
+        ArgumentNullException.ThrowIfNull(candidates);
+        return candidates.Where(r => r.Target is RouteTarget.ProviderRoute).Select(r => r.Id).ToArray();
+    }
+
+    /// <summary>
+    /// THE count: the least count of comparable runs over the counted candidates of one candidate set. A set with
+    /// no provider route counts an observed zero, so nothing is ranked on evidence there.
+    /// </summary>
+    public static MeasurementQuantity OfCandidates(IEnumerable<Route> candidates, TaskClass taskClass, IReadOnlyList<BenchmarkObservation> evidence) =>
+        LeastOver(CountedCandidates(candidates), taskClass, evidence);
+
+    /// <summary>
+    /// The reasoning-tier classes of a capability as the report counts them: its available routes, grouped by
+    /// the reasoning tier each states (none being its own class), in tier order with the untiered class last.
+    /// </summary>
+    public static IReadOnlyList<IReadOnlyList<Route>> TierClasses(
+        IEnumerable<Route> routes,
+        CapabilityClass capability,
+        IReadOnlyDictionary<RouteId, RouteAvailability> availability,
+        IReadOnlyDictionary<ProviderAccountId, ProviderAccountStatus> accounts) =>
+        routes
+            .Where(r => r.Capability == capability && IsAvailable(r, availability, accounts))
+            .GroupBy(r => r.StatedReasoningTier)
+            .OrderBy(g => g.Key is null ? int.MaxValue : (int)g.Key.Value)
+            .Select(g => (IReadOnlyList<Route>)g.OrderBy(r => (int)r.Tier).ThenBy(r => r.Id.Value).ToArray())
+            .ToArray();
 
     /// <summary>Whether a count reaches the owner's ten. An unmeasured count never does.</summary>
     public static bool ReachesOwnersTen(MeasurementQuantity count) =>

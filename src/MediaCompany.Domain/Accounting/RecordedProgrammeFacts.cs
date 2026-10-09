@@ -37,6 +37,9 @@ public static class RecordedProgrammeFacts
     /// <summary>Where the programme thresholds and dated changes are recorded.</summary>
     public const string ProgrammeRecordedIn = "MASTER-PLAN.md sections 2 and 5, recorded from the platform policy dossier verified 2026-09-18";
 
+    /// <summary>Where the guidelines change of 2026-09-24 is recorded.</summary>
+    public const string GuidelinesChangeRecordedIn = "MASTER-PLAN.md section 3.3, recorded from the platform policy dossier verified 2026-09-18";
+
     /// <summary>Where the re-verification wording is recorded.</summary>
     public const string ReverificationRecordedIn = "MASTER-PLAN.md section 3.3 and section 33";
 
@@ -90,7 +93,7 @@ public static class RecordedProgrammeFacts
     /// <summary>The dated platform changes the master plan records, in date order.</summary>
     public static IReadOnlyList<RecordedAmount> DatedChanges { get; } =
     [
-        RecordedAmount.OnDate(new DateOnly(2026, 9, 24), "the platform guidelines change", ProgrammeRecordedIn),
+        RecordedAmount.OnDate(new DateOnly(2026, 9, 24), "the platform guidelines change", GuidelinesChangeRecordedIn),
         RecordedAmount.OnDate(new DateOnly(2027, 1, 31), "the deadline for accepting the updated programme terms", ProgrammeRecordedIn),
         RecordedAmount.OnDate(ThresholdChangeDate, "the doubling of the entry thresholds for a new entrant", ProgrammeRecordedIn),
     ];

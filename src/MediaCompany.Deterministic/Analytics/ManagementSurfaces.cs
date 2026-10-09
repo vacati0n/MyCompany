@@ -132,11 +132,45 @@ public static class BriefComposer
     {
         ArgumentNullException.ThrowIfNull(reports);
 
-        IReadOnlyList<BriefItem> Lines(Func<ReportLine, bool> where) =>
-            reports.Lines.Where(l => l.Informs is not null && where(l)).Select(l => (BriefItem)new BriefItem.LineItem(l)).ToArray();
+        // THE BOUND (correction cycle): the brief's size does not grow with the rows behind it. Of the held requests
+        // only the most urgent is shown beside the counts of held operations and escalated deferrals; of each rule's
+        // outcomes at most the first output and the first abstention are shown, each rule ordering its outcomes by
+        // urgency or severity, and a further count names how many more stand in the report holding the full list. The
+        // bound is a presentation choice, not a business quantity.
+        var firstHeld = reports.Lines.FirstOrDefault(l => l.Key == ReportLineKey.HeldRequest);
 
-        IReadOnlyList<BriefItem> Rules(params RecommendationRule[] rules) =>
-            reports.Outcomes.Where(o => rules.Contains(o.Rule)).Select(o => (BriefItem)new BriefItem.RuleItem(o)).ToArray();
+        IReadOnlyList<BriefItem> Lines(Func<ReportLine, bool> where) =>
+            reports.Lines
+                .Where(l => l.Informs is not null && where(l))
+                .Where(l => l.Key != ReportLineKey.HeldRequest || ReferenceEquals(l, firstHeld))
+                .Select(l => (BriefItem)new BriefItem.LineItem(l))
+                .ToArray();
+
+        IReadOnlyList<BriefItem> Rules(params RecommendationRule[] rules)
+        {
+            var items = new List<BriefItem>();
+            foreach (var rule in rules)
+            {
+                var outcomes = reports.Outcomes.Where(o => o.Rule == rule).ToArray();
+                var shown = new[]
+                    {
+                        outcomes.FirstOrDefault(o => o is RuleOutcome.Issued),
+                        outcomes.FirstOrDefault(o => o is RuleOutcome.Abstained),
+                    }
+                    .Where(o => o is not null)
+                    .Cast<RuleOutcome>()
+                    .OrderBy(o => Array.IndexOf(outcomes, o))
+                    .ToArray();
+                items.AddRange(shown.Select(o => (BriefItem)new BriefItem.RuleItem(o)));
+
+                if (outcomes.Length > shown.Length)
+                {
+                    items.Add(new BriefItem.LineItem(NotShown(reports, rule, outcomes.Length - shown.Length)));
+                }
+            }
+
+            return items;
+        }
 
         var company = Lines(l => l.Report == ReportKind.Cfo || (l.Report == ReportKind.Coo && l.Key == ReportLineKey.ItemsPublished))
             .Concat(Rules(RecommendationRule.CfoCompanyCeiling, RecommendationRule.CfoUnbudgetedChannel))
@@ -167,7 +201,9 @@ public static class BriefComposer
                 new BriefSectionReading
                 {
                     Section = BriefSection.CtoRecommendations,
-                    Items = Rules(RecommendationRule.CtoQualitativeReview, RecommendationRule.CtoControllerAction, RecommendationRule.CtoReverification),
+                    Items = Lines(l => l.Report == ReportKind.Cto && l.Key == ReportLineKey.ControllerActions)
+                        .Concat(Rules(RecommendationRule.CtoQualitativeReview, RecommendationRule.CtoControllerAction, RecommendationRule.CtoReverification))
+                        .ToArray(),
                 },
                 new BriefSectionReading
                 {
@@ -176,6 +212,30 @@ public static class BriefComposer
                 },
                 new BriefSectionReading { Section = BriefSection.DecisionsRequired, Items = decisions },
             ],
+        };
+    }
+
+    /// <summary>The brief's count of a rule's further outcomes, naming the report that holds them all.</summary>
+    private static ReportLine NotShown(ManagementReportSet reports, RecommendationRule rule, int further)
+    {
+        var (report, name) = rule switch
+        {
+            RecommendationRule.CfoCompanyCeiling or RecommendationRule.CfoUnbudgetedChannel => (ReportKind.Cfo, "CFO"),
+            RecommendationRule.CooEscalatedDeferral or RecommendationRule.CooAwaitingApproval => (ReportKind.Coo, "COO"),
+            _ => (ReportKind.Cto, "CTO"),
+        };
+
+        return new ReportLine
+        {
+            Report = report,
+            Key = ReportLineKey.RuleOutputsNotShown,
+            Heading = "Brief",
+            Label = $"{rule}: further outcomes not shown in the brief (the full list is in the {name} report)",
+            Figure = LineFigure.Of(MeasurementQuantity.Count(further, "further rule outcomes")),
+            RestsOn = "the rule catalogue's outcomes over the same read",
+            Instant = reports.Instant,
+            Finality = "as of the snapshot",
+            Informs = reports.Outcomes.First(o => o.Rule == rule).Informs,
         };
     }
 }

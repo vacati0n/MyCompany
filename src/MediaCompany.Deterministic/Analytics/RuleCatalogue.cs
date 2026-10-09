@@ -41,6 +41,31 @@ public static class RuleCatalogue
         return outcomes;
     }
 
+    /// <summary>
+    /// The current entry of a question's lineage (correction cycle): starting from the entry the transcription
+    /// recorded, follow each later entry that supersedes the current one until none does. A re-worded question
+    /// recorded as a superseding open entry is the current entry, and a decided one closes the lineage.
+    /// </summary>
+    public static RegisterEntry? Current(string lineageRoot, IReadOnlyList<RegisterEntry> register)
+    {
+        ArgumentNullException.ThrowIfNull(register);
+
+        var current = register.FirstOrDefault(e => e.Identifier == lineageRoot);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        while (current is not null && seen.Add(current.Identifier))
+        {
+            var next = register.FirstOrDefault(e => e.Supersedes == current.Identifier);
+            if (next is null)
+            {
+                return current;
+            }
+
+            current = next;
+        }
+
+        return current;
+    }
+
     /// <summary>Whether a register entry is open: recorded open and superseded by no later entry.</summary>
     public static bool IsOpen(RegisterEntry entry, IReadOnlyList<RegisterEntry> register)
     {
@@ -138,7 +163,9 @@ public static class RuleCatalogue
     private static IEnumerable<RuleOutcome> UnbudgetedChannel(ManagementReportSet reports)
     {
         var informs = "what each channel's budget amount is, and whether an unbudgeted channel may rely on the company ceiling (owner)";
-        var entry = reports.Register.FirstOrDefault(e => e.Identifier == "REG-004");
+
+        // The current entry of the transcribed question's lineage, never the transcribed identifier itself.
+        var entry = Current("REG-004", reports.Register);
 
         foreach (var line in reports.Lines.Where(l =>
                      l.Report == ReportKind.Cfo && l.Key == ReportLineKey.ChannelBudget && l.Figure.Case == FigureCase.NotRecorded))
@@ -151,7 +178,9 @@ public static class RuleCatalogue
                     Reading = line.Label,
                     Instant = reports.Instant,
                     Informs = informs,
-                    Reason = "the register holds no open entry REG-004 on an unbudgeted channel, so the rule has no recorded anchor",
+                    Reason = "the current entry of the register's question on an unbudgeted channel is not open"
+                        + (entry is null ? string.Empty : $" ({entry.Identifier}, {entry.Status})")
+                        + ", so the rule has no recorded anchor",
                 };
                 continue;
             }
@@ -180,32 +209,35 @@ public static class RuleCatalogue
 
         foreach (var capability in snapshot.Routes.Select(r => r.Capability).Distinct().OrderBy(c => c))
         {
-            var routes = snapshot.Routes.Where(r => r.Capability == capability).Select(r => r.Id).ToArray();
-            var counts = Enum.GetValues<TaskClass>()
-                .Select(task => (Task: task, Count: ComparableRuns.LeastOver(routes, task, snapshot.Benchmark.Observations)))
+            // The same count over the same candidate sets the report states, ComparableRuns.OfCandidates per
+            // reasoning-tier class of the capability's available routes (correction cycle).
+            var counts = ComparableRuns.TierClasses(snapshot.Routes, capability, snapshot.Availability, snapshot.AccountStatus)
+                .SelectMany(tierClass => Enum.GetValues<TaskClass>().Select(task => (
+                    Name: $"{ManagementComposers.TierClassName(tierClass[0].StatedReasoningTier)} / {task}",
+                    Count: ComparableRuns.OfCandidates(tierClass, task, snapshot.Benchmark.Observations))))
                 .ToArray();
-            var below = counts.Where(c => !ComparableRuns.ReachesOwnersTen(c.Count)).Select(c => c.Task).ToArray();
+            var below = counts.Where(c => !ComparableRuns.ReachesOwnersTen(c.Count)).Select(c => c.Name).ToArray();
             if (below.Length == 0)
             {
                 continue;
             }
 
-            var least = counts.Where(c => below.Contains(c.Task)).Select(c => c.Count).First();
+            var least = counts.Where(c => below.Contains(c.Name)).Select(c => c.Count).First();
             yield return new RuleOutcome.Issued
             {
                 Rule = RecommendationRule.CtoQualitativeReview,
-                Reading = $"{capability}: comparable runs of task class {below[0]}, the first below the owner's ten",
+                Reading = $"{capability}: comparable runs of {below[0]}, the first class and task below the owner's ten",
                 Instant = reports.Instant,
                 Informs = informs,
                 Figure = LineFigure.Of(least),
                 Anchor = RecordedProgrammeFacts.ComparableRunsPerTask,
                 AnchorStatement = "the owner's ten comparable runs per task, the one count the router and this report share",
-                Statement = $"{below.Length} of the {counts.Length} task classes of {capability} hold fewer comparable runs than the owner's "
-                    + $"ten ({string.Join(", ", below)}); the router keeps the labelled configured ordering and the CTO report keeps "
-                    + "the qualitative-review label for them",
+                Statement = $"{below.Length} of the {counts.Length} tier-class and task pairs of {capability} hold fewer comparable runs "
+                    + $"than the owner's ten ({string.Join(", ", below)}); the router keeps the labelled configured ordering and the "
+                    + "CTO report keeps the qualitative-review label for them",
                 Cto = Cto(
                     $"the labelled configured ordering for {capability}",
-                    $"{below.Length} task classes are below the owner's ten comparable runs, so no evidence ranking may replace the configured ordering",
+                    $"{below.Length} tier-class and task pairs are below the owner's ten comparable runs, so no evidence ranking may replace the configured ordering",
                     "record comparable benchmark runs until every task class holds ten",
                     "none added by keeping the configured ordering; it is labelled configured on every decision",
                     "keep the labelled configured ordering and the qualitative-review label until each task class holds ten comparable runs",
@@ -222,7 +254,8 @@ public static class RuleCatalogue
     {
         var informs = "whether the decided ceiling or a channel budget needs changing (owner)";
 
-        foreach (var decision in snapshot.Decisions.Where(d => d.Action >= ControllerAction.Downgrade))
+        // The most severe first, so the brief's one shown output is the most severe action.
+        foreach (var decision in ManagementComposers.Severity(snapshot.Decisions).Where(d => d.Action >= ControllerAction.Downgrade))
         {
             var deciding = decision.Readings.Where(r => r.Action == decision.Action).OrderBy(r => r.Scope).FirstOrDefault();
             var label = $"decision for operation {decision.Operation}: the deciding reading's utilisation";
@@ -328,9 +361,10 @@ public static class RuleCatalogue
     private static IEnumerable<RuleOutcome> EscalatedDeferral(ManagementReportSet reports, CompanySnapshot snapshot)
     {
         var informs = "whether deferred requests are re-admitted, and how (owner)";
-        var entry = reports.Register.FirstOrDefault(e => e.Identifier == "REG-008");
+        var entry = Current("REG-008", reports.Register);
 
-        foreach (var held in snapshot.Held)
+        // The earliest recorded escalation first, so the brief's one shown output is the most urgent.
+        foreach (var held in ManagementComposers.Urgency(snapshot.Held))
         {
             var line = reports.Lines.First(l => l.Key == ReportLineKey.HeldRequest && l.Label.Contains(held.Operation.ToString(), StringComparison.Ordinal));
 
