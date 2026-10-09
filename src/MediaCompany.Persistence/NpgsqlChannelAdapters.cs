@@ -355,7 +355,10 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             cancellationToken).ConfigureAwait(false);
 
         return new BudgetPartitionSummary(
-            closure, read.channels, read.company.Operations, read.company.Cost, read.company.Percent, ceiling);
+            closure, read.channels, read.company.Operations, read.company.Cost, read.company.Percent, ceiling)
+        {
+            CompanyUnstatedOperations = read.company.Unstated,
+        };
     }
 
     /// <summary>
@@ -480,10 +483,13 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         // The capability split first, by the same grouping, so each partition carries its own.
         var byCapability = new Dictionary<ChannelId, Dictionary<CapabilityClass, Money>>();
         var companyByCapability = new Dictionary<CapabilityClass, Money>();
+        var unstatedByCapability = new Dictionary<ChannelId, Dictionary<CapabilityClass, long>>();
+        var companyUnstatedByCapability = new Dictionary<CapabilityClass, long>();
 
         await using (var split = new NpgsqlCommand(
             """
-            SELECT channel_id, GROUPING(channel_id) AS is_company, capability_class, sum(computed_cost) AS total_cost
+            SELECT channel_id, GROUPING(channel_id) AS is_company, capability_class, sum(computed_cost) AS total_cost,
+                   count(*) FILTER (WHERE cost_stated IS NOT TRUE) AS unstated
             FROM agent_costs
             WHERE period = @month
             GROUP BY GROUPING SETS ((channel_id, capability_class), (capability_class))
@@ -498,10 +504,12 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             {
                 var capability = Enum.Parse<CapabilityClass>(reader.GetString(2));
                 var cost = new Money(reader.GetDecimal(3));
+                var unstated = reader.GetInt64(4);
 
                 if (reader.GetInt32(1) == 1)
                 {
                     companyByCapability[capability] = cost;
+                    companyUnstatedByCapability[capability] = unstated;
                     continue;
                 }
 
@@ -512,6 +520,13 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                 }
 
                 of[capability] = cost;
+
+                if (!unstatedByCapability.TryGetValue(channel, out var unstatedOf))
+                {
+                    unstatedByCapability[channel] = unstatedOf = [];
+                }
+
+                unstatedOf[capability] = unstated;
             }
         }
 
@@ -532,7 +547,9 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                                       AND reasoning_tier_served IS NOT NULL)           AS carrying_both,
                    count(*) FILTER (WHERE reasoning_tier_requested IS NOT NULL
                                       AND reasoning_tier_served = reasoning_tier_requested) AS agreeing,
-                   COALESCE(sum(computed_cost), 0) - @envelope                         AS variance_against_envelope
+                   COALESCE(sum(computed_cost), 0) - @envelope                         AS variance_against_envelope,
+                   count(*) FILTER (WHERE cost_stated IS NOT TRUE)                     AS unstated_costs,
+                   count(*) FILTER (WHERE deterministic_task IS NOT NULL AND cost_stated IS NOT TRUE) AS unstated_deterministic
             FROM agent_costs
             WHERE period = @month
             GROUP BY GROUPING SETS ((channel_id), ())
@@ -569,7 +586,15 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                         : isCompany ? companyByCapability : new Dictionary<CapabilityClass, Money>(),
                     reader.GetInt64(7),
                     reader.GetInt64(8),
-                    reader.GetInt64(9));
+                    reader.GetInt64(9))
+                {
+                    // Whether each cost is stated (correction cycle), read in the same statement as the sums.
+                    UnstatedCosts = reader.GetInt64(11),
+                    UnstatedDeterministicCosts = reader.GetInt64(12),
+                    UnstatedByCapability = channel is { } ofUnstated && unstatedByCapability.TryGetValue(ofUnstated, out var u)
+                        ? u
+                        : isCompany ? companyUnstatedByCapability : new Dictionary<CapabilityClass, long>(),
+                };
 
                 if (channel is { } id)
                 {
@@ -705,6 +730,8 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                    (SELECT count(*) FROM agent_costs a WHERE a.channel_id = c.channel_id AND a.period = @month)  AS operations,
                    (SELECT COALESCE(sum(a.computed_cost), 0) FROM agent_costs a
                      WHERE a.channel_id = c.channel_id AND a.period = @month)                                   AS utilised,
+                   (SELECT count(*) FROM agent_costs a
+                     WHERE a.channel_id = c.channel_id AND a.period = @month AND a.cost_stated IS NOT TRUE)       AS unstated,
                    b.budget_id,
                    b.amount,
                    u.utilization_percent
@@ -718,7 +745,7 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
             transaction);
         command.Parameters.Add("month", NpgsqlDbType.Date).Value = month;
 
-        var rows = new List<(ChannelId Channel, long Operations, Money Utilised, Guid? Budget, Money? Amount, decimal? Percent)>();
+        var rows = new List<(ChannelId Channel, long Operations, Money Utilised, Guid? Budget, Money? Amount, decimal? Percent, long Unstated)>();
         await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
         {
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -727,9 +754,10 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                     new ChannelId(reader.GetGuid(0)),
                     reader.GetInt64(1),
                     new Money(reader.GetDecimal(2)),
-                    reader.IsDBNull(3) ? null : reader.GetGuid(3),
-                    reader.IsDBNull(4) ? null : new Money(reader.GetDecimal(4)),
-                    reader.IsDBNull(5) ? null : reader.GetDecimal(5)));
+                    reader.IsDBNull(4) ? null : reader.GetGuid(4),
+                    reader.IsDBNull(5) ? null : new Money(reader.GetDecimal(5)),
+                    reader.IsDBNull(6) ? null : reader.GetDecimal(6),
+                    reader.GetInt64(3)));
             }
         }
 
@@ -762,11 +790,14 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                 r.Percent,
                 r.Budget is { } id && alerts.TryGetValue(id, out var of)
                     ? of
-                    : new Dictionary<int, long>()))
+                    : new Dictionary<int, long>())
+            {
+                UnstatedOperations = r.Unstated,
+            })
             .ToArray();
     }
 
-    private static async Task<(long Operations, Money Cost, decimal? Percent)> CompanyCeilingAsync(
+    private static async Task<(long Operations, Money Cost, decimal? Percent, long Unstated)> CompanyCeilingAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         DateOnly month,
@@ -781,7 +812,8 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
                    COALESCE(sum(computed_cost), 0),
                    CASE WHEN count(*) = 0 THEN NULL
                         ELSE ROUND(COALESCE(sum(computed_cost), 0) * 100.0 / @ceiling, 4)
-                   END
+                   END,
+                   count(*) FILTER (WHERE cost_stated IS NOT TRUE)
             FROM agent_costs
             WHERE period = @month
             """,
@@ -793,7 +825,7 @@ public sealed class NpgsqlChannelPartitionReader : IChannelPartitionReader
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
 
-        return (reader.GetInt64(0), new Money(reader.GetDecimal(1)), reader.IsDBNull(2) ? null : reader.GetDecimal(2));
+        return (reader.GetInt64(0), new Money(reader.GetDecimal(1)), reader.IsDBNull(2) ? null : reader.GetDecimal(2), reader.GetInt64(3));
     }
 
     private static (DateTimeOffset Start, DateTimeOffset End) Bounds(DateOnly month)

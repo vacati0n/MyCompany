@@ -107,9 +107,6 @@ public static class CompositionRoot
         // The capability boundary — the single egress. Nothing below it is registered, because
         // nothing below it is visible.
         services.AddSingleton<ICapabilityGateway>(sp => CapabilityGatewayFactory.Create(
-            sp.GetRequiredService<IRouteRegistry>(),
-            sp.GetRequiredService<IRouteAvailabilityLedger>(),
-            sp.GetRequiredService<IOperatingRegisters>(),
             sp.GetRequiredService<IUnitOfWork>(),
             sp.GetRequiredService<ICredentialBroker>(),
             sp.GetRequiredService<ICredentialExchange>(),

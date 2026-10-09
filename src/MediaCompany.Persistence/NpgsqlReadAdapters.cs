@@ -442,6 +442,22 @@ public sealed class NpgsqlConfigurationStore : IConfigurationStore
         await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
+        // A company scope names a company the register HOLDS (the correction cycle): a value scoped to an
+        // identifier no company carries would be recorded where nothing reads it.
+        if (CompanyConfigurationScope.IsCompanyScope(next.Scope))
+        {
+            var company = Guid.ParseExact(next.Scope[CompanyConfigurationScope.ScopePrefix.Length..], "D");
+            await using var exists = new NpgsqlCommand(
+                "SELECT EXISTS (SELECT 1 FROM companies WHERE company_id = @company)", connection, transaction);
+            exists.Parameters.AddWithValue("company", company);
+            if (await exists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
+            {
+                throw new InvalidOperationException(
+                    $"'{next.Key}' under scope '{next.Scope}' is refused: the company register holds no company {company}, "
+                    + "so a value scoped to it would be read by nothing.");
+            }
+        }
+
         await using (var close = new NpgsqlCommand(
             """
             UPDATE configuration SET valid_to = @valid_from
@@ -549,9 +565,10 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IServedTierReader
             {
                 await using var command = new NpgsqlCommand(
                     """
-                    SELECT total_cost, envelope_total, envelope_metered, envelope_standing,
-                           variance_against_envelope, contains_estimates, operations
-                    FROM v_cost_per_period WHERE period = @period
+                    SELECT v.total_cost, v.envelope_total, v.envelope_metered, v.envelope_standing,
+                           v.variance_against_envelope, v.contains_estimates, v.operations,
+                           (SELECT count(*) FROM agent_costs a WHERE a.period = v.period AND a.cost_stated IS NOT TRUE)
+                    FROM v_cost_per_period v WHERE v.period = @period
                     """,
                     connection,
                     transaction);
@@ -582,7 +599,10 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IServedTierReader
                     new Money(reader.GetDecimal(3)),
                     new Money(reader.GetDecimal(4)),
                     reader.GetBoolean(5),
-                    reader.GetInt64(6));
+                    reader.GetInt64(6))
+                {
+                    UnstatedOperations = reader.GetInt64(7),
+                };
             },
             cancellationToken).ConfigureAwait(false);
 
@@ -598,8 +618,9 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IServedTierReader
     {
         await using var command = _dataSource.CreateCommand(
             """
-            SELECT total_cost, COALESCE(currency, 'USD'), contains_estimates, operations
-            FROM v_cost_per_item WHERE item_id = @item_id
+            SELECT v.total_cost, COALESCE(v.currency, 'USD'), v.contains_estimates, v.operations,
+                   (SELECT count(*) FROM agent_costs a WHERE a.item_id = v.item_id AND a.cost_stated IS NOT TRUE)
+            FROM v_cost_per_item v WHERE v.item_id = @item_id
             """);
         command.Parameters.AddWithValue("item_id", item.Value);
 
@@ -613,7 +634,10 @@ public sealed class NpgsqlCostReader : ICostRollupReader, IServedTierReader
             item,
             new Money(reader.GetDecimal(0), reader.GetString(1)),
             reader.GetBoolean(2),
-            reader.GetInt64(3));
+            reader.GetInt64(3))
+        {
+            UnstatedOperations = reader.GetInt64(4),
+        };
     }
 
     /// <summary>

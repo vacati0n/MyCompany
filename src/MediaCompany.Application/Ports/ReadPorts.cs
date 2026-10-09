@@ -147,7 +147,14 @@ public sealed record PeriodSummary(
     Money EnvelopeStanding,
     Money VarianceAgainstEnvelope,
     bool ContainsEstimates,
-    long Operations);
+    long Operations)
+{
+    /// <summary>
+    /// How many of the operations carry a cost that is not stated (the AI-economics change, correction
+    /// cycle): where any does, the total is a partial sum and is never presented as observed.
+    /// </summary>
+    public long UnstatedOperations { get; init; }
+}
 
 /// <summary>
 /// One item's cost position as the datastore computes it, on the same shape as
@@ -158,7 +165,11 @@ public sealed record ItemSummary(
     ItemId Item,
     Money Total,
     bool ContainsEstimates,
-    long Operations);
+    long Operations)
+{
+    /// <summary>How many of the operations carry a cost that is not stated; where any does, the total is not observed.</summary>
+    public long UnstatedOperations { get; init; }
+}
 
 /// <summary>
 /// The served reasoning tier as recorded, one entry per accounted operation in a period.
@@ -411,7 +422,17 @@ public sealed record OperationTotals(
     IReadOnlyDictionary<CapabilityClass, Money> CostByCapability,
     long ServedTierRecords,
     long CarryingBothTiers,
-    long AgreeingTiers);
+    long AgreeingTiers)
+{
+    /// <summary>How many operations of the partition carry a cost that is not stated (correction cycle).</summary>
+    public long UnstatedCosts { get; init; }
+
+    /// <summary>How many operations of the deterministic set carry a cost that is not stated.</summary>
+    public long UnstatedDeterministicCosts { get; init; }
+
+    /// <summary>How many operations of each capability class carry a cost that is not stated.</summary>
+    public IReadOnlyDictionary<CapabilityClass, long> UnstatedByCapability { get; init; } = new Dictionary<CapabilityClass, long>();
+}
 
 /// <summary>One channel's partition of the operation record, and whether the register holds the channel.</summary>
 public sealed record OperationPartitionRow(ChannelId Channel, bool InRegister, OperationTotals Totals);
@@ -468,7 +489,11 @@ public sealed record ChannelBudgetRow(
     Money Utilised,
     Money? BudgetAmount,
     decimal? UtilisationPercent,
-    IReadOnlyDictionary<int, long> AlertsByThreshold);
+    IReadOnlyDictionary<int, long> AlertsByThreshold)
+{
+    /// <summary>How many of the channel's operations in the month carry a cost that is not stated (correction cycle).</summary>
+    public long UnstatedOperations { get; init; }
+}
 
 /// <summary>Every registered channel's budget position, and the company's cost against the ceiling, for one month.</summary>
 public sealed record BudgetPartitionSummary(
@@ -477,7 +502,11 @@ public sealed record BudgetPartitionSummary(
     long CompanyOperations,
     Money CompanyCost,
     decimal? CompanyUtilisationPercent,
-    Money Ceiling);
+    Money Ceiling)
+{
+    /// <summary>How many of the company's operations in the month carry a cost that is not stated (correction cycle).</summary>
+    public long CompanyUnstatedOperations { get; init; }
+}
 
 /// <summary>
 /// The approval queue reader (decision D-005 of the multi-channel design).

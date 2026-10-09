@@ -643,9 +643,6 @@ public sealed class SustainedRateIntegrationTests : IAsyncLifetime
         var broker = CredentialBrokerFactory.Create(new SecretStoreOptions(), () => _clock.UtcNow);
 
         return CapabilityGatewayFactory.Create(
-            new NpgsqlRouteRegistry(Source),
-            new NpgsqlRouteAvailabilityLedger(Source),
-            new NpgsqlOperatingRegisters(Source),
             new NpgsqlUnitOfWork(Source, _clock),
             broker,
             broker,

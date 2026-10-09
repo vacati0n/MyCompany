@@ -130,7 +130,22 @@ internal sealed class FakeAdmission
 
     public int GoverningReads { get; set; }
 
-    public int EvidenceReads { get; set; }
+    public int Snapshots { get; set; }
+
+    /// <summary>The scope holds taken, in the order they were taken.</summary>
+    public List<string> Holds { get; } = [];
+
+    /// <summary>The price sets restored on a fresh transaction after a lost one.</summary>
+    public List<IReadOnlyList<ModelPrice>> RestoredPrices { get; } = [];
+
+    /// <summary>The route register the snapshot reads routes and forbidden sources from.</summary>
+    public IRouteRegistry? RouteSource { get; set; }
+
+    /// <summary>The availability ledger the snapshot reads availability from.</summary>
+    public IRouteAvailabilityLedger? AvailabilitySource { get; set; }
+
+    /// <summary>The registers the snapshot reads accounts from.</summary>
+    public IOperatingRegisters? RegisterSource { get; set; }
 
     /// <summary>Set to make the next operation write fail, standing in for a transaction lost after the provider call.</summary>
     public bool LoseNextOperationWrite { get; set; }
@@ -167,12 +182,42 @@ internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDec
         return Task.FromResult(_reservation);
     }
 
-    public Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(IReadOnlyCollection<ModelId> models, CancellationToken cancellationToken)
+    public Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
     {
+        // The order the datastore adapter takes the holds in, recorded so a demonstration can read it.
+        state.Holds.Add("company");
+        state.Holds.Add($"channel:{channel}");
+        return Task.CompletedTask;
+    }
+
+    public async Task<AdmissionSnapshot> ReadAsync(
+        CapabilityClass capability, Attribution attribution, Money companyAllotment, TaskClass? taskClass, CancellationToken cancellationToken)
+    {
+        state.Snapshots++;
         var at = Reserved().Instant;
-        return Task.FromResult<IReadOnlyList<ModelPrice>>(state.Prices
-            .Where(p => models.Contains(p.Model) && p.ValidFrom <= at && (p.ValidTo is null || p.ValidTo > at))
-            .ToArray());
+        var routes = state.RouteSource is null
+            ? (IReadOnlyList<Route>)[]
+            : await state.RouteSource.AdmittedRoutesAsync(capability, cancellationToken);
+        var models = routes.Select(r => r.Target).OfType<RouteTarget.ProviderRoute>().Select(p => p.Model).ToHashSet();
+
+        return new AdmissionSnapshot(
+            routes,
+            state.RouteSource is null ? [] : await state.RouteSource.ForbiddenSourcesAsync(cancellationToken),
+            state.AvailabilitySource is null
+                ? new Dictionary<RouteId, RouteAvailability>()
+                : await state.AvailabilitySource.CurrentAsync(routes.Select(r => r.Id).ToArray(), cancellationToken),
+            state.RegisterSource is null ? [] : await state.RegisterSource.ProviderAccountsAsync(cancellationToken),
+            state.Prices.Where(p => models.Contains(p.Model) && p.ValidFrom <= at && (p.ValidTo is null || p.ValidTo > at)).ToArray(),
+            await GoverningReadingsAsync(attribution, companyAllotment, cancellationToken),
+            taskClass is { } task
+                ? state.Evidence.Where(o => routes.Any(r => r.Id == o.Route) && o.TaskClass == task && o.ObservedAt <= at).ToArray()
+                : []);
+    }
+
+    public Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken)
+    {
+        state.RestoredPrices.Add(prices);
+        return Task.CompletedTask;
     }
 
     public Task<GoverningReadingsSummary> GoverningReadingsAsync(Attribution attribution, Money companyAllotment, CancellationToken cancellationToken)
@@ -188,16 +233,6 @@ internal sealed class FakeAdmissionLedger(FakeAdmission state, List<AdmissionDec
             state.CompanySpend,
             FakeAdmission.Percent(companyAllotment, state.CompanySpend),
             state.Headroom));
-    }
-
-    public Task<IReadOnlyList<BenchmarkObservation>> EvidenceAsync(
-        IReadOnlyCollection<RouteId> routes, TaskClass taskClass, CancellationToken cancellationToken)
-    {
-        state.EvidenceReads++;
-        var at = Reserved().Instant;
-        return Task.FromResult<IReadOnlyList<BenchmarkObservation>>(state.Evidence
-            .Where(o => routes.Contains(o.Route) && o.TaskClass == taskClass && o.ObservedAt <= at)
-            .ToArray());
     }
 
     public Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken)
@@ -245,6 +280,21 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
 
     /// <summary>Set to make the next commit throw, standing in for a crash mid-transaction.</summary>
     public bool FailNextCommit { get; set; }
+
+    /// <summary>
+    /// Set to make the next commit REACH THE STORE and then throw, standing in for a commit whose reply was
+    /// lost: what it wrote is durable, and the caller cannot know it.
+    /// </summary>
+    public bool LoseNextCommitReply { get; set; }
+
+    /// <summary>Binds the read ports the admission snapshot is composed from (the correction cycle).</summary>
+    public FakeUnitOfWork Bind(IRouteRegistry routes, IRouteAvailabilityLedger availability, IOperatingRegisters registers)
+    {
+        Admission.RouteSource = routes;
+        Admission.AvailabilitySource = availability;
+        Admission.RegisterSource = registers;
+        return this;
+    }
 
     public Task<IWorkTransaction> BeginAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IWorkTransaction>(new Transaction(this));
@@ -307,6 +357,13 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
             _owner.PendingAvailability.Clear();
             _owner.Commits++;
             _committed = true;
+
+            if (_owner.LoseNextCommitReply)
+            {
+                _owner.LoseNextCommitReply = false;
+                throw new IOException("induced loss of the commit's reply after the commit reached the store");
+            }
+
             return Task.CompletedTask;
         }
 
@@ -372,6 +429,13 @@ internal sealed class FakeUnitOfWork : IUnitOfWork
                 {
                     owner.Admission.LoseNextOperationWrite = false;
                     throw new InvalidOperationException("induced loss of the admission transaction after the provider call");
+                }
+
+                // The datastore's key on the operation identifier: a second write under one identifier books
+                // nothing and says the attempt is already recorded (the correction cycle).
+                if (owner.Operations.FirstOrDefault(o => o.Id == draft.Id) is { } recorded)
+                {
+                    throw new OperationAlreadyRecordedException(recorded);
                 }
 
                 // The production recorder lets the datastore compute the cost. Here the double

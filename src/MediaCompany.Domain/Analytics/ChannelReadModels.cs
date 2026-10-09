@@ -221,6 +221,12 @@ public sealed record CompanyCeilingReading
     public required IReadOnlyList<ThresholdReading> Thresholds { get; init; }
     public required MeasurementQuantity StandingCommitment { get; init; }
 
+    /// <summary>
+    /// The basis the cost controller governs metered admission on — the recorded metered allotment, a recorded
+    /// amount — stated beside this reading's envelope (the AI-economics change, correction cycle).
+    /// </summary>
+    public required RecordedAmount ControllerBasis { get; init; }
+
     /// <summary>What the company reading covers and what it does not. Required.</summary>
     public required string CoverageStatement { get; init; }
 }

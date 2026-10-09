@@ -109,8 +109,16 @@ public interface IWorkTransaction : IAsyncDisposable
 /// takes it exclusively without waiting, no closure can pass the reserved instant meanwhile, so the
 /// month the operation is admitted against is the month it is booked into.
 ///
-/// Each read is ONE STATEMENT, so a ranking or a controller decision never rests on reads taken at
-/// different instants.
+/// ONE SNAPSHOT (the correction cycle): <see cref="ReadAsync"/> reads the routes, the forbidden sources,
+/// the availability, the accounts, the prices in force, the governing readings and the evidence in ONE
+/// STATEMENT, so the estimate, the headroom it is compared with and the controller's readings come from
+/// one consistent read; and it captures the prices it read on the transaction, so the operation recorder
+/// applies those prices rather than looking them up again in the editable price register.
+///
+/// SERIALISED PER SCOPE (the correction cycle, on the ruling that no concurrent overshoot is accepted):
+/// <see cref="HoldScopesAsync"/> takes the company scope's hold and then the channel scope's, always in
+/// that order, each held to the end of the transaction, so two metered admissions of one scope cannot
+/// both read spend that excludes the other's booking.
 /// </summary>
 public interface IAdmissionLedger
 {
@@ -120,8 +128,32 @@ public interface IAdmissionLedger
     /// </summary>
     Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken);
 
-    /// <summary>The price rows in force AT THE RESERVED INSTANT for the named models, one per model and unit kind.</summary>
-    Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(IReadOnlyCollection<ModelId> models, CancellationToken cancellationToken);
+    /// <summary>
+    /// Takes the company scope's admission hold and then the attribution channel's, in that fixed order,
+    /// each held to the end of this transaction. A metered admission takes both before the read it decides
+    /// on, so admissions of one scope are serialised and no deadlock between them is possible.
+    /// </summary>
+    Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Everything one admission decides by, in ONE STATEMENT at the reserved instant: the capability's
+    /// admitted routes, the forbidden sources, each route's current availability, the provider accounts,
+    /// the prices in force for the routes' models, the governing readings of the attribution with the
+    /// company's metered allotment capping the headroom, and, where a task class is named, the evidence.
+    /// The prices read are captured on the transaction for the operation recorder.
+    /// </summary>
+    Task<AdmissionSnapshot> ReadAsync(
+        CapabilityClass capability,
+        Attribution attribution,
+        Money companyAllotment,
+        TaskClass? taskClass,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Captures price rows read by an earlier admission snapshot on THIS transaction, so an attempt recorded
+    /// on a fresh transaction after a lost one applies the prices it was admitted at.
+    /// </summary>
+    Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken);
 
     /// <summary>
     /// The governing readings of one attribution in the booking month, in one statement at the reserved
@@ -135,15 +167,6 @@ public interface IAdmissionLedger
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Every observation of the named routes for one task class, with each one's cost and latency from
-    /// the operation it references, in one statement.
-    /// </summary>
-    Task<IReadOnlyList<BenchmarkObservation>> EvidenceAsync(
-        IReadOnlyCollection<RouteId> routes,
-        TaskClass taskClass,
-        CancellationToken cancellationToken);
-
-    /// <summary>
     /// Writes the decision record of one operation recorded on this transaction: the header stamped
     /// with the reserved instant and month, one row per governing reading, one per candidate and one per
     /// observation ranked on. The datastore refuses a decision whose instant is not its operation's.
@@ -153,6 +176,38 @@ public interface IAdmissionLedger
 
 /// <summary>The booking instant a transaction reserved, and its month (the first day, UTC).</summary>
 public sealed record BookingReservation(DateTimeOffset Instant, DateOnly Month);
+
+/// <summary>
+/// Everything one admission decides by, as one statement read it at the reserved instant (the
+/// AI-economics change, correction cycle).
+/// </summary>
+public sealed record AdmissionSnapshot(
+    IReadOnlyList<Route> Routes,
+    IReadOnlyList<ForbiddenSource> ForbiddenSources,
+    IReadOnlyDictionary<RouteId, RouteAvailability> Availability,
+    IReadOnlyList<ProviderAccount> Accounts,
+    IReadOnlyList<ModelPrice> Prices,
+    GoverningReadingsSummary Readings,
+    IReadOnlyList<BenchmarkObservation> Evidence);
+
+/// <summary>
+/// An operation is already recorded under the identifier a writer presented (the AI-economics change,
+/// correction cycle): one provider attempt is recorded under ONE identifier minted before the call, so a
+/// retry after a commit whose outcome was unknown meets the first record rather than booking a second.
+/// The stored record is carried, and the writing transaction is left usable.
+/// </summary>
+public sealed class OperationAlreadyRecordedException : InvalidOperationException
+{
+    public OperationAlreadyRecordedException(OperationRecord recorded)
+        : base($"Operation {recorded?.Id} is already recorded; one attempt is booked once.")
+    {
+        ArgumentNullException.ThrowIfNull(recorded);
+        Recorded = recorded;
+    }
+
+    /// <summary>The record already stored under the identifier.</summary>
+    public OperationRecord Recorded { get; }
+}
 
 /// <summary>
 /// One scope's booked operations in a booking month, as the datastore aggregated them: how many, how
@@ -401,6 +456,11 @@ public interface IOperationRecorder
     /// against; elsewhere it is stamped exactly as above. The record also states whether its cost is
     /// stated: not where a consumed input, output or cached unit had no price row in force at the
     /// booking instant, or any other unit was consumed, so a missing price never reads as a stated zero.
+    ///
+    /// Where the transaction captured prices at admission (the correction cycle) the recorder applies the
+    /// captured prices, not a later lookup in the editable price register. Where an operation is already
+    /// recorded under the draft's identifier it books nothing and raises
+    /// <see cref="OperationAlreadyRecordedException"/> carrying the stored record.
     /// </summary>
     Task<OperationRecord> RecordAsync(OperationDraft draft, CancellationToken cancellationToken);
 }

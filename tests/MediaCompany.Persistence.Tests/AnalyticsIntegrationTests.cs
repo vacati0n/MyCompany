@@ -173,7 +173,7 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheBoundaryRecordsBothTiersAgainstTheRecordStoreWithoutReachingAProvider()
     {
-        var gateway = BuildGateway(statedTier: ReasoningTier.Deep);
+        var gateway = await BuildGatewayAsync(statedTier: ReasoningTier.Deep);
 
         var outcome = await gateway.ExecuteAsync(Request(ReasoningTier.Light), Context(), CancellationToken.None);
 
@@ -215,7 +215,7 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task ARouteStatingNoTierRecordsTheAbsenceMarkerAgainstTheRecordStore()
     {
-        var gateway = BuildGateway(statedTier: null);
+        var gateway = await BuildGatewayAsync(statedTier: null);
 
         var outcome = await gateway.ExecuteAsync(Request(ReasoningTier.Deep), Context(), CancellationToken.None);
 
@@ -448,26 +448,29 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
     // Harness
     // -----------------------------------------------------------------------
 
-    private ICapabilityGateway BuildGateway(ReasoningTier? statedTier)
+    /// <summary>
+    /// The delivered boundary over the record store. The admission reads the route register, the
+    /// availability and the accounts in one snapshot of its own transaction (the correction cycle), so the
+    /// stated tier and the serving state are recorded on the fixture route row in the throwaway store rather
+    /// than supplied by a register double. No endpoint is supplied, so no provider adapter exists.
+    /// </summary>
+    private async Task<ICapabilityGateway> BuildGatewayAsync(ReasoningTier? statedTier)
     {
-        var route = new Route(
-            SubstituteRoute,
-            CapabilityClass.EditorialReasoning,
-            RouteTier.Primary,
-            new RouteTarget.NonAiSubstitute(DeterministicTaskRegistry.MetadataTemplatePopulation),
-            new QualityRating(100),
-            new ContextCapacity(int.MaxValue),
-            "non-AI substitute; no provider account and no commercial terms",
-            new DateOnly(2026, 9, 20),
-            statedTier);
+        await ExecuteAsync(
+            """
+            UPDATE routes SET reasoning_tier_stated = @stated WHERE route_id = @route;
+            INSERT INTO route_availability (route_id, effective_from, state, reason)
+            VALUES (@route, now() - interval '1 day', 'Serving', 'demonstration fixture: the substitute route is serving');
+            """,
+            c =>
+            {
+                c.Parameters.AddWithValue("route", SubstituteRoute.Value);
+                c.Parameters.Add("stated", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)statedTier?.ToString() ?? DBNull.Value;
+            });
 
         var broker = CredentialBrokerFactory.Create(new SecretStoreOptions(), () => Now);
 
-        // No endpoint is supplied, so no provider adapter is built and none could be reached.
         return CapabilityGatewayFactory.Create(
-            new RouteRegistryStatingATier(route),
-            new AvailabilityAlwaysServing(),
-            new EmptyRegisters(),
             new NpgsqlUnitOfWork(Source, _clock),
             broker,
             broker,
@@ -496,51 +499,6 @@ public sealed class AnalyticsIntegrationTests : IAsyncLifetime
         new EstimatedUnits(1_000, 500, 0),
         TimeSpan.FromHours(4),
         ReducedFloorPolicy.Forbidden);
-
-    /// <summary>
-    /// Supplies the admitted route to the boundary. It is a test double for the route register
-    /// port and for that port alone: the boundary, the resolver, the operation recorder, the audit
-    /// appender and the record store are the delivered ones, so the record this produces is
-    /// written by the boundary executing rather than composed here.
-    /// </summary>
-    private sealed class RouteRegistryStatingATier(Route route) : IRouteRegistry
-    {
-        public Task<IReadOnlyList<Route>> AdmittedRoutesAsync(CapabilityClass capability, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Route>>(route.Capability == capability ? [route] : []);
-
-        public Task<IReadOnlyList<ForbiddenSource>> ForbiddenSourcesAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<ForbiddenSource>>([]);
-    }
-
-    private sealed class AvailabilityAlwaysServing : IRouteAvailabilityLedger
-    {
-        public Task<IReadOnlyDictionary<RouteId, RouteAvailability>> CurrentAsync(
-            IReadOnlyCollection<RouteId> routes, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyDictionary<RouteId, RouteAvailability>>(
-                routes.ToDictionary(r => r, r => RouteAvailability.Serving(r, Now)));
-    }
-
-    /// <summary>No provider account, no model and no price: there is nothing to reach.</summary>
-    private sealed class EmptyRegisters : IOperatingRegisters
-    {
-        public Task<IReadOnlyList<ProviderAccount>> ProviderAccountsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<ProviderAccount>>([]);
-
-        public Task<IReadOnlyList<Model>> ModelsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Model>>([]);
-
-        public Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(DateTimeOffset asOf, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<ModelPrice>>([]);
-
-        public Task<IReadOnlyList<Channel>> ChannelsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Channel>>([]);
-
-        public Task<IReadOnlyList<Department>> DepartmentsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<Department>>([]);
-
-        public Task<IReadOnlyList<WorkforceAgent>> AgentsAsync(CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<WorkforceAgent>>([]);
-    }
 
     private sealed class TestClock(DateTimeOffset now) : IClock
     {

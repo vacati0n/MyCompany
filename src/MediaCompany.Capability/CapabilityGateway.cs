@@ -79,6 +79,15 @@ public sealed record CapabilityInvocationContext
 /// Where the transaction is lost after the provider was called, the incurred attempt is recorded on a
 /// fresh transaction under a fresh reservation, and its decision record says that the admitted month's
 /// reservation was lost and re-evaluates the governing readings against the month it was booked into.
+///
+/// THE CORRECTION CYCLE. Everything an admission decides by is one snapshot of the admission transaction,
+/// read by the admission ledger in one statement, and the prices it read are the ones the recorder applies.
+/// A metered admission takes the company scope's hold and then the channel scope's before the snapshot it
+/// decides on, so two metered admissions of one scope are serialised and cannot together pass a threshold,
+/// a budget or the allotment neither reading reached. A provider attempt is recorded under ONE operation
+/// identifier minted before the call: a retry after a commit whose outcome is unknown meets the first
+/// record and books nothing. Once the provider has returned, recording is not cancellable, so a cancellation
+/// never rolls back the record of a cost already incurred.
 /// </summary>
 public sealed class CapabilityGateway : ICapabilityGateway
 {
@@ -87,24 +96,15 @@ public sealed class CapabilityGateway : ICapabilityGateway
         "the booking instant reserved at admission held to the booking, under the shared hold on the record horizon, so "
         + "the operation is booked into the month it was admitted against";
 
-    private readonly IRouteRegistry _routes;
-    private readonly IRouteAvailabilityLedger _availability;
-    private readonly IOperatingRegisters _registers;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICredentialBroker _broker;
     private readonly IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> _adapters;
 
     internal CapabilityGateway(
-        IRouteRegistry routes,
-        IRouteAvailabilityLedger availability,
-        IOperatingRegisters registers,
         IUnitOfWork unitOfWork,
         ICredentialBroker broker,
         IReadOnlyDictionary<ProviderAccountId, IProviderAdapter> adapters)
     {
-        _routes = routes;
-        _availability = availability;
-        _registers = registers;
         _unitOfWork = unitOfWork;
         _broker = broker;
         _adapters = adapters;
@@ -118,17 +118,19 @@ public sealed class CapabilityGateway : ICapabilityGateway
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(context);
 
-        // Routes, forbidden sources, availability and accounts stay read through their delivered ports.
-        var admitted = await _routes.AdmittedRoutesAsync(request.Capability, cancellationToken).ConfigureAwait(false);
-        var forbidden = await _routes.ForbiddenSourcesAsync(cancellationToken).ConfigureAwait(false);
-        var availability = await _availability
-            .CurrentAsync(admitted.Select(r => r.Id).ToArray(), cancellationToken).ConfigureAwait(false);
-        var accounts = await _registers.ProviderAccountsAsync(cancellationToken).ConfigureAwait(false);
-
         await using var held = new HeldTransaction(await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false));
 
-        var admission = await AdmitAsync(held.Transaction, request, admitted, forbidden, availability, accounts, cancellationToken)
-            .ConfigureAwait(false);
+        var admission = await AdmitAsync(held.Transaction, request, cancellationToken).ConfigureAwait(false);
+
+        // A METERED ADMISSION IS SERIALISED PER SCOPE (the correction cycle): where the first snapshot
+        // resolves to a provider route, the company scope's hold and then the channel scope's are taken, and
+        // the admission is decided again on a snapshot read after both are held, so it reads every booking
+        // of an admission of the same scope that committed before it.
+        if (admission.Record.Resolution is CapabilityResolution.Resolved { Route.Target: RouteTarget.ProviderRoute })
+        {
+            await held.Transaction.Admission.HoldScopesAsync(request.Attribution.Channel, cancellationToken).ConfigureAwait(false);
+            admission = await AdmitAsync(held.Transaction, request, cancellationToken).ConfigureAwait(false);
+        }
 
         return admission.Record.Resolution switch
         {
@@ -162,51 +164,37 @@ public sealed class CapabilityGateway : ICapabilityGateway
     private static async Task<Admission> AdmitAsync(
         IWorkTransaction transaction,
         CapabilityRequest request,
-        IReadOnlyList<Route> admitted,
-        IReadOnlyList<ForbiddenSource> forbidden,
-        IReadOnlyDictionary<RouteId, RouteAvailability> availability,
-        IReadOnlyList<ProviderAccount> accounts,
         CancellationToken cancellationToken)
     {
         var reservation = await transaction.Admission.ReserveAsync(cancellationToken).ConfigureAwait(false);
 
-        var models = admitted
-            .Select(r => r.Target)
-            .OfType<RouteTarget.ProviderRoute>()
-            .Select(p => p.Model)
-            .Distinct()
-            .ToArray();
+        // ONE SNAPSHOT (the correction cycle): routes, forbidden sources, availability, accounts, prices,
+        // governing readings and evidence in one statement at the reserved instant.
+        var snapshot = await transaction.Admission
+            .ReadAsync(request.Capability, request.Attribution, ApprovedEnvelope.Metered, request.TaskClass, cancellationToken)
+            .ConfigureAwait(false);
 
-        var prices = models.Length == 0
-            ? []
-            : await transaction.Admission.PricesInForceAsync(models, cancellationToken).ConfigureAwait(false);
+        var controller = CostController.Decide(snapshot.Readings, reservation.Instant);
 
-        var readings = await transaction.Admission
-            .GoverningReadingsAsync(request.Attribution, ApprovedEnvelope.Metered, cancellationToken).ConfigureAwait(false);
-
-        var controller = CostController.Decide(readings, reservation.Instant);
-
-        var evidence = request.TaskClass is { } taskClass && admitted.Count > 0
-            ? await transaction.Admission
-                .EvidenceAsync(admitted.Select(r => r.Id).ToArray(), taskClass, cancellationToken).ConfigureAwait(false)
-            : [];
-
+        // The headroom is consulted only where the controller admits metered work, which requires every
+        // operation of the month to state its cost (the company reading covers them all), so it is never a
+        // partial sum where it decides.
         var record = RouteResolver.ResolveWithRecord(
             request,
             new ResolutionInputs
             {
-                AdmittedRoutes = admitted,
-                ForbiddenSources = forbidden,
-                Availability = availability,
-                AccountStatus = accounts.ToDictionary(a => a.Id, a => a.Status),
-                Prices = BuildPriceTable(prices),
-                BudgetRemaining = readings.Headroom,
+                AdmittedRoutes = snapshot.Routes,
+                ForbiddenSources = snapshot.ForbiddenSources,
+                Availability = snapshot.Availability,
+                AccountStatus = snapshot.Accounts.ToDictionary(a => a.Id, a => a.Status),
+                Prices = BuildPriceTable(snapshot.Prices),
+                BudgetRemaining = snapshot.Readings.Headroom,
                 Now = reservation.Instant,
                 Controller = controller,
-                Evidence = evidence,
+                Evidence = snapshot.Evidence,
             });
 
-        return new Admission(reservation, controller, record);
+        return new Admission(reservation, controller, record, snapshot.Prices);
     }
 
     private async Task<CapabilityOutcome> ExecuteResolvedAsync(
@@ -299,18 +287,26 @@ public sealed class CapabilityGateway : ICapabilityGateway
 
         var handle = ((CredentialOutcome.Issued)issuance).Handle;
 
+        // ONE IDENTIFIER PER ATTEMPT, minted before the call (the correction cycle): every write of this
+        // attempt, on this transaction or on a fresh one after a loss, is under it, so it is booked once.
+        var operationId = OperationId.New();
+
         // The provider is called WITH THE ADMISSION TRANSACTION OPEN, so the shared hold on the record
         // horizon keeps the reserved instant bookable for the whole call; the call is bounded by the
         // client's own timeout and is never retried inside the transaction.
         var attempt = await adapter.InvokeAsync(provider, request, handle, cancellationToken).ConfigureAwait(false);
 
+        // From here the cost is incurred, so recording is NOT CANCELLABLE: a cancellation that arrives now
+        // must not roll back the record of what the provider already did.
+        var recording = CancellationToken.None;
+
         try
         {
             return await RecordAttemptAsync(
-                held.Transaction, admission, request, context, resolved, provider, attempt, ReservationHeld, cancellationToken)
+                held.Transaction, admission, request, context, resolved, provider, attempt, operationId, ReservationHeld, recording)
                 .ConfigureAwait(false);
         }
-        catch (Exception lost) when (lost is not OperationCanceledException)
+        catch (Exception lost)
         {
             // The admission transaction was lost after the provider was called. The cost was incurred,
             // so it is never dropped: it is recorded on a fresh transaction under a fresh reservation,
@@ -325,10 +321,12 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 // The lost transaction is already gone; disposing it can fail and changes nothing durable.
             }
 
-            await using var fresh = new HeldTransaction(await _unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false));
-            var reservation = await fresh.Transaction.Admission.ReserveAsync(cancellationToken).ConfigureAwait(false);
+            await using var fresh = new HeldTransaction(await _unitOfWork.BeginAsync(recording).ConfigureAwait(false));
+            await fresh.Transaction.Admission.HoldScopesAsync(request.Attribution.Channel, recording).ConfigureAwait(false);
+            var reservation = await fresh.Transaction.Admission.ReserveAsync(recording).ConfigureAwait(false);
+            await fresh.Transaction.Admission.RestorePricesAsync(admission.Prices, recording).ConfigureAwait(false);
             var readings = await fresh.Transaction.Admission
-                .GoverningReadingsAsync(request.Attribution, ApprovedEnvelope.Metered, cancellationToken).ConfigureAwait(false);
+                .GoverningReadingsAsync(request.Attribution, ApprovedEnvelope.Metered, recording).ConfigureAwait(false);
 
             var statement =
                 $"the booking instant reserved at admission, {admission.Reservation.Instant:O} in "
@@ -336,10 +334,21 @@ public sealed class CapabilityGateway : ICapabilityGateway
                 + $"the incurred attempt is booked under a fresh reservation at {reservation.Instant:O} in "
                 + $"{reservation.Month:yyyy-MM}, and the governing readings recorded here were re-evaluated against that month";
 
-            return await RecordAttemptAsync(
-                fresh.Transaction,
-                admission with { Reservation = reservation, Controller = CostController.Decide(readings, reservation.Instant) },
-                request, context, resolved, provider, attempt, statement, cancellationToken).ConfigureAwait(false);
+            try
+            {
+                return await RecordAttemptAsync(
+                    fresh.Transaction,
+                    admission with { Reservation = reservation, Controller = CostController.Decide(readings, reservation.Instant) },
+                    request, context, resolved, provider, attempt, operationId, statement, recording).ConfigureAwait(false);
+            }
+            catch (OperationAlreadyRecordedException already)
+            {
+                // The first commit reached the datastore although its reply was lost: the attempt is already
+                // booked under its one identifier, with its decision, audit entry and alerts, so nothing more
+                // is written and the fresh transaction is rolled back. The alerts that commit raised are in
+                // the record; they are not raised twice.
+                return new CapabilityOutcome.Completed(already.Recorded, []);
+            }
         }
     }
 
@@ -356,6 +365,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
         CapabilityResolution.Resolved resolved,
         RouteTarget.ProviderRoute provider,
         ProviderAttempt attempt,
+        OperationId operationId,
         string reservationStatement,
         CancellationToken cancellationToken)
     {
@@ -384,7 +394,7 @@ public sealed class CapabilityGateway : ICapabilityGateway
         var operation = await transaction.Operations.RecordAsync(
             new OperationDraft
             {
-                Id = OperationId.New(),
+                Id = operationId,
                 Run = context.Run,
                 Attribution = request.Attribution,
                 Capability = request.Capability,
@@ -557,7 +567,11 @@ public sealed class CapabilityGateway : ICapabilityGateway
     };
 
     /// <summary>What one admission reserved, decided and resolved.</summary>
-    private sealed record Admission(BookingReservation Reservation, ControllerDecision Controller, ResolutionRecord Record);
+    private sealed record Admission(
+        BookingReservation Reservation,
+        ControllerDecision Controller,
+        ResolutionRecord Record,
+        IReadOnlyList<ModelPrice> Prices);
 
     /// <summary>The admission transaction, disposed exactly once whichever path ends it.</summary>
     private sealed class HeldTransaction(IWorkTransaction transaction) : IAsyncDisposable

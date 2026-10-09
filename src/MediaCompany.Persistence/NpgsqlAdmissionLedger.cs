@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.Json;
 using MediaCompany.Application.Ports;
 using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Analytics;
@@ -14,16 +16,84 @@ namespace MediaCompany.Persistence;
 /// <see cref="ReserveAsync"/> stamps the booking instant exactly as the operation recorder stamps — the
 /// later of the datastore's clock and the record horizon, under a SHARED hold on the horizon kept to
 /// the end of this transaction — and holds it in a transaction-local setting, so it reverts when the
-/// transaction ends and no caller code ever carries it. Every read below is ONE STATEMENT taken AT that
-/// instant, and the decision record is stamped with it; the datastore refuses a decision whose instant
-/// is not its operation's booked one.
+/// transaction ends and no caller code ever carries it.
+///
+/// THE CORRECTION CYCLE. <see cref="ReadAsync"/> is ONE STATEMENT: routes, forbidden sources, availability,
+/// accounts, prices in force, governing readings and evidence all come from one snapshot at the reserved
+/// instant, and the prices it read are captured in a second transaction-local setting that the operation
+/// recorder applies. <see cref="HoldScopesAsync"/> serialises metered admissions per scope with two
+/// transaction-scoped advisory holds taken in one fixed order, the company's first.
 /// </summary>
 internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
 {
     /// <summary>The transaction-local setting the reserved instant is held in.</summary>
     internal const string BookingInstantSetting = "mediacompany.booking_instant";
 
+    /// <summary>The transaction-local setting the prices captured at admission are held in, as a JSON array.</summary>
+    internal const string AdmissionPricesSetting = "mediacompany.admission_prices";
+
     private const string ReservedInstant = "current_setting('mediacompany.booking_instant')::timestamptz";
+
+    /// <summary>
+    /// The governing readings, as common table expressions over the booking month, shared by the snapshot
+    /// read and the readings-only read. The headroom is the delivered minimum over the governing channel and
+    /// department budgets, CAPPED by what remains of the company's metered allotment (the interim answer on
+    /// the allotment: it caps each estimate exactly as channel headroom does).
+    /// </summary>
+    private const string ReadingCtes =
+        $"""
+        booking AS (
+            SELECT {ReservedInstant} AS at,
+                   (date_trunc('month', {ReservedInstant} AT TIME ZONE 'UTC'))::date AS month
+        ),
+        channel_budget AS (
+            SELECT b.amount, b.currency
+            FROM budgets b, booking
+            WHERE b.scope_kind = 'Channel' AND b.scope_id = @channel_id AND b.period = booking.month
+        ),
+        channel_ops AS (
+            SELECT count(*)                                        AS operations,
+                   count(*) FILTER (WHERE cost_stated IS NOT TRUE) AS unstated,
+                   COALESCE(sum(computed_cost), 0)                 AS booked,
+                   COALESCE(min(currency), 'USD')                  AS currency
+            FROM agent_costs, booking
+            WHERE channel_id = @channel_id AND period = booking.month
+        ),
+        company_ops AS (
+            SELECT count(*)                                        AS operations,
+                   count(*) FILTER (WHERE cost_stated IS NOT TRUE) AS unstated,
+                   COALESCE(sum(computed_cost), 0)                 AS booked,
+                   COALESCE(min(currency), 'USD')                  AS currency
+            FROM agent_costs, booking
+            WHERE period = booking.month
+        )
+        """;
+
+    private const string ReadingColumns =
+        """
+               booking.month,
+               cb.amount,
+               cb.currency,
+               co.operations, co.unstated, co.booked, co.currency,
+               CASE WHEN cb.amount IS NULL THEN NULL ELSE ROUND(co.booked * 100.0 / cb.amount, 4) END,
+               (SELECT c.company_id FROM channels c WHERE c.channel_id = @channel_id),
+               mo.operations, mo.unstated, mo.booked, mo.currency,
+               ROUND(mo.booked * 100.0 / @allotment, 4),
+               LEAST(
+                   COALESCE((SELECT MIN(b.amount - u.utilized)
+                             FROM fn_budgets_for(@channel_id, @department_id, booking.month) b
+                             CROSS JOIN LATERAL fn_budget_utilization(b.budget_id) u), 0),
+                   @allotment - mo.booked),
+               COALESCE((SELECT MIN(b.currency) FROM fn_budgets_for(@channel_id, @department_id, booking.month) b), 'USD')
+        """;
+
+    private const string ReadingJoins =
+        """
+        FROM booking
+        LEFT JOIN channel_budget cb ON true
+        CROSS JOIN channel_ops co
+        CROSS JOIN company_ops mo
+        """;
 
     private readonly NpgsqlConnection _connection;
     private readonly NpgsqlTransaction _transaction;
@@ -69,46 +139,127 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
         return _reservation;
     }
 
-    public async Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(
-        IReadOnlyCollection<ModelId> models,
+    public async Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken)
+    {
+        // Two statements, so the order is the order they are sent in: the company scope first, then the
+        // channel scope. Each hold is transaction-scoped and released at commit or rollback; holding one
+        // already held by this transaction is a no-op, and a hold is never taken in the other order.
+        await using (var company = new NpgsqlCommand(
+            "SELECT pg_advisory_xact_lock(hashtextextended('mediacompany.admission.company', 0))",
+            _connection,
+            _transaction))
+        {
+            await company.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        await using var scope = new NpgsqlCommand(
+            "SELECT pg_advisory_xact_lock(hashtextextended('mediacompany.admission.channel:' || @channel::text, 0))",
+            _connection,
+            _transaction);
+        scope.Parameters.AddWithValue("channel", channel.Value);
+        await scope.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<AdmissionSnapshot> ReadAsync(
+        CapabilityClass capability,
+        Attribution attribution,
+        Money companyAllotment,
+        TaskClass? taskClass,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(models);
+        ArgumentNullException.ThrowIfNull(attribution);
         RequireReservation();
 
-        // One row per model and unit kind in force at the reserved instant; where two overlap, the higher
-        // price, which is the one the recorder applies at the same instant.
+        // ONE STATEMENT, ONE SNAPSHOT. The registers and the readings are aggregated as JSON columns of one
+        // row, and the prices in force are captured on the transaction in the same statement.
         await using var command = new NpgsqlCommand(
             $"""
-            SELECT DISTINCT ON (model_id, unit_kind)
-                   model_price_id, model_id, unit_kind, unit_price, currency, source, verified_on, valid_from, valid_to
-            FROM model_prices
-            WHERE model_id = ANY(@models)
-              AND valid_from <= {ReservedInstant}
-              AND (valid_to IS NULL OR valid_to > {ReservedInstant})
-            ORDER BY model_id, unit_kind, unit_price DESC, valid_from DESC
+            WITH {ReadingCtes},
+            admitted AS (
+                SELECT route_id, capability_class, tier, target_kind, provider_account_id, model_id,
+                       substitute_task, hold_reason, rated_quality, context_capacity, terms_basis, terms_verified_on,
+                       reasoning_tier_stated
+                FROM routes
+                WHERE capability_class = @capability
+            ),
+            in_force AS (
+                SELECT DISTINCT ON (p.model_id, p.unit_kind)
+                       p.model_price_id, p.model_id, p.unit_kind, p.unit_price, p.currency, p.source, p.verified_on,
+                       p.valid_from, p.valid_to
+                FROM model_prices p, booking
+                WHERE p.model_id IN (SELECT model_id FROM admitted WHERE model_id IS NOT NULL)
+                  AND p.valid_from <= booking.at AND (p.valid_to IS NULL OR p.valid_to > booking.at)
+                ORDER BY p.model_id, p.unit_kind, p.unit_price DESC, p.valid_from DESC
+            )
+            SELECT {ReadingColumns},
+                   (SELECT COALESCE(json_agg(a ORDER BY a.tier, a.route_id), '[]') FROM admitted a)::text,
+                   (SELECT COALESCE(json_agg(f ORDER BY f.kind, f.identifier), '[]') FROM forbidden_sources f)::text,
+                   (SELECT COALESCE(json_agg(v), '[]') FROM (
+                        SELECT DISTINCT ON (route_id) route_id, state, effective_from, reason, reset_or_probe_point, observed_quality
+                        FROM route_availability
+                        WHERE route_id IN (SELECT route_id FROM admitted)
+                        ORDER BY route_id, effective_from DESC) v)::text,
+                   (SELECT COALESCE(json_agg(pa ORDER BY pa.provider), '[]') FROM provider_accounts pa)::text,
+                   (SELECT COALESCE(json_agg(i ORDER BY i.model_id, i.unit_kind), '[]') FROM in_force i)::text,
+                   set_config('{AdmissionPricesSetting}',
+                       (SELECT COALESCE(json_agg(json_build_object(
+                            'id', i.model_price_id, 'model', i.model_id, 'kind', i.unit_kind,
+                            'price', i.unit_price, 'currency', i.currency)), '[]') FROM in_force i)::text,
+                       true),
+                   CASE WHEN @task_class IS NULL THEN '[]' ELSE (
+                       SELECT COALESCE(json_agg(e ORDER BY e.observation_id), '[]') FROM (
+                           SELECT o.observation_id, o.entry_id, o.task_class, o.route_id, o.model_id, o.operation_id,
+                                  o.quality_case, o.quality_amount, o.quality_unit, o.quality_unmeasured_reason,
+                                  o.quality_unmeasured_detail, ac.computed_cost, ac.currency, ac.cost_stated, ac.duration_ms,
+                                  o.observed_at, o.period
+                           FROM benchmark_observations o
+                           JOIN agent_costs ac ON ac.operation_id = o.operation_id
+                           WHERE o.route_id IN (SELECT route_id FROM admitted)
+                             AND o.task_class = @task_class
+                             AND o.observed_at <= (SELECT at FROM booking)) e)::text END
+            {ReadingJoins}
             """,
             _connection,
             _transaction);
-        command.Parameters.Add("models", NpgsqlDbType.Array | NpgsqlDbType.Text).Value = models.Select(m => m.Value).ToArray();
+        AddReadingParameters(command, attribution, companyAllotment);
+        command.Parameters.AddWithValue("capability", capability.ToString());
+        command.Parameters.Add("task_class", NpgsqlDbType.Text).Value = (object?)taskClass?.ToString() ?? DBNull.Value;
 
-        var prices = new List<ModelPrice>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            prices.Add(new ModelPrice(
-                new ModelPriceId(reader.GetGuid(0)),
-                new ModelId(reader.GetString(1)),
-                Enum.Parse<PriceUnitKind>(reader.GetString(2)),
-                reader.GetDecimal(3),
-                reader.GetString(4),
-                reader.GetString(5),
-                reader.GetFieldValue<DateOnly>(6),
-                reader.GetFieldValue<DateTimeOffset>(7),
-                reader.IsDBNull(8) ? null : reader.GetFieldValue<DateTimeOffset>(8)));
+            throw new InvalidOperationException("The admission snapshot returned no row; the booking month could not be read.");
         }
 
-        return prices;
+        var readings = ReadReadings(reader, attribution);
+        var routes = SnapshotJson.Routes(reader.GetString(16));
+        return new AdmissionSnapshot(
+            routes,
+            SnapshotJson.Forbidden(reader.GetString(17)),
+            SnapshotJson.Availability(reader.GetString(18)),
+            SnapshotJson.Accounts(reader.GetString(19)),
+            SnapshotJson.Prices(reader.GetString(20)),
+            readings,
+            SnapshotJson.Evidence(reader.GetString(22)));
+    }
+
+    public async Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(prices);
+
+        var captured = JsonSerializer.Serialize(prices.Select(p => new Dictionary<string, object>
+        {
+            ["id"] = p.Id.Value,
+            ["model"] = p.Model.Value,
+            ["kind"] = p.UnitKind.ToString(),
+            ["price"] = p.UnitPrice,
+            ["currency"] = p.Currency,
+        }));
+
+        await using var command = new NpgsqlCommand(
+            $"SELECT set_config('{AdmissionPricesSetting}', @captured, true)", _connection, _transaction);
+        command.Parameters.AddWithValue("captured", captured);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<GoverningReadingsSummary> GoverningReadingsAsync(
@@ -121,57 +272,17 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
 
         // ONE STATEMENT: the booking month, the channel's recorded budget amount, the channel's and the
         // company's booked operations with how many carry an unstated cost, both utilisations, the
-        // channel's company and the delivered headroom over the governing channel and department
-        // budgets. A cost that is not stated — false, or null for a row recorded before the statement
-        // existed — is counted as unstated, never as zero.
+        // channel's company and the capped headroom. A cost that is not stated — false, or null for a row
+        // recorded before the statement existed — is counted as unstated, never as zero.
         await using var command = new NpgsqlCommand(
             $"""
-            WITH booking AS (
-                SELECT (date_trunc('month', {ReservedInstant} AT TIME ZONE 'UTC'))::date AS month
-            ),
-            channel_budget AS (
-                SELECT b.amount, b.currency
-                FROM budgets b, booking
-                WHERE b.scope_kind = 'Channel' AND b.scope_id = @channel_id AND b.period = booking.month
-            ),
-            channel_ops AS (
-                SELECT count(*)                                    AS operations,
-                       count(*) FILTER (WHERE cost_stated IS NOT TRUE) AS unstated,
-                       COALESCE(sum(computed_cost), 0)             AS booked,
-                       COALESCE(min(currency), 'USD')              AS currency
-                FROM agent_costs, booking
-                WHERE channel_id = @channel_id AND period = booking.month
-            ),
-            company_ops AS (
-                SELECT count(*)                                    AS operations,
-                       count(*) FILTER (WHERE cost_stated IS NOT TRUE) AS unstated,
-                       COALESCE(sum(computed_cost), 0)             AS booked,
-                       COALESCE(min(currency), 'USD')              AS currency
-                FROM agent_costs, booking
-                WHERE period = booking.month
-            )
-            SELECT booking.month,
-                   cb.amount,
-                   cb.currency,
-                   co.operations, co.unstated, co.booked, co.currency,
-                   CASE WHEN cb.amount IS NULL THEN NULL ELSE ROUND(co.booked * 100.0 / cb.amount, 4) END,
-                   (SELECT c.company_id FROM channels c WHERE c.channel_id = @channel_id),
-                   mo.operations, mo.unstated, mo.booked, mo.currency,
-                   ROUND(mo.booked * 100.0 / @allotment, 4),
-                   COALESCE((SELECT MIN(b.amount - u.utilized)
-                             FROM fn_budgets_for(@channel_id, @department_id, booking.month) b
-                             CROSS JOIN LATERAL fn_budget_utilization(b.budget_id) u), 0),
-                   COALESCE((SELECT MIN(b.currency) FROM fn_budgets_for(@channel_id, @department_id, booking.month) b), 'USD')
-            FROM booking
-            LEFT JOIN channel_budget cb ON true
-            CROSS JOIN channel_ops co
-            CROSS JOIN company_ops mo
+            WITH {ReadingCtes}
+            SELECT {ReadingColumns}
+            {ReadingJoins}
             """,
             _connection,
             _transaction);
-        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
-        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
-        command.Parameters.Add("allotment", NpgsqlDbType.Numeric).Value = companyAllotment.Amount;
+        AddReadingParameters(command, attribution, companyAllotment);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
@@ -179,7 +290,18 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
             throw new InvalidOperationException("The governing readings returned no row; the booking month could not be read.");
         }
 
-        return new GoverningReadingsSummary(
+        return ReadReadings(reader, attribution);
+    }
+
+    private static void AddReadingParameters(NpgsqlCommand command, Attribution attribution, Money companyAllotment)
+    {
+        command.Parameters.AddWithValue("channel_id", attribution.Channel.Value);
+        command.Parameters.AddWithValue("department_id", attribution.Department.Value);
+        command.Parameters.Add("allotment", NpgsqlDbType.Numeric).Value = companyAllotment.Amount;
+    }
+
+    private static GoverningReadingsSummary ReadReadings(NpgsqlDataReader reader, Attribution attribution) =>
+        new(
             reader.GetFieldValue<DateOnly>(0),
             attribution.Channel,
             reader.IsDBNull(1) ? null : new Money(reader.GetDecimal(1), reader.GetString(2)),
@@ -189,33 +311,6 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
             new ScopeSpend(reader.GetInt64(9), reader.GetInt64(10), new Money(reader.GetDecimal(11), reader.GetString(12))),
             reader.IsDBNull(13) ? null : reader.GetDecimal(13),
             new Money(reader.GetDecimal(14), reader.GetString(15)));
-    }
-
-    public async Task<IReadOnlyList<BenchmarkObservation>> EvidenceAsync(
-        IReadOnlyCollection<RouteId> routes,
-        TaskClass taskClass,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(routes);
-        RequireReservation();
-
-        // ONE STATEMENT, at the reserved instant: every observation of the named routes for the task
-        // class stamped at or before it, each with its referenced operation's cost and latency.
-        await using var command = new NpgsqlCommand(
-            $"""
-            {BenchmarkRows.Select}
-            WHERE o.route_id = ANY(@routes)
-              AND o.task_class = @task_class
-              AND o.observed_at <= {ReservedInstant}
-            ORDER BY o.observation_id
-            """,
-            _connection,
-            _transaction);
-        command.Parameters.Add("routes", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = routes.Select(r => r.Value).ToArray();
-        command.Parameters.AddWithValue("task_class", taskClass.ToString());
-
-        return await BenchmarkRows.ReadAllAsync(command, cancellationToken).ConfigureAwait(false);
-    }
 
     public async Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken)
     {
@@ -433,6 +528,13 @@ internal static class BenchmarkRows
         return observations;
     }
 
+    /// <summary>The unmeasured cost of an operation whose cost is not stated, never the zero it was stored as.</summary>
+    internal static MeasurementQuantity UnstatedCost(OperationId operation) =>
+        MeasurementQuantity.NotMeasured(
+            UnmeasuredReason.SourceCannotStateOne,
+            $"the cost of operation {operation} is not stated: a consumed unit kind had no price in force at its "
+            + "booking instant, or the operation was recorded before the record stated whether its cost is stated");
+
     internal static BenchmarkObservation Map(NpgsqlDataReader reader)
     {
         var operation = new OperationId(reader.GetGuid(5));
@@ -441,10 +543,7 @@ internal static class BenchmarkRows
         // operation states it; a cost that is not stated is unmeasured, never the zero it was stored as.
         var cost = !reader.IsDBNull(13) && reader.GetBoolean(13)
             ? MeasurementQuantity.Observed(reader.GetDecimal(11), reader.GetString(12))
-            : MeasurementQuantity.NotMeasured(
-                UnmeasuredReason.SourceCannotStateOne,
-                $"the cost of operation {operation} is not stated: a consumed unit kind had no price in force at its "
-                + "booking instant, or the operation was recorded before the record stated whether its cost is stated");
+            : UnstatedCost(operation);
 
         return new BenchmarkObservation
         {
@@ -461,4 +560,127 @@ internal static class BenchmarkRows
             Period = reader.GetFieldValue<DateOnly>(16),
         };
     }
+}
+
+/// <summary>
+/// Reads the JSON columns of the one-statement admission snapshot back into the domain types, with the
+/// same mapping the delivered registers apply (the AI-economics change, correction cycle). Every value is
+/// the datastore's, read in the one snapshot; nothing here computes a figure.
+/// </summary>
+internal static class SnapshotJson
+{
+    internal static IReadOnlyList<Route> Routes(string json) =>
+        Each(json, e =>
+        {
+            RouteTarget target = Text(e, "target_kind") switch
+            {
+                "ProviderRoute" => new RouteTarget.ProviderRoute(
+                    new ProviderAccountId(Text(e, "provider_account_id")!), new ModelId(Text(e, "model_id")!)),
+                "NonAiSubstitute" => new RouteTarget.NonAiSubstitute(Text(e, "substitute_task")!),
+                "HoldAndEscalate" => new RouteTarget.HoldAndEscalate(Text(e, "hold_reason")!),
+                var kind => throw new InvalidOperationException($"Unknown route target kind '{kind}'."),
+            };
+
+            var stated = Text(e, "reasoning_tier_stated");
+            return new Route(
+                new RouteId(e.GetProperty("route_id").GetGuid()),
+                Enum.Parse<CapabilityClass>(Text(e, "capability_class")!),
+                Enum.Parse<RouteTier>(Text(e, "tier")!),
+                target,
+                new QualityRating(e.GetProperty("rated_quality").GetInt32()),
+                new ContextCapacity(e.GetProperty("context_capacity").GetInt32()),
+                Text(e, "terms_basis")!,
+                Date(e, "terms_verified_on"),
+                statedReasoningTier: stated is null ? null : Enum.Parse<ReasoningTier>(stated));
+        });
+
+    internal static IReadOnlyList<ForbiddenSource> Forbidden(string json) =>
+        Each(json, e => new ForbiddenSource(
+            Enum.Parse<ForbiddenSourceKind>(Text(e, "kind")!),
+            Text(e, "identifier")!,
+            Text(e, "reason")!,
+            Text(e, "evidence_reference")!));
+
+    internal static IReadOnlyDictionary<RouteId, RouteAvailability> Availability(string json) =>
+        Each(json, e =>
+        {
+            var route = new RouteId(e.GetProperty("route_id").GetGuid());
+            return new RouteAvailability(
+                route,
+                Enum.Parse<AvailabilityState>(Text(e, "state")!),
+                Instant(e, "effective_from")!.Value,
+                Text(e, "reason")!,
+                Instant(e, "reset_or_probe_point"),
+                Null(e, "observed_quality") ? null : new QualityRating(e.GetProperty("observed_quality").GetInt32()));
+        }).ToDictionary(a => a.Route, a => a);
+
+    internal static IReadOnlyList<ProviderAccount> Accounts(string json) =>
+        Each(json, e => new ProviderAccount(
+            new ProviderAccountId(Text(e, "provider_account_id")!),
+            Text(e, "provider")!,
+            Text(e, "commercial_terms_basis")!,
+            Date(e, "verified_on"),
+            Enum.Parse<ProviderAccountStatus>(Text(e, "status")!)));
+
+    internal static IReadOnlyList<ModelPrice> Prices(string json) =>
+        Each(json, e => new ModelPrice(
+            new ModelPriceId(e.GetProperty("model_price_id").GetGuid()),
+            new ModelId(Text(e, "model_id")!),
+            Enum.Parse<PriceUnitKind>(Text(e, "unit_kind")!),
+            e.GetProperty("unit_price").GetDecimal(),
+            Text(e, "currency")!,
+            Text(e, "source")!,
+            Date(e, "verified_on"),
+            Instant(e, "valid_from")!.Value,
+            Instant(e, "valid_to")));
+
+    internal static IReadOnlyList<BenchmarkObservation> Evidence(string json) =>
+        Each(json, e =>
+        {
+            var operation = new OperationId(e.GetProperty("operation_id").GetGuid());
+            var stated = !Null(e, "cost_stated") && e.GetProperty("cost_stated").GetBoolean();
+
+            MeasurementQuantity quality = Text(e, "quality_case") switch
+            {
+                "ObservedValue" => MeasurementQuantity.Observed(e.GetProperty("quality_amount").GetDecimal(), Text(e, "quality_unit")!),
+                "ObservedZero" => MeasurementQuantity.Zero(Text(e, "quality_unit")!),
+                "Unmeasured" => MeasurementQuantity.NotMeasured(
+                    Enum.Parse<UnmeasuredReason>(Text(e, "quality_unmeasured_reason")!), Text(e, "quality_unmeasured_detail")!),
+                var other => throw new InvalidOperationException($"The record holds a measurement case it does not admit: {other}."),
+            };
+
+            return new BenchmarkObservation
+            {
+                Id = new BenchmarkObservationId(e.GetProperty("observation_id").GetGuid()),
+                Entry = new CorpusEntryId(e.GetProperty("entry_id").GetGuid()),
+                TaskClass = Enum.Parse<TaskClass>(Text(e, "task_class")!),
+                Route = new RouteId(e.GetProperty("route_id").GetGuid()),
+                Model = new ModelId(Text(e, "model_id")!),
+                Operation = operation,
+                Quality = quality,
+                Cost = stated
+                    ? MeasurementQuantity.Observed(e.GetProperty("computed_cost").GetDecimal(), Text(e, "currency")!)
+                    : BenchmarkRows.UnstatedCost(operation),
+                Latency = MeasurementQuantity.Observed(e.GetProperty("duration_ms").GetInt64(), BenchmarkObservation.LatencyUnit),
+                ObservedAt = Instant(e, "observed_at")!.Value,
+                Period = Date(e, "period"),
+            };
+        });
+
+    private static List<T> Each<T>(string json, Func<JsonElement, T> map)
+    {
+        using var document = JsonDocument.Parse(json);
+        return document.RootElement.EnumerateArray().Select(map).ToList();
+    }
+
+    private static bool Null(JsonElement e, string name) =>
+        !e.TryGetProperty(name, out var value) || value.ValueKind == JsonValueKind.Null;
+
+    private static string? Text(JsonElement e, string name) => Null(e, name) ? null : e.GetProperty(name).GetString();
+
+    private static DateOnly Date(JsonElement e, string name) =>
+        DateOnly.ParseExact(e.GetProperty(name).GetString()!, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    private static DateTimeOffset? Instant(JsonElement e, string name) =>
+        Null(e, name) ? null : DateTimeOffset.Parse(e.GetProperty(name).GetString()!, CultureInfo.InvariantCulture);
 }

@@ -16,15 +16,18 @@ internal sealed class NoAdmission : IAdmissionLedger
     public Task<BookingReservation> ReserveAsync(CancellationToken cancellationToken) =>
         throw new NotSupportedException("No service under this demonstration admits a capability request.");
 
-    public Task<IReadOnlyList<ModelPrice>> PricesInForceAsync(IReadOnlyCollection<ModelId> models, CancellationToken cancellationToken) =>
-        throw new NotSupportedException("No service under this demonstration reads admission prices.");
+    public Task HoldScopesAsync(ChannelId channel, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("No service under this demonstration holds an admission scope.");
+
+    public Task<AdmissionSnapshot> ReadAsync(
+        CapabilityClass capability, Attribution attribution, Money companyAllotment, TaskClass? taskClass, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("No service under this demonstration reads an admission snapshot.");
+
+    public Task RestorePricesAsync(IReadOnlyList<ModelPrice> prices, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("No service under this demonstration restores admission prices.");
 
     public Task<GoverningReadingsSummary> GoverningReadingsAsync(Attribution attribution, Money companyAllotment, CancellationToken cancellationToken) =>
         throw new NotSupportedException("No service under this demonstration reads governing readings.");
-
-    public Task<IReadOnlyList<BenchmarkObservation>> EvidenceAsync(
-        IReadOnlyCollection<RouteId> routes, TaskClass taskClass, CancellationToken cancellationToken) =>
-        throw new NotSupportedException("No service under this demonstration reads evidence.");
 
     public Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken) =>
         throw new NotSupportedException("No service under this demonstration records an admission decision.");

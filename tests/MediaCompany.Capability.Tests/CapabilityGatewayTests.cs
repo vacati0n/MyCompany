@@ -50,8 +50,10 @@ public sealed class CapabilityGatewayTests
         var secrets = new FakeSecretStore();
         var broker = new CredentialBroker(secrets, () => clock.UtcNow, TimeSpan.FromMinutes(5));
 
+        // The routes, availability and accounts are read in the admission snapshot (the correction cycle).
+        work.Bind(routes, availability, registers);
         var gateway = CapabilityGatewayFactory.Create(
-            routes, availability, registers, work, broker, broker, clock,
+            work, broker, broker, clock,
             endpoints: [], httpClient: new HttpClient());
 
         return new Harness(gateway, routes, availability, registers, work, clock);

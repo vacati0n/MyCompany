@@ -45,8 +45,9 @@ public sealed class ServedTierAtTheBoundaryTests
         var secrets = new FakeSecretStore();
         var broker = new CredentialBroker(secrets, () => clock.UtcNow, TimeSpan.FromMinutes(5));
 
+        work.Bind(routes, availability, registers);
         var gateway = CapabilityGatewayFactory.Create(
-            routes, availability, registers, work, broker, broker, clock,
+            work, broker, broker, clock,
             endpoints: [], httpClient: new HttpClient());
 
         return new Harness(gateway, routes, availability, work);

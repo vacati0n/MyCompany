@@ -42,7 +42,14 @@ internal sealed class NpgsqlBudgetEvaluator : IBudgetEvaluator
                 SELECT * FROM fn_budgets_for(@channel_id, @department_id, @period)
             ),
             measured AS (
-                SELECT g.budget_id, g.period, g.amount, g.currency, u.utilized, u.utilization_percent
+                SELECT g.budget_id, g.period, g.amount, g.currency, u.utilized, u.utilization_percent,
+                       -- Whether the budget's scope holds a cost that is not stated in the month (the
+                       -- AI-economics change, correction cycle): where it does, the utilisation is a partial
+                       -- sum, so no threshold is read as reached from it and no alert presents it.
+                       (SELECT count(*) FROM agent_costs c
+                        WHERE c.period = g.period AND c.cost_stated IS NOT TRUE
+                          AND ((g.scope_kind = 'Department' AND c.department_id = g.scope_id)
+                            OR (g.scope_kind = 'Channel' AND c.channel_id = g.scope_id))) AS unstated
                 FROM governing g
                 CROSS JOIN LATERAL fn_budget_utilization(g.budget_id) u
             ),
@@ -50,7 +57,7 @@ internal sealed class NpgsqlBudgetEvaluator : IBudgetEvaluator
                 SELECT m.*, t.threshold
                 FROM measured m
                 CROSS JOIN (VALUES (50), (75), (90), (100)) AS t(threshold)
-                WHERE m.utilization_percent >= t.threshold
+                WHERE m.unstated = 0 AND m.utilization_percent >= t.threshold
             )
             INSERT INTO budget_alerts (budget_id, period, threshold, utilization, utilized, budget_amount, raised_at)
             SELECT budget_id, period, threshold, utilization_percent, utilized, amount, @raised_at

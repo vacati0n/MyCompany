@@ -31,9 +31,6 @@ public sealed record ProviderEndpoint(ProviderAccountId ProviderAccount, Uri End
 public static class CapabilityGatewayFactory
 {
     public static ICapabilityGateway Create(
-        IRouteRegistry routes,
-        IRouteAvailabilityLedger availability,
-        IOperatingRegisters registers,
         IUnitOfWork unitOfWork,
         ICredentialBroker broker,
         ICredentialExchange exchange,
@@ -56,10 +53,10 @@ public static class CapabilityGatewayFactory
             e => e.ProviderAccount,
             IProviderAdapter (e) => new HttpProviderAdapter(e.ProviderAccount, e.Endpoint, httpClient, exchange));
 
+        // The routes, forbidden sources, availability, accounts and prices are read by the admission ledger
+        // in one snapshot of the admission transaction (the correction cycle), so the boundary takes none of
+        // the register ports that read them on other connections.
         return new CapabilityGateway(
-            routes,
-            availability,
-            registers,
             unitOfWork,
             broker,
             adapters);

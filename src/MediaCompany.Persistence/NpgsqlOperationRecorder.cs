@@ -48,13 +48,37 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             WHERE h.only_row
             FOR SHARE
         ),
+        -- The prices CAPTURED AT ADMISSION on this transaction, where it captured any (the correction
+        -- cycle): the operation is costed at the prices the admission read, never at a later lookup in
+        -- the editable register. Elsewhere the rows in force at the stamp are looked up, as delivered.
+        captured AS (
+            SELECT (c->>'id')::uuid AS model_price_id, c->>'kind' AS unit_kind, (c->>'price')::numeric AS unit_price,
+                   c->>'currency' AS currency, NULL::timestamptz AS valid_from
+            FROM jsonb_array_elements(
+                     COALESCE(NULLIF(current_setting('mediacompany.admission_prices', true), '')::jsonb, '[]'::jsonb)) c
+            WHERE c->>'model' = @model_id
+        ),
+        looked_up AS (
+            SELECT p.model_price_id, p.unit_kind, p.unit_price, p.currency, p.valid_from
+            FROM stamp
+            JOIN model_prices p
+              ON p.model_id = @model_id
+             AND p.valid_from <= stamp.at
+             AND (p.valid_to IS NULL OR p.valid_to > stamp.at)
+            WHERE NULLIF(current_setting('mediacompany.admission_prices', true), '') IS NULL
+        ),
+        applicable AS (
+            SELECT * FROM captured
+            UNION ALL
+            SELECT * FROM looked_up
+        ),
         price AS (
             SELECT
                 stamp.at                                                       AS at,
-                -- The applied price reference is the input-unit row in force at the instant.
-                -- `max` has no uuid form, and picking by aggregate would be arbitrary where two
-                -- rows overlap, so the most recently effective one is taken explicitly.
-                (array_agg(p.model_price_id ORDER BY p.valid_from DESC)
+                -- The applied price reference is the input-unit row applied. `max` has no uuid form,
+                -- and picking by aggregate would be arbitrary where two rows overlap, so the most
+                -- recently effective one is taken explicitly.
+                (array_agg(p.model_price_id ORDER BY p.valid_from DESC NULLS LAST)
                     FILTER (WHERE p.unit_kind = 'InputUnit'))[1]                AS reference_id,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'InputUnit'), 0)  AS input_price,
                 COALESCE(MAX(p.unit_price) FILTER (WHERE p.unit_kind = 'OutputUnit'), 0) AS output_price,
@@ -64,11 +88,7 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
                 COALESCE(bool_or(p.unit_kind = 'OutputUnit'), false) AS has_output,
                 COALESCE(bool_or(p.unit_kind = 'CachedUnit'), false) AS has_cached
             FROM stamp
-            LEFT JOIN model_prices p
-                   ON @model_id IS NOT NULL
-                  AND p.model_id = @model_id
-                  AND p.valid_from <= stamp.at
-                  AND (p.valid_to IS NULL OR p.valid_to > stamp.at)
+            LEFT JOIN applicable p ON @model_id IS NOT NULL
             GROUP BY stamp.at
         )
         INSERT INTO agent_costs (
@@ -104,6 +124,9 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
                       AND (@cached_units = 0 OR price.has_cached))
             END
         FROM price
+        -- One attempt is booked once (the correction cycle): a second write under the identifier minted
+        -- before the provider call books nothing, and the writer is told the attempt is already recorded.
+        ON CONFLICT (operation_id) DO NOTHING
         RETURNING computed_cost, currency, applied_price_id, occurred_at, cost_stated
         """;
 
@@ -150,13 +173,22 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
         AddNullable(command, "tier_requested", NpgsqlDbType.Text, draft.ReasoningTierRequested?.ToString());
         AddNullable(command, "tier_served", NpgsqlDbType.Text, draft.ReasoningTierServed?.ToString());
 
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
+            await reader.DisposeAsync().ConfigureAwait(false);
+
+            if (await StoredAsync(draft.Id, cancellationToken).ConfigureAwait(false) is { } recorded)
+            {
+                throw new OperationAlreadyRecordedException(recorded);
+            }
+
             throw new InvalidOperationException(
                 $"The operation row for {draft.Id} was not written: the record horizon the fifth schema resource "
                 + "creates was not readable, so no instant could be stamped.");
         }
+
+        await using var _ = reader;
 
         var computedCost = reader.GetDecimal(0);
         var currency = reader.GetString(1);
@@ -186,6 +218,53 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             ReasoningTierRequested = draft.ReasoningTierRequested,
             ReasoningTierServed = draft.ReasoningTierServed,
             CostStated = costStated,
+        };
+    }
+
+    /// <summary>The operation stored under an identifier, as the datastore holds it, or null.</summary>
+    private async Task<OperationRecord?> StoredAsync(OperationId id, CancellationToken cancellationToken)
+    {
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT run_id, item_id, channel_id, department_id, agent_id, capability_class, route_id, model_id,
+                   deterministic_task, input_units, output_units, cached_units, other_units, applied_price_id,
+                   computed_cost, currency, cost_basis, duration_ms, outcome, occurred_at, attempt, failure_reason,
+                   reasoning_tier_requested, reasoning_tier_served, cost_stated
+            FROM agent_costs WHERE operation_id = @operation_id
+            """,
+            _connection,
+            _transaction);
+        command.Parameters.AddWithValue("operation_id", id.Value);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        return new OperationRecord
+        {
+            Id = id,
+            Run = new RunId(reader.GetGuid(0)),
+            Attribution = new MediaCompany.Domain.Capabilities.Attribution(
+                new ItemId(reader.GetGuid(1)), new ChannelId(reader.GetGuid(2)),
+                new DepartmentId(reader.GetGuid(3)), new AgentId(reader.GetGuid(4))),
+            Capability = Enum.Parse<MediaCompany.Domain.Capabilities.CapabilityClass>(reader.GetString(5)),
+            Route = reader.IsDBNull(6) ? null : new RouteId(reader.GetGuid(6)),
+            Model = reader.IsDBNull(7) ? null : new ModelId(reader.GetString(7)),
+            DeterministicTaskName = reader.IsDBNull(8) ? null : reader.GetString(8),
+            Units = new UnitCounts(reader.GetInt64(9), reader.GetInt64(10), reader.GetInt64(11), reader.GetInt64(12)),
+            AppliedPrice = reader.IsDBNull(13) ? null : new ModelPriceId(reader.GetGuid(13)),
+            ComputedCost = new Money(reader.GetDecimal(14), reader.GetString(15)),
+            CostBasis = Enum.Parse<CostBasis>(reader.GetString(16)),
+            Duration = TimeSpan.FromMilliseconds(reader.GetInt64(17)),
+            Outcome = Enum.Parse<OperationOutcome>(reader.GetString(18)),
+            OccurredAt = reader.GetFieldValue<DateTimeOffset>(19),
+            Attempt = reader.GetInt32(20),
+            FailureReason = reader.IsDBNull(21) ? null : reader.GetString(21),
+            ReasoningTierRequested = reader.IsDBNull(22) ? null : Enum.Parse<MediaCompany.Domain.Capabilities.ReasoningTier>(reader.GetString(22)),
+            ReasoningTierServed = reader.IsDBNull(23) ? null : Enum.Parse<MediaCompany.Domain.Capabilities.ReasoningTier>(reader.GetString(23)),
+            CostStated = reader.IsDBNull(24) ? null : reader.GetBoolean(24),
         };
     }
 

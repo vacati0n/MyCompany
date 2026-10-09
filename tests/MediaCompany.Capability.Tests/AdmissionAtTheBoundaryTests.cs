@@ -171,7 +171,8 @@ public sealed class AdmissionAtTheBoundaryTests
 
         var adapters = new Dictionary<ProviderAccountId, IProviderAdapter>();
 
-        var gateway = new CapabilityGateway(routes, availability, registers, work, new StandInBroker(clock), adapters);
+        work.Bind(routes, availability, registers);
+        var gateway = new CapabilityGateway(work, new StandInBroker(clock), adapters);
         return new Harness(gateway, routes, availability, work, adapters);
     }
 

@@ -1043,9 +1043,6 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
         }
 
         return new CapabilityGateway(
-            new NpgsqlRouteRegistry(Source),
-            new NpgsqlRouteAvailabilityLedger(Source),
-            new NpgsqlOperatingRegisters(Source),
             new NpgsqlUnitOfWork(Source, clock),
             new StandInBroker(),
             adapters);

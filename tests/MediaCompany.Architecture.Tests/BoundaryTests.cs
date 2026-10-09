@@ -1286,6 +1286,10 @@ public sealed class BoundaryTests
         "MediaCompany.Application.Ports.IBenchmarkReader",
         "MediaCompany.Application.Ports.BenchmarkRecordSummary",
 
+        // The correction cycle: the one-statement admission snapshot, and its JSON reader below the port.
+        "MediaCompany.Application.Ports.AdmissionSnapshot",
+        "MediaCompany.Persistence.SnapshotJson",
+
         // The rule-determined rules that read the controller decision and the evidence table: the
         // resolution function and its inputs and record, the evidence selection and its outcome, and the
         // cost controller, which is the one composing site of every governing reading's cases.
@@ -1868,16 +1872,19 @@ internal sealed class TerminalStateProbe : IUnitOfWork
     {
         public Task<BookingReservation> ReserveAsync(CancellationToken ct) => throw new NotSupportedException();
 
-        public Task<IReadOnlyList<MediaCompany.Domain.Registry.ModelPrice>> PricesInForceAsync(
-            IReadOnlyCollection<ModelId> models, CancellationToken ct) => throw new NotSupportedException();
+        public Task HoldScopesAsync(MediaCompany.Domain.ChannelId channel, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<AdmissionSnapshot> ReadAsync(
+            MediaCompany.Domain.Capabilities.CapabilityClass capability, MediaCompany.Domain.Capabilities.Attribution attribution,
+            MediaCompany.Domain.Accounting.Money allotment, MediaCompany.Domain.Capabilities.TaskClass? taskClass, CancellationToken ct) =>
+            throw new NotSupportedException();
+
+        public Task RestorePricesAsync(IReadOnlyList<MediaCompany.Domain.Registry.ModelPrice> prices, CancellationToken ct) =>
+            throw new NotSupportedException();
 
         public Task<GoverningReadingsSummary> GoverningReadingsAsync(
             MediaCompany.Domain.Capabilities.Attribution attribution, MediaCompany.Domain.Accounting.Money allotment, CancellationToken ct) =>
             throw new NotSupportedException();
-
-        public Task<IReadOnlyList<MediaCompany.Domain.Analytics.BenchmarkObservation>> EvidenceAsync(
-            IReadOnlyCollection<RouteId> routes, MediaCompany.Domain.Capabilities.TaskClass taskClass,
-            CancellationToken ct) => throw new NotSupportedException();
 
         public Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken ct) => throw new NotSupportedException();
     }

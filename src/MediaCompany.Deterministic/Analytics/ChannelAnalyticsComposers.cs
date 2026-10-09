@@ -59,7 +59,10 @@ public static class ChannelAnalyticsComposers
         "the company reading covers the metered operations the operation record carries, across every channel of "
         + "the company, against the approved monthly envelope, and nothing else: the standing charge the envelope "
         + "includes is not carried by the operation record and is read as its own quantity, unmeasured while no "
-        + "record of a standing commitment exists, so it is neither folded into the utilisation nor presented as zero";
+        + "record of a standing commitment exists, so it is neither folded into the utilisation nor presented as zero. "
+        + "This reading is against the whole envelope; the cost controller governs metered admission against a different "
+        + "basis, the recorded metered allotment it states as its basis, so a threshold this reading shows unreached may "
+        + "already defer or refuse metered work";
 
     /// <summary>Where a channel's budget amount is recorded (the AI-economics change, decision D-011).</summary>
     public const string BudgetRegister = "the budget register";
@@ -162,8 +165,10 @@ public static class ChannelAnalyticsComposers
             summary.Closure.EarliestEntry,
             AnalyticsComposers.FromOperations(
                 summary.Company.Operations,
+                summary.Company.UnstatedCosts,
                 summary.CompanyVarianceAgainstEnvelope,
-                $"no operation is recorded for the company in period {month:yyyy-MM}"));
+                $"no operation is recorded for the company in period {month:yyyy-MM}",
+                $"the company in period {month:yyyy-MM}"));
 
         return new OperationPartitionReading
         {
@@ -240,18 +245,26 @@ public static class ChannelAnalyticsComposers
         }
 
         var absent = $"no operation is recorded for {label} in period {month:yyyy-MM}";
+        var scope = $"{label} in period {month:yyyy-MM}";
 
+        // Every cost figure honours whether each cost is stated (correction cycle): a partition holding an
+        // unstated cost reads that cost unmeasured, as the cost controller reads the same month's spend.
         return new ChannelOperationReading
         {
             Channel = channel,
             Standing = standing,
-            Cost = AnalyticsComposers.FromOperations(totals.Operations, totals.Cost, absent),
+            Cost = AnalyticsComposers.FromOperations(totals.Operations, totals.UnstatedCosts, totals.Cost, absent, scope),
             Operations = MeasurementQuantity.Count(totals.Operations, "operations"),
-            DeterministicSetCost = AnalyticsComposers.FromOperations(totals.Operations, totals.DeterministicSetCost, absent),
+            DeterministicSetCost = AnalyticsComposers.FromOperations(
+                totals.Operations, totals.UnstatedDeterministicCosts, totals.DeterministicSetCost, absent, $"the deterministic set of {scope}"),
             VarianceAgainstEnvelope = variance,
             CostByCapability = totals.CostByCapability.ToDictionary(
                 pair => pair.Key,
-                pair => MeasurementQuantity.Observed(pair.Value.Amount, pair.Value.Currency)),
+                pair => totals.UnstatedByCapability.TryGetValue(pair.Key, out var unstated) && unstated > 0
+                    ? MeasurementQuantity.NotMeasured(
+                        UnmeasuredReason.SourceCannotStateOne,
+                        $"{unstated} operations of capability class {pair.Key} of {scope} carry a cost that is not stated, so its cost cannot be stated")
+                    : MeasurementQuantity.Observed(pair.Value.Amount, pair.Value.Currency)),
             ServedTierRecords = MeasurementQuantity.Count(totals.ServedTierRecords, "served-tier records"),
             TierRatio = AnalyticsComposers.TierRatioFromCounts(
                 month, totals.CarryingBothTiers, totals.AgreeingTiers, $"the {label} partition of period"),
@@ -383,7 +396,8 @@ public static class ChannelAnalyticsComposers
                 // A RECORDED AMOUNT that was not recorded, never an observation and never zero.
                 BudgetAmount = RecordedAmount.Missing(missing),
                 Utilised = AnalyticsComposers.FromOperations(
-                    row.Operations, row.Utilised, $"no operation is recorded for {label} in period {month:yyyy-MM}"),
+                    row.Operations, row.UnstatedOperations, row.Utilised,
+                    $"no operation is recorded for {label} in period {month:yyyy-MM}", $"{label} in period {month:yyyy-MM}"),
                 Utilisation = none,
                 Thresholds = Thresholds(null, none, _ => none),
             };
@@ -391,6 +405,26 @@ public static class ChannelAnalyticsComposers
 
         // A recorded amount, labelled as recorded in the budget register: nobody observed a budget.
         var budgetAmount = RecordedAmount.Of(amount, BudgetRegister);
+
+        if (row.UnstatedOperations > 0)
+        {
+            // A partial sum is never a utilisation (correction cycle): unmeasured, naming the operations,
+            // exactly as the cost controller reads the same channel's booked spend.
+            var unstated = MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.SourceCannotStateOne,
+                $"{row.UnstatedOperations} of the {row.Operations} operations of {label} in period {month:yyyy-MM} carry a cost "
+                + "that is not stated, so its utilisation cannot be stated");
+
+            return new ChannelBudgetReading
+            {
+                Channel = row.Channel,
+                Standing = ChannelPartitionStanding.InRegister,
+                BudgetAmount = budgetAmount,
+                Utilised = unstated,
+                Utilisation = unstated,
+                Thresholds = Thresholds(null, unstated, threshold => Alerts(row, threshold)),
+            };
+        }
 
         if (row.Operations == 0 || row.UtilisationPercent is not { } percent)
         {
@@ -432,18 +466,28 @@ public static class ChannelAnalyticsComposers
             "no company alert is persisted: the delivered alert is kept per budget, and the company ceiling is not a "
             + "budget the budget register holds");
 
-        var utilisation = summary.CompanyOperations == 0 || summary.CompanyUtilisationPercent is not { } percent
+        var utilisation = summary.CompanyUnstatedOperations > 0
             ? MeasurementQuantity.NotMeasured(
-                UnmeasuredReason.NoObservationExists,
-                $"no operation is recorded for the company in period {month:yyyy-MM}, so its utilisation of the ceiling was not observed")
-            : MeasurementQuantity.Observed(percent, "percent");
+                UnmeasuredReason.SourceCannotStateOne,
+                $"{summary.CompanyUnstatedOperations} of the {summary.CompanyOperations} operations of the company in period "
+                + $"{month:yyyy-MM} carry a cost that is not stated, so its utilisation of the ceiling cannot be stated")
+            : summary.CompanyOperations == 0 || summary.CompanyUtilisationPercent is not { } percent
+                ? MeasurementQuantity.NotMeasured(
+                    UnmeasuredReason.NoObservationExists,
+                    $"no operation is recorded for the company in period {month:yyyy-MM}, so its utilisation of the ceiling was not observed")
+                : MeasurementQuantity.Observed(percent, "percent");
 
         return new CompanyCeilingReading
         {
             // The envelope is a recorded amount, a code constant, never an observation.
             Ceiling = RecordedAmount.Of(summary.Ceiling, EnvelopeConstant),
             CompanyCost = AnalyticsComposers.FromOperations(
-                summary.CompanyOperations, summary.CompanyCost, $"no operation is recorded for the company in period {month:yyyy-MM}"),
+                summary.CompanyOperations, summary.CompanyUnstatedOperations, summary.CompanyCost,
+                $"no operation is recorded for the company in period {month:yyyy-MM}", $"the company in period {month:yyyy-MM}"),
+
+            // The basis the cost controller governs metered admission on (correction cycle): the recorded
+            // metered allotment, stated beside this reading's own envelope so the two cannot be confused.
+            ControllerBasis = MediaCompany.Deterministic.Accounting.CostController.CompanyBasis,
             Utilisation = utilisation,
             Thresholds = Thresholds(
                 utilisation is MeasurementQuantity.Unmeasured ? null : summary.CompanyUtilisationPercent,
