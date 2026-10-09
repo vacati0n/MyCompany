@@ -1,0 +1,111 @@
+```yaml
+reviewPackage:
+  packageId: RP-2026-0009
+  reviewReference: MC-9, the AI-management change at its twice-corrected head 3466ee0 on branch feature/mc-9-wave-8-the-ai-management-capability in the feature worktree at .worktrees/mc-9-feature, correction commits 05243d1 and c443485 over the orchestrator's decision-record commit 510a32a and the first-pass head ec23f8d, and 3466ee0 over c443485, quality-review phase of run-79ce8c121936, re-verified after the second correction cycle
+  sourceInputs:
+    - type: implementation-report
+      reference: runs/run-79ce8c121936/states/implementation/artifacts/implementation-report.md (IR-2026-0009, as updated in place for the correction cycle)
+    - type: feature-request
+      reference: tasks/MC-9/input.md (digest sha256:886055bdd1eb59f9d8a107653d106e9f)
+    - type: design-reference
+      reference: runs/run-79ce8c121936/states/solution-design-and-risk-assessment/artifacts/technical-design.md with decision records D-001, D-002, D-003, D-004, D-005, D-006, D-007, D-009, D-010 and D-012, and the verification tasks owned by this agent in runs/run-79ce8c121936/states/execution-planning/artifacts/execution-plan.md
+    - type: standards-checklist
+      reference: runs/run-79ce8c121936/task-context.yaml read with the gate rulings, the orchestrator's rulings on the implementation's objections and the orchestrator's correction-cycle rulings restated in the re-verification message
+    - type: code-diff
+      reference: git diff ea62be4..ec23f8d read in the first pass, the correction diff ec23f8d..c443485 (18 files) read in the second pass, and the correction diff c443485..3466ee0 (3 files) read in this pass
+    - type: test-evidence
+      reference: the executions performed in both passes, listed under Test Adequacy Assessment
+  producedBy: omn-dev-2-reviewer
+  agentVersion: 1.1.0
+  schemaVersion: 1.0.0
+  status: complete
+  verdict: approve
+  inputDigest: sha256:18e1816d2119f4425d9cebebfc462f06
+  contextDigest: sha256:7c56e10872c3a10df579c4c56767bfbe
+```
+
+## Metadata
+
+- Review ID: RP-2026-0009
+- Reviewer: omn-dev-2-reviewer
+- Change under review: MC-9 at its twice-corrected head 3466ee0 in the feature worktree, delivered by implementation report IR-2026-0009 as updated in place, against the approved technical design under option O-002 and its decision records, read with the gate rulings, the owner's decisions of 2026-10-09 and the orchestrator's correction-cycle rulings: one shared count over the candidate set selection compares for a tier class; re-verification unmeasured until a result is recorded; the brief showing held requests, escalated deferrals and controller actions as counts with at most the most urgent item per kind; a gate transition and an alert committed during composition; the register lineage; the guidelines change cited to section 3.3; a nonexistent week refused with exit 2; the two bounds named apart; and the Wave 8 owner questions transcribed into the eighth resource; and omn-tech-lead's rulings of the second cycle: a route reaching no provider keeps its exact configured position and evidence reorders providers only among the positions providers hold, the shared count kept, the console runner placed in the management scan by name, and the qualitative-review rule's one output per capability class confirmed
+- Review date: 2026-10-09
+
+## Review Scope
+
+- In scope: this pass, the second correction diff read against `F-009` and `F-010`, each judged closed by reading and by its new check against the previous head; selection attacked again for behaviour reachable today (below the owner's ten, with no task class, with a gap, with no provider candidate) and above ten (a non-provider ahead of, between and after the providers, providers failing the floor on observation, the position fill against the counted-slot count); the scan's text-writer allowance judged for safety and narrowness; the one-read path confirmed untouched by the diff; the second pass, the correction diff read against each first-pass finding, `F-001`, `F-002`, `F-003`, `F-004`, `F-005`, `F-006`, `F-007` and `F-008`, each judged closed or open by reading and by its new check, and each new check judged against the first-pass code for whether it would have failed there; the implementer's three correction-cycle objections (the selection change that a candidate reaching no provider no longer blocks an evidence ranking, per-channel brief lines growing with channel count, and register rows in demonstration stores installed before the change); the corrections attacked again for the two-clock and one-read class (the two new snapshot sources, route availability and account status, and their filtering; the new escalated-deferral count against the report instant; the alert line's filtering), for any write or listener on the new console runner, and for its placement under the management scan; the first-pass scope where the corrections touched it, and as recorded in the first pass otherwise: the one read, its bounds, every source's filter and stamp, the eighth resource and its register, the composers, rules, rendering, brief, dashboard and service, the comparable-run count, the host commands, the datastore month, the version and the previous account's correction
+- Out of scope: acceptance-criterion validation, release thresholds and the owner's timed reading of the brief, which belong to omn-qa and the owner; the merge and release decisions, which belong to omn-tech-lead; product scope and the open owner questions, which belong to omn-product-owner; the host commands run end to end, which stay the implementer's claimed evidence because this agent may run only the repository's own build and test commands; the company store's table count, answered by the orchestrator's read-only check (zero tables) rather than by this agent; the real provider path, which no endpoint, account or credential may reach in this wave
+- Evidence reviewed: this pass, the correction diff c443485..3466ee0 in full (the selection's position fill and served-position rule, the boundary scan's added runner and its text-writer allowance, the console probe writing a file, the new selection check holding a hold route ahead of and between two providers, and below ten) and the updated implementation report's evidence and objection; first pass, as recorded then (the full diff ea62be4..ec23f8d, the reader, port, resource, composers, rules, surfaces, read models, facts and count read in full, the adapters, gateway, controller, selection, reporting service, host and test diffs, the resolver's candidate steps, every stamp writer, the master plan sections, the previous owner report, the implementation report, decision records D-001 and D-005 and the other decision statements, the plan's verification tasks and the validator source); second pass, the correction diff ec23f8d..c443485 in full: the comparable-run count, selection and resolver, the reader with its two new sources and named outcomes, the port additions, the composers, rule catalogue and brief bound, the new console runner and the host, the recorded facts, the eighth resource's added entries, the boundary test addition and every new and changed check (the shared count over a class with excluded routes, the bounded brief at two and at fifty rows, the re-verification line with a statement and no result, the register lineage, the gate transition and the alert committed during composition, the missing week through the console runner, the bounds named apart, the twenty-one register entries); the admission ledger's availability statement compared with the reader's; the route record's constructor for any tier restriction on targets; the updated implementation report's change set, deviations and objections
+
+## Findings
+
+| ID | Severity | Category | Location | Requirement | Finding | Correction Request | Status |
+|---|---|---|---|---|---|---|---|
+| `F-001` | medium | correctness | src/MediaCompany.Deterministic/Analytics/ManagementComposers.cs:364 | Design Gate ruling F and decision record D-005: one count drives both the router fallback and the CTO label, so the report and the router cannot disagree | First pass: the label counted every register route of the class while selection counted the surviving candidates. Closed at 05243d1: label, rule and selection call one function over the available provider routes of each reasoning-tier class; the new check (a class holding a substitute, a disabled route and an other-tier route) fails on the first-pass code and passes now | `CR-001` | resolved |
+| `F-002` | medium | correctness | src/MediaCompany.Deterministic/Analytics/ManagementComposers.cs:462 | Design Gate ruling G: the re-verification line reads unmeasured until results are recorded | First pass: a statement with no result rendered an observed zero. Closed at 05243d1: the counts read unmeasured until a result is recorded, and the rule abstains; the changed check asserts unmeasured where the first-pass check asserted the observed zero, and an observed zero only once a result exists | `CR-002` | resolved |
+| `F-003` | medium | correctness | src/MediaCompany.Deterministic/Analytics/ManagementSurfaces.cs:131 | Scope item S-010 and constraint C-018: the brief is readable end to end within 15 minutes | First pass: held requests and controller actions grew the brief without bound. Closed at 05243d1: counts in their case, the most urgent held request only, at most one output and one abstention per rule with a count naming the report holding the rest; the new check gives equal item counts at two and at fifty rows, which the first-pass code fails; per-channel lines still scale with channels, held at one by the owner's single-channel position | `CR-003` | resolved |
+| `F-004` | medium | test-adequacy | tests/MediaCompany.Persistence.Tests/ManagementIntegrationTests.cs:242 | Plan task T-035 criterion two and the validation checkpoint of decision record D-001 | First pass: only an operation was committed during composition. Closed at c443485: a gate transition (snapshot-bound listing against the instant-filtered rate) and an admission raising an alert are each committed during composition and reach every affected line or none, and an alert stamped past the instant is read by no line; executed and passing | `CR-004` | resolved |
+| `F-005` | low | correctness | src/MediaCompany.Deterministic/Analytics/RuleCatalogue.cs:141 | Decision record D-010 supersession; decision record D-009, the rule keys on the open register entry | First pass: the rules looked their entry up by literal identifier. Closed at 05243d1: both rules follow the supersession lineage to its current entry; the changed check issues on a re-worded open successor and abstains on a decided one, which the first-pass code fails | `CR-005` | resolved |
+| `F-006` | low | standards | src/MediaCompany.Domain/Accounting/RecordedProgrammeFacts.cs:39 | Planning Gate ruling 6: each recorded programme fact cites the section that states it | Closed at 05243d1: the 2026-09-24 guidelines change cites master plan section 3.3, confirmed against the plan; checked | `CR-006` | resolved |
+| `F-007` | low | correctness | src/MediaCompany.Host/Program.cs:174 | Technical context, stable failure-handling semantics; decision record D-002 | Closed at 05243d1: a well-formed week that does not exist raises a named exception the console runner refuses with exit 2 and no output, as a malformed week is; the new check runs both commands through the runner the host calls | `CR-007` | resolved |
+| `F-008` | low | correctness | src/MediaCompany.Persistence/NpgsqlCompanyRecordReader.cs:87 | Design Gate ruling A: a bound reached ends in its named outcome | Closed at 05243d1: the statement bound now ends in its own named outcome, a read too slow, apart from the lock bound's store being changed; the new check asserts the three mappings | `CR-008` | resolved |
+| `F-009` | low | correctness | src/MediaCompany.Deterministic/Routing/EvidenceSelection.cs:63 | The Wave 7 selection decision: evidence ranks only where every candidate is observed, otherwise the configured route-tier ordering exactly | Raised at 05243d1: a candidate reaching no provider was moved after the ranked providers, so a substitute configured ahead of every provider would be passed over once each held ten. Closed at 3466ee0 as ruled by omn-tech-lead: every non-provider keeps its exact configured position and evidence reorders providers only among provider positions; below ten the configured ordering applies unchanged; the new check (a hold route ahead of, and between, two providers at ten, and below ten) fails on c443485 and passes now | `CR-009` | resolved |
+| `F-010` | low | test-adequacy | tests/MediaCompany.Architecture.Tests/BoundaryTests.cs:1098 | Scope item S-011 and decision record D-012: the dashboard path holds no write path, file, listener or action, asserted by the build | Raised at 05243d1: the console runner sat outside the management scan. Closed at 3466ee0: it is in the scan by name, the scan admits exactly the text-writer base type and refuses every other file-system type (a stream or string writer, a file) in members and compiled bodies, and a console-shaped probe writing a file beside its text is found and named; the allowance applies to every scanned management type, which can write only to a writer its caller supplies and can construct none | `CR-010` | resolved |
+
+## Severity Summary
+
+- Critical: 0
+- High: 0
+- Medium: 4
+- Low: 6
+
+## Standards and Architecture Conformance
+
+- Coding standards: the necessity and reuse ladder and the testing, security and performance playbooks applied to the correction diff; the availability step is defined once and the resolver delegates to it, the brief bound is a presentation choice with no invented quantity; conformant
+- Architecture rules: the one-read decision still holds as built: the two new sources, route availability and account status, carry writer instants and are bounded by the snapshot, matching the admission ledger's own statement; the escalated-deferral count and the alert line read datastore instants only; no new write, hold, wait or process-clock read was found; the comparable-run decision is now met by one function over one candidate set; selection keeps every non-provider route in its configured position and reorders providers only among provider positions, and below ten applies the configured ordering exactly, which is every selection reachable today because no comparable run can be recorded; above ten, where no provider meets the floor on observation, the first non-provider in configured order is served rather than a provider below the floor, consistent with the evidence rule that nothing is served below the floor; the architecture suite runs 63 of 63
+- Security criteria: no model call, metered call, listener, file write or action is reachable from the corrected paths; the console runner writes only to the two text writers the host passes; a refusal prints the named outcome and nothing else; conformant
+- Exceptions requested: None identified.
+
+## Test Adequacy Assessment
+
+- Test evidence reviewed: executed in this pass at 3466ee0, dotnet build MediaCompany.slnx (0 warnings, 0 errors), then dotnet test MediaCompany.slnx --no-build against mediacompany_demo: 736 executed, 736 passed, 0 failed (domain 48, deterministic 391, capability 51, architecture 63, persistence 183); and without the variable: 729 collected, 582 passed, 148 skipped, 0 failed; both match the twice-updated account; executed in the second pass at c443485, dotnet build MediaCompany.slnx (0 warnings, 0 errors), then dotnet test MediaCompany.slnx --no-build with the test connection naming mediacompany_demo on port 55432: 735 executed, 735 passed, 0 failed, 0 skipped (domain 48, deterministic 390, capability 51, architecture 63, persistence 183); and dotnet test MediaCompany.slnx --no-build without the variable: 729 collected, 581 passed, 148 skipped, 0 failed; both match the updated account exactly; the first pass's runs at ec23f8d (729 of 729 live; 578 passed and 145 skipped without a store) stand as recorded; the host commands end to end (install, check, weekly, weekly 2026-W40, dashboard, two refused weeks with exit 2) are the implementer's executed evidence, not re-run here; the company store's zero tables confirmed by the orchestrator
+- Coverage of changed behavior: every correction is exercised by an executed check; the checks for `F-001`, `F-002`, `F-003` and `F-005` would fail on the first-pass code, the checks for `F-007` and `F-008` cover types the first pass lacked, the `F-004` demonstrations close the coverage gap they were raised for, the `F-009` check fails on the previous head, and the `F-010` probe shows the scan finds a file write from a console-shaped type
+- Gaps requiring new tests: None identified.
+
+## Correction Requests
+
+| ID | Addresses | Required change | Blocking | Owner |
+|---|---|---|---|---|
+| `CR-001` | `F-001` | Closed: the label, the rule and selection decide "below the owner's ten" over the same candidate set, with a check over a class holding excluded routes | no | omn-dev-1-implement |
+| `CR-002` | `F-002` | Closed: the re-verification counts read unmeasured until a result is recorded, asserted by the unit check | no | omn-dev-1-implement |
+| `CR-003` | `F-003` | Closed: the brief's size no longer grows with held work or controller actions, every row staying in the reports | no | omn-dev-1-implement |
+| `CR-004` | `F-004` | Closed: a gate transition and a budget alert committed during composition reach every affected line or none | no | omn-dev-1-implement |
+| `CR-005` | `F-005` | Closed: the register rules follow supersession to the current entry | no | omn-dev-1-implement |
+| `CR-006` | `F-006` | Closed: each dated change names the section that states it | no | omn-dev-1-implement |
+| `CR-007` | `F-007` | Closed: a nonexistent week is refused by name with exit 2 | no | omn-dev-1-implement |
+| `CR-008` | `F-008` | Closed: the statement bound reports a slow read under its own outcome | no | omn-dev-1-implement |
+| `CR-009` | `F-009` | Closed: a route reaching no provider keeps its exact configured position and evidence reorders providers only among provider positions, with a check | no | omn-dev-1-implement |
+| `CR-010` | `F-010` | Closed: the build scans the console runner for a writer, clock, configuration, file or network reach, admitting only the text writer it is given | no | omn-dev-1-implement |
+
+## Residual Risk
+
+- Accepted risk: the implementer's residual risks stand as accepted by the orchestrator's rulings: every week reads not final until the delivered report command runs after it ends; the company store stays uninstalled, holding zero tables, so the register and reports exist over demonstration stores only; held operations booked before the eighth resource read their escalation as not recorded; per-channel brief lines grow with the channel count, held at one by the owner's single-channel position
+- Unmitigated risk: a demonstration store that carries the first-pass eighth resource keeps its earlier register rows on re-application, inserts being where absent, so its two first decision entries name no superseded question and the two answered Wave 7 questions read open in its decisions-required section; no kept store carries that version (the company store holds no tables and the demonstrations drop theirs), so it binds only a store installed between the two commits; the report's tier classes count every available route, while a request's candidates are also narrowed by floor, context, price and budget, so the report states a class's count rather than any one request's; write-once on the new records is not enforced against truncation, as on every delivered write-once record; the scan's text-writer allowance applies to every management type, so a composer could take a writer its caller supplies, though none can construct one
+- Monitoring required: the brief's item count against the channel count; reads ending under either bound; the count of tasks the CTO report labels qualitative while selection ranks on evidence, expected zero; once comparable runs exist, any selection serving a non-provider route because no provider met the floor on observation
+
+## Verdict
+
+- Decision: approve
+- Rationale: Test evidence was reviewed and reproduced exactly, the declared scope was examined, and all ten findings are resolved and confirmed by execution, so no finding is open and the last row of the adjudication table applies.
+- Blocking findings outstanding: None identified.
+- Readiness recommendation: recommended to omn-tech-lead as ready for its gate: no finding is open, and the one read, the no-write path, the eighth resource, selection below the owner's ten and the boundaries hold under execution; the owner's timed reading of the brief remains acceptance evidence for omn-qa and the owner; the decision is the gate owner's
+
+## Open Questions
+
+| ID | Question | Blocking | Owner | Affects |
+|---|---|---|---|---|
+| `Q-001` | Over which routes does a capability and task pair count its comparable runs? Answered by the orchestrator: the candidate set selection compares for a tier class, by one shared function | no | architect, ruled by omn-tech-lead | `F-001`, `CR-001` |
+| `Q-002` | Does "unmeasured until results are recorded" mean until a re-verification result exists? Answered by the orchestrator: yes, ruling G governs | no | omn-tech-lead | `F-002`, `CR-002` |
+| `Q-003` | May the brief show held requests and controller actions as counts? Answered by the orchestrator: counts with their case and at most the most urgent item per kind | no | omn-product-owner, with the owner at the wave report | `F-003`, `CR-003` |
+| `Q-004` | How do this wave's owner questions reach the register? Answered by the orchestrator: recorded in the decision record and transcribed by the eighth resource | no | omn-orchestrator | Residual Risk |
+| `Q-005` | Does a route reaching no provider keep its precedence once evidence ranks the providers? Answered by omn-tech-lead: it keeps its exact configured position; evidence reorders providers only among provider positions | no | omn-tech-lead | `F-009`, `CR-009` |
