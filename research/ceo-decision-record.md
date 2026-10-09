@@ -1951,3 +1951,29 @@ outside the USD 5.95 cap.
    unmeasured.
 4. **Price capture (question 4) and register writer (question 5): not answered.** Both stay open;
    the interim behaviour stands.
+
+---
+
+## CEO-D-803 — Answers to the Wave 9 scope phase's owner questions
+
+**The CEO's own decisions, 2026-10-09**, answering the questions the Wave 9 scope phase raised
+(run `run-7ae81c0de400`), in one answer the same session.
+
+1. **Pricing rule for non-token units: approved.** A route counts as priced when every unit kind
+   its vendor bills that request by has a price in force. A unit kind the vendor never bills for
+   that request needs no price. A billed unit kind with no price in force still refuses. This
+   lets a speech route billed by characters or audio units be selected; it does not relax the
+   refusal of a route with a missing price for a unit it consumes.
+2. **A channel with no budget amount: the company ceiling governs.** When a channel has no
+   recorded budget amount, metered work for it is admitted against the company metered ceiling
+   (USD 34.42, `CEO-D-702`) and, for the first video, the per-item cap (USD 5.95, `CEO-D-800`)
+   alone. No channel budget amount is recorded or invented by this decision. This answers the
+   Wave 7 question on a channel with no budget amount for metered work.
+3. **The metered run books into the company store `mediacompany`.** Its schema is installed for
+   the first time immediately before the owner-released metered run, by the orchestrator. No
+   phase, test or demonstration touches the company store; demonstrations stay in
+   `mediacompany_demo`.
+4. **The macro forager thumbnail is not generated.** The recorded synthetic-media determination
+   stands; that candidate stays a placeholder. The other candidates are code-rendered.
+5. **Vendors:** the owner's billed accounts are with the reasoning vendor (Anthropic) and the
+   speech-and-image vendor (OpenAI), as named in the question of `CEO-D-801`; both pay-per-use.
