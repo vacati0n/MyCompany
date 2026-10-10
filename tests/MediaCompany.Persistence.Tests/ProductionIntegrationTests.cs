@@ -192,7 +192,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         Assert.True(priced.CostStated);
         Assert.Equal(1_000 * 0.000015m, priced.ComputedCost.Amount);
         Assert.Equal(0.000015m, await ScalarAsync<decimal>($"SELECT applied_character_price FROM agent_costs WHERE operation_id = '{priced.Id}'"));
-        Assert.Contains("ESTIMATE", await ScalarAsync<string>(
+        // The applied price carries its recorded source; the orchestrator's first-hand re-fetch of 2026-10-10 added a
+        // newer row at the same price, so the source is asserted by its stated price, not by its ESTIMATE label.
+        Assert.Contains("USD 15.00 per", await ScalarAsync<string>(
             $"SELECT p.source FROM agent_costs a JOIN model_prices p ON p.model_price_id = a.applied_price_id WHERE a.operation_id = '{priced.Id}'"), StringComparison.Ordinal);
         Assert.True(unbilled.CostStated);
         Assert.Equal(1_000 * 0.000015m, unbilled.ComputedCost.Amount);

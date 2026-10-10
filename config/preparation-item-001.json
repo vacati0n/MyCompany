@@ -42,12 +42,12 @@
       "model": "tts-1",
       "ratedQuality": 0,
       "contextCapacity": 0,
-      "termsBasis": "the speech-and-image vendor's pay-per-use API terms; not verified first hand by any phase",
-      "termsVerifiedOn": "2026-10-09",
+      "termsBasis": "the speech-and-image vendor's pay-per-use API terms, verified first hand by the orchestrator on 2026-10-10",
+      "termsVerifiedOn": "2026-10-10",
       "automatedAccess": "Permits",
       "customerContent": "NoLicenceTaken",
-      "positionsEvidence": "the implementing role's recorded knowledge of the vendor's API terms, 2026-10-09: an API offered for programmatic use, and output owned by the customer; to be verified first hand by the orchestrator before the go",
-      "positionsReadOn": "2026-10-09"
+      "positionsEvidence": "read first hand by the orchestrator on 2026-10-10: the vendor's enterprise privacy page (openai.com/enterprise-privacy, updated 2026-01-08) states it does not train on API Platform business data by default and the customer owns inputs and outputs; the speech API reference (POST /v1/audio/speech, bearer authorization, body model, input, voice, response_format; input at most 4096 characters; voice onyx listed) is a programmatic API",
+      "positionsReadOn": "2026-10-10"
     }
   ],
   "prices": [
@@ -60,6 +60,16 @@
       "source": "ESTIMATE: the speech vendor's published price of USD 15.00 per million characters for this model, as recorded by the implementing role on 2026-10-09; not verified first hand; re-fetched by the orchestrator immediately before any spend",
       "verifiedOn": "2026-10-09",
       "validFrom": "2026-10-09T00:00:00Z"
+    },
+    {
+      "id": "d687c9ee-fb96-4a52-9355-1a51486c1c7e",
+      "model": "tts-1",
+      "kind": "CharacterUnit",
+      "unitPrice": 1.5e-05,
+      "currency": "USD",
+      "source": "Re-fetched first hand by the orchestrator on 2026-10-10 from the speech vendor's API pricing page (developers.openai.com/api/docs/pricing): tts-1 USD 15.00 per 1M characters",
+      "verifiedOn": "2026-10-10",
+      "validFrom": "2026-10-10T00:00:00Z"
     }
   ],
   "item": {
