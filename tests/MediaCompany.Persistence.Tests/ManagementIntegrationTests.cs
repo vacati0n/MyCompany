@@ -110,13 +110,19 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheEighthResourceSeedsTheRegisterRecordsNothingElseAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.008-management.sql", SchemaInstaller.ResourceNames[^1]);
+        // The ninth resource (the production change) now installs last; the eighth is still the eighth, and its
+        // transcription is asserted below over the entries IT seeded, REG-001 to REG-021, exactly as delivered.
+        // The ninth resource's five decided entries, superseding five of these, are asserted by its own test.
+        Assert.Equal("MediaCompany.Persistence.Schema.008-management.sql", SchemaInstaller.ResourceNames[^2]);
+        Assert.Equal("MediaCompany.Persistence.Schema.008-management.sql", SchemaInstaller.ResourceNames[7]);
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM platform_policy_statements"));
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM platform_policy_reverifications"));
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM admission_held_outcomes"));
 
         var read = await Reader().ReadAsync(null, CancellationToken.None);
-        var entries = read.RegisterEntries.OrderBy(e => e.Identifier, StringComparer.Ordinal).ToArray();
+        var eighth = Enumerable.Range(1, 21).Select(n => $"REG-{n:D3}").ToHashSet(StringComparer.Ordinal);
+        var seededByTheEighth = read.RegisterEntries.Where(e => eighth.Contains(e.Identifier)).ToArray();
+        var entries = seededByTheEighth.OrderBy(e => e.Identifier, StringComparer.Ordinal).ToArray();
         Assert.Equal(Enumerable.Range(1, 21).Select(n => $"REG-{n:D3}"), entries.Select(e => e.Identifier));
         Assert.Equal(["REG-001", "REG-002", "REG-003"], entries.Where(e => e.Status == RegisterEntryStatus.Decided).Select(e => e.Identifier));
 
@@ -136,7 +142,7 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         }
 
         Assert.Equal("REG-014", entries[19].Supersedes);
-        var open = read.RegisterEntries.Where(e => RuleCatalogue.IsOpen(e, read.RegisterEntries)).Select(e => e.Identifier).Order(StringComparer.Ordinal);
+        var open = seededByTheEighth.Where(e => RuleCatalogue.IsOpen(e, seededByTheEighth)).Select(e => e.Identifier).Order(StringComparer.Ordinal);
         Assert.Equal(
             Enumerable.Range(4, 10).Concat(Enumerable.Range(17, 5)).Select(n => $"REG-{n:D3}"),
             open);
@@ -175,7 +181,8 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         // Re-applied: nothing is re-inserted and no entry changes, its instant included.
         var instants = entries.Select(e => e.EnteredAt).ToArray();
         await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.008-management.sql"));
-        var again = (await Reader().ReadAsync(null, CancellationToken.None)).RegisterEntries.OrderBy(e => e.Identifier, StringComparer.Ordinal).ToArray();
+        var again = (await Reader().ReadAsync(null, CancellationToken.None)).RegisterEntries
+            .Where(e => eighth.Contains(e.Identifier)).OrderBy(e => e.Identifier, StringComparer.Ordinal).ToArray();
         Assert.Equal(instants, again.Select(e => e.EnteredAt));
         Assert.Equal(entries, again);
     }
@@ -225,8 +232,11 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         Assert.DoesNotContain("REG-008", required);
         Assert.DoesNotContain("REG-100", required);
         Assert.Equal(read.Reports.Register.Where(e => RuleCatalogue.IsOpen(e, read.Reports.Register)).Select(e => e.Identifier), required);
+        // The ninth resource (the production change) records the owner's answers of 2026-10-09 to REG-004, REG-007,
+        // REG-017, REG-018 and REG-019 as decided entries superseding them, so those five are no longer open; every
+        // other entry the delivered assertion named stays open, REG-008 is answered by this demonstration's own row.
         Assert.Equal(
-            Enumerable.Range(4, 10).Where(n => n != 8).Concat(Enumerable.Range(17, 5)).Select(n => $"REG-{n:D3}"),
+            Enumerable.Range(4, 10).Where(n => n is not (8 or 4 or 7)).Concat(Enumerable.Range(20, 2)).Select(n => $"REG-{n:D3}"),
             required.Order(StringComparer.Ordinal));
     }
 

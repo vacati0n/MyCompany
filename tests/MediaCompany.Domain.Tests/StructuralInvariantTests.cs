@@ -279,7 +279,10 @@ public sealed class ForbiddenSourceTests
     {
         var kinds = Enum.GetValues<ForbiddenSourceKind>();
 
-        Assert.Equal(5, kinds.Length);
+        // Six since the production change: its design adds the customer-content-licence kind (decision D-003), a
+        // code change the Review Gate sees, exactly as this test intends; the five delivered kinds are all kept.
+        Assert.Equal(6, kinds.Length);
+        Assert.Contains(ForbiddenSourceKind.CustomerContentLicence, kinds);
         Assert.Contains(ForbiddenSourceKind.ConsumerChatSubscription, kinds);
         Assert.Contains(ForbiddenSourceKind.MultipliedPersonalAccount, kinds);
         Assert.Contains(ForbiddenSourceKind.SharedCredential, kinds);

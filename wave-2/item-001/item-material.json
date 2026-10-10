@@ -1,0 +1,612 @@
+{
+  "item": "MC3-ITEM-001",
+  "packageVersion": 1,
+  "recordedBy": "the implementing role, 2026-10-09, every entry quoted from the recorded package or the owner's decision record",
+  "narrationFile": "wave-2/item-001/narration.txt",
+  "narrationCharacters": 11096,
+  "specifiedRuntime": {
+    "seconds": 819,
+    "source": "wave-2/item-001/script.md",
+    "quote": "| **Specified runtime of the cut** | **13 min 39 s** |"
+  },
+  "subjectTerms": {
+    "source": "wave-2/item-001/script.md",
+    "terms": [
+      "bee",
+      "honeybee",
+      "honey bee",
+      "waggle dance",
+      "beehive",
+      "honeycomb",
+      "apiary",
+      "pollination",
+      "blossom",
+      "linden",
+      "meadow",
+      "farmland",
+      "sunset",
+      "beekeeper"
+    ]
+  },
+  "beats": [
+    {
+      "number": 1,
+      "title": "The problem",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 1. The problem | 00:00 | A forager returns; the colony cannot see the resource | `GFX-01` | `CLIP-01`, `CLIP-02`, `CLIP-09`, `CLIP-10` |",
+      "opening": "A honey bee returns to her colony.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 1 — the problem.** Opens on `CLIP-01` and `CLIP-02` under the first two paragraphs;"
+    },
+    {
+      "number": 2,
+      "title": "Why it is worth an explainer",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 2. Why it is worth an explainer | 01:05 | We can read this signal like an instrument | — | `CLIP-03` |",
+      "opening": "This is the honey bee waggle dance, and the reason it matters to anyone outside entomology is that it is one of the very few cases in which we can read an animal's signal the way we would read an instrument — where we can say, precisely, what quantity is encoded, in what units, and with what error.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 2.** `CLIP-03` under the instrument paragraph."
+    },
+    {
+      "number": 3,
+      "title": "The act",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 3. The act | 02:00 | The figure of eight and the waggle run | `GFX-02`, `GFX-03`, `GFX-04` | `CLIP-04`, `CLIP-05`, `CLIP-16` |",
+      "opening": "A returning forager climbs onto a vertical sheet of comb inside the nest.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 3 — the act.** `CLIP-04` and `CLIP-16` under the description of the returning forager."
+    },
+    {
+      "number": 4,
+      "title": "Encoding one — direction",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 4. Encoding one — direction | 03:10 | Sun azimuth transposed onto gravity | `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08` | `CLIP-13`, `CLIP-14` |",
+      "opening": "Take direction first, because it involves a transformation that is easy to state and genuinely strange to think about.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 4 — direction.** `CLIP-13` and `CLIP-14` establish sun and comb."
+    },
+    {
+      "number": 5,
+      "title": "The moving reference",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 5. The moving reference | 05:10 | Time-compensated solar azimuth, in darkness | `GFX-09` | — |",
+      "opening": "And there is a complication, which the bee also solves.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 5 — the moving reference.** `GFX-09` alone, no clip."
+    },
+    {
+      "number": 6,
+      "title": "Encoding two — distance",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 6. Encoding two — distance | 06:15 | Waggle duration; calibrated, not absolute | `GFX-10` | `CLIP-11` |",
+      "opening": "Now the second number: distance.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 6 — distance.** `CLIP-11` under the opening;"
+    },
+    {
+      "number": 7,
+      "title": "The odometer",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 7. The odometer | 07:20 | Optic flow, and the tunnel experiment | `GFX-11`, `GFX-12`, `GFX-13` | `CLIP-12`, `CLIP-15` |",
+      "opening": "Calibrated against what?",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 7 — the odometer.** `CLIP-12` and `CLIP-15` under the optic-flow explanation;"
+    },
+    {
+      "number": 8,
+      "title": "The vector",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 8. The vector | 08:40 | Two numbers resolving to a region | `GFX-14` | — |",
+      "opening": "Two numbers, then: an angle against a moving celestial reference, and a duration standing for accumulated optic flow.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 8 — the vector.** `GFX-14` resolves θ and t into a region with visible extent."
+    },
+    {
+      "number": 9,
+      "title": "Does anything read it",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 9. Does anything read it | 09:05 | Model bee; harmonic radar | `GFX-15`, `GFX-16` | `CLIP-06`, `CLIP-08` |",
+      "opening": "Which raises the obvious question.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 9 — does anything read it.** `CLIP-06` and `CLIP-08` under the attendance description."
+    },
+    {
+      "number": 10,
+      "title": "The error",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 10. The error | 10:40 | Scatter, and the error cone | `GFX-17`, `GFX-18` | `CLIP-07` |",
+      "opening": "So the dance transmits.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 10 — the error.** `CLIP-07` briefly;"
+    },
+    {
+      "number": 11,
+      "title": "Adaptation or constraint",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 11. Adaptation or constraint | 11:30 | The contested question, left contested | `GFX-19` | — |",
+      "opening": "Whether that imprecision is a limitation or a feature has been argued both ways.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 11 — adaptation or constraint.** `GFX-19` alone."
+    },
+    {
+      "number": 12,
+      "title": "What it is worth",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 12. What it is worth | 12:10 | Dance advantage varies by habitat | `GFX-20` | `CLIP-18` |",
+      "opening": "There is a further result worth knowing, because it puts the whole system in economic terms.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 12 — what it is worth.** `CLIP-18` under the habitat comparison;"
+    },
+    {
+      "number": 13,
+      "title": "The mechanism whole",
+      "structureSource": "wave-2/item-001/script.md",
+      "structureQuote": "| 13. The mechanism whole | 12:40 | The block diagram, and the close | `GFX-21`, `GFX-22` | `CLIP-17` |",
+      "opening": "So, to state the mechanism as a whole.",
+      "openingSource": "wave-2/item-001/narration.txt",
+      "cueSource": "wave-2/item-001/script.md",
+      "cueQuote": "**Beat 13 — close.** `GFX-21` assembles the whole mechanism."
+    }
+  ],
+  "graphics": [
+    {
+      "id": "GFX-01",
+      "beat": 1,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-01` | Plan view: nest, resource at ~2 km, no line of sight, no shared landmark | The problem the mechanism solves |",
+      "lines": [
+        "Plan view: nest, resource at ~2 km, no line of sight, no shared landmark",
+        "The problem the mechanism solves"
+      ]
+    },
+    {
+      "id": "GFX-02",
+      "beat": 3,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-02` | The figure of eight, annotated: two return loops, one straight waggle run | `CL-03` |",
+      "lines": [
+        "The figure of eight, annotated: two return loops, one straight waggle run",
+        "CL-03"
+      ]
+    },
+    {
+      "id": "GFX-03",
+      "beat": 3,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-03` | Abdominal oscillation trace, 13–15 Hz, against a time axis | `CL-04` |",
+      "lines": [
+        "Abdominal oscillation trace, 13–15 Hz, against a time axis",
+        "CL-04"
+      ]
+    },
+    {
+      "id": "GFX-04",
+      "beat": 3,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-04` | The two variables isolated from the dance: angle θ, duration t | `CL-05` |",
+      "lines": [
+        "The two variables isolated from the dance: angle θ, duration t",
+        "CL-05"
+      ]
+    },
+    {
+      "id": "GFX-05",
+      "beat": 4,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-05` | Outdoor frame, plan view: sun azimuth, resource bearing, angle θ between them | `CL-06` |",
+      "lines": [
+        "Outdoor frame, plan view: sun azimuth, resource bearing, angle θ between them",
+        "CL-06"
+      ]
+    },
+    {
+      "id": "GFX-06",
+      "beat": 4,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-06` | Comb frame, elevation view: gravity vertical, waggle run at angle θ | `CL-07` |",
+      "lines": [
+        "Comb frame, elevation view: gravity vertical, waggle run at angle θ",
+        "CL-07"
+      ]
+    },
+    {
+      "id": "GFX-07",
+      "beat": 4,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-07` | The transposition: both frames side by side, θ preserved across them | `CL-07`, `CL-08` |",
+      "lines": [
+        "The transposition: both frames side by side, θ preserved across them",
+        "CL-07, CL-08"
+      ]
+    },
+    {
+      "id": "GFX-08",
+      "beat": 4,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-08` | Three worked cases: run straight up, straight down, 60° right of vertical | `CL-07` |",
+      "lines": [
+        "Three worked cases: run straight up, straight down, 60° right of vertical",
+        "CL-07"
+      ]
+    },
+    {
+      "id": "GFX-09",
+      "beat": 5,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-09` | Solar azimuth through the day, and the dance angle rotating to track it | `CL-09`, `CL-10` |",
+      "lines": [
+        "Solar azimuth through the day, and the dance angle rotating to track it",
+        "CL-09, CL-10"
+      ]
+    },
+    {
+      "id": "GFX-10",
+      "beat": 6,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-10` | Waggle duration against distance: near-linear, with a band for subspecies slope | `CL-11`, `CL-12` |",
+      "lines": [
+        "Waggle duration against distance: near-linear, with a band for subspecies slope",
+        "CL-11, CL-12"
+      ]
+    },
+    {
+      "id": "GFX-11",
+      "beat": 7,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-11` | Optic flow: image motion accumulating along a flight path | `CL-13` |",
+      "lines": [
+        "Optic flow: image motion accumulating along a flight path",
+        "CL-13"
+      ]
+    },
+    {
+      "id": "GFX-12",
+      "beat": 7,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-12` | The tunnel experiment: narrow patterned tunnel, dance distance overestimated | `CL-14` |",
+      "lines": [
+        "The tunnel experiment: narrow patterned tunnel, dance distance overestimated",
+        "CL-14"
+      ]
+    },
+    {
+      "id": "GFX-13",
+      "beat": 7,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-13` | Unit substitution: metres set beside accumulated image motion | `CL-15` |",
+      "lines": [
+        "Unit substitution: metres set beside accumulated image motion",
+        "CL-15"
+      ]
+    },
+    {
+      "id": "GFX-14",
+      "beat": 8,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-14` | The vector assembled: θ and t resolving to a region, not a point | `CL-16` |",
+      "lines": [
+        "The vector assembled: θ and t resolving to a region, not a point",
+        "CL-16"
+      ]
+    },
+    {
+      "id": "GFX-15",
+      "beat": 9,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-15` | The mechanical model-bee experiment, schematic | `CL-17` |",
+      "lines": [
+        "The mechanical model-bee experiment, schematic",
+        "CL-17"
+      ]
+    },
+    {
+      "id": "GFX-16",
+      "beat": 9,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-16` | Harmonic radar flight paths: outbound vector, then search pattern | `CL-18`, `CL-19` |",
+      "lines": [
+        "Harmonic radar flight paths: outbound vector, then search pattern",
+        "CL-18, CL-19"
+      ]
+    },
+    {
+      "id": "GFX-17",
+      "beat": 10,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-17` | Angular scatter: successive run angles distributed around the true bearing | `CL-20` |",
+      "lines": [
+        "Angular scatter: successive run angles distributed around the true bearing",
+        "CL-20"
+      ]
+    },
+    {
+      "id": "GFX-18",
+      "beat": 10,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-18` | The error cone widening with distance | `CL-21` |",
+      "lines": [
+        "The error cone widening with distance",
+        "CL-21"
+      ]
+    },
+    {
+      "id": "GFX-19",
+      "beat": 11,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-19` | Patch area set against delivery precision — the two readings of the scatter | `CL-22` |",
+      "lines": [
+        "Patch area set against delivery precision — the two readings of the scatter",
+        "CL-22"
+      ]
+    },
+    {
+      "id": "GFX-20",
+      "beat": 12,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-20` | Dance advantage by habitat: substantial in patchy, negligible in dense | `CL-23` |",
+      "lines": [
+        "Dance advantage by habitat: substantial in patchy, negligible in dense",
+        "CL-23"
+      ]
+    },
+    {
+      "id": "GFX-21",
+      "beat": 13,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-21` | The whole mechanism as one block diagram: measure, encode, transmit, decode, fly | Summary |",
+      "lines": [
+        "The whole mechanism as one block diagram: measure, encode, transmit, decode, fly",
+        "Summary"
+      ]
+    },
+    {
+      "id": "GFX-22",
+      "beat": 13,
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `GFX-22` | End card: the source list, on screen, readable | Attribution |",
+      "lines": [
+        "End card: the source list, on screen, readable",
+        "Attribution"
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "id": "CLIP-01",
+      "beat": 1,
+      "label": "Forager landing at a hive entrance",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-01` | Forager landing at a hive entrance | Beat 1, the problem | Required before use |"
+    },
+    {
+      "id": "CLIP-02",
+      "beat": 1,
+      "label": "Hive entrance activity, wide",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-02` | Hive entrance activity, wide | Beat 1, the problem | Required before use |"
+    },
+    {
+      "id": "CLIP-03",
+      "beat": 2,
+      "label": "Interior comb, bees moving, low light macro",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-03` | Interior comb, bees moving, low light macro | Beat 2, why it is worth an explainer | Required before use |"
+    },
+    {
+      "id": "CLIP-04",
+      "beat": 3,
+      "label": "Single bee on comb, close macro",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-04` | Single bee on comb, close macro | Beat 3, the act | Required before use |"
+    },
+    {
+      "id": "CLIP-05",
+      "beat": 3,
+      "label": "Waggle-run candidate A",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-05` | **Waggle-run candidate A** | Beat 3, the act | **Must be confirmed by eye to show the dance itself** |"
+    },
+    {
+      "id": "CLIP-06",
+      "beat": 9,
+      "label": "Waggle-run candidate B",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-06` | **Waggle-run candidate B** | Beat 9, does anything read it | **Must be confirmed by eye to show the dance itself** |"
+    },
+    {
+      "id": "CLIP-07",
+      "beat": 10,
+      "label": "Waggle-run candidate C",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-07` | **Waggle-run candidate C** | Beat 10, the error | **Must be confirmed by eye to show the dance itself** |"
+    },
+    {
+      "id": "CLIP-08",
+      "beat": 9,
+      "label": "Bees clustered around a dancer — attendance behaviour",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-08` | Bees clustered around a dancer — attendance behaviour | Beat 9, does anything read it | Required before use |"
+    },
+    {
+      "id": "CLIP-09",
+      "beat": 1,
+      "label": "Lime / linden blossom, mid shot",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-09` | Lime / linden blossom, mid shot | Beat 1, the problem | Required before use |"
+    },
+    {
+      "id": "CLIP-10",
+      "beat": 1,
+      "label": "Forager on a flower, macro",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-10` | Forager on a flower, macro | Beat 1, the problem | Required before use |"
+    },
+    {
+      "id": "CLIP-11",
+      "beat": 6,
+      "label": "Bee in flight, slow motion",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-11` | Bee in flight, slow motion | Beat 6, encoding two — distance | Required before use |"
+    },
+    {
+      "id": "CLIP-12",
+      "beat": 7,
+      "label": "Open farmland, elevated wide",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-12` | Open farmland, elevated wide | Beat 7, the odometer | Required before use |"
+    },
+    {
+      "id": "CLIP-13",
+      "beat": 4,
+      "label": "Low sun over a horizon",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-13` | Low sun over a horizon | Beat 4, encoding one — direction | Required before use |"
+    },
+    {
+      "id": "CLIP-14",
+      "beat": 4,
+      "label": "Vertical comb, wide, orientation legible",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-14` | Vertical comb, wide, orientation legible | Beat 4, encoding one — direction | Required before use |"
+    },
+    {
+      "id": "CLIP-15",
+      "beat": 7,
+      "label": "Compound eye, macro",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-15` | Compound eye, macro | Beat 7, the odometer | Required before use |"
+    },
+    {
+      "id": "CLIP-16",
+      "beat": 3,
+      "label": "Hive frame lifted, hands only, no face",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-16` | Hive frame lifted, hands only, no face | Beat 3, the act | Required before use; no depicted human expert |"
+    },
+    {
+      "id": "CLIP-17",
+      "beat": 13,
+      "label": "Bees fanning at the entrance",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-17` | Bees fanning at the entrance | Beat 13, the mechanism whole | Required before use |"
+    },
+    {
+      "id": "CLIP-18",
+      "beat": 12,
+      "label": "Flowering meadow, wide",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `CLIP-18` | Flowering meadow, wide | Beat 12, what it is worth | Required before use |"
+    }
+  ],
+  "unsourcedClips": {
+    "ids": [
+      "CLIP-05",
+      "CLIP-06",
+      "CLIP-07"
+    ],
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "Until it is,\n`CLIP-05`, `CLIP-06` and `CLIP-07` are specified but not sourced"
+  },
+  "clipPlaceholders": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the first video carries no stock footage and no"
+  },
+  "thumbnails": [
+    {
+      "id": "THUMB-01",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `THUMB-01` | The angle diagram alone: comb vertical, run at θ, gravity arrow. No bee. |",
+      "lines": [
+        "The angle diagram alone: comb vertical, run at θ, gravity arrow. No bee."
+      ],
+      "displayedText": null,
+      "alternativeText": null,
+      "alternativeTextNote": "not recorded in the package; recorded absent, never invented",
+      "placeholder": false,
+      "placeholderSource": null,
+      "placeholderQuote": null
+    },
+    {
+      "id": "THUMB-02",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `THUMB-02` | Split frame: sun-azimuth plan view beside comb elevation view, θ marked on both |",
+      "lines": [
+        "Split frame: sun-azimuth plan view beside comb elevation view, θ marked on both"
+      ],
+      "displayedText": null,
+      "alternativeText": null,
+      "alternativeTextNote": "not recorded in the package; recorded absent, never invented",
+      "placeholder": false,
+      "placeholderSource": null,
+      "placeholderQuote": null
+    },
+    {
+      "id": "THUMB-03",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `THUMB-03` | Macro forager on comb, with the θ overlay struck over it |",
+      "lines": [
+        "Macro forager on comb, with the θ overlay struck over it"
+      ],
+      "displayedText": null,
+      "alternativeText": null,
+      "alternativeTextNote": "not recorded in the package; recorded absent, never invented",
+      "placeholder": true,
+      "placeholderSource": "research/ceo-decision-record.md",
+      "placeholderQuote": "4. **The macro forager thumbnail is not generated.**"
+    },
+    {
+      "id": "THUMB-04",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `THUMB-04` | The waggle duration/distance plot, one axis labelled, high contrast |",
+      "lines": [
+        "The waggle duration/distance plot, one axis labelled, high contrast"
+      ],
+      "displayedText": null,
+      "alternativeText": null,
+      "alternativeTextNote": "not recorded in the package; recorded absent, never invented",
+      "placeholder": false,
+      "placeholderSource": null,
+      "placeholderQuote": null
+    },
+    {
+      "id": "THUMB-05",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `THUMB-05` | The error cone widening, with the nest at the apex |",
+      "lines": [
+        "The error cone widening, with the nest at the apex"
+      ],
+      "displayedText": null,
+      "alternativeText": null,
+      "alternativeTextNote": "not recorded in the package; recorded absent, never invented",
+      "placeholder": false,
+      "placeholderSource": null,
+      "placeholderQuote": null
+    },
+    {
+      "id": "THUMB-06",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "| `THUMB-06` | Typographic: \"TWO NUMBERS\" over the figure-of-eight path |",
+      "lines": [
+        "Typographic: \"TWO NUMBERS\" over the figure-of-eight path"
+      ],
+      "displayedText": "TWO NUMBERS",
+      "alternativeText": null,
+      "alternativeTextNote": "not recorded in the package; recorded absent, never invented",
+      "placeholder": false,
+      "placeholderSource": null,
+      "placeholderQuote": null
+    }
+  ]
+}

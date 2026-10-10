@@ -1893,3 +1893,134 @@ transcribe them from a recorded source. None blocks Wave 8; each is put to the o
    immediately before use, or must the booking re-fetch it? No behaviour changes until answered.
 5. **Register writer:** the register is filled only by transcription in a schema resource, so a
    decision reaches it one release late. Keep transcription, or direct a writer in a later wave?
+
+---
+
+## CEO-D-800 — Produce the first metered video, not published, within a USD 5.95 cap
+
+**The CEO's own decision, 2026-10-09**, answering section 3.1 of `wave-8/bao-cao-ceo.md` at the
+start of the Wave 9 session. The owner **authorises producing the company's first metered video**:
+
+- **Cap: USD 5.95 of metered spend in total for this video**, all attempts, retries and failed
+  calls included. The cap is a hard stop, not a target: reaching it stops production and is
+  reported; it is never exceeded to finish. It sits inside the USD 34.42 company metered ceiling
+  (`CEO-D-702`).
+- **Produced, never published.** No upload, no channel creation, no channel configured as live,
+  no platform account action. The five structural absences on the upload path stay.
+- This is a **new, separate authority**. It does not spend, stretch or replace the earlier
+  single-metered-operation exception (`CEO-D-300`, `CEO-D-301`), which remains unspent.
+- `CEO-D-700` (no executive or narrative model call for reports until the first video exists) is
+  not relaxed for reports. Calls that are production stages of the video are what this authorises.
+- Every spend is recorded through the existing admission, booking and operation record.
+
+Decision block for Wave 9: `CEO-D-800`–`CEO-D-899`, `CEO-C-800`–`CEO-C-899`.
+
+---
+
+## CEO-D-801 — Build the production capability first; the metered run waits for the owner
+
+**The CEO's own decision, 2026-10-09**, in a second answer the same session, after the
+orchestrator's survey showed that no code path can produce a video (no real provider adapter, no
+producing stage, no render) and that option O-002's standing services cost USD 42.99 per month
+outside the USD 5.95 cap.
+
+1. **Wave 9 builds the production capability and proves it at USD 0.00 against fake providers.**
+   No phase makes a metered call.
+2. **The owner holds billed API accounts** and will set the credential variables on this machine
+   when the wave reports their exact names. The single metered run of `CEO-D-800` is then executed
+   by the orchestrator, outside the phases, only on the owner's explicit go.
+3. **No subscription is bought** (stock library, music library, narration-vendor entitlement).
+   The orchestrator's reading, which the owner may overturn: the pipeline uses pay-per-use vendors
+   the owner can bill without a subscription, and the first video carries no stock footage and no
+   music.
+4. **The autonomy capability is deferred** to a later wave; `MC-10` is re-scoped to production.
+5. **`ffmpeg` installed**: the owner approved installing winget package `Gyan.FFmpeg` (user
+   scope) on the development machine; version 9.0.2 was installed 2026-10-09.
+
+---
+
+## CEO-D-802 — Answers to the Wave 8 owner questions (CEO-Q-700)
+
+**The CEO's own decisions, 2026-10-09.**
+
+1. **Report week (question 3): confirmed.** The UTC week, Monday 00:00 UTC (07:00 Vietnam time).
+2. **Recommendation items (question 2): seven.** The seven-item list of master plan sections 9 and
+   29 governs; the delivered seven-rule catalogue stands.
+3. **Platform-policy re-verification (question 1): the orchestrator records the results, once per
+   wave.** No day count for "overdue" was given; beyond "not recorded in the current wave" it stays
+   unmeasured.
+4. **Price capture (question 4) and register writer (question 5): not answered.** Both stay open;
+   the interim behaviour stands.
+
+---
+
+## CEO-D-803 — Answers to the Wave 9 scope phase's owner questions
+
+**The CEO's own decisions, 2026-10-09**, answering the questions the Wave 9 scope phase raised
+(run `run-7ae81c0de400`), in one answer the same session.
+
+1. **Pricing rule for non-token units: approved.** A route counts as priced when every unit kind
+   its vendor bills that request by has a price in force. A unit kind the vendor never bills for
+   that request needs no price. A billed unit kind with no price in force still refuses. This
+   lets a speech route billed by characters or audio units be selected; it does not relax the
+   refusal of a route with a missing price for a unit it consumes.
+2. **A channel with no budget amount: the company ceiling governs.** When a channel has no
+   recorded budget amount, metered work for it is admitted against the company metered ceiling
+   (USD 34.42, `CEO-D-702`) and, for the first video, the per-item cap (USD 5.95, `CEO-D-800`)
+   alone. No channel budget amount is recorded or invented by this decision. This answers the
+   Wave 7 question on a channel with no budget amount for metered work.
+3. **The metered run books into the company store `mediacompany`.** Its schema is installed for
+   the first time immediately before the owner-released metered run, by the orchestrator. No
+   phase, test or demonstration touches the company store; demonstrations stay in
+   `mediacompany_demo`.
+4. **The macro forager thumbnail is not generated.** The recorded synthetic-media determination
+   stands; that candidate stays a placeholder. The other candidates are code-rendered.
+5. **Vendors:** the owner's billed accounts are with the reasoning vendor (Anthropic) and the
+   speech-and-image vendor (OpenAI), as named in the question of `CEO-D-801`; both pay-per-use.
+
+---
+
+## CEO-D-804 — The narration voice for the first video
+
+**The CEO's own decision, 2026-10-10**, answering the implementation phase's open question (the
+narration voice has no default; metered mode refuses until it is set). The narration voice is the
+speech-and-image vendor's voice **`onyx`** (a deep male voice suited to documentary narration).
+The orchestrator verifies first-hand that the voice name is current with the vendor before the go
+and sets it in the run's settings; no code default is added.
+
+---
+
+## CEO-D-805 — The company's narration is its own: a human recording, or a voice model run in house
+
+**The CEO's own decision, 2026-10-10**, after the first metered attempt of `CEO-D-800`.
+
+**What happened first.** On 2026-10-10 at 07:50 UTC the orchestrator ran `produce --mode metered`
+once on the owner's go, against the company store `mediacompany` (backed up beforehand). Item
+version 2 opened; the Design stage drew its 22 stills locally; the first narration request (513
+characters) was answered by the speech vendor with HTTP status 429. The run stopped without retry
+(exit 3). The attempt is booked at its admitted worst case, **USD 0.007695, labelled estimate**
+(operation `4087889c-2f31-4868-8d91-5223a3b4134b`); the vendor's actual charge is not known and is
+probably zero. The vendor's error body was not recorded, so the cause (rate limit or no prepaid
+quota) is not known. **No video was produced.**
+
+**The decision.** The owner does not want the company's voice to depend on the speech vendor.
+Narration must come from the company itself, in **both** forms:
+
+1. **A human recording**: a person working for the company records the narration; the pipeline
+   imports the recorded audio file, checks it, and assembles the video from it.
+2. **A voice model run in house**: an open-licensed speech model running on the company's own
+   machine, used when no human recording exists — no vendor, no per-use charge, no content leaving
+   the machine.
+
+**Consequences.**
+
+- The speech vendor's narration route is **not attempted again**. The `CEO-D-800` authority is not
+  spent further on that vendor; the counted total under the USD 5.95 cap stays at its recorded
+  USD 0.007695 estimate.
+- The owner-set credential variable for that vendor is no longer needed and may be removed.
+- **Wave 10** builds the in-house narration in its own session (one session per wave); Wave 9 closes
+  as delivered.
+- The voice `onyx` (`CEO-D-804`) belonged to the vendor and lapses with it; the in-house voice is
+  chosen in Wave 10.
+
+Decision block for Wave 10: `CEO-D-900`–`CEO-D-999`, `CEO-C-900`–`CEO-C-999`.

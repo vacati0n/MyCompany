@@ -98,6 +98,12 @@ public static class CompositionRoot
         services.AddSingleton<ICompanyRecordReader>(sp =>
             new NpgsqlCompanyRecordReader(sp.GetRequiredService<NpgsqlDataSource>()));
 
+        // The production change: the store's designation, the produce path's reads and the preparation. The produce
+        // service, the writer and the process starter are composed per command from the settings file, never here.
+        services.AddSingleton<IStoreDesignationReader>(sp => new NpgsqlStoreDesignationReader(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IProductionReader>(sp => new NpgsqlProductionReader(sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddSingleton<IPreparationWriter>(sp => new NpgsqlPreparationWriter(sp.GetRequiredService<NpgsqlDataSource>()));
+
         // The credential broker — the only module holding a dependency on the secret store.
         services.AddSingleton(sp =>
         {

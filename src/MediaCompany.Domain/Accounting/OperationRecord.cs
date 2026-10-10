@@ -17,6 +17,12 @@ public enum OperationOutcome
 public sealed record UnitCounts(long InputUnits, long OutputUnits, long CachedUnits, long OtherUnits)
 {
     public static UnitCounts None { get; } = new(0, 0, 0, 0);
+
+    /// <summary>Characters billed (the production change, decision D-007 of its design). Zero by default.</summary>
+    public long CharacterUnits { get; init; }
+
+    /// <summary>Images billed (the production change, decision D-007 of its design). Zero by default.</summary>
+    public long ImageUnits { get; init; }
 }
 
 /// <summary>
@@ -117,6 +123,9 @@ public enum CostUnstatedReason
 
     /// <summary>A unit of another kind was consumed, and no price applies to it.</summary>
     UnpricedUnitConsumed = 2,
+
+    // A consumed character or image unit with no price row in force (the production change) is the
+    // PriceNotInForce reason above, as an input, output or cached unit is.
 
     /// <summary>
     /// The units at the applied prices come to a cost the cost column cannot hold, so the cost is refused

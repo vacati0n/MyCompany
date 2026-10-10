@@ -92,7 +92,12 @@ internal sealed class NpgsqlWorkTransaction : IWorkTransaction
         // transaction, and the benchmark writer.
         Admission = new NpgsqlAdmissionLedger(connection, transaction);
         Benchmarks = new NpgsqlBenchmarkWriter(connection, transaction);
+
+        // The production change: the production record, on this transaction.
+        Production = new NpgsqlProductionLedger(connection, transaction);
     }
+
+    public IProductionLedger Production { get; }
 
     public IAuditAppender Audit { get; }
 

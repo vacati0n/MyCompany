@@ -13,5 +13,6 @@
     <ProjectReference Include="..\MediaCompany.Credentials\MediaCompany.Credentials.csproj" />
     <ProjectReference Include="..\MediaCompany.Capability\MediaCompany.Capability.csproj" />
     <ProjectReference Include="..\MediaCompany.Persistence\MediaCompany.Persistence.csproj" />
+    <ProjectReference Include="..\MediaCompany.Production\MediaCompany.Production.csproj" />
   </ItemGroup>
 </Project>

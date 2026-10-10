@@ -644,6 +644,39 @@ public sealed class ManagementCompositionTests
     }
 
     /// <summary>
+    /// ONCE THE QUESTION IS DECIDED, the unbudgeted-channel rule KEEPS ISSUING for a channel whose metered work admission
+    /// would still refuse — one of its items carries no recorded cap, or it has no item — anchored on the decided entry,
+    /// and ABSTAINS only for a channel whose every item carries a recorded cap, where admission now admits (the ruling
+    /// on the review's question). A snapshot that did not read the coverage keeps the delivered abstention.
+    /// </summary>
+    [Fact]
+    public void TheUnbudgetedChannelRuleKeepsIssuingWhereAdmissionWouldStillRefuse()
+    {
+        var decided = SnapshotFixture.Register()
+            .Append(SnapshotFixture.Entry("REG-099", RegisterEntryStatus.Decided, "fixture: the ceiling and the item cap govern", supersedes: "REG-004"))
+            .ToArray();
+        RuleOutcome Outcome(IReadOnlyList<ChannelItemCapCoverage>? coverage) => Assert.Single(
+            ManagementComposers.Compose(SnapshotFixture.Build(register: decided) with { ItemCapCoverage = coverage }).Outcomes,
+            o => o.Rule == RecommendationRule.CfoUnbudgetedChannel);
+
+        var uncapped = Assert.IsType<RuleOutcome.Issued>(Outcome(
+            [new ChannelItemCapCoverage { Channel = SnapshotFixture.ChannelOne, Items = 2, CappedItems = 1 }]));
+        Assert.Contains("REG-099", uncapped.AnchorStatement, StringComparison.Ordinal);
+        Assert.Contains("Design Gate", uncapped.AnchorStatement, StringComparison.Ordinal);
+        Assert.Contains("1 of the channel's 2 item(s) carry no recorded cap", uncapped.Statement, StringComparison.Ordinal);
+
+        var empty = Assert.IsType<RuleOutcome.Issued>(Outcome([]));
+        Assert.Contains("the channel has no item", empty.Statement, StringComparison.Ordinal);
+
+        var capped = Assert.IsType<RuleOutcome.Abstained>(Outcome(
+            [new ChannelItemCapCoverage { Channel = SnapshotFixture.ChannelOne, Items = 1, CappedItems = 1 }]));
+        Assert.Contains("every one of the channel's 1 item(s) carries a recorded cap", capped.Reason, StringComparison.Ordinal);
+        Assert.Contains("REG-099", capped.Reason, StringComparison.Ordinal);
+
+        Assert.IsType<RuleOutcome.Abstained>(Outcome(null));
+    }
+
+    /// <summary>
     /// CTO rule 2 fires on a recorded decision at defer, keyed on its fixed threshold, with the ten CTO fields; it
     /// abstains over a decision whose deciding reading is unmeasured.
     /// </summary>

@@ -20,7 +20,39 @@ public enum ForbiddenSourceKind
 
     /// <summary>A generation interface withdrawn by its provider.</summary>
     WithdrawnInterface = 5,
+
+    /// <summary>
+    /// A service whose terms take a licence over the customer's content (the production change, decision D-003
+    /// of its design): a narration or image service that would acquire rights in the company's script or
+    /// output. Refused like every other kind, before any request is sent.
+    /// </summary>
+    CustomerContentLicence = 6,
 }
+
+/// <summary>A route's recorded position on automated access, from its terms (the production change, decision D-003).</summary>
+public enum AutomatedAccessPosition
+{
+    Permits = 1,
+    Prohibits = 2,
+}
+
+/// <summary>A route's recorded position on a licence over the customer's content (the production change, decision D-003).</summary>
+public enum CustomerContentPosition
+{
+    NoLicenceTaken = 1,
+    LicenceTaken = 2,
+}
+
+/// <summary>
+/// The two terms positions recorded on a route beside its terms basis, each with the evidence it rests on and
+/// the date that evidence was read (the production change, decision D-003 of its design). A position that is
+/// absent is NOT RECORDED, which is never read as permitted.
+/// </summary>
+public sealed record RouteTermsPositions(
+    AutomatedAccessPosition? AutomatedAccess,
+    CustomerContentPosition? CustomerContent,
+    string? EvidenceReference,
+    DateOnly? EvidenceReadOn);
 
 /// <summary>One entry of the forbidden-source register.</summary>
 public sealed record ForbiddenSource

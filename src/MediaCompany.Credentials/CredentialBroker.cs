@@ -17,6 +17,16 @@ public sealed record CredentialRequest
     public ChannelId? Channel { get; init; }
     public CapabilityClass? Capability { get; init; }
 
+    /// <summary>
+    /// How the account's secret is presented (the production change, decision D-002 of its design), as the
+    /// account records it. The default is the delivered bearer authorization.
+    /// </summary>
+    public MediaCompany.Domain.Registry.AuthenticationScheme Scheme { get; init; } =
+        MediaCompany.Domain.Registry.AuthenticationScheme.BearerAuthorization;
+
+    /// <summary>The vendor's key header for the key-header scheme, named by the vendor contract; not a secret.</summary>
+    public string? KeyHeaderName { get; init; }
+
     /// <summary>Required for <see cref="CredentialClass.Release"/>; ignored otherwise.</summary>
     public GatePassToken? GatePass { get; init; }
 
@@ -200,7 +210,14 @@ public sealed class CredentialBroker : ICredentialBroker, ICredentialExchange
 
         lock (_gate)
         {
-            _live[handle.HandleId] = new LiveHandle(handle, holder, RemainingUses: handle.UseBound);
+            // The scheme and the vendor's header are held HERE, in the broker's own table, beside the handle it
+            // issued (the production change, decision D-002 of its design): the handle the caller holds carries
+            // neither, so no caller can redirect the secret to another header by presenting an altered copy.
+            _live[handle.HandleId] = new LiveHandle(handle, holder, RemainingUses: handle.UseBound)
+            {
+                Scheme = request.Scheme,
+                HeaderName = request.KeyHeaderName,
+            };
             _audit.Add(new CredentialAuditEvent(now, "issued", handle.HandleId, holder, null));
         }
 
@@ -260,8 +277,23 @@ public sealed class CredentialBroker : ICredentialBroker, ICredentialExchange
         }
 
         // The one place the secret value exists in this process, on the transport message. It is
-        // never returned, never logged, and never handed to the caller.
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secret);
+        // never returned, never logged, and never handed to the caller. The scheme is the ISSUED
+        // handle's, as the account records it (the production change, decision D-002 of its design).
+        if (live.Scheme == MediaCompany.Domain.Registry.AuthenticationScheme.KeyHeader)
+        {
+            if (string.IsNullOrWhiteSpace(live.HeaderName))
+            {
+                return RecordPresentation(now, handle, live.Holder, CredentialRefusal.OutOfScope,
+                    "The account presents its secret in a key header, and no key header was named for the handle.");
+            }
+
+            request.Headers.Remove(live.HeaderName);
+            request.Headers.TryAddWithoutValidation(live.HeaderName, secret);
+        }
+        else
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secret);
+        }
 
         int remaining;
         lock (_gate)
@@ -307,7 +339,15 @@ public sealed class CredentialBroker : ICredentialBroker, ICredentialExchange
         return new CredentialOutcome.Refused(reason, detail);
     }
 
-    private sealed record LiveHandle(ScopedHandle Handle, CredentialHolderKey Holder, int RemainingUses);
+    private sealed record LiveHandle(ScopedHandle Handle, CredentialHolderKey Holder, int RemainingUses)
+    {
+        /// <summary>How the issued handle's secret is presented, as its account records it.</summary>
+        public MediaCompany.Domain.Registry.AuthenticationScheme Scheme { get; init; } =
+            MediaCompany.Domain.Registry.AuthenticationScheme.BearerAuthorization;
+
+        /// <summary>The vendor's header for the key-header scheme; not a secret.</summary>
+        public string? HeaderName { get; init; }
+    }
 }
 
 /// <summary>One audited credential event. It carries the handle identity and the holder, never the value.</summary>

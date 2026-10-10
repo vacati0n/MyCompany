@@ -102,7 +102,9 @@ public sealed class MultiChannelIntegrationTests : IAsyncLifetime
     {
         // The seventh and eighth resources now install after it (the AI-economics and AI-management changes);
         // re-applying the sixth over a store holding both must still succeed and record nothing.
-        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^3]);
+        // The ninth resource (the production change) now installs last; the sixth is still the sixth.
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[^4]);
+        Assert.Equal("MediaCompany.Persistence.Schema.006-multi-channel.sql", SchemaInstaller.ResourceNames[5]);
 
         await ExecuteAsync(SchemaInstaller.ReadResource("MediaCompany.Persistence.Schema.006-multi-channel.sql"));
 

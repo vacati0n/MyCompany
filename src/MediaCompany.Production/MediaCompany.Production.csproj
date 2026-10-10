@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The production capability (the production change, decision D-012 of its design): the produce service, the
+    four producing stages, the ONE type that starts a process and the ONE type that writes files. It references
+    the domain, the ports, the rule-determined assembly and the capability boundary, and nothing that publishes.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Domain\MediaCompany.Domain.csproj" />
+    <ProjectReference Include="..\MediaCompany.Application\MediaCompany.Application.csproj" />
+    <ProjectReference Include="..\MediaCompany.Deterministic\MediaCompany.Deterministic.csproj" />
+    <ProjectReference Include="..\MediaCompany.Capability\MediaCompany.Capability.csproj" />
+  </ItemGroup>
+</Project>

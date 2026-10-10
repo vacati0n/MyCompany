@@ -32,7 +32,7 @@ public static class RuleCatalogue
 
         var outcomes = new List<RuleOutcome>();
         outcomes.AddRange(CompanyCeiling(reports));
-        outcomes.AddRange(UnbudgetedChannel(reports));
+        outcomes.AddRange(UnbudgetedChannel(reports, snapshot));
         outcomes.AddRange(QualitativeReview(reports, snapshot));
         outcomes.AddRange(ControllerActions(reports, snapshot));
         outcomes.AddRange(Reverification(reports, snapshot));
@@ -160,7 +160,15 @@ public static class RuleCatalogue
     // CFO rule 2: an unbudgeted channel
     // -----------------------------------------------------------------------
 
-    private static IEnumerable<RuleOutcome> UnbudgetedChannel(ManagementReportSet reports)
+    /// <summary>
+    /// The unbudgeted-channel rule. While the register's question on an unbudgeted channel is open, it issues for every
+    /// channel with no budget amount, anchored on the open entry, as delivered. Once the question is decided (the
+    /// owner's answer that the company ceiling and an item's recorded cap govern a channel with no budget amount), the
+    /// rule KEEPS ISSUING for a channel whose metered work admission would still refuse — a channel with an item that
+    /// carries no recorded cap, or with no item at all — anchored on the decided entry; it abstains only for a channel
+    /// whose every item carries a recorded cap, where admission now admits (the ruling on the review's question).
+    /// </summary>
+    private static IEnumerable<RuleOutcome> UnbudgetedChannel(ManagementReportSet reports, CompanySnapshot snapshot)
     {
         var informs = "what each channel's budget amount is, and whether an unbudgeted channel may rely on the company ceiling (owner)";
 
@@ -170,6 +178,44 @@ public static class RuleCatalogue
         foreach (var line in reports.Lines.Where(l =>
                      l.Report == ReportKind.Cfo && l.Key == ReportLineKey.ChannelBudget && l.Figure.Case == FigureCase.NotRecorded))
         {
+            if (entry is not null && !IsOpen(entry, reports.Register) && entry.Status == RegisterEntryStatus.Decided
+                && snapshot.ItemCapCoverage is { } coverage)
+            {
+                var covered = coverage.FirstOrDefault(c => line.Label.StartsWith($"channel {c.Channel}: ", StringComparison.Ordinal));
+                var items = covered?.Items ?? 0;
+                var capped = covered?.CappedItems ?? 0;
+                if (items > 0 && capped == items)
+                {
+                    yield return new RuleOutcome.Abstained
+                    {
+                        Rule = RecommendationRule.CfoUnbudgetedChannel,
+                        Reading = line.Label,
+                        Instant = reports.Instant,
+                        Informs = informs,
+                        Reason = $"the question is decided ({entry.Identifier}), and every one of the channel's {items} item(s) carries a recorded cap, "
+                            + "so admission admits its metered work under the company ceiling and the item's cap; the rule has nothing to issue",
+                    };
+                    continue;
+                }
+
+                yield return new RuleOutcome.Issued
+                {
+                    Rule = RecommendationRule.CfoUnbudgetedChannel,
+                    Reading = line.Label,
+                    Instant = reports.Instant,
+                    Informs = informs,
+                    Figure = line.Figure,
+                    AnchorStatement = $"the decided register entry {entry.Identifier} ({entry.Statement}) and the Design Gate's scope: the company "
+                        + "ceiling and an item's recorded cap govern a channel with no budget amount, so an item with no recorded cap is still refused",
+                    Statement = (items == 0
+                            ? "the channel has no item, so any item it takes on has no recorded cap"
+                            : $"{items - capped} of the channel's {items} item(s) carry no recorded cap")
+                        + ", and no budget amount is recorded for the channel in this booking month, so that metered work is refused "
+                        + "under its own reason; record the item's cap or the channel's amount",
+                };
+                continue;
+            }
+
             if (entry is null || !IsOpen(entry, reports.Register))
             {
                 yield return new RuleOutcome.Abstained

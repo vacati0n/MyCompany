@@ -188,6 +188,62 @@ public sealed record CompanySnapshot
     public required IReadOnlyList<PolicyStatementRecord> PolicyStatements { get; init; }
 
     public required IReadOnlyList<ReverificationResult> Reverifications { get; init; }
+
+    /// <summary>
+    /// The latest production of each produced item, read in the same snapshot (the production change, decision
+    /// D-017 of its design). Null where the reader did not read it, which composes nothing, as delivered; empty where
+    /// the production register holds no production, which composes a line reading not recorded and naming it.
+    /// </summary>
+    public IReadOnlyList<ProducedItemReading>? ProducedItems { get; init; }
+
+    /// <summary>
+    /// The store's recorded designation, read in the same snapshot (the production change, decision D-005 of its design),
+    /// or null where none is recorded. In a DEMONSTRATION store every observed figure of every report is a demonstration
+    /// figure and is never read, counted or rendered as an observation.
+    /// </summary>
+    public MediaCompany.Domain.Production.StoreDesignation? Designation { get; init; }
+
+    /// <summary>
+    /// How many of each channel's items carry a recorded cap, read in the same snapshot (the production change; the
+    /// ruling on the review's question of the unbudgeted-channel rule). Null where the reader did not read it or the
+    /// cap record is absent, which keeps the delivered rule exactly; a channel with no row has no item.
+    /// </summary>
+    public IReadOnlyList<ChannelItemCapCoverage>? ItemCapCoverage { get; init; }
+}
+
+/// <summary>One channel's items, and how many of them carry a recorded cap, BARE, as the snapshot read them.</summary>
+public sealed record ChannelItemCapCoverage
+{
+    public required ChannelId Channel { get; init; }
+
+    public required long Items { get; init; }
+
+    public required long CappedItems { get; init; }
+}
+
+/// <summary>
+/// One produced item's latest production, BARE, as the snapshot read it (the production change, decision D-017 of
+/// its design): its version, mode and the store's designation, its stage outcomes, its operations and their booked
+/// cost, its recorded cap with the open reservations, and the runtime a probe of the rendered file measured. Nothing
+/// here decides a case: the composer labels every figure of a demonstration store demonstration, never observed.
+/// </summary>
+public sealed record ProducedItemReading
+{
+    public required ItemId Item { get; init; }
+    public required ItemVersion Version { get; init; }
+    public required string Mode { get; init; }
+    public required string Designation { get; init; }
+    public required DateTimeOffset OpenedAt { get; init; }
+    public required IReadOnlyList<MediaCompany.Domain.Production.ProducedStageOutcome> Stages { get; init; }
+    public required long Operations { get; init; }
+    public required long UnstatedOperations { get; init; }
+    public required MediaCompany.Domain.Accounting.Money Booked { get; init; }
+    public MediaCompany.Domain.Accounting.Money? Cap { get; init; }
+    public string? CapSource { get; init; }
+    public required MediaCompany.Domain.Accounting.Money OpenReservations { get; init; }
+    public required long OpenReservationCount { get; init; }
+    public TimeSpan? MeasuredRuntime { get; init; }
+    public string? RenderedPath { get; init; }
 }
 
 /// <summary>One booking month the week touches: its closure as stored, and its readings bounded by the instant.</summary>

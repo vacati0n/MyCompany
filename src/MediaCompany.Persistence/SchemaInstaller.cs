@@ -61,7 +61,16 @@ public static class SchemaInstaller
         // utilisation columns widened to the unbounded decimal, as the seventh resource widened the alert
         // columns. Nothing here records a threshold, a cadence, a budget amount, a statement or a result.
         "MediaCompany.Persistence.Schema.008-management.sql",
+
+        // Wave 9, the production capability. Additive: the store designation, the item cap register, the
+        // admission reservations, the production versions and artifacts, all created empty and write-once; the
+        // character and image unit kinds with the operation record's cost covering them; the recorded billed
+        // kinds, account scope and scheme and route terms positions; the customer-content-licence kind and the
+        // item-cap reason; and five decided register entries superseding the questions the owner answered.
+        // Nothing here records a designation, a cap, a channel, a budget amount, a price or a route.
+        "MediaCompany.Persistence.Schema.009-production.sql",
     ];
+
 
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)
     {

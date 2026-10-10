@@ -4,6 +4,7 @@ using MediaCompany.Domain.Audit;
 using MediaCompany.Domain.Capabilities;
 using MediaCompany.Domain.Registry;
 using MediaCompany.Domain.Dossier;
+using MediaCompany.Domain.Production;
 using MediaCompany.Domain.Work;
 
 namespace MediaCompany.Application.Ports;
@@ -99,7 +100,59 @@ public interface IWorkTransaction : IAsyncDisposable
     /// </summary>
     IBenchmarkWriter Benchmarks { get; }
 
+    /// <summary>
+    /// The production record (the production change, decisions D-010 and D-014 of its design): a production's
+    /// item version and the artifacts it stored, each stamped by the datastore. Reachable only from a
+    /// transaction, as every writer is. Default-implemented so every delivered double compiles unchanged; a
+    /// realization without the record refuses by name.
+    /// </summary>
+    IProductionLedger Production =>
+        throw new NotSupportedException("This unit of work holds no production record; the ninth schema resource adds it.");
+
     Task CommitAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The production record on one transaction (the production change, decisions D-010 and D-014 of its design).
+/// Every instant here is the DATASTORE'S, stamped in the statement that writes the row; no member takes one.
+/// </summary>
+public interface IProductionLedger
+{
+    /// <summary>
+    /// Opens the next item version of the item for one production: one above the highest version recorded for
+    /// it, with its dossier header and a production header naming the mode, both stamped by the datastore. A
+    /// concurrent production meets the version key and ends with the datastore's refusal.
+    /// </summary>
+    Task<ProductionVersionOpened> OpenProductionVersionAsync(ItemId item, ProductionMode mode, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records one artifact after its file was completely written, promoted and re-read. The row carries the
+    /// stored file's length and hash; its instant is the datastore's. A second row for one path of one version
+    /// is refused.
+    /// </summary>
+    Task<ArtifactRecord> RecordArtifactAsync(ArtifactRecord draft, CancellationToken cancellationToken);
+}
+
+/// <summary>The item version a production opened, and the datastore's instant it opened at.</summary>
+public sealed record ProductionVersionOpened(ItemVersion Version, DateTimeOffset OpenedAt);
+
+/// <summary>
+/// One worst-case reservation (the production change, decision D-006 of its design), written on a COMPANION
+/// transaction and committed before the call it reserves for, keyed on the one operation identifier the
+/// attempt will be booked under, so the booking reconciles it and an attempt that is never booked keeps
+/// counting at its worst case.
+/// </summary>
+public sealed record ReservationDraft
+{
+    public required OperationId Operation { get; init; }
+    public required ItemId Item { get; init; }
+    public required RouteId Route { get; init; }
+    public required ModelId Model { get; init; }
+    public required UnitCounts WorstCaseUnits { get; init; }
+    public required Money WorstCaseAmount { get; init; }
+
+    /// <summary>The booking instant the admission reserved, the datastore's.</summary>
+    public required DateTimeOffset AdmittedAt { get; init; }
 }
 
 // ---------------------------------------------------------------------------
@@ -186,6 +239,15 @@ public interface IAdmissionLedger
     /// observation ranked on. The datastore refuses a decision whose instant is not its operation's.
     /// </summary>
     Task RecordDecisionAsync(AdmissionDecisionDraft decision, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Writes one worst-case reservation (the production change, decision D-006 of its design). Called on a
+    /// COMPANION transaction, which the caller commits before the call it reserves for, so the reservation is
+    /// durable whatever happens to the admission transaction afterwards. It takes no scope hold. Default-
+    /// implemented so every delivered double compiles; a realization without the reservation record refuses.
+    /// </summary>
+    Task RecordReservationAsync(ReservationDraft reservation, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This admission ledger holds no reservation record; the ninth schema resource adds it.");
 }
 
 /// <summary>The booking instant a transaction reserved, and its month (the first day, UTC).</summary>
@@ -202,7 +264,21 @@ public sealed record AdmissionSnapshot(
     IReadOnlyList<ProviderAccount> Accounts,
     IReadOnlyList<ModelPrice> Prices,
     GoverningReadingsSummary Readings,
-    IReadOnlyList<BenchmarkObservation> Evidence);
+    IReadOnlyList<BenchmarkObservation> Evidence)
+{
+    /// <summary>
+    /// The item's recorded cap and its counted total, read in the same statement (the production change,
+    /// decision D-006 of its design), or null where the item has no recorded cap, which keeps the delivered path.
+    /// </summary>
+    public ItemCapReading? ItemCap { get; init; }
+
+    /// <summary>
+    /// The unit kinds each model is recorded as billed by (the production change, decision D-007 of its design).
+    /// A model absent here is billed by input, output and cached units, as delivered.
+    /// </summary>
+    public IReadOnlyDictionary<ModelId, IReadOnlyList<PriceUnitKind>> BilledKinds { get; init; } =
+        new Dictionary<ModelId, IReadOnlyList<PriceUnitKind>>();
+}
 
 /// <summary>
 /// An operation is already recorded under the identifier a writer presented (the AI-economics change,
@@ -617,6 +693,21 @@ public interface IDossierWriter
 
     /// <summary>Records one production stage's outcome. One outcome per stage per item version.</summary>
     Task RecordStageAsync(ItemId item, ItemVersion version, StageEvidence evidence, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Records one production stage's outcome STAMPED BY THE DATASTORE (the production change, decision D-010 of
+    /// its design) and returns the stored instant, so the stage rows of a production order on the datastore's one
+    /// clock and never on a process clock. One outcome per stage per item version, as delivered.
+    /// </summary>
+    Task<DateTimeOffset> RecordStageStampedAsync(
+        ItemId item,
+        ItemVersion version,
+        MediaCompany.Domain.Production.ProductionStage stage,
+        StageOutcome outcome,
+        string summary,
+        string? evidenceReference,
+        CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This dossier writer does not stamp stage rows; the ninth schema resource's writer does.");
 
     /// <summary>
     /// Records one supply-audit entry, holding its count exactly as the entry holds it: a zero as

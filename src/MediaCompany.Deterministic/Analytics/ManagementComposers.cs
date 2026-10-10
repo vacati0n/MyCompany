@@ -38,6 +38,15 @@ public static class ManagementComposers
         lines.AddRange(ChannelPerformance(snapshot));
         lines.AddRange(Risk(snapshot));
 
+        // THE DEMONSTRATION RULE (the production change, decision D-005 of its design): in a store designated
+        // demonstration every observed figure — spend, utilisation, counts and durations alike, all booked or recorded
+        // by fake providers — becomes a demonstration figure BEFORE any rule reads it, so no rule, total, brief line or
+        // tile can read a fake operation's zero as observed. Unmeasured and recorded figures keep their case.
+        if (snapshot.Designation == MediaCompany.Domain.Production.StoreDesignation.Demonstration)
+        {
+            lines = lines.Select(Demonstrated).ToList();
+        }
+
         var set = new ManagementReportSet
         {
             Instant = snapshot.Instant,
@@ -52,8 +61,33 @@ public static class ManagementComposers
             Register = snapshot.RegisterEntries,
         };
 
-        return set with { Outcomes = RuleCatalogue.Evaluate(set, snapshot) };
+        var outcomes = RuleCatalogue.Evaluate(set, snapshot);
+
+        // A rule that issued over a figure of a demonstration store issues nothing: it abstains, naming the designation,
+        // whatever the figure it read was computed from (the production change, decision D-005 of its design).
+        if (snapshot.Designation == MediaCompany.Domain.Production.StoreDesignation.Demonstration)
+        {
+            outcomes = outcomes.Select(AbstainOverDemonstration).ToArray();
+        }
+
+        return set with { Outcomes = outcomes };
     }
+
+    /// <summary>An issued outcome of a demonstration store, as the abstention it must be.</summary>
+    private static RuleOutcome AbstainOverDemonstration(RuleOutcome outcome) => outcome switch
+    {
+        RuleOutcome.Issued issued => new RuleOutcome.Abstained
+        {
+            Rule = issued.Rule,
+            Reading = issued.Reading,
+            Instant = issued.Instant,
+            Informs = issued.Informs,
+            Reason = "the reading is a demonstration figure of a store designated demonstration, where fake providers run, so the "
+                + "rule abstains and issues nothing: "
+                + (issued.Figure is LineFigure.Measured measured ? LineFigure.Demonstrated(measured.Quantity) : issued.Figure).Describe(),
+        },
+        _ => outcome,
+    };
 
     // -----------------------------------------------------------------------
     // Finality, read and never made (decisions D-001 and D-002)
@@ -96,6 +130,83 @@ public static class ManagementComposers
         $"month {closure.Month:yyyy-MM} {(MonthIsFinal(closure) ? "final" : "not final, month to date")}";
 
     private static string RecordedTag() => "recorded, the same at every instant";
+
+    /// <summary>
+    /// The produced item's lines (the production change, decision D-017 of its design): its stage outcomes, its
+    /// operations and booked cost, its cap with the counted total, and its runtime measured from the rendered file.
+    /// EVERY FIGURE OF A DEMONSTRATION STORE IS LABELLED DEMONSTRATION and is never an observation: it reads
+    /// unmeasured, naming the designation, and adds nothing to observed spend. With no production the line reads
+    /// not recorded, naming the register; where the snapshot did not read the register, nothing is composed.
+    /// </summary>
+    private static IEnumerable<ReportLine> ProducedItemLines(
+        CompanySnapshot s,
+        Func<ReportLineKey, string, string, LineFigure, string, string, string?, string?, DateTimeOffset?, ReportLine> line)
+    {
+        const string Heading = "Produced item";
+        const string Informs = "the owner's go for the one metered production run (owner)";
+        const string RestsOn = "the production version register, the item dossier, the operation record, the item cap register and the "
+            + "admission reservations, in the one snapshot; ManagementComposers.ProducedItemLines";
+
+        if (s.ProducedItems is null)
+        {
+            yield break;
+        }
+
+        if (s.ProducedItems.Count == 0)
+        {
+            yield return line(ReportLineKey.ProducedItemStages, Heading, "produced items",
+                LineFigure.Of(MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists,
+                    "no production is recorded in the production version register")),
+                RestsOn, "as of the snapshot", Informs, null, null);
+            yield break;
+        }
+
+        foreach (var item in s.ProducedItems)
+        {
+            var demonstration = !string.Equals(item.Designation, "Company", StringComparison.Ordinal);
+            var tag = $"item {item.Item} version {item.Version} ({item.Mode} mode, {item.Designation} store)";
+
+            // A demonstration store's figures become demonstration figures by the one rule applied to every line.
+            MeasurementQuantity Figure(MeasurementQuantity measured, string what) => measured;
+
+            var stages = string.Join("; ", item.Stages.Select(st => $"{st.Stage} {st.Outcome}"));
+            yield return line(ReportLineKey.ProducedItemStages, Heading, $"stage outcomes of {tag}",
+                LineFigure.Of(Figure(MeasurementQuantity.Count(item.Stages.Count, "stage outcomes"), $"{item.Stages.Count} stage outcomes recorded")),
+                RestsOn, "as of the snapshot", Informs, stages, item.OpenedAt);
+
+            var booked = item.UnstatedOperations > 0
+                ? MeasurementQuantity.NotMeasured(UnmeasuredReason.SourceCannotStateOne,
+                    $"{item.UnstatedOperations} of the {item.Operations} operations carry a cost that is not stated")
+                : MeasurementQuantity.Observed(item.Booked.Amount, item.Booked.Currency);
+            yield return line(ReportLineKey.ProducedItemOperations, Heading, $"operations and booked cost of {tag}",
+                LineFigure.Of(Figure(booked, $"{item.Operations} operations booked {item.Booked}")),
+                RestsOn, "as of the snapshot", Informs, $"{item.Operations} operations", item.OpenedAt);
+
+            if (item.Cap is { } cap)
+            {
+                var counted = item.Booked + item.OpenReservations;
+                yield return line(ReportLineKey.ProducedItemCap, Heading, $"cap of item {item.Item}",
+                    LineFigure.Of(RecordedAmount.Of(cap, item.CapSource ?? "the item cap register")),
+                    RestsOn, "as of the snapshot", Informs,
+                    $"counted total {counted} (booked {item.Booked} plus {item.OpenReservationCount} open reservation(s) at their worst case "
+                    + $"{item.OpenReservations}); remaining {new Money(cap.Amount - counted.Amount, cap.Currency)}"
+                    + (demonstration ? "; DEMONSTRATION figures, never observed" : string.Empty),
+                    item.OpenedAt);
+            }
+
+            yield return line(ReportLineKey.ProducedItemRuntime, Heading, $"runtime of {tag}, measured from the rendered file",
+                LineFigure.Of(item.MeasuredRuntime is { } runtime
+                    ? Figure(MeasurementQuantity.Observed(Math.Round((decimal)runtime.TotalSeconds, 3), "seconds"), $"a runtime of {runtime.TotalSeconds:0.000} s measured from the file")
+                    : MeasurementQuantity.NotMeasured(UnmeasuredReason.NoObservationExists, "no rendered file is recorded for the production")),
+                RestsOn, "as of the snapshot", Informs, item.RenderedPath, item.OpenedAt);
+        }
+    }
+
+    /// <summary>A line of a demonstration store: its observed figure becomes a demonstration figure; nothing else changes.</summary>
+    private static ReportLine Demonstrated(ReportLine line) =>
+        line.Figure is LineFigure.Measured { Quantity: MeasurementQuantity.ObservedValue or MeasurementQuantity.ObservedZero } measured
+            ? line with { Figure = LineFigure.Demonstrated(measured.Quantity) }
+            : line;
 
     private static ReportLine Line(
         ReportKind report,
@@ -190,6 +301,9 @@ public static class ManagementComposers
         ReportLine L(ReportLineKey key, string heading, string label, LineFigure figure, string restsOn, string finality, string? informs = null,
             string? text = null, DateTimeOffset? at = null) =>
             Line(ReportKind.Coo, key, heading, label, figure, restsOn, s, finality, informs, text, at);
+
+        // The produced item (the production change, decision D-017 of its design), from the same snapshot.
+        lines.AddRange(ProducedItemLines(s, L));
 
         // Production.
         lines.Add(L(ReportLineKey.UnitsCompleted, "Production", "units completed in the week", LineFigure.Of(throughput.Completed),

@@ -1,0 +1,18 @@
+{
+  "source": "the implementing role's recorded knowledge of the reasoning vendor's published API reference for its messages endpoint",
+  "recordedOn": "2026-10-09",
+  "verifiedFirstHand": false,
+  "request": {
+    "method": "POST",
+    "path": "/v1/messages",
+    "authentication": "x-api-key: <secret>",
+    "versionHeader": "anthropic-version: 2023-06-01",
+    "bodyMembers": [ "model", "max_tokens", "messages" ]
+  },
+  "response": {
+    "status": 200,
+    "contentType": "application/json",
+    "body": { "id": "msg_fixture", "type": "message", "role": "assistant", "content": [ { "type": "text", "text": "fixture reply" } ], "usage": { "input_tokens": 12, "output_tokens": 7, "cache_read_input_tokens": 0 } },
+    "usageInBody": true
+  }
+}

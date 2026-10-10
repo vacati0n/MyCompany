@@ -7,6 +7,7 @@
     <Project Path="src/MediaCompany.Domain/MediaCompany.Domain.csproj" />
     <Project Path="src/MediaCompany.Host/MediaCompany.Host.csproj" />
     <Project Path="src/MediaCompany.Persistence/MediaCompany.Persistence.csproj" />
+    <Project Path="src/MediaCompany.Production/MediaCompany.Production.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MediaCompany.Architecture.Tests/MediaCompany.Architecture.Tests.csproj" />
@@ -14,5 +15,6 @@
     <Project Path="tests/MediaCompany.Deterministic.Tests/MediaCompany.Deterministic.Tests.csproj" />
     <Project Path="tests/MediaCompany.Domain.Tests/MediaCompany.Domain.Tests.csproj" />
     <Project Path="tests/MediaCompany.Persistence.Tests/MediaCompany.Persistence.Tests.csproj" />
+    <Project Path="tests/MediaCompany.Production.Tests/MediaCompany.Production.Tests.csproj" />
   </Folder>
 </Solution>

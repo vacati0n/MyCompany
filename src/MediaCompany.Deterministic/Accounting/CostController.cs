@@ -74,7 +74,18 @@ public static class CostController
     /// The decision for one admission: the channel reading and the company reading of the booking
     /// month, from the one statement that read them, and the most severe action either demands.
     /// </summary>
-    public static ControllerDecision Decide(GoverningReadingsSummary summary, DateTimeOffset decidedAt)
+    public static ControllerDecision Decide(GoverningReadingsSummary summary, DateTimeOffset decidedAt) =>
+        Decide(summary, decidedAt, itemCapped: false);
+
+    /// <summary>
+    /// The decision for one admission, where the item may carry a recorded cap (the production change, decision
+    /// D-006 of its design). Under the owner's decision of 2026-10-09, a channel with NO budget amount is
+    /// governed, for an item with a recorded cap, by the company ceiling and that cap alone: the channel reading
+    /// then demands no action and RECORDS NO AMOUNT, so no channel deferral applies and no channel amount is
+    /// invented. The company reading defers and refuses exactly as delivered; a channel whose spend cannot be
+    /// stated still refuses; an uncapped item keeps the delivered refusal.
+    /// </summary>
+    public static ControllerDecision Decide(GoverningReadingsSummary summary, DateTimeOffset decidedAt, bool itemCapped)
     {
         ArgumentNullException.ThrowIfNull(summary);
 
@@ -93,7 +104,8 @@ public static class CostController
                 summary.Month,
                 channelAmount,
                 summary.ChannelSpend,
-                summary.ChannelUtilisationPercent),
+                summary.ChannelUtilisationPercent,
+                governedByCeilingAndCap: itemCapped),
             Reading(
                 GoverningScope.Company,
                 summary.Company?.Value,
@@ -137,7 +149,8 @@ public static class CostController
         DateOnly month,
         RecordedAmount amount,
         ScopeSpend spend,
-        decimal? percent)
+        decimal? percent,
+        bool governedByCeilingAndCap = false)
     {
         var bookedSpend = spend.UnstatedOperations > 0
             ? MeasurementQuantity.NotMeasured(
@@ -151,7 +164,17 @@ public static class CostController
         ControllerAction action;
         RefusalReason? reason = null;
 
-        if (amount is RecordedAmount.NotRecorded missing)
+        if (amount is RecordedAmount.NotRecorded uncapped && governedByCeilingAndCap && bookedSpend is not MeasurementQuantity.Unmeasured)
+        {
+            // The owner's decision of 2026-10-09: the company ceiling and the item's recorded cap govern; no
+            // channel amount is recorded or invented, so the channel reading demands nothing and states why.
+            utilisation = MeasurementQuantity.NotMeasured(
+                UnmeasuredReason.NoObservationExists,
+                $"no utilisation of {label} is computed for {month:yyyy-MM} against an amount nobody recorded: {uncapped.LookedFor}; "
+                + "under the owner's decision of 2026-10-09 the company ceiling and the item's recorded cap govern this admission");
+            action = ControllerAction.None;
+        }
+        else if (amount is RecordedAmount.NotRecorded missing)
         {
             utilisation = MeasurementQuantity.NotMeasured(
                 UnmeasuredReason.NoObservationExists,
@@ -186,6 +209,8 @@ public static class CostController
 
         var demands = action switch
         {
+            ControllerAction.None when amount is RecordedAmount.NotRecorded =>
+                "no action: no budget amount is recorded, and the company ceiling and the item's recorded cap govern",
             ControllerAction.None => "no action: below every threshold",
             ControllerAction.AlertOnly => "the delivered alert only, at the 50 percent threshold",
             ControllerAction.Downgrade => "a reasoning-tier downgrade, at the 75 percent threshold",

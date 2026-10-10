@@ -44,12 +44,60 @@ public sealed record ResolutionInputs
     /// empty where none was read, which yields the configured ordering (decision D-003).
     /// </summary>
     public IReadOnlyList<BenchmarkObservation> Evidence { get; init; } = [];
+
+    /// <summary>
+    /// The item's recorded cap and its counted total (the production change, decision D-006 of its design), or
+    /// null where the item has none, which keeps the delivered resolution exactly. Under a cap, a provider route
+    /// whose WORST CASE would take the counted total past the cap is removed, and where none survives the request
+    /// is refused under its own reason naming the cap, the counted total and the worst case.
+    /// </summary>
+    public ItemCapReading? ItemCap { get; init; }
 }
 
 /// <summary>The unit prices of one model, in one currency.</summary>
 public sealed record UnitPrices(decimal PerInputUnit, decimal PerOutputUnit, decimal PerCachedUnit, string Currency)
 {
     public static UnitPrices Free(string currency = Money.DefaultCurrency) => new(0m, 0m, 0m, currency);
+
+    /// <summary>The price of one character (the production change, decision D-007). Zero where the model is not billed by it.</summary>
+    public decimal PerCharacterUnit { get; init; }
+
+    /// <summary>The price of one image (the production change, decision D-007). Zero where the model is not billed by it.</summary>
+    public decimal PerImageUnit { get; init; }
+
+    /// <summary>
+    /// The price table entry of one model from the prices in force (the production change, decision D-007 of its
+    /// design): a model enters ONLY where every unit kind it is billed by has a price in force. Where its billed
+    /// kinds are not recorded it is billed by input, output and cached units, as delivered. A kind it is not
+    /// billed by needs no price and is costed at zero. Where two rows of one kind are in force the higher is taken.
+    /// </summary>
+    public static UnitPrices? From(IEnumerable<ModelPrice> inForce, IReadOnlyList<PriceUnitKind>? billedKinds)
+    {
+        ArgumentNullException.ThrowIfNull(inForce);
+        var rows = inForce.ToList();
+        IReadOnlyList<PriceUnitKind> billed = billedKinds is { Count: > 0 }
+            ? billedKinds
+            : [PriceUnitKind.InputUnit, PriceUnitKind.OutputUnit, PriceUnitKind.CachedUnit];
+
+        ModelPrice? Highest(PriceUnitKind kind) => rows.Where(p => p.UnitKind == kind).MaxBy(p => p.UnitPrice);
+
+        if (billed.Any(kind => Highest(kind) is null))
+        {
+            return null;
+        }
+
+        decimal Price(PriceUnitKind kind) => billed.Contains(kind) ? Highest(kind)!.UnitPrice : 0m;
+
+        return new UnitPrices(
+            Price(PriceUnitKind.InputUnit),
+            Price(PriceUnitKind.OutputUnit),
+            Price(PriceUnitKind.CachedUnit),
+            Highest(billed[0])!.Currency)
+        {
+            PerCharacterUnit = Price(PriceUnitKind.CharacterUnit),
+            PerImageUnit = Price(PriceUnitKind.ImageUnit),
+        };
+    }
 }
 
 /// <summary>
@@ -112,6 +160,20 @@ public static class RouteResolver
                         $"Route {route.Id} for {route.Capability} matches forbidden source '{match.Identifier}': {match.Reason}",
                         match.Kind),
                     "a route matched the forbidden-source register at step 1",
+                    NoTier);
+            }
+
+            // Step 1, continued (the production change, decision D-003 of its design): the route's RECORDED TERMS
+            // POSITIONS. A provider route whose terms prohibit automated access, or take a licence over the
+            // customer's content, is refused under the kind it matches; a narration or still-image provider route
+            // whose positions are not recorded is refused under the kind whose position is missing, because a
+            // position nobody recorded is never read as permitted. Nothing is sent on a refusal.
+            if (TermsRefusal(route) is { } terms)
+            {
+                return Ended(
+                    request,
+                    new CapabilityResolution.Refused(RefusalReason.ForbiddenSource, terms.Detail, terms.Kind),
+                    "a route's recorded terms positions refused it at step 1",
                     NoTier);
             }
         }
@@ -208,6 +270,40 @@ public static class RouteResolver
             }
 
             available = comparable;
+        }
+
+        // Step 4, under a recorded item cap (the production change, decision D-006 of its design): a provider
+        // route whose WORST CASE would take the item's counted total past its cap is removed BEFORE the budget
+        // comparison, and where none survives the call is refused naming the cap, the counted total and the
+        // cheapest worst case. The worst case is the request's estimated units at the prices in force, which the
+        // admission then reserves durably before the call.
+        if (inputs.ItemCap is { } cap)
+        {
+            // THE CAP FAILS CLOSED (correction CR-004): while an operation of the item carries a cost that is not stated
+            // and no reservation bounds it, the counted total cannot be stated, so no provider route is admitted.
+            if (cap.UnstatedOperations > 0 && available.Any(r => r.Target is RouteTarget.ProviderRoute))
+            {
+                var closed = "the item's counted total cannot be stated, so the cap fails closed and no call is made: " + cap.Describe();
+                return Ended(request, new CapabilityResolution.Refused(RefusalReason.ItemCapExceeded, closed, null), closed, NoTier);
+            }
+
+            var withinCap = available.Where(r => WithinItemCap(r, request, inputs, cap)).ToList();
+            if (withinCap.Count == 0)
+            {
+                var cheapest = available
+                    .Select(r => EstimateCost(r, request, inputs)!.Value)
+                    .OrderBy(m => m.Amount)
+                    .First();
+                var detail = $"the worst case of the call, {cheapest}, would take the item's counted total past its cap: "
+                    + cap.Describe();
+                return Ended(
+                    request,
+                    new CapabilityResolution.Refused(RefusalReason.ItemCapExceeded, detail, null),
+                    detail,
+                    NoTier);
+            }
+
+            available = withinCap;
         }
 
         var affordable = available.Where(r => WithinCeilingAndBudget(r, request, inputs)).ToList();
@@ -408,6 +504,62 @@ public static class RouteResolver
             && estimate.IsComparableTo(inputs.BudgetRemaining);
     }
 
+    /// <summary>Whether a route's worst case fits what remains of the item's cap. A target reaching no provider costs nothing.</summary>
+    private static bool WithinItemCap(Route route, CapabilityRequest request, ResolutionInputs inputs, ItemCapReading cap)
+    {
+        if (route.Target is not RouteTarget.ProviderRoute)
+        {
+            return true;
+        }
+
+        var worst = EstimateCost(route, request, inputs)!.Value;
+        return worst.IsComparableTo(cap.Cap) && worst.Amount <= cap.Remaining.Amount;
+    }
+
+    /// <summary>
+    /// The terms-position refusal of a route, or null (the production change, decision D-003 of its design). Only
+    /// provider routes are judged; a narration or still-image provider route must record both positions.
+    /// </summary>
+    private static (ForbiddenSourceKind Kind, string Detail)? TermsRefusal(Route route)
+    {
+        if (route.Target is not RouteTarget.ProviderRoute provider)
+        {
+            return null;
+        }
+
+        var positions = route.TermsPositions;
+        var evidence = positions?.EvidenceReference is { } reference
+            ? $" (evidence: {reference}, read {positions.EvidenceReadOn:yyyy-MM-dd})"
+            : string.Empty;
+
+        if (positions?.AutomatedAccess == AutomatedAccessPosition.Prohibits)
+        {
+            return (ForbiddenSourceKind.AutomatedAccessProhibited,
+                $"Route {route.Id} for {route.Capability} ({provider.ProviderAccount}): its recorded terms prohibit automated access{evidence}");
+        }
+
+        if (positions?.CustomerContent == CustomerContentPosition.LicenceTaken)
+        {
+            return (ForbiddenSourceKind.CustomerContentLicence,
+                $"Route {route.Id} for {route.Capability} ({provider.ProviderAccount}): its recorded terms take a licence over the customer's content{evidence}");
+        }
+
+        var judged = route.Capability is CapabilityClass.Narration or CapabilityClass.StillImages;
+        if (judged && positions?.AutomatedAccess is null)
+        {
+            return (ForbiddenSourceKind.AutomatedAccessProhibited,
+                $"Route {route.Id} for {route.Capability} ({provider.ProviderAccount}): no position on automated access is recorded, and an unrecorded position is never read as permitted");
+        }
+
+        if (judged && positions?.CustomerContent is null)
+        {
+            return (ForbiddenSourceKind.CustomerContentLicence,
+                $"Route {route.Id} for {route.Capability} ({provider.ProviderAccount}): no position on a licence over the customer's content is recorded, and an unrecorded position is never read as permitted");
+        }
+
+        return null;
+    }
+
     private static bool WithinCeilingAndBudget(Route route, CapabilityRequest request, ResolutionInputs inputs)
     {
         var estimate = EstimateCost(route, request, inputs)!.Value;
@@ -444,7 +596,9 @@ public static class RouteResolver
         var amount =
             (request.EstimatedUnits.InputUnits * prices.PerInputUnit) +
             (request.EstimatedUnits.OutputUnits * prices.PerOutputUnit) +
-            (request.EstimatedUnits.CachedUnits * prices.PerCachedUnit);
+            (request.EstimatedUnits.CachedUnits * prices.PerCachedUnit) +
+            (request.EstimatedUnits.CharacterUnits * prices.PerCharacterUnit) +
+            (request.EstimatedUnits.ImageUnits * prices.PerImageUnit);
 
         return new Money(amount, prices.Currency);
     }

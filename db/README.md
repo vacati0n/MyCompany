@@ -111,6 +111,35 @@ Every figure reads as exactly one of observed, observed zero, unmeasured (naming
 for), recorded (naming where it is recorded) or not recorded. Recommendations come only from a
 fixed catalogue of seven rules, and a rule abstains over an unmeasured reading.
 
+## The ninth resource and the production commands
+
+**All nine resources are applied in order, before any process starts.** The ninth resource
+(`009-production.sql`) adds, each created empty and write-once: the store designation (demonstration
+or company, with the database it names), the item cap register, the admission reservations (the
+worst case of every capped provider attempt, committed before the call), the production versions
+and the production artifacts. It widens the price kinds to character and image units and makes the
+operation record's stored cost cover all five kinds, recomputing every existing row to the value it
+already held; it records the owner's five answers of 2026-10-09 as decided register entries
+superseding the questions they answer. It records no designation, cap, channel, budget amount,
+configuration value, price or route, and it re-applies changing nothing.
+
+```bash
+dotnet run --project src/MediaCompany.Host -- prepare --settings <settings.json> --designation demonstration
+dotnet run --project src/MediaCompany.Host -- produce --mode plan-only --settings <settings.json>
+dotnet run --project src/MediaCompany.Host -- produce --mode fake --settings <settings.json>
+```
+
+`prepare` loads `config/preparation-item-001.json` and item 001's package into the connected store,
+inserting where absent and refusing, by name, any row that differs. `produce` runs one production:
+`plan-only` prints the plan and calls nothing; `fake` produces the video at USD 0.00 with fake
+providers, in a **demonstration** store only; `metered` books into the company store only. The
+settings file (see `config/production-settings.sample.json`) names the output root, which must lie
+outside the repository, the media tool's two executables, the font, the render profile and the
+bounds. The owner's guide to the metered run is `wave-9/owner-guide-metered-run.md`.
+
+The live suite's production demonstrations need the media tool and the font on the machine; without
+them those demonstrations skip as not-run, saying why, and never pass.
+
 ## Stop and remove
 
 ```bash
