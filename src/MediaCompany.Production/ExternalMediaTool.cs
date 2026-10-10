@@ -33,6 +33,11 @@ public sealed class ExternalMediaTool : IMediaTool
         _settings = settings;
     }
 
+    /// <summary>
+    /// The tool's version line, bounded by the configured PROBE bound (probeBoundSeconds, 60 s at the Design Gate;
+    /// correction CR-008, as ruled): reading a version is a probe-sized task, so it borrows that bound rather than a
+    /// setting of its own, and no new setting exists for it.
+    /// </summary>
     public async Task<string> VersionLineAsync(CancellationToken cancellationToken)
     {
         var (_, output, _) = await RunAsync(
@@ -69,6 +74,11 @@ public sealed class ExternalMediaTool : IMediaTool
             cancellationToken);
     }
 
+    /// <summary>
+    /// Joins the narration parts, bounded by the configured DECODE bound (decodeBoundMinutes, 60 min at the Design Gate;
+    /// correction CR-008, as ruled): joining reads every part through end to end, a decode-sized task, so it borrows
+    /// that bound rather than a setting of its own, and no new setting exists for it.
+    /// </summary>
     public Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, CancellationToken cancellationToken) =>
         RunCheckedAsync(
             "narration concatenation",

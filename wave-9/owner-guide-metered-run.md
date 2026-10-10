@@ -93,14 +93,32 @@ dotnet run --project src/MediaCompany.Host -- produce --mode metered   --setting
 Metered mode refuses, naming each, when: the store is not the configured company store or is not
 designated company; no cap is recorded; the narration route has no price in force; the cost
 controller refuses or defers; a credential variable above is not set (printed by its exact name);
-a fake is configured for the planned account; no vendor endpoint is configured; or no narration
-voice is configured. **The narration voice is your choice** (it is part of the channel's voice,
-still an open question): set `narrationVoice` in the settings file to the vendor voice you choose;
-none is invented.
+a fake is configured for the planned account; no vendor endpoint is configured, or one is not an
+`https` address; or no narration voice is configured.
 
-Exit codes: `0` finished; `2` refused before any call; `3` a stage failed (named in its record); `4`
-stopped at the cap; `5` an incurred attempt could not be recorded (its facts are printed and its
-worst-case reservation keeps counting).
+**The narration voice.** You decided it on 2026-10-10: `onyx`, for the first video. **The
+orchestrator sets it** — it writes `"narrationVoice": "onyx"` into the settings file it runs the go
+with. The code holds no default voice, and the sample settings file leaves it empty, so a settings
+file without it is refused before any call.
+
+**Remove the demonstration provider before metered mode.** The sample settings file names a
+demonstration provider (`demonstrationProviders`: the `openai` account, `SpeechAudio`) so fake mode
+works out of the box. Metered mode **refuses** while a fake is configured for the account it plans to
+call, so the orchestrator's settings file for the go has that entry removed (an empty list `[]`),
+and its `endpoints` entry set to the speech vendor's `https` base address, verified first hand. A
+vendor endpoint is reached over `https` only, and a redirect from it is never followed.
+
+Exit codes: `0` finished; `2` refused before any call; `3` a stage failed or was held, or failed on
+anything nobody anticipated (named in its record); `4` stopped at the cap; `5` an incurred attempt
+could not be recorded (its facts are printed and its worst-case reservation keeps counting); `6`
+cancelled by the operator (Ctrl+C): the stage in progress is recorded failed, and a vendor call in
+flight is booked at its worst case, because the vendor may already have charged it. After the item
+version opens, every ending is one of these.
+
+**The bounds.** Every bound is a configured amount from the settings file. Two tasks borrow a bound
+rather than having their own: the media tool's **version check** uses the probe bound
+(`probeBoundSeconds`, 60 s), and the **narration join** uses the decode bound (`decodeBoundMinutes`,
+60 min). There is no separate setting for either.
 
 ---
 
@@ -112,8 +130,15 @@ Before your go, and in this order, the orchestrator:
    authentication scheme and the price per character, and the terms positions recorded for the
    narration route (automated access permitted, no licence over the company's content). The values
    in `config/preparation-item-001.json` are the implementing role's recorded knowledge of
-   2026-10-09 and are **not** verified first hand. A price that differs is recorded as a new price
-   row with its own source, date and validity, never by editing the recorded one.
+   2026-10-09 and are **not** verified first hand. **How a re-fetched price enters the company
+   store:** the orchestrator adds it to the recorded configuration `config/preparation-item-001.json`
+   as a **new price row** — its own identifier, the vendor page it was read from as its source, the
+   date it was read, and the instant its validity begins — and the **preparation** of step 3 loads it
+   into the company store with every other recorded row. Nothing is typed into the store by hand and
+   no recorded row is ever edited: the preparation inserts what is absent and refuses a row that
+   differs from the one already there. Where the earlier price row and the re-fetched one are both in
+   force, admission and booking both apply the **higher** of the two, so the cap is never judged at a
+   price below the one the vendor states.
 2. **Installs** the nine schema resources into the company store `mediacompany` (it holds no table
    today): `dotnet run --project src/MediaCompany.Host -- install`.
 3. **Prepares** it from the recorded configuration:

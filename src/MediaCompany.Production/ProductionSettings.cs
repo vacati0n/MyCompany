@@ -32,8 +32,10 @@ public sealed record ProductionSettings
 
     public required TimeSpan RenderBound { get; init; }
 
+    /// <summary>The bound on a full decode of a produced file; the narration join borrows it too (correction CR-008).</summary>
     public required TimeSpan DecodeBound { get; init; }
 
+    /// <summary>The bound on one probe of a file; the tool's version check borrows it too (correction CR-008).</summary>
     public required TimeSpan ProbeBound { get; init; }
 
     public required TimeSpan StillBound { get; init; }
@@ -45,15 +47,16 @@ public sealed record ProductionSettings
     public required int NarrationCharacterMaximum { get; init; }
 
     /// <summary>
-    /// The vendor voice a narration request names. It is a channel voice choice the owner has not made (the open
-    /// question on channel one's configuration values), so it has no default: metered mode refuses without it.
+    /// The vendor voice a narration request names. The owner decided the voice for the first video on 2026-10-10, and
+    /// the orchestrator writes it into the settings file before the go; the code carries NO default, so metered mode
+    /// refuses without it.
     /// </summary>
     public string? NarrationVoice { get; init; }
 
     /// <summary>States the configured figures, each labelled configured.</summary>
     public string DescribeBounds() =>
-        $"provider call {ProviderCallBound.TotalSeconds:0} s; render {RenderBound.TotalMinutes:0} min; decode {DecodeBound.TotalMinutes:0} min; "
-        + $"probe {ProbeBound.TotalSeconds:0} s; still {StillBound.TotalSeconds:0} s; profile {Width}x{Height} at {FramesPerSecond} frames a second; "
+        $"provider call {ProviderCallBound.TotalSeconds:0} s; render {RenderBound.TotalMinutes:0} min; decode {DecodeBound.TotalMinutes:0} min (the narration join too); "
+        + $"probe {ProbeBound.TotalSeconds:0} s (the version check too); still {StillBound.TotalSeconds:0} s; profile {Width}x{Height} at {FramesPerSecond} frames a second; "
         + $"narration character maximum {NarrationCharacterMaximum} (all configured)";
 }
 
