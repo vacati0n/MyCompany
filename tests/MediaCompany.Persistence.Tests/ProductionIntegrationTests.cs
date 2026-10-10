@@ -607,7 +607,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
 
     /// <summary>
     /// AN INJECTED INTERRUPTION between the promotion of a file and its record leaves ZERO RECORDS for the file: the
-    /// file is complete on disk, and nothing claims it.
+    /// file is complete on disk, and nothing claims it. THE RUN STILL ENDS IN A NAMED, RECORDED OUTCOME (correction
+    /// CR-005): the stage in progress is recorded failed, naming the failure, and the run ends with exit code 3, never
+    /// an unhandled exception.
     /// </summary>
     [RequiresPostgresAndMediaToolFact]
     public async Task AnInterruptionBeforeTheRecordLeavesNoRecordForTheFile()
@@ -617,15 +619,105 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         var settings = MediaToolOnPath.Settings(_output, Repository());
         var store = new InterruptedStore(new ArtifactWriter(_output, Repository()), "gfx-05.png");
         var unitOfWork = new NpgsqlUnitOfWork(Source, new FixedClock());
-        var service = new ProduceItemService(unitOfWork, new NpgsqlProductionReader(Source), new ExternalMediaTool(settings), store, settings, new StringWriter());
+        var reader = new NpgsqlProductionReader(Source);
+        var service = new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(settings), store, settings, new StringWriter());
 
-        await Assert.ThrowsAsync<IOException>(() => service.RunAsync(Request(record, loaded, ProductionMode.Fake),
+        var ended = await service.RunAsync(Request(record, loaded, ProductionMode.Fake),
             CapabilityGatewayFactory.CreateDemonstration(unitOfWork, [new DemonstrationProvider(Speech, VendorContract.SpeechAudio)], () => DateTimeOffset.UtcNow),
-            CancellationToken.None));
+            CancellationToken.None);
 
+        Assert.Equal(ProduceResult.StageFailed, ended.ExitCode);
         Assert.True(File.Exists(store.Interrupted));
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE relative_path LIKE '%gfx-05.png'"));
         Assert.Equal(4L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE role = 'GraphicStill'"));
+        var design = (await reader.StagesAsync(record.Item, ended.Version!.Value, CancellationToken.None)).Single(s => s.Stage == ProductionStage.Design);
+        Assert.Equal(StageOutcome.Failed, design.Outcome);
+        Assert.Contains("IOException", design.Summary, StringComparison.Ordinal);
+        Assert.Contains("induced interruption", design.Summary, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// AN OPERATOR'S CANCELLATION DURING A VENDOR CALL, end to end through the produce service (corrections CR-003 and
+    /// CR-009): the stub vendor receives the first narration request and the operator cancels while it is unanswered.
+    /// The attempt is booked at its worst case, labelled estimate, under its reservation; the Audio stage is recorded
+    /// failed naming the cancellation; nothing after it runs; the run ends with exit code 6.
+    /// </summary>
+    [RequiresPostgresAndMediaToolFact]
+    public async Task ACancellationDuringAVendorCallBooksTheAttemptRecordsTheStageAndEndsWithItsCode()
+    {
+        var record = await PrepareAsync();
+        var loaded = await ItemPackageLoader.LoadAsync(Repository(), "wave-2/item-001/item-material.json", CancellationToken.None);
+        var settings = MediaToolOnPath.Settings(_output, Repository());
+        var unitOfWork = new NpgsqlUnitOfWork(Source, new FixedClock());
+        var reader = new NpgsqlProductionReader(Source);
+        var variable = CredentialBrokerFactory.VariableName(Speech, null);
+
+        // The variable's existing value is NEVER READ: the fake value is set in this process only, and removed after.
+        Environment.SetEnvironmentVariable(variable, FakeSecret);
+        try
+        {
+            using var cancellation = new CancellationTokenSource();
+            var stub = new CancellingStub(cancellation);
+            var broker = CredentialBrokerFactory.Create(new SecretStoreOptions(), () => DateTimeOffset.UtcNow);
+            var metered = CapabilityGatewayFactory.Create(unitOfWork, broker, broker, new FixedClock(),
+                [new ProviderEndpoint(Speech, new Uri("https://speech.stub.invalid/"), VendorContract.SpeechAudio)], new HttpClient(stub));
+            var output = new StringWriter();
+
+            var ended = await new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(settings), new ArtifactWriter(_output, Repository()), settings, output)
+                .RunAsync(Request(record, loaded, ProductionMode.Metered), metered, cancellation.Token);
+
+            Assert.Equal(ProduceResult.Cancelled, ended.ExitCode);
+            Assert.Equal(1, stub.Requests);
+            var operation = Assert.Single(await ScalarsAsync($"SELECT operation_id::text FROM agent_costs WHERE item_id = '{record.Item}'"));
+            Assert.Equal("Estimate", await ScalarAsync<string>($"SELECT cost_basis FROM agent_costs WHERE operation_id = '{operation}'"));
+            Assert.Equal("Failed", await ScalarAsync<string>($"SELECT outcome FROM agent_costs WHERE operation_id = '{operation}'"));
+            Assert.Contains("cancelled by the operator", await ScalarAsync<string>($"SELECT failure_reason FROM agent_costs WHERE operation_id = '{operation}'"), StringComparison.Ordinal);
+            Assert.Equal(await ScalarAsync<long>($"SELECT character_units FROM admission_reservations WHERE operation_id = '{operation}'"),
+                await ScalarAsync<long>($"SELECT character_units FROM agent_costs WHERE operation_id = '{operation}'"));
+            var stages = await reader.StagesAsync(record.Item, ended.Version!.Value, CancellationToken.None);
+            var audio = stages.Single(s => s.Stage == ProductionStage.Audio);
+            Assert.Equal(StageOutcome.Failed, audio.Outcome);
+            Assert.Contains("cancelled by the operator", audio.Summary, StringComparison.Ordinal);
+            Assert.DoesNotContain(stages, s => s.Stage is ProductionStage.Thumbnail or ProductionStage.Production);
+            Assert.DoesNotContain(FakeSecret, output.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(variable, null);
+        }
+    }
+
+    /// <summary>
+    /// THE PROCESS CLOCK ONE DAY AHEAD AND ONE DAY BEHIND the datastore's (correction CR-009): in fake mode, with the
+    /// render bound set to fail fast, every stage instant and every operation instant of each run is the datastore's,
+    /// never the process clock's, whichever way the process clock is wrong.
+    /// </summary>
+    [RequiresPostgresAndMediaToolFact]
+    public async Task EveryInstantIsTheDatastoresWithTheProcessClockADayAheadOrBehind()
+    {
+        var record = await PrepareAsync();
+        var loaded = await ItemPackageLoader.LoadAsync(Repository(), "wave-2/item-001/item-material.json", CancellationToken.None);
+        var settings = MediaToolOnPath.Settings(_output, Repository()) with { RenderBound = TimeSpan.FromMilliseconds(1) };
+        var reader = new NpgsqlProductionReader(Source);
+
+        foreach (var skew in new[] { TimeSpan.FromDays(1), TimeSpan.FromDays(-1) })
+        {
+            var unitOfWork = new NpgsqlUnitOfWork(Source, new SkewedClock(skew));
+            var before = await ScalarAsync<DateTimeOffset>("SELECT clock_timestamp()");
+            var ended = await new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(settings), new ArtifactWriter(_output, Repository()), settings, new StringWriter())
+                .RunAsync(Request(record, loaded, ProductionMode.Fake),
+                    CapabilityGatewayFactory.CreateDemonstration(unitOfWork, [new DemonstrationProvider(Speech, VendorContract.SpeechAudio)], () => DateTimeOffset.UtcNow + skew),
+                    CancellationToken.None);
+            var after = await ScalarAsync<DateTimeOffset>("SELECT clock_timestamp()");
+
+            Assert.Equal(ProduceResult.StageFailed, ended.ExitCode);
+            Assert.Equal(14, ended.Operations.Count);
+            Assert.All(ended.Operations, o => Assert.InRange(o.OccurredAt, before, after));
+            var stages = await reader.StagesAsync(record.Item, ended.Version!.Value, CancellationToken.None);
+            Assert.Equal(12, stages.Count);
+            Assert.All(stages, s => Assert.InRange(s.RecordedAt, before, after));
+            Assert.All(await reader.ArtifactsAsync(record.Item, ended.Version!.Value, CancellationToken.None), a => Assert.InRange(a.RecordedAt!.Value, before, after));
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -733,6 +825,19 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         await command.ExecuteNonQueryAsync();
     }
 
+    private async Task<IReadOnlyList<string>> ScalarsAsync(string sql)
+    {
+        await using var command = Source.CreateCommand(sql);
+        await using var reader = await command.ExecuteReaderAsync();
+        var values = new List<string>();
+        while (await reader.ReadAsync())
+        {
+            values.Add(reader.GetString(0));
+        }
+
+        return values;
+    }
+
     private async Task<T> ScalarAsync<T>(string sql)
     {
         await using var command = Source.CreateCommand(sql);
@@ -750,6 +855,32 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     private sealed class FixedClock : IClock
     {
         public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>A process clock set wrong by a fixed offset; the datastore's clock is the only one any record reads.</summary>
+    private sealed class SkewedClock(TimeSpan skew) : IClock
+    {
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow + skew;
+    }
+
+    /// <summary>
+    /// A stub vendor that receives the request and never answers: on the first request it cancels the operator's token
+    /// and waits on it, standing in for an operator pressing cancel while a vendor call is in flight.
+    /// </summary>
+    private sealed class CancellingStub(CancellationTokenSource operatorCancellation) : HttpMessageHandler
+    {
+        private int _requests;
+
+        public int Requests => _requests;
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _requests);
+            Assert.Equal($"Bearer {FakeSecret}", request.Headers.Authorization?.ToString());
+            await operatorCancellation.CancelAsync();
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            throw new InvalidOperationException("unreachable: the wait ends only by cancellation");
+        }
     }
 
     /// <summary>A stand-in provider declared here: it reaches nothing and answers from the function it is given.</summary>

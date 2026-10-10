@@ -59,6 +59,14 @@ public sealed record DemonstrationProvider(ProviderAccountId ProviderAccount, Ve
 /// </summary>
 public static class CapabilityGatewayFactory
 {
+    /// <summary>
+    /// The one network client of the metered composition (correction CR-006): it follows NO REDIRECT, so a request
+    /// carrying a credential never goes anywhere but the configured https endpoint, and every call is bounded by the
+    /// configured provider-call bound. A redirect answer is a non-success status, booked at its worst case.
+    /// </summary>
+    public static HttpClient VendorClient(TimeSpan providerCallBound) =>
+        new(new SocketsHttpHandler { AllowAutoRedirect = false }, disposeHandler: true) { Timeout = providerCallBound };
+
     public static ICapabilityGateway Create(
         IUnitOfWork unitOfWork,
         ICredentialBroker broker,

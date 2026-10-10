@@ -115,4 +115,56 @@ public sealed class ArtifactWriterTests : IDisposable
         Assert.Throws<ArgumentException>(() => writer.FullPath("../escape.bin"));
         Assert.Throws<ArgumentException>(() => writer.FullPath(Path.GetFullPath("/escape.bin")));
     }
+
+    /// <summary>
+    /// A SHORT-NAME SPELLING OF A FOLDER INSIDE THE REPOSITORY is refused (correction CR-007): the output root is
+    /// expanded to its full long name before the containment check, so the short spelling compares equal to the
+    /// repository's long one. Where the volume records no short name, the two spellings are the same and the case is
+    /// the delivered one, which the refusal below still proves.
+    /// </summary>
+    [Fact]
+    public void AShortNameSpellingOfAFolderInsideTheRepositoryIsRefused()
+    {
+        var repository = Path.Combine(Path.GetTempPath(), "mediacompany repository with a long name " + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(repository, "inside output"));
+        try
+        {
+            var shortInside = ShortName(Path.Combine(repository, "inside output"));
+            var shortOutside = ShortName(Path.Combine(Path.GetTempPath(), "mediacompany output with a long name " + Guid.NewGuid().ToString("N")));
+
+            var refused = Assert.Throws<ProductionSettingRefusedException>(() => { _ = new ArtifactWriter(shortInside, repository); });
+            Assert.Contains("inside, equal to or containing the repository root", refused.Message, StringComparison.Ordinal);
+
+            // The root a writer keeps is the long spelling, whatever spelling configured it.
+            Directory.CreateDirectory(shortOutside);
+            try
+            {
+                var writer = new ArtifactWriter(ShortName(shortOutside), repository);
+                Assert.DoesNotContain("~", writer.OutputRoot, StringComparison.Ordinal);
+            }
+            finally
+            {
+                Directory.Delete(shortOutside, recursive: true);
+            }
+        }
+        finally
+        {
+            Directory.Delete(repository, recursive: true);
+        }
+    }
+
+    private static string ShortName(string path)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return path;
+        }
+
+        var buffer = new System.Text.StringBuilder(1024);
+        var length = GetShortPathNameW(path, buffer, (uint)buffer.Capacity);
+        return length == 0 || length > buffer.Capacity ? path : buffer.ToString();
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetShortPathNameW(string longPath, System.Text.StringBuilder shortPath, uint bufferLength);
 }

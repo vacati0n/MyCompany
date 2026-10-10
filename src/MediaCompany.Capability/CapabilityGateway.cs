@@ -474,7 +474,27 @@ public sealed class CapabilityGateway : ICapabilityGateway
         // The provider is called WITH THE ADMISSION TRANSACTION OPEN, so the shared hold on the record
         // horizon keeps the reserved instant bookable for the whole call; the call is bounded by the
         // client's own timeout and is never retried inside the transaction.
-        var attempt = await adapter.InvokeAsync(provider, request, handle, cancellationToken).ConfigureAwait(false);
+        //
+        // AN OPERATOR'S CANCELLATION DURING THE CALL (correction CR-003): the request may already have reached the
+        // vendor, so the attempt is NOT dropped. It becomes a failed attempt whose charge is not known, booked below at
+        // the admitted worst case and labelled estimate, with no availability transition, because the operator stopped
+        // it and the vendor did not fail. The caller sees the booked attempt and ends its own stage.
+        var calling = System.Diagnostics.Stopwatch.StartNew();
+        ProviderAttempt attempt;
+        try
+        {
+            attempt = await adapter.InvokeAsync(provider, request, handle, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            attempt = new ProviderAttempt(
+                false, UnitCounts.None, CostBasis.Estimate, calling.Elapsed,
+                "cancelled by the operator during the vendor call; the request may have reached the vendor, and the charge is not known",
+                null)
+            {
+                ChargeKnown = false,
+            };
+        }
 
         // NO CHARGED OR POSSIBLY CHARGED ATTEMPT IS BOOKED AT ZERO UNITS (the production change, decision D-006 of
         // its design). Where the vendor's charge is not known from its response — a timeout, a transport failure,

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using MediaCompany.Application.Ports;
@@ -135,7 +136,12 @@ public sealed class ArtifactWriter : IArtifactStore
         return Path.Combine(stagingFolder, name);
     }
 
-    /// <summary>The full path, every existing link on it resolved, with no trailing separator.</summary>
+    /// <summary>
+    /// The full path, every existing link on it resolved and, on this platform, every existing component expanded from
+    /// its short name to its full long name (correction CR-007), with no trailing separator. Without the expansion a
+    /// short-name spelling of a folder inside the repository would compare unequal to the repository's long spelling and
+    /// pass the containment check.
+    /// </summary>
     internal static string Resolve(string path)
     {
         var full = Path.GetFullPath(path);
@@ -150,10 +156,37 @@ public sealed class ArtifactWriter : IArtifactStore
                 resolved = info.ResolveLinkTarget(returnFinalTarget: true)?.FullName
                     ?? throw new ProductionSettingRefusedException("outputRoot", $"the link {resolved} on the path cannot be resolved");
             }
+
+            if (OperatingSystem.IsWindows() && (Directory.Exists(resolved) || File.Exists(resolved)))
+            {
+                resolved = LongName(resolved);
+            }
         }
 
         return resolved.TrimEnd(Path.DirectorySeparatorChar);
     }
+
+    /// <summary>
+    /// The long-name spelling of an existing path, as the file system records it. A path the system cannot expand is
+    /// refused rather than compared in a spelling that might hide where it is.
+    /// </summary>
+    private static string LongName(string existing)
+    {
+        var buffer = new StringBuilder(1024);
+        var length = GetLongPathNameW(existing, buffer, (uint)buffer.Capacity);
+        if (length > buffer.Capacity)
+        {
+            buffer = new StringBuilder((int)length);
+            length = GetLongPathNameW(existing, buffer, (uint)buffer.Capacity);
+        }
+
+        return length == 0 || length > buffer.Capacity
+            ? throw new ProductionSettingRefusedException("outputRoot", $"the full long name of {existing} could not be read, so its place cannot be decided")
+            : buffer.ToString();
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetLongPathNameW(string shortPath, StringBuilder longPath, uint bufferLength);
 
     /// <summary>Whether <paramref name="inner"/> is <paramref name="outer"/> or lies under it.</summary>
     internal static bool Contains(string outer, string inner) =>

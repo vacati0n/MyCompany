@@ -67,10 +67,23 @@ public static class ProductionCommands
         var fakes = (json["demonstrationProviders"]?.AsArray() ?? [])
             .Select(f => new DemonstrationProvider(new ProviderAccountId(f!["account"]!.GetValue<string>()), Enum.Parse<VendorContract>(f["contract"]!.GetValue<string>())))
             .ToArray();
+        // A VENDOR ENDPOINT IS REACHED OVER HTTPS ONLY (correction CR-006): an endpoint that is not an absolute https
+        // address is refused by name before anything is read or called. The demonstration providers are not endpoints:
+        // they name a fake, which reaches no network at all.
         var endpoints = (json["endpoints"]?.AsArray() ?? [])
             .Where(e => !e!["endpoint"]!.GetValue<string>().StartsWith('<'))
-            .Select(e => new ProviderEndpoint(
-                new ProviderAccountId(e!["account"]!.GetValue<string>()), new Uri(e["endpoint"]!.GetValue<string>()), Enum.Parse<VendorContract>(e["contract"]!.GetValue<string>())))
+            .Select(e =>
+            {
+                var account = e!["account"]!.GetValue<string>();
+                var address = e["endpoint"]!.GetValue<string>();
+                if (!Uri.TryCreate(address, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+                {
+                    throw new ProductionSettingRefusedException(
+                        "endpoints", $"the endpoint configured for account {account} is not an absolute https address; a vendor endpoint is reached over https only");
+                }
+
+                return new ProviderEndpoint(new ProviderAccountId(account), uri, Enum.Parse<VendorContract>(e["contract"]!.GetValue<string>()));
+            })
             .ToArray();
 
         return new HostProductionSettings(
@@ -279,7 +292,7 @@ public static class ProductionCommands
 
             var secrets = new SecretStoreOptions();
             var broker = CredentialBrokerFactory.Create(secrets, () => DateTimeOffset.UtcNow);
-            var http = new HttpClient { Timeout = settings.Production.ProviderCallBound };
+            var http = CapabilityGatewayFactory.VendorClient(settings.Production.ProviderCallBound);
             gateway = CapabilityGatewayFactory.Create(unitOfWork, broker, broker, new SystemClock(), settings.Endpoints, http);
         }
 

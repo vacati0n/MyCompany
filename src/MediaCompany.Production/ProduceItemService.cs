@@ -28,7 +28,14 @@ public sealed record ProduceRequest
     public RunId Run { get; init; } = RunId.New();
 }
 
-/// <summary>How a produce run ended: the exit code, and what it produced.</summary>
+/// <summary>
+/// How a produce run ended: the exit code, and what it produced. THE EXIT CODES ARE DOCUMENTED (correction CR-005):
+/// 0 succeeded (the file rendered, the item held short of publish-ready); 2 refused before any call; 3 a stage failed
+/// or was held, its outcome recorded naming why, including any failure nobody anticipated; 4 stopped at the item cap;
+/// 5 an incurred attempt could not be recorded; 6 cancelled by the operator, the interrupted stage recorded failed and
+/// any vendor call in flight booked at its worst case. After the item version opens, every ending is one of these, and
+/// every ending but 5 records the stage it ended in.
+/// </summary>
 public sealed record ProduceResult(int ExitCode, ItemVersion? Version, StoredFile? Rendered, IReadOnlyList<OperationRecord> Operations)
 {
     public const int Succeeded = 0;
@@ -36,6 +43,7 @@ public sealed record ProduceResult(int ExitCode, ItemVersion? Version, StoredFil
     public const int StageFailed = 3;
     public const int CapStopped = 4;
     public const int AttemptNotRecorded = 5;
+    public const int Cancelled = 6;
 }
 
 /// <summary>
@@ -158,20 +166,23 @@ public sealed class ProduceItemService
         private readonly List<OperationRecord> _operations = [];
         private readonly JobId _job = JobId.New();
 
-        private ProductionRun(ProduceItemService service, ProduceRequest request, ProductionPlan plan, ICapabilityGateway gateway, ItemVersion version, string staging, string folder)
+        private ProductionRun(ProduceItemService service, ProduceRequest request, ProductionPlan plan, ICapabilityGateway gateway, ItemVersion version, string folder)
         {
             _service = service;
             _request = request;
             _plan = plan;
             _gateway = gateway;
             Version = version;
-            Staging = staging;
             Folder = folder;
         }
 
         private ItemVersion Version { get; }
 
-        private string Staging { get; }
+        /// <summary>The run's staging folder, begun inside the run so a failure to begin it is a recorded outcome too.</summary>
+        private string Staging { get; set; } = string.Empty;
+
+        /// <summary>The producing stage in progress, which an unanticipated failure or a cancellation is recorded against.</summary>
+        private ProductionStage _stage = ProductionStage.Design;
 
         private string Folder { get; }
 
@@ -195,21 +206,28 @@ public sealed class ProduceItemService
             }
 
             var folder = $"{request.Loaded.Material.Item}/v{opened.Version}";
-            var staging = service._store.BeginRun(folder);
             service._output.WriteLine($"Opened item version {opened.Version} at {opened.OpenedAt:O} (the datastore's instant); output folder {service._store.FullPath(folder)}");
-            return new ProductionRun(service, request, plan, gateway, opened.Version, staging, folder);
+            return new ProductionRun(service, request, plan, gateway, opened.Version, folder);
         }
 
+        /// <summary>
+        /// Runs the opened version to one of the documented endings (correction CR-005): from here on no exception leaves
+        /// the run unrecorded. A cancellation by the operator records the interrupted stage failed and ends with exit code
+        /// 6; any failure nobody anticipated records the stage in progress failed, naming the failure's type and message,
+        /// and ends with exit code 3. Those records are written on a token that cannot be cancelled, because they record
+        /// what already happened.
+        /// </summary>
         public async Task<ProduceResult> ExecuteAsync(CancellationToken cancellationToken)
         {
-            var version = await _service._tool.VersionLineAsync(cancellationToken).ConfigureAwait(false);
-            Output.WriteLine($"Media tool: {version}");
-            await _service._store.CopyIntoStagingAsync(Staging, _service._settings.FontFile, ExternalMediaTool.StagedFontName, cancellationToken).ConfigureAwait(false);
-
-            await CarryAsync(cancellationToken).ConfigureAwait(false);
-
             try
             {
+                Staging = _service._store.BeginRun(Folder);
+                var version = await _service._tool.VersionLineAsync(cancellationToken).ConfigureAwait(false);
+                Output.WriteLine($"Media tool: {version}");
+                await _service._store.CopyIntoStagingAsync(Staging, _service._settings.FontFile, ExternalMediaTool.StagedFontName, cancellationToken).ConfigureAwait(false);
+
+                await CarryAsync(cancellationToken).ConfigureAwait(false);
+
                 var graphics = await DesignAsync(version, cancellationToken).ConfigureAwait(false);
 
                 var audio = await AudioAsync(cancellationToken).ConfigureAwait(false);
@@ -232,6 +250,19 @@ public sealed class ProduceItemService
             catch (StageEndedException stopped)
             {
                 return new ProduceResult(stopped.ExitCode, Version, null, _operations);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                await TryEndStageAsync(_stage, StageOutcome.Failed,
+                    $"cancelled by the operator during the {_stage} stage; no further call is made and nothing after it ran", CancellationToken.None).ConfigureAwait(false);
+                return new ProduceResult(ProduceResult.Cancelled, Version, null, _operations);
+            }
+            catch (Exception unanticipated)
+            {
+                await TryEndStageAsync(_stage, StageOutcome.Failed,
+                    $"the {_stage} stage ended on a failure nobody anticipated ({unanticipated.GetType().Name}: {unanticipated.Message}); no further call is made",
+                    CancellationToken.None).ConfigureAwait(false);
+                return new ProduceResult(ProduceResult.StageFailed, Version, null, _operations);
             }
         }
 
@@ -262,6 +293,7 @@ public sealed class ProduceItemService
 
         private async Task<IReadOnlyDictionary<string, string>> DesignAsync(string toolVersion, CancellationToken cancellationToken)
         {
+            _stage = ProductionStage.Design;
             var stills = new Dictionary<string, string>(StringComparer.Ordinal);
             try
             {
@@ -293,6 +325,7 @@ public sealed class ProduceItemService
         private async Task<(ProduceResult? Ended, IReadOnlyList<(int Beat, TimeSpan MeasuredDuration)>? BeatDurations, StoredFile? Narration)> AudioAsync(
             CancellationToken cancellationToken)
         {
+            _stage = ProductionStage.Audio;
             var partFiles = new List<(NarrationPart Part, StoredFile File, TimeSpan Duration)>();
             foreach (var planned in _plan.Operations)
             {
@@ -407,9 +440,11 @@ public sealed class ProduceItemService
 
                     if (completed.Operation.Outcome != OperationOutcome.Succeeded || completed.Content is null)
                     {
+                        // An operator's cancellation during the call (correction CR-003): the boundary booked the attempt at
+                        // its worst case; the stage is recorded failed and the run ends with the cancellation's exit code.
                         await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
                             $"part {part.Ordinal}'s narration call failed ({completed.Operation.FailureReason}); it is booked as operation {completed.Operation.Id} and is not retried",
-                            ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                            cancellationToken.IsCancellationRequested ? ProduceResult.Cancelled : ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
                     }
 
                     return (null, completed.Content);
@@ -444,6 +479,7 @@ public sealed class ProduceItemService
 
         private async Task ThumbnailAsync(CancellationToken cancellationToken)
         {
+            _stage = ProductionStage.Thumbnail;
             var hits = new List<string>();
             var placeholders = new List<string>();
             try
@@ -498,6 +534,7 @@ public sealed class ProduceItemService
             StoredFile narration,
             CancellationToken cancellationToken)
         {
+            _stage = ProductionStage.Production;
             var settings = _service._settings;
             var visuals = new List<(string Implements, int Beat, string Still)>();
             StoredFile rendered;
@@ -653,21 +690,28 @@ public sealed class ProduceItemService
             Output.WriteLine($"Stage {stage}: {outcome} at {at:O} - {summary}");
         }
 
-        /// <summary>Records the stage's end and stops the run with the exit code named.</summary>
+        /// <summary>
+        /// Records the stage's end and stops the run with the exit code named. The record is written on a token that
+        /// cannot be cancelled (correction CR-003), because it records what already happened; the caller's token is
+        /// accepted only so every call site reads alike.
+        /// </summary>
         private async Task EndStageAsync(ProductionStage stage, StageOutcome outcome, string summary, int exitCode, CancellationToken cancellationToken)
         {
-            await RecordStageAsync(stage, outcome, summary, null, cancellationToken).ConfigureAwait(false);
+            _ = cancellationToken;
+            await RecordStageAsync(stage, outcome, summary, null, CancellationToken.None).ConfigureAwait(false);
             throw new StageEndedException(exitCode);
         }
 
         /// <summary>Records the stage's end where the store still accepts it; a failure here is printed, never hidden.</summary>
         private async Task TryEndStageAsync(ProductionStage stage, StageOutcome outcome, string summary, CancellationToken cancellationToken)
         {
+            _ = cancellationToken;
             try
             {
-                await RecordStageAsync(stage, outcome, summary, null, cancellationToken).ConfigureAwait(false);
+                // Not cancellable (correction CR-003): it records what already happened.
+                await RecordStageAsync(stage, outcome, summary, null, CancellationToken.None).ConfigureAwait(false);
             }
-            catch (Exception failure) when (failure is not OperationCanceledException)
+            catch (Exception failure)
             {
                 Output.WriteLine($"Stage {stage} could not be recorded {outcome} ({failure.GetType().Name}): {summary}");
             }
