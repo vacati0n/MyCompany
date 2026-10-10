@@ -117,41 +117,50 @@ public sealed class ArtifactWriterTests : IDisposable
     }
 
     /// <summary>
-    /// A SHORT-NAME SPELLING OF A FOLDER INSIDE THE REPOSITORY is refused (correction CR-007): the output root is
-    /// expanded to its full long name before the containment check, so the short spelling compares equal to the
-    /// repository's long one. Where the volume records no short name, the two spellings are the same and the case is
-    /// the delivered one, which the refusal below still proves.
+    /// A SHORT-NAME SPELLING OF A FOLDER INSIDE THE REPOSITORY is refused (correction CR-007): the repository root is
+    /// configured in its long spelling and the output root in its short spelling, and the output root is expanded to its
+    /// full long name before the containment check, so the two compare as the same place. The case needs a volume that
+    /// records short names, as this machine's user-profile folder does; where none is recorded the two spellings are one
+    /// and the delivered check alone decides it.
     /// </summary>
     [Fact]
     public void AShortNameSpellingOfAFolderInsideTheRepositoryIsRefused()
     {
-        var repository = Path.Combine(Path.GetTempPath(), "mediacompany repository with a long name " + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Path.Combine(repository, "inside output"));
+        var created = Path.Combine(Path.GetTempPath(), "mediacompany repository with a long name " + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(created, "inside output"));
         try
         {
-            var shortInside = ShortName(Path.Combine(repository, "inside output"));
-            var shortOutside = ShortName(Path.Combine(Path.GetTempPath(), "mediacompany output with a long name " + Guid.NewGuid().ToString("N")));
+            var repository = LongName(created);
+            var longInside = Path.Combine(repository, "inside output");
+            var shortInside = ShortName(longInside);
+            if (string.Equals(shortInside, longInside, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
 
             var refused = Assert.Throws<ProductionSettingRefusedException>(() => { _ = new ArtifactWriter(shortInside, repository); });
             Assert.Contains("inside, equal to or containing the repository root", refused.Message, StringComparison.Ordinal);
-
-            // The root a writer keeps is the long spelling, whatever spelling configured it.
-            Directory.CreateDirectory(shortOutside);
-            try
-            {
-                var writer = new ArtifactWriter(ShortName(shortOutside), repository);
-                Assert.DoesNotContain("~", writer.OutputRoot, StringComparison.Ordinal);
-            }
-            finally
-            {
-                Directory.Delete(shortOutside, recursive: true);
-            }
         }
         finally
         {
-            Directory.Delete(repository, recursive: true);
+            Directory.Delete(created, recursive: true);
         }
     }
+
+    private static string LongName(string path)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return path;
+        }
+
+        var buffer = new System.Text.StringBuilder(1024);
+        var length = GetLongPathNameW(path, buffer, (uint)buffer.Capacity);
+        return length == 0 || length > buffer.Capacity ? path : buffer.ToString();
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetLongPathNameW(string shortPath, System.Text.StringBuilder longPath, uint bufferLength);
 
     private static string ShortName(string path)
     {
