@@ -1977,3 +1977,13 @@ outside the USD 5.95 cap.
    stands; that candidate stays a placeholder. The other candidates are code-rendered.
 5. **Vendors:** the owner's billed accounts are with the reasoning vendor (Anthropic) and the
    speech-and-image vendor (OpenAI), as named in the question of `CEO-D-801`; both pay-per-use.
+
+---
+
+## CEO-D-804 — The narration voice for the first video
+
+**The CEO's own decision, 2026-10-10**, answering the implementation phase's open question (the
+narration voice has no default; metered mode refuses until it is set). The narration voice is the
+speech-and-image vendor's voice **`onyx`** (a deep male voice suited to documentary narration).
+The orchestrator verifies first-hand that the voice name is current with the vendor before the go
+and sets it in the run's settings; no code default is added.
