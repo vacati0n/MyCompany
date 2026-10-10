@@ -2071,3 +2071,39 @@ GPU); the owner approves the download by name, source, size and licence before i
    duration and loudness are measured and recorded. The owner guide recommends WAV.
 
 ---
+
+## CEO-D-902 — Install the in-house voice now; narrate with the voice's default settings
+
+**The CEO's own decision, 2026-10-10**, during the Wave 10 planning phase.
+
+1. **Install now.** The owner approved installing the model before the design phase, so the design
+   rests on measurements, with the full download list named first: `piper-tts` 1.8.0 and the
+   dependencies pip resolves for it (onnxruntime 1.31.0 MIT, numpy 2.5.3 BSD, protobuf 7.36.2 BSD,
+   flatbuffers 25.12.19 Apache-2.0, packaging 26.3 Apache-2.0/BSD, pathvalidate 3.3.1 MIT) from
+   PyPI, and the voice files from `huggingface.co/rhasspy/piper-voices` at revision
+   `c10ece1aade47bb51c153c893d14e5bf8e5b7117`. The orchestrator installed them on 2026-10-10 under
+   `C:/Users/vuhoangcao/MediaCompanyRun/voice/` (a virtual environment `venv/` on Python 3.14.0, and
+   `model/`), outside the repository:
+   - `en_GB-cori-high.onnx`, 114,219,352 bytes, SHA-256
+     `470b4dd634c98f8a4850d7626ffc3dfc90774628eeef6605a6dd8f88f30a5903` (equal to the hub's
+     recorded LFS object id);
+   - `en_GB-cori-high.onnx.json`, 4,963 bytes, SHA-256
+     `9e7fb5b5671612c22f3c81cbe46c1ae87b031a4632bcb509e499dad6f1e2adec`;
+   - `MODEL_CARD`, 468 bytes, SHA-256
+     `136e7bd168b6c35b4a5df01a0253297e5773b5775ceae0af5160f264aa58208f`.
+2. **What the orchestrator measured first hand** (trial outputs under `voice/trial/`, not records
+   of the company): Piper 1.8.0 runs on Python 3.14 on this machine's CPU. The whole item 001
+   narration (1,929 words) took 175 s with the voice's default settings and 161 s with both noise
+   scales at 0. With the defaults (noise scale 0.667, length scale 1, noise width 0.8, from the
+   voice's configuration; Piper's default output normalisation on), two runs of the same paragraph
+   produced different bytes and different lengths; with both noise scales at 0, two runs produced
+   identical bytes. The whole narration measured 10 min 31 s with the defaults and 9 min 42 s with
+   noise at 0, both shorter than the script's expectation of 12 min 51 s; integrated loudness
+   -15.5 LUFS for both (ffmpeg ebur128).
+3. **The decision.** Item 001 is narrated with **the voice's default settings** (the more natural
+   delivery), knowing that each generation differs and is therefore recorded as not observed to
+   repeat. The settings used are recorded with every artifact, passed explicitly rather than left to
+   the runtime's defaults. Piper's own output normalisation is part of the model's generation and
+   recorded as a setting; the pipeline applies no further level change to any narration source.
+
+---
