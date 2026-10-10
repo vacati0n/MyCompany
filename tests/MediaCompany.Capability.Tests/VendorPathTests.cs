@@ -314,6 +314,120 @@ public sealed class VendorPathTests
     }
 
     // -----------------------------------------------------------------------
+    // The screened vendor error record (the own-voice change, decision D-013 of its design)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// A STUB 429 WITH A CODED BODY records its status and the vendor's code, screened and within the ruled 200 characters:
+    /// the first string among the error object's code, type and message.
+    /// </summary>
+    [Fact]
+    public async Task ACodedNonSuccessRecordsTheStatusAndTheCodeWithinTheRuledLength()
+    {
+        var stub = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+        {
+            Content = new StringContent("""{"error":{"message":"Rate limit reached for requests","type":"requests","code":"rate_limit_exceeded"}}""", Encoding.UTF8, "application/json"),
+        });
+        var (adapter, handle) = await SpeechAsync(stub);
+
+        var attempt = await adapter.InvokeAsync(Route(SpeechAccount, "tts-fixture"), Narration("text"), handle, CancellationToken.None);
+
+        Assert.False(attempt.Succeeded);
+        Assert.Equal(ProviderFailureSignal.RateLimited, attempt.Signal);
+        Assert.StartsWith("the vendor returned status 429: rate_limit_exceeded", attempt.FailureReason, StringComparison.Ordinal);
+        Assert.True(VendorCalls.ErrorText(Encoding.UTF8.GetBytes(new string('m', 900)), []).Length <= VendorCalls.ScreenedLength);
+        Assert.Equal(200, VendorCalls.ScreenedLength);
+    }
+
+    /// <summary>
+    /// A BODY ECHOING THE SENT SECRET, A BEARER VALUE OR A TOKEN-SHAPED STRING leaves none of them in the failure reason, on
+    /// the bearer path and on the key-header path, and so in none of the sinks it reaches.
+    /// </summary>
+    [Theory]
+    [InlineData("speech-vendor")]
+    [InlineData("messages-vendor")]
+    public async Task AnEchoedSecretBearerOrTokenLeavesNoneOfThemInTheFailureReason(string path)
+    {
+        const string Token = "tok_9f8e7d6c5b4a3210ZYXWVUTSRQ";
+        const string Dotted = "eyJhbGciOi.eyJzdWIiOiIx.c2lnbmF0dXJl";
+        var stub = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized)
+        {
+            Content = new StringContent(
+                $$$"""{"error":{"message":"Incorrect key {{{FakeSecret}}} (Authorization: Bearer {{{FakeSecret}}}) token {{{Token}}} jwt {{{Dotted}}}"}}""",
+                Encoding.UTF8, "application/json"),
+        });
+        var broker = Broker(out _);
+        IProviderAdapter adapter = path == "speech-vendor"
+            ? new SpeechAudioAdapter(SpeechAccount, Endpoint, new HttpClient(stub), broker)
+            : new MessagesAdapter(ReasoningAccount, Endpoint, new HttpClient(stub), broker);
+        var handle = path == "speech-vendor"
+            ? await IssueAsync(broker, SpeechAccount, AuthenticationScheme.BearerAuthorization, null)
+            : await IssueAsync(broker, ReasoningAccount, AuthenticationScheme.KeyHeader, MessagesAdapter.KeyHeader);
+        var request = path == "speech-vendor"
+            ? Narration("text")
+            : Request(CapabilityClass.EditorialReasoning, new CapabilityPayload.Messages("text", 16));
+
+        var attempt = await adapter.InvokeAsync(Route(path == "speech-vendor" ? SpeechAccount : ReasoningAccount, "fixture"), request, handle, CancellationToken.None);
+
+        Assert.Contains(FakeSecret, Assert.Single(stub.Requests).Headers.Values.Aggregate(string.Empty, (a, v) => a + v), StringComparison.Ordinal);
+        Assert.StartsWith("the vendor returned status 401: Incorrect key [redacted]", attempt.FailureReason, StringComparison.Ordinal);
+        Assert.DoesNotContain(FakeSecret, attempt.FailureReason, StringComparison.Ordinal);
+        Assert.DoesNotContain(Token, attempt.FailureReason, StringComparison.Ordinal);
+        Assert.DoesNotContain(Dotted, attempt.FailureReason, StringComparison.Ordinal);
+        Assert.DoesNotContain("0f4c2a9e", attempt.FailureReason, StringComparison.Ordinal);
+    }
+
+    /// <summary>An EMPTY and a BINARY body record the status and say that nothing readable was returned.</summary>
+    [Theory]
+    [InlineData("empty")]
+    [InlineData("binary")]
+    public async Task AnEmptyOrBinaryBodyRecordsTheStatusAndTheUnreadableStatement(string body)
+    {
+        var stub = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+        {
+            Content = new ByteArrayContent(body == "empty" ? [] : [0xFF, 0x00, 0xFE, 0x01, 0x89, 0x50]),
+        });
+        var (adapter, handle) = await SpeechAsync(stub);
+
+        var attempt = await adapter.InvokeAsync(Route(SpeechAccount, "tts-fixture"), Narration("text"), handle, CancellationToken.None);
+
+        Assert.Contains("the vendor returned status 503: no error code or message was readable", attempt.FailureReason, StringComparison.Ordinal);
+        Assert.Contains(body == "empty" ? "(empty body)" : "(not text)", attempt.FailureReason, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// THROUGH THE BOUNDARY, a 429 whose body echoes the secret leaves it in no sink: not the operation record, its failure
+    /// reason, the audit entries, the decision records, the availability transitions or the outcome.
+    /// </summary>
+    [Fact]
+    public async Task AnEchoedSecretReachesNoSinkThroughTheBoundary()
+    {
+        var stub = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.TooManyRequests)
+        {
+            Content = new StringContent($$$"""{"error":{"message":"slow down, Bearer {{{FakeSecret}}}"}}""", Encoding.UTF8, "application/json"),
+        });
+        var work = ProductionHarness.Work(SpeechAccount, "tts-fixture", CapabilityClass.Narration, out var registers);
+        registers.Accounts[0] = registers.Accounts[0] with { Scope = CredentialScope.Company };
+        var secrets = new FakeSecretStore();
+        secrets.Publish(new CredentialHolderKey(SpeechAccount, null), FakeSecret);
+        var broker = new CredentialBroker(secrets, () => DateTimeOffset.UtcNow, TimeSpan.FromMinutes(5));
+        var gateway = new CapabilityGateway(work, broker, [new SpeechAudioAdapter(SpeechAccount, Endpoint, new HttpClient(stub), broker)], TimeSpan.FromSeconds(60));
+
+        var outcome = await gateway.ExecuteAsync(ProductionHarness.NarrationRequest("secret-free text"), ProductionHarness.Context(), CancellationToken.None);
+
+        Assert.Single(stub.Requests);
+        var reason = Assert.Single(work.Operations).FailureReason;
+        Assert.Contains("the vendor returned status 429: slow down, [redacted]", reason, StringComparison.Ordinal);
+        var everything = string.Join("\n",
+            work.Operations.Select(o => $"{o} {o.FailureReason}")
+                .Concat(work.AuditEntries.Select(e => $"{e} {e.Reason} {e.Decision}"))
+                .Concat(work.Decisions.Select(d => $"{d} {d.TierStatement} {d.ReservationStatement}"))
+                .Concat(work.PendingAvailability.Concat(work.CommittedAvailability).Select(a => $"{a} {a.Reason}"))
+                .Append(outcome.ToString()));
+        Assert.DoesNotContain(FakeSecret, everything, StringComparison.Ordinal);
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 

@@ -11,5 +11,6 @@
     <ProjectReference Include="..\..\src\MediaCompany.Persistence\MediaCompany.Persistence.csproj" />
     <ProjectReference Include="..\..\src\MediaCompany.Capability\MediaCompany.Capability.csproj" />
     <ProjectReference Include="..\..\src\MediaCompany.Host\MediaCompany.Host.csproj" />
+    <ProjectReference Include="..\MediaCompany.VoiceStandIn\MediaCompany.VoiceStandIn.csproj" />
   </ItemGroup>
 </Project>

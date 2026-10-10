@@ -9,5 +9,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MediaCompany.Production\MediaCompany.Production.csproj" />
+    <ProjectReference Include="..\MediaCompany.VoiceStandIn\MediaCompany.VoiceStandIn.csproj" />
   </ItemGroup>
 </Project>
