@@ -801,14 +801,14 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
                     WHERE e.item_id = l.item_id AND e.item_version = l.item_version AND e.recorded_at <= @as_of)::text,
                    (SELECT count(*) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of),
                    (SELECT count(*) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of AND a.cost_stated IS NOT TRUE),
-                   (SELECT COALESCE(sum(a.computed_cost), 0) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of),
+                   (SELECT COALESCE(sum(a.computed_cost), 0) FROM agent_costs a WHERE a.item_id = l.item_id AND a.occurred_at <= @as_of AND a.cost_stated IS TRUE),
                    c.amount, c.currency, c.source,
                    (SELECT COALESCE(sum(r.worst_case_amount), 0) FROM admission_reservations r
                     WHERE r.item_id = l.item_id AND r.recorded_at <= @as_of
-                      AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.occurred_at <= @as_of)),
+                      AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.occurred_at <= @as_of AND a.cost_stated IS TRUE)),
                    (SELECT count(*) FROM admission_reservations r
                     WHERE r.item_id = l.item_id AND r.recorded_at <= @as_of
-                      AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.occurred_at <= @as_of)),
+                      AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.occurred_at <= @as_of AND a.cost_stated IS TRUE)),
                    (SELECT p.measured_duration_ms FROM production_artifacts p
                     WHERE p.item_id = l.item_id AND p.item_version = l.item_version AND p.role = 'RenderedVideo' AND p.recorded_at <= @as_of
                     ORDER BY p.recorded_at DESC LIMIT 1),

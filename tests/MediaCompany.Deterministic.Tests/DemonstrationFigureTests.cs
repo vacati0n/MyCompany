@@ -57,4 +57,64 @@ public sealed class DemonstrationFigureTests
         Assert.Equal(delivered.Tiles.Select(t => t.Rendering), read.Tiles.Select(t => t.Rendering));
         Assert.Equal(FigureCase.ObservedZero, read.Reports.Lines.First(l => l.Key == ReportLineKey.WeekCost).Figure.Case);
     }
+
+
+    // -----------------------------------------------------------------------
+    // The measurable-now report (correction CR-001): the same rule as the weekly reports and the dashboard
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// The report command's figures in a DEMONSTRATION store: the monthly cost total, the variance against the envelope,
+    /// the cost by capability and every channel line render as demonstration, none as observed or observed zero, and an
+    /// unmeasured figure stays unmeasured.
+    /// </summary>
+    [Fact]
+    public async Task TheReportRendersADemonstrationStoresFiguresAsDemonstration()
+    {
+        var lines = await new MediaCompany.Deterministic.Services.ReportingService(
+            Partitions(), new NoCompanyRecords(), new FixedDesignation(StoreDesignation.Demonstration))
+            .MeasurableNowAsync(new DateOnly(2026, 10, 1), CancellationToken.None);
+
+        var valued = lines.Where(l => l.Quantity is MeasurementQuantity.ObservedValue or MeasurementQuantity.ObservedZero).ToArray();
+        Assert.Contains(valued, l => l.Name == "monthly-cost-total");
+        Assert.Contains(valued, l => l.Name == "cost-variance-against-envelope");
+        Assert.All(valued, l =>
+        {
+            Assert.True(l.Demonstration);
+            Assert.Equal(FigureCase.Demonstration, l.Case());
+            Assert.Contains("DEMONSTRATION", l.Describe(), StringComparison.Ordinal);
+        });
+        Assert.DoesNotContain(lines, l => l.Case() is FigureCase.Observed or FigureCase.ObservedZero);
+        Assert.All(lines.Where(l => l.Quantity is MeasurementQuantity.Unmeasured), l => Assert.Equal(FigureCase.Unmeasured, l.Case()));
+    }
+
+    /// <summary>A store not designated demonstration, and a report built without the designation reader, render as delivered.</summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData(StoreDesignation.Company)]
+    public async Task TheReportOfAStoreNotDesignatedDemonstrationRendersAsDelivered(StoreDesignation? designation)
+    {
+        var period = new DateOnly(2026, 10, 1);
+        var delivered = await new MediaCompany.Deterministic.Services.ReportingService(Partitions(), new NoCompanyRecords())
+            .MeasurableNowAsync(period, CancellationToken.None);
+        var read = await new MediaCompany.Deterministic.Services.ReportingService(Partitions(), new NoCompanyRecords(), new FixedDesignation(designation))
+            .MeasurableNowAsync(period, CancellationToken.None);
+
+        Assert.Equal(delivered.Select(l => l.Quantity.Describe()), read.Select(l => l.Describe()));
+        Assert.DoesNotContain(read, l => l.Demonstration);
+        Assert.Equal(FigureCase.ObservedZero, read.First(l => l.Name == "monthly-cost-total").Case());
+    }
+
+    private static StubPartitions Partitions() => new()
+    {
+        Horizon = DateTimeOffset.UnixEpoch,
+        EarliestEntry = DateTimeOffset.UnixEpoch,
+        CompanyOperations = StubPartitions.Empty with { Operations = 14, Cost = MediaCompany.Domain.Accounting.Money.Zero() },
+    };
+
+    private sealed class FixedDesignation(StoreDesignation? designation) : MediaCompany.Application.Ports.IStoreDesignationReader
+    {
+        public Task<MediaCompany.Application.Ports.StoreIdentity> ReadAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(new MediaCompany.Application.Ports.StoreIdentity(designation, "mediacompany_demo", null));
+    }
 }

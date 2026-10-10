@@ -165,21 +165,27 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// A character-billed operation books a STATED cost from the price in force, carrying its source and date; a
-    /// consumed kind with no price in force leaves the cost not stated under its named reason.
+    /// A character-billed operation books a STATED cost from the price in force, carrying its source and date. THE
+    /// OWNER'S UNIT-KIND RULE ON THE BOOKING SIDE (correction CR-002): a consumed kind the model is NOT billed by needs no
+    /// price and costs nothing, so the cost stays stated; a consumed kind the model IS billed by with no price in force
+    /// leaves the cost not stated under its named reason.
     /// </summary>
     [RequiresPostgresFact]
-    public async Task ACharacterBilledOperationIsBookedAtAStatedCostAndAnUnpricedKindIsNot()
+    public async Task ACharacterBilledOperationIsBookedAtAStatedCostAnUnbilledKindNeedsNoPriceAndAnUnpricedBilledKindIsNotStated()
     {
         await PrepareAsync();
+        await FixtureModelAsync("image-unpriced-fixture", ["ImageUnit"]);
         var unitOfWork = new NpgsqlUnitOfWork(Source, new FixedClock());
 
         OperationRecord priced;
+        OperationRecord unbilled;
         OperationRecord unpriced;
         await using (var transaction = await unitOfWork.BeginAsync(CancellationToken.None))
         {
             priced = await transaction.Operations.RecordAsync(Draft(new UnitCounts(0, 0, 0, 0) { CharacterUnits = 1_000 }), CancellationToken.None);
-            unpriced = await transaction.Operations.RecordAsync(Draft(new UnitCounts(0, 0, 0, 0) { ImageUnits = 1 }), CancellationToken.None);
+            unbilled = await transaction.Operations.RecordAsync(Draft(new UnitCounts(0, 0, 0, 0) { CharacterUnits = 1_000, ImageUnits = 1 }), CancellationToken.None);
+            unpriced = await transaction.Operations.RecordAsync(
+                Draft(new UnitCounts(0, 0, 0, 0) { ImageUnits = 1 }) with { Model = new ModelId("image-unpriced-fixture") }, CancellationToken.None);
             await transaction.CommitAsync(CancellationToken.None);
         }
 
@@ -188,8 +194,112 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         Assert.Equal(0.000015m, await ScalarAsync<decimal>($"SELECT applied_character_price FROM agent_costs WHERE operation_id = '{priced.Id}'"));
         Assert.Contains("ESTIMATE", await ScalarAsync<string>(
             $"SELECT p.source FROM agent_costs a JOIN model_prices p ON p.model_price_id = a.applied_price_id WHERE a.operation_id = '{priced.Id}'"), StringComparison.Ordinal);
+        Assert.True(unbilled.CostStated);
+        Assert.Equal(1_000 * 0.000015m, unbilled.ComputedCost.Amount);
         Assert.False(unpriced.CostStated);
         Assert.Equal(CostUnstatedReason.PriceNotInForce, unpriced.CostUnstatedReason);
+    }
+
+    /// <summary>
+    /// A MEASURED IMAGE RESPONSE (correction CR-002): the response reports input, output and image units, and the model
+    /// is recorded as billed by input and output units only. The booking states its cost from the input and output
+    /// prices in force, applies no image price, and needs none.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AMeasuredImageResponseIsBookedByTheKindsItsModelIsBilledBy()
+    {
+        await PrepareAsync();
+        await FixtureModelAsync("image-measured-fixture", ["InputUnit", "OutputUnit"]);
+        await FixturePriceAsync("image-measured-fixture", "InputUnit", 0.000005m);
+        await FixturePriceAsync("image-measured-fixture", "OutputUnit", 0.00004m);
+        var unitOfWork = new NpgsqlUnitOfWork(Source, new FixedClock());
+
+        OperationRecord measured;
+        await using (var transaction = await unitOfWork.BeginAsync(CancellationToken.None))
+        {
+            measured = await transaction.Operations.RecordAsync(
+                Draft(new UnitCounts(100, 200, 0, 0) { ImageUnits = 1 }) with { Model = new ModelId("image-measured-fixture") }, CancellationToken.None);
+            await transaction.CommitAsync(CancellationToken.None);
+        }
+
+        Assert.True(measured.CostStated);
+        Assert.Equal((100 * 0.000005m) + (200 * 0.00004m), measured.ComputedCost.Amount);
+        Assert.Equal(0m, await ScalarAsync<decimal>($"SELECT applied_image_price FROM agent_costs WHERE operation_id = '{measured.Id}'"));
+        Assert.Equal(1L, await ScalarAsync<long>($"SELECT image_units FROM agent_costs WHERE operation_id = '{measured.Id}'"));
+        Assert.Equal("InputUnit", await ScalarAsync<string>(
+            $"SELECT p.unit_kind FROM agent_costs a JOIN model_prices p ON p.model_price_id = a.applied_price_id WHERE a.operation_id = '{measured.Id}'"));
+    }
+
+    /// <summary>
+    /// A COST-UNSTATED BOOKING DOES NOT CLEAR ITS RESERVATION (corrections CR-002 and CR-004): the vendor answers with a
+    /// measured response reporting a unit no price row can cost, so the booking's cost is not stated. Its reservation
+    /// keeps counting at its worst case in the item's counted total, and the next admission of the item is refused before
+    /// any call: the company and channel readings cannot state the booked spend, and the cap counts the worst case.
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task ACostUnstatedBookingKeepsItsReservationCountingAtItsWorstCase()
+    {
+        var record = await PrepareAsync();
+        var item = await SecondItemAsync(record, cap: 0.05m);
+        var stand = new StandIn(() => new ProviderAttempt(true, new UnitCounts(0, 0, 0, 1) { CharacterUnits = 2_000 }, CostBasis.Measurement, TimeSpan.FromMilliseconds(5), null, null)
+        {
+            Content = new ProducedContent(ContentKind.Audio, "audio/wav", FakeSpeechAudio.Wave("stand-in")),
+            ChargeKnown = true,
+        });
+
+        var booked = Assert.IsType<CapabilityOutcome.Completed>(await Gateway(new NpgsqlUnitOfWork(Source, new FixedClock()), stand)
+            .ExecuteAsync(Request(record, 2_000, item), Context(), CancellationToken.None));
+        Assert.False(booked.Operation.CostStated);
+        Assert.Equal(CostUnstatedReason.UnpricedUnitConsumed, booked.Operation.CostUnstatedReason);
+
+        // The production reader and the admission ledger each count the reservation.
+        var cap = (await new NpgsqlProductionReader(Source).PackageAsync(item, new ItemVersion(1), CancellationToken.None))!.Cap!;
+        Assert.Equal(1, cap.OpenReservationCount);
+        Assert.Equal(0L, cap.UnstatedOperations);
+        Assert.Equal(2_000 * 0.000015m, cap.CountedTotal.Amount);
+        await using (var transaction = await new NpgsqlUnitOfWork(Source, new FixedClock()).BeginAsync(CancellationToken.None))
+        {
+            await transaction.Admission.ReserveAsync(CancellationToken.None);
+            var snapshot = await transaction.Admission.ReadAsync(
+                CapabilityClass.Narration, new Attribution(item, record.Channel, record.Department, record.Agent), ApprovedEnvelope.Metered, null, CancellationToken.None);
+            Assert.Equal(1, snapshot.ItemCap!.OpenReservationCount);
+            Assert.Equal(2_000 * 0.000015m, snapshot.ItemCap.CountedTotal.Amount);
+        }
+
+        var second = await Gateway(new NpgsqlUnitOfWork(Source, new FixedClock()), stand)
+            .ExecuteAsync(Request(record, 2_000, item), Context(), CancellationToken.None);
+        Assert.IsNotType<CapabilityOutcome.Completed>(second);
+        Assert.Equal(1, stand.Calls);
+    }
+
+    /// <summary>
+    /// THE CAP FAILS CLOSED (correction CR-004): an operation of the item with a cost not stated and NO reservation
+    /// bounding it leaves the counted total unstatable. The store's cap reading names it, and the next admission is
+    /// refused before any call (the resolver's own refusal under the cap is proved in memory, where no budget reading
+    /// refuses first).
+    /// </summary>
+    [RequiresPostgresFact]
+    public async Task AnUnstatedOperationWithNoReservationClosesTheCap()
+    {
+        var record = await PrepareAsync();
+        await FixtureModelAsync("image-unpriced-fixture", ["ImageUnit"]);
+        await using (var transaction = await new NpgsqlUnitOfWork(Source, new FixedClock()).BeginAsync(CancellationToken.None))
+        {
+            var unstated = await transaction.Operations.RecordAsync(
+                Draft(new UnitCounts(0, 0, 0, 0) { ImageUnits = 1 }) with { Model = new ModelId("image-unpriced-fixture") }, CancellationToken.None);
+            Assert.False(unstated.CostStated);
+            await transaction.CommitAsync(CancellationToken.None);
+        }
+
+        var cap = (await new NpgsqlProductionReader(Source).PackageAsync(record.Item, new ItemVersion(1), CancellationToken.None))!.Cap!;
+        Assert.Equal(1L, cap.UnstatedOperations);
+        Assert.Contains("1 of them with a cost not stated and no reservation bounding it", cap.Describe(), StringComparison.Ordinal);
+
+        var stand = new StandIn(Succeeded);
+        var refused = await Gateway(new NpgsqlUnitOfWork(Source, new FixedClock()), stand)
+            .ExecuteAsync(Request(record, 100), Context(), CancellationToken.None);
+        Assert.IsNotType<CapabilityOutcome.Completed>(refused);
+        Assert.Equal(0, stand.Calls);
     }
 
     // -----------------------------------------------------------------------
@@ -605,6 +715,17 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         OccurredAt = DateTimeOffset.UnixEpoch,
         Attempt = 1,
     };
+
+    /// <summary>A model of this self-dropping store only, recorded as billed by the kinds named; it has no price until one is added.</summary>
+    private Task FixtureModelAsync(string model, string[] billed) =>
+        ExecuteAsync("INSERT INTO models (model_id, provider_account_id, rated_quality, context_capacity, modality, billed_kinds) "
+            + $"VALUES ('{model}', 'openai', 0, 0, 'image', ARRAY[{string.Join(", ", billed.Select(k => $"'{k}'"))}]::text[])");
+
+    /// <summary>A price row of this self-dropping store only, in force from a day before the datastore's instant.</summary>
+    private Task FixturePriceAsync(string model, string kind, decimal price) =>
+        ExecuteAsync("INSERT INTO model_prices (model_price_id, model_id, unit_kind, unit_price, currency, source, verified_on, valid_from) "
+            + $"VALUES ('{Guid.NewGuid()}', '{model}', '{kind}', {price.ToString(System.Globalization.CultureInfo.InvariantCulture)}, 'USD', "
+            + "'a demonstration fixture price', current_date, now() - interval '1 day')");
 
     private async Task ExecuteAsync(string sql)
     {

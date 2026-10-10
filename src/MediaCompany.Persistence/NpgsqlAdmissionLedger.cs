@@ -234,13 +234,14 @@ internal sealed class NpgsqlAdmissionLedger : IAdmissionLedger
                         'booked', COALESCE((SELECT sum(a.computed_cost) FROM agent_costs a
                                             WHERE a.item_id = c.item_id AND a.cost_stated IS TRUE), 0),
                         'unstated', (SELECT count(*) FROM agent_costs a
-                                     WHERE a.item_id = c.item_id AND a.cost_stated IS NOT TRUE),
+                                     WHERE a.item_id = c.item_id AND a.cost_stated IS NOT TRUE
+                                       AND NOT EXISTS (SELECT 1 FROM admission_reservations r WHERE r.operation_id = a.operation_id)),
                         'open_amount', COALESCE((SELECT sum(r.worst_case_amount) FROM admission_reservations r
                                                  WHERE r.item_id = c.item_id
-                                                   AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id)), 0),
+                                                   AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.cost_stated IS TRUE)), 0),
                         'open_count', (SELECT count(*) FROM admission_reservations r
                                        WHERE r.item_id = c.item_id
-                                         AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id)))
+                                         AND NOT EXISTS (SELECT 1 FROM agent_costs a WHERE a.operation_id = r.operation_id AND a.cost_stated IS TRUE)))
                     FROM item_caps c WHERE c.item_id = @item_id)::text,
                    -- The unit kinds each admitted model is recorded as billed by (the production change, decision D-007).
                    (SELECT COALESCE(json_object_agg(m.model_id, m.billed_kinds), json_build_object())

@@ -279,6 +279,14 @@ public static class RouteResolver
         // admission then reserves durably before the call.
         if (inputs.ItemCap is { } cap)
         {
+            // THE CAP FAILS CLOSED (correction CR-004): while an operation of the item carries a cost that is not stated
+            // and no reservation bounds it, the counted total cannot be stated, so no provider route is admitted.
+            if (cap.UnstatedOperations > 0 && available.Any(r => r.Target is RouteTarget.ProviderRoute))
+            {
+                var closed = "the item's counted total cannot be stated, so the cap fails closed and no call is made: " + cap.Describe();
+                return Ended(request, new CapabilityResolution.Refused(RefusalReason.ItemCapExceeded, closed, null), closed, NoTier);
+            }
+
             var withinCap = available.Where(r => WithinItemCap(r, request, inputs, cap)).ToList();
             if (withinCap.Count == 0)
             {

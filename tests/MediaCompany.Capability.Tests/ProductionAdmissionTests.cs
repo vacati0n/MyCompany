@@ -76,6 +76,28 @@ public sealed class ProductionAdmissionTests
     }
 
     /// <summary>
+    /// THE CAP FAILS CLOSED (correction CR-004): one operation of the item carries a cost that is not stated and no
+    /// reservation bounds it, so the counted total cannot be stated. A call whose worst case would fit the cap many
+    /// times over is still refused under the item-cap reason, before it is made, naming the unstated operation.
+    /// </summary>
+    [Fact]
+    public async Task AnUnstatedOperationWithNoReservationClosesTheCapBeforeAnyCall()
+    {
+        var work = ProductionHarness.Work(Account, "tts", CapabilityClass.Narration, out _, cap: 5.95m);
+        work.Admission.ItemCap = work.Admission.ItemCap! with { UnstatedOperations = 1 };
+        var adapter = new ScriptedAdapter(Account, ProductionHarness.Succeeded);
+
+        var refused = Assert.IsType<CapabilityOutcome.Refused>(await ProductionHarness.Gateway(work, adapter).ExecuteAsync(
+            ProductionHarness.NarrationRequest("a short line"), ProductionHarness.Context(), CancellationToken.None));
+
+        Assert.Equal(RefusalReason.ItemCapExceeded, refused.Reason);
+        Assert.Contains("fails closed", refused.Detail, StringComparison.Ordinal);
+        Assert.Contains("1 of them with a cost not stated", refused.Detail, StringComparison.Ordinal);
+        Assert.Equal(0, adapter.Calls);
+        Assert.Empty(work.Admission.CommittedReservations);
+    }
+
+    /// <summary>
     /// With stub prices binding mid-production, the counted total NEVER EXCEEDS the cap: calls are admitted while
     /// their worst case fits, every attempt — the timed-out ones included — counts, and the call that would pass the
     /// cap is not made.

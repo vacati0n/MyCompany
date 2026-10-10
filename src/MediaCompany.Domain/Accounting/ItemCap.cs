@@ -20,10 +20,17 @@ public sealed record ItemCapReading
     /// <summary>The stated cost of the item's booked operations.</summary>
     public required Money Booked { get; init; }
 
-    /// <summary>How many of the item's booked operations carry a cost that is not stated.</summary>
+    /// <summary>
+    /// How many of the item's booked operations carry a cost that is not stated AND no reservation bounds them
+    /// (correction CR-004): such an operation's charge has no stated bound, so the cap fails closed while any exists.
+    /// </summary>
     public required long UnstatedOperations { get; init; }
 
-    /// <summary>The worst case of every reservation of the item that no booked operation has reconciled.</summary>
+    /// <summary>
+    /// The worst case of every reservation of the item that no booking with a STATED cost has reconciled: an attempt
+    /// never booked, and one booked with its cost not stated, keep counting at their worst case (corrections CR-002 and
+    /// CR-004).
+    /// </summary>
     public required Money OpenReservations { get; init; }
 
     /// <summary>How many reservations of the item are open.</summary>
@@ -38,6 +45,6 @@ public sealed record ItemCapReading
     /// <summary>States the reading, every figure named for what it is.</summary>
     public string Describe() =>
         $"item cap {Cap} (configured, {Source}); counted total {CountedTotal} = booked {Booked} over its operations"
-        + $"{(UnstatedOperations > 0 ? $", {UnstatedOperations} of them with a cost not stated" : string.Empty)}"
+        + $"{(UnstatedOperations > 0 ? $", {UnstatedOperations} of them with a cost not stated and no reservation bounding it" : string.Empty)}"
         + $" plus {OpenReservationCount} open reservation(s) at their worst case {OpenReservations}; remaining {Remaining}";
 }

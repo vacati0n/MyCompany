@@ -19,7 +19,26 @@ namespace MediaCompany.Deterministic.Services;
 /// unobserved quantity could arrive looking like a number, and the only route by which record
 /// content could reach a reader through this surface without being classified first.
 /// </summary>
-public sealed record ReportedMeasure(string Name, MeasurementQuantity Quantity, string Source, bool IsEstimate);
+public sealed record ReportedMeasure(string Name, MeasurementQuantity Quantity, string Source, bool IsEstimate)
+{
+    /// <summary>
+    /// Whether the figure was read from a store designated DEMONSTRATION (the production change, decision D-005 of its
+    /// design; correction CR-001): fake providers booked it, so it is never an observation of the company's work or
+    /// spend, and every rendering says so.
+    /// </summary>
+    public bool Demonstration { get; init; }
+
+    /// <summary>The figure's case: the quantity's own case, or the demonstration case for a demonstration store's figure.</summary>
+    public FigureCase Case() => Demonstration ? FigureCase.Demonstration : LineFigure.Of(Quantity).Case;
+
+    /// <summary>
+    /// The rendering every surface prints: the delivered rendering of the quantity, or, in a demonstration store, the
+    /// demonstration figure's rendering, which names the store and never reads as an observation.
+    /// </summary>
+    public string Describe() => Demonstration
+        ? LineFigure.Demonstrated(Quantity).Describe()
+        : Quantity.Describe();
+}
 
 /// <summary>
 /// The reporting surface (module M-016, plan task T-025).
@@ -37,6 +56,7 @@ public sealed class ReportingService
 {
     private readonly IChannelPartitionReader _partitions;
     private readonly ICompanyRecordReader _records;
+    private readonly IStoreDesignationReader? _designation;
 
     /// <summary>
     /// The report reads ONE source, the channel partition of the operation record (the multi-channel
@@ -48,10 +68,20 @@ public sealed class ReportingService
     /// AI-management change, decision D-015 of its design), never from the process clock; the closure the
     /// partition reading takes is unchanged.
     /// </summary>
-    public ReportingService(IChannelPartitionReader partitions, ICompanyRecordReader records)
+    /// <para>
+    /// The store's designation (the production change, decision D-005 of its design; correction CR-001): in a store
+    /// designated demonstration, every observed figure, zero included, is labelled DEMONSTRATION, because fake
+    /// providers booked it. Without a designation reader, or in a store with no designation recorded, every line is
+    /// exactly as delivered.
+    /// </para>
+    public ReportingService(
+        IChannelPartitionReader partitions,
+        ICompanyRecordReader records,
+        IStoreDesignationReader? designation = null)
     {
         _partitions = partitions;
         _records = records;
+        _designation = designation;
     }
 
     public async Task<IReadOnlyList<ReportedMeasure>> MeasurableNowAsync(DateOnly period, CancellationToken cancellationToken)
@@ -111,8 +141,19 @@ public sealed class ReportingService
                 $"recorded operations of the channel{standing}, exact decimal aggregation", channel.ContainsEstimates)));
         }
 
+        // A DEMONSTRATION store's observed figures, zero included, are labelled demonstration (correction CR-001): the
+        // fake providers booked them, so none is an observation of the company's spend. An unmeasured figure stays
+        // unmeasured, because it carries no value to mistake.
+        var demonstration = _designation is not null
+            && (await _designation.ReadAsync(cancellationToken).ConfigureAwait(false)).Designation
+                == MediaCompany.Domain.Production.StoreDesignation.Demonstration;
+
         // Every line says whether its month can still change.
-        return lines.Select(line => line with { Source = $"{line.Source}; {finality}" }).ToArray();
+        return lines.Select(line => line with
+        {
+            Source = $"{line.Source}; {finality}",
+            Demonstration = demonstration && line.Quantity is MeasurementQuantity.ObservedValue or MeasurementQuantity.ObservedZero,
+        }).ToArray();
     }
 
     /// <summary>

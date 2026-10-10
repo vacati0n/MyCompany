@@ -112,6 +112,13 @@ switch (command)
     case "registers":
     {
         var registers = await provider.GetRequiredService<OperatingRegisterReport>().ProduceAsync(cancellation.Token);
+
+        // The store's designation first (correction CR-001): in a demonstration store every entry below was prepared
+        // into a store where fake providers run, so the reader is told before any count or price is printed.
+        var store = await provider.GetRequiredService<IStoreDesignationReader>().ReadAsync(cancellation.Token);
+        Console.WriteLine(store.Designation == MediaCompany.Domain.Production.StoreDesignation.Demonstration
+            ? $"Store {store.DatabaseName}: designated DEMONSTRATION; the entries below are configuration prepared into a store where fake providers run, never the company's own records."
+            : $"Store {store.DatabaseName}: designated {(store.Designation is { } designation ? designation.ToString() : "nothing (no designation recorded)")}.");
         Console.WriteLine($"Channels:    {registers.Channels.Count}");
         Console.WriteLine($"Departments: {registers.Departments.Count}");
         Console.WriteLine($"Agents:      {registers.Agents.Count}");
@@ -140,8 +147,9 @@ switch (command)
         Console.WriteLine($"Measurable now, period {period:yyyy-MM}:");
         foreach (var measure in await reporting.MeasurableNowAsync(period, cancellation.Token))
         {
+            // A demonstration store's figure renders as demonstration, never as an observation (correction CR-001).
             var label = measure.IsEstimate ? " [ESTIMATE — unit prices not verified first-hand]" : string.Empty;
-            Console.WriteLine($"  {measure.Name}: {measure.Quantity.Describe()} ({measure.Source}){label}");
+            Console.WriteLine($"  {measure.Name}: [{MediaCompany.Domain.Analytics.LineFigure.CaseWord(measure.Case())}] {measure.Describe()} ({measure.Source}){label}");
         }
 
         Console.WriteLine("Deferred, each naming the parameter it waits on:");

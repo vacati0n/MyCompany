@@ -103,15 +103,38 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             LEFT JOIN applicable p ON @model_id IS NOT NULL
             GROUP BY stamp.at
         ),
+        -- THE OWNER'S UNIT-KIND RULE ON THE BOOKING SIDE (the production change, decision D-007 of its design;
+        -- correction CR-002): a kind the model is recorded as billed by needs a price in force, and a kind it is
+        -- NOT billed by needs none and costs nothing, whatever the response reports of it. A model whose billed kinds
+        -- are not recorded is billed by every kind, as delivered.
+        billed AS (
+            SELECT price.at, price.reference_id, price.other_reference_id, price.currency,
+                   price.has_input, price.has_output, price.has_cached, price.has_character, price.has_image,
+                   k.bills_input, k.bills_output, k.bills_cached, k.bills_character, k.bills_image,
+                   CASE WHEN k.bills_input     THEN price.input_price     ELSE 0 END AS input_price,
+                   CASE WHEN k.bills_output    THEN price.output_price    ELSE 0 END AS output_price,
+                   CASE WHEN k.bills_cached    THEN price.cached_price    ELSE 0 END AS cached_price,
+                   CASE WHEN k.bills_character THEN price.character_price ELSE 0 END AS character_price,
+                   CASE WHEN k.bills_image     THEN price.image_price     ELSE 0 END AS image_price
+            FROM price
+            CROSS JOIN (
+                SELECT kinds IS NULL OR 'InputUnit'     = ANY (kinds) AS bills_input,
+                       kinds IS NULL OR 'OutputUnit'    = ANY (kinds) AS bills_output,
+                       kinds IS NULL OR 'CachedUnit'    = ANY (kinds) AS bills_cached,
+                       kinds IS NULL OR 'CharacterUnit' = ANY (kinds) AS bills_character,
+                       kinds IS NULL OR 'ImageUnit'     = ANY (kinds) AS bills_image
+                FROM (SELECT (SELECT m.billed_kinds FROM models m WHERE m.model_id = @model_id) AS kinds) recorded
+            ) k
+        ),
         -- THE COST IN RANGE (the second correction cycle): the units at the applied prices, rounded as the
         -- generated cost column rounds them, computed here in unbounded precision BEFORE the insert, so a
         -- cost the column cannot hold (ten billion or more) is refused rather than overflowing the insert.
         ranged AS (
-            SELECT price.*,
-                   round(@input_units * price.input_price + @output_units * price.output_price
-                         + @cached_units * price.cached_price + @character_units * price.character_price
-                         + @image_units * price.image_price, 8) < 1e10 AS in_range
-            FROM price
+            SELECT billed.*,
+                   round(@input_units * billed.input_price + @output_units * billed.output_price
+                         + @cached_units * billed.cached_price + @character_units * billed.character_price
+                         + @image_units * billed.image_price, 8) < 1e10 AS in_range
+            FROM billed
         ),
         -- Why the cost is not stated, or null where it is. A member of the deterministic set states zero; a
         -- row with no model states zero only where it consumed nothing; a priced row only where every consumed
@@ -128,11 +151,11 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
                                WHEN @other_units > 0 THEN 'UnpricedUnitConsumed'
                                ELSE NULL
                            END
-                       WHEN (@input_units > 0 AND NOT ranged.has_input)
-                         OR (@output_units > 0 AND NOT ranged.has_output)
-                         OR (@cached_units > 0 AND NOT ranged.has_cached)
-                         OR (@character_units > 0 AND NOT ranged.has_character)
-                         OR (@image_units > 0 AND NOT ranged.has_image) THEN 'PriceNotInForce'
+                       WHEN (@input_units > 0 AND ranged.bills_input AND NOT ranged.has_input)
+                         OR (@output_units > 0 AND ranged.bills_output AND NOT ranged.has_output)
+                         OR (@cached_units > 0 AND ranged.bills_cached AND NOT ranged.has_cached)
+                         OR (@character_units > 0 AND ranged.bills_character AND NOT ranged.has_character)
+                         OR (@image_units > 0 AND ranged.bills_image AND NOT ranged.has_image) THEN 'PriceNotInForce'
                        WHEN @other_units > 0 THEN 'UnpricedUnitConsumed'
                        WHEN NOT ranged.in_range THEN 'CostOutOfRange'
                        ELSE NULL
@@ -156,7 +179,9 @@ internal sealed class NpgsqlOperationRecorder : IOperationRecorder
             @input_units, @output_units, @cached_units, @other_units, @character_units, @image_units,
             -- The applied price reference is the input-unit row, or for a model billed by none, the first row of
             -- the kind it is billed by (the production change), so a character-billed booking names its price.
-            CASE WHEN @deterministic_task IS NULL THEN COALESCE(price.reference_id, price.other_reference_id) ELSE NULL END,
+            CASE WHEN @deterministic_task IS NULL
+                 THEN COALESCE(CASE WHEN price.bills_input THEN price.reference_id END, price.other_reference_id, price.reference_id)
+                 ELSE NULL END,
             CASE WHEN @deterministic_task IS NULL AND price.in_range THEN price.input_price  ELSE 0 END,
             CASE WHEN @deterministic_task IS NULL AND price.in_range THEN price.output_price ELSE 0 END,
             CASE WHEN @deterministic_task IS NULL AND price.in_range THEN price.cached_price ELSE 0 END,
