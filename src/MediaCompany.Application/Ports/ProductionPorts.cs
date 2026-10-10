@@ -46,6 +46,26 @@ public interface IProductionReader
 
     /// <summary>The artifacts recorded for one item version, in recording order.</summary>
     Task<IReadOnlyList<ArtifactRecord>> ArtifactsAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The latest recording registration of an item's package version, with every registered beat file, or null where none
+    /// is recorded (the own-voice change, decision D-004 of its design). Default-implemented so every delivered double
+    /// compiles unchanged; a realization without the tenth schema resource refuses by name.
+    /// </summary>
+    Task<RecordingRegistration?> LatestRegistrationAsync(ItemId item, ItemVersion packageVersion, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This reader holds no recording registration; the tenth schema resource adds it.");
+
+    /// <summary>The narration measurements recorded for one item version, in recording order (the own-voice change, decision D-007).</summary>
+    Task<IReadOnlyList<NarrationMeasurement>> MeasurementsAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This reader holds no narration measurement; the tenth schema resource adds it.");
+
+    /// <summary>The narration provenance recorded for one item version, in recording order (the own-voice change, decision D-008).</summary>
+    Task<IReadOnlyList<NarrationProvenance>> ProvenanceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This reader holds no narration provenance; the tenth schema resource adds it.");
+
+    /// <summary>The narration source a production version recorded, or null where it was recorded before the tenth resource.</summary>
+    Task<NarrationSource?> VersionSourceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This reader holds no narration source; the tenth schema resource adds it.");
 }
 
 /// <summary>The item a production reads, as recorded.</summary>
@@ -158,8 +178,12 @@ public interface IMediaTool
     /// <summary>Draws one still from a text file into a PNG, both named relative to the staging folder.</summary>
     Task DrawStillAsync(StillSpecification still, CancellationToken cancellationToken);
 
-    /// <summary>Concatenates the audio files a list file names into one file, with no inserted silence.</summary>
-    Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, CancellationToken cancellationToken);
+    /// <summary>
+    /// Concatenates the audio files a list file names into one PCM file in the parts' COMMON sample format, named in the
+    /// tool's own sample-format vocabulary, with no inserted silence and no filter: it neither resamples nor requantises
+    /// (the own-voice change, decision D-007 of its design).
+    /// </summary>
+    Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, string sampleFormat, CancellationToken cancellationToken);
 
     /// <summary>Renders a segment list over an audio file into one video file in the staging folder.</summary>
     Task RenderAsync(RenderSpecification render, CancellationToken cancellationToken);
@@ -169,6 +193,57 @@ public interface IMediaTool
 
     /// <summary>Decodes a file end to end to a null sink and counts the errors reported.</summary>
     Task<DecodeCheck> DecodeAsync(string file, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Measures a file's one audio stream from DECODED audio (the own-voice change, decision D-007 of its design): the
+    /// container, codec, sample rate, channel count and sample format the decoder reports, the samples counted by decoding
+    /// the whole stream, and the EBU R128 integrated loudness of the same decode pass, or why the meter stated none. The
+    /// duration is decoded samples over sample rate; no container duration field is read. Runs under the decode bound.
+    /// </summary>
+    Task<AudioMeasurement> MeasureAudioAsync(string file, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This media tool measures no decoded audio.");
+}
+
+/// <summary>
+/// The in-house speech model (the own-voice change, decision D-005 of its design), realised by the ONE type that starts a
+/// process. One generation starts the environment's interpreter located by setting, in isolated mode with bytecode writing
+/// off, running the runtime as a module with an EXPLICIT argument list: the model file's and the configuration file's full
+/// paths, the part's text file and output file (plain names in the staging folder) and all six generation settings; never a
+/// voice name, a data directory, a device flag, a speaker number or raw output. The text reaches it only through the text
+/// file. Its working directory is the staging folder; it runs under the model part bound on the monotonic clock with no
+/// transaction held; past the bound its process tree is terminated under <see cref="MediaToolBoundExceededException"/>.
+/// </summary>
+public interface IVoiceModel
+{
+    /// <summary>Runs one generation and returns the exact argument list the process was started with, executable first.</summary>
+    Task<IReadOnlyList<string>> GenerateAsync(VoiceGeneration generation, CancellationToken cancellationToken);
+}
+
+/// <summary>One generation: the staging folder, the text and output file names in it, the verified model files and the settings.</summary>
+public sealed record VoiceGeneration(
+    string StagingFolder,
+    string TextFile,
+    string OutputFile,
+    string ModelFile,
+    string ConfigurationFile,
+    VoiceGenerationSettings Settings,
+    TimeSpan Bound);
+
+/// <summary>
+/// The six generation settings, every one passed explicitly and recorded with each artifact (the owner's decision of
+/// 2026-10-10: the voice's default settings, passed explicitly). Every value is configured; none has a default in code.
+/// </summary>
+public sealed record VoiceGenerationSettings(
+    decimal LengthScale,
+    decimal NoiseScale,
+    decimal NoiseWidthScale,
+    decimal SentenceSilenceSeconds,
+    decimal Volume,
+    bool Normalise)
+{
+    public string Describe() => string.Create(System.Globalization.CultureInfo.InvariantCulture,
+        $"length scale {LengthScale}; noise scale {NoiseScale}; noise width scale {NoiseWidthScale}; sentence silence {SentenceSilenceSeconds} s; volume {Volume}; "
+        + $"output normalisation {(Normalise ? "on (the runtime's per-sentence peak normalisation)" : "off")}");
 }
 
 /// <summary>One still: its text file and output file under the staging folder, and the profile it is drawn at.</summary>

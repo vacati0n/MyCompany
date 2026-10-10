@@ -31,10 +31,10 @@ public sealed record ProduceRequest
 /// <summary>
 /// How a produce run ended: the exit code, and what it produced. THE EXIT CODES ARE DOCUMENTED (correction CR-005):
 /// 0 succeeded (the file rendered, the item held short of publish-ready); 2 refused before any call; 3 a stage failed
-/// or was held, its outcome recorded naming why, including any failure nobody anticipated; 4 stopped at the item cap;
-/// 5 an incurred attempt could not be recorded; 6 cancelled by the operator, the interrupted stage recorded failed and
-/// any vendor call in flight booked at its worst case. After the item version opens, every ending is one of these, and
-/// every ending but 5 records the stage it ended in.
+/// or was held, its outcome recorded naming why, including any failure nobody anticipated and a narration source that
+/// changed between the plan and a part; 4 stopped at the item cap; 5 an incurred attempt could not be recorded; 6 cancelled
+/// by the operator, the interrupted stage recorded failed and any vendor call in flight booked at its worst case. After the
+/// item version opens, every ending is one of these, and every ending but 5 records the stage it ended in.
 /// </summary>
 public sealed record ProduceResult(int ExitCode, ItemVersion? Version, StoredFile? Rendered, IReadOnlyList<OperationRecord> Operations)
 {
@@ -51,14 +51,23 @@ public sealed record ProduceResult(int ExitCode, ItemVersion? Version, StoredFil
 /// recorded item package into one rendered video file, recording every stage outcome, every operation and every
 /// artifact on the datastore's clock, regenerating no script, research or claim, and publishing nothing.
 ///
+/// THE NARRATION SOURCE (the own-voice change, decisions D-001 to D-003 of its design). One source narrates a whole
+/// production, chosen by <see cref="NarrationSourceRule"/> and printed per part with its reason before anything runs. The
+/// own mode narrates one part per beat from a registered recording or the verified in-house model, books no operation and
+/// needs no cap and no capability boundary; fake mode narrates through the demonstration composition as delivered; the
+/// vendor is never chosen by the rule, and its path below the rule is reached only through the internal entry the vendor
+/// path's own tests use. Before every own-source part the source is re-derived, and a run whose source would differ from
+/// the planned one records the Audio stage failed naming both and ends with exit 3 before producing that part.
+///
 /// THE ORDER. A production opens the next item version, records the eight carried stages citing the package's
 /// version, then runs the four producing stages in EXECUTION order — Design, Audio, Thumbnail, Production — because
 /// the assembly consumes the narration; readers list them in the closed stage order. A stage that cannot finish is
 /// recorded failed or held, naming why, and the run makes no further call.
 ///
-/// THE HOLDS. No transaction and no record is held open while the external tool runs or while a vendor is called
-/// from here: every record is one short transaction of its own, and the capability boundary keeps its own
-/// admission transaction to the call it makes. Every bound is the configured one.
+/// THE HOLDS. No transaction and no record is held open while the external tool or the model runs, while a file is
+/// hashed or while a vendor is called from here: every record is one short transaction of its own, after the work it
+/// records, and the capability boundary keeps its own admission transaction to the call it makes. Every bound is the
+/// configured one.
 /// </summary>
 public sealed class ProduceItemService
 {
@@ -68,6 +77,7 @@ public sealed class ProduceItemService
     private readonly IArtifactStore _store;
     private readonly ProductionSettings _settings;
     private readonly TextWriter _output;
+    private readonly IVoiceModel? _voice;
 
     public ProduceItemService(
         IUnitOfWork unitOfWork,
@@ -75,7 +85,8 @@ public sealed class ProduceItemService
         IMediaTool tool,
         IArtifactStore store,
         ProductionSettings settings,
-        TextWriter output)
+        TextWriter output,
+        IVoiceModel? voice = null)
     {
         _unitOfWork = unitOfWork;
         _reader = reader;
@@ -83,9 +94,13 @@ public sealed class ProduceItemService
         _store = store;
         _settings = settings;
         _output = output;
+        _voice = voice;
     }
 
-    /// <summary>Reads the package and composes the plan, refusing where the narration cannot be split as designed.</summary>
+    /// <summary>
+    /// Reads the package, selects the narration source by the rule and composes the plan, refusing where the narration
+    /// cannot be split as designed. Plan-only previews the own mode: it reads files only and starts no process.
+    /// </summary>
     public async Task<ProductionPlan?> PlanAsync(ProduceRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -97,15 +112,69 @@ public sealed class ProduceItemService
             return null;
         }
 
-        var parts = NarrationSplitter.Split(request.Loaded.Narration, material.Beats, _settings.NarrationCharacterMaximum);
-        var pricing = await _reader.PricingAsync(CapabilityClass.Narration, cancellationToken).ConfigureAwait(false);
-        return ProductionPlan.Compose(package, parts, pricing);
+        switch (request.Mode)
+        {
+            case ProductionMode.Fake:
+            {
+                var selection = NarrationSourceRule.Select(request.Mode, request.Designation, RegistrationReading.None, ModelReading.NotConfigured);
+                return await BoundaryPlanAsync(request, package, selection, cancellationToken).ConfigureAwait(false);
+            }
+
+            case ProductionMode.Metered:
+            {
+                // The rule refuses: no plan with a vendor estimate is composed above it.
+                var selection = NarrationSourceRule.Select(request.Mode, request.Designation, RegistrationReading.None, ModelReading.NotConfigured);
+                return ProductionPlan.ComposeOwn(package, NarrationSplitter.SplitByBeat(request.Loaded.Narration, material.Beats), selection, null, null, request.Loaded);
+            }
+
+            default:
+            {
+                var (selection, recording, installation) = await SelectOwnAsync(request, cancellationToken).ConfigureAwait(false);
+                return ProductionPlan.ComposeOwn(package, NarrationSplitter.SplitByBeat(request.Loaded.Narration, material.Beats), selection, recording, installation, request.Loaded);
+            }
+        }
     }
 
     /// <summary>
-    /// Runs one production. In plan-only mode the plan is printed and nothing is called or written. Otherwise the
-    /// gateway given is the one the host composed for the mode: the demonstration composition in fake mode, the
-    /// vendor composition in metered mode; this service cannot tell them apart and needs no code change between them.
+    /// The plan of a boundary source (the fake, or the vendor below the rule): the narration split under the configured
+    /// character maximum, estimated at the prices in force, as delivered.
+    /// </summary>
+    private async Task<ProductionPlan> BoundaryPlanAsync(ProduceRequest request, RecordedPackage package, NarrationSelection selection, CancellationToken cancellationToken)
+    {
+        var maximum = _settings.NarrationCharacterMaximum
+            ?? throw new NarrationSplitRefusedException("no narration character maximum is configured (setting narrationCharacterMaximum); a boundary source needs it");
+        var parts = NarrationSplitter.Split(request.Loaded.Narration, request.Loaded.Material.Beats, maximum);
+        var pricing = await _reader.PricingAsync(CapabilityClass.Narration, cancellationToken).ConfigureAwait(false);
+        return ProductionPlan.Compose(package, parts, pricing) with { Selection = selection };
+    }
+
+    /// <summary>
+    /// The own sources' readings and the rule's selection over them: the latest registration with every stored copy
+    /// re-hashed, and, only where no released registration decides it, the model's whole verification from the files.
+    /// </summary>
+    private async Task<(NarrationSelection Selection, RecordingRegistration? Recording, InstallationReport? Installation)> SelectOwnAsync(
+        ProduceRequest request, CancellationToken cancellationToken)
+    {
+        var material = request.Loaded.Material;
+        var latest = await _reader.LatestRegistrationAsync(request.Item, new ItemVersion(material.PackageVersion), cancellationToken).ConfigureAwait(false);
+        var registration = await RecordingRegistrar.ReadAsync(latest, _settings.OutputRoot, cancellationToken).ConfigureAwait(false);
+
+        InstallationReport? installation = null;
+        var model = ModelReading.NotConfigured;
+        if (registration.State is not (RegistrationState.Verified or RegistrationState.FilesChanged) && _settings.InHouseModel is { } configured)
+        {
+            installation = await new InstallationVerifier(configured, _settings.RepositoryRoot).VerifyAsync(entries: true, cancellationToken).ConfigureAwait(false);
+            model = installation.Verified ? new ModelReading(ModelState.Verified, []) : new ModelReading(ModelState.Refused, installation.Findings);
+        }
+
+        var selection = NarrationSourceRule.Select(request.Mode, request.Designation, registration, model);
+        return (selection, latest, installation);
+    }
+
+    /// <summary>
+    /// Runs one production. In plan-only mode the plan is printed and nothing is started or written. A refused selection
+    /// ends before anything is recorded, naming every reason. The own mode composes no capability boundary; fake mode is
+    /// given the demonstration composition by the host.
     /// </summary>
     public async Task<ProduceResult> RunAsync(ProduceRequest request, ICapabilityGateway? gateway, CancellationToken cancellationToken)
     {
@@ -128,33 +197,93 @@ public sealed class ProduceItemService
         }
 
         plan.Print(_output, request.Mode, request.Designation, _settings, request.Loaded.Material);
+        if (plan.Selection is not { Chosen: true } selection)
+        {
+            foreach (var refusal in plan.Selection?.Refusals ?? [])
+            {
+                _output.WriteLine($"Refused before any call: {refusal}");
+            }
+
+            return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+        }
 
         if (request.Mode == ProductionMode.PlanOnly)
         {
-            _output.WriteLine("Plan only: no capability call was made and no file was written.");
+            _output.WriteLine("Plan only: no capability call was made, no process was started and no file was written.");
             return new ProduceResult(ProduceResult.Succeeded, null, null, []);
         }
 
-        if (plan.Package.Cap is null)
+        return await StartAsync(request, plan, selection.Source!.Value, gateway, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// THE VENDOR PATH UNDER TEST, BELOW THE RULE (the own-voice change, decision D-002 of its design, as the Planning Gate
+    /// ruled): runs a production with the source named explicitly, bypassing the selection rule, so the vendor path's own
+    /// tests can keep every assertion on its requests and bookings. Internal: no command and no composition reaches it.
+    /// </summary>
+    internal async Task<ProduceResult> RunBelowTheRuleAsync(ProduceRequest request, NarrationSource source, ICapabilityGateway? gateway, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (source is not (NarrationSource.Vendor or NarrationSource.Fake))
         {
-            _output.WriteLine("Refused before any call: the item has no recorded cap.");
+            throw new ArgumentOutOfRangeException(nameof(source), source, "Only a boundary source runs below the rule.");
+        }
+
+        var package = await _reader.PackageAsync(request.Item, new ItemVersion(request.Loaded.Material.PackageVersion), cancellationToken).ConfigureAwait(false);
+        if (package is null)
+        {
             return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
         }
 
-        if (gateway is null)
+        ProductionPlan plan;
+        try
         {
-            throw new InvalidOperationException("A producing mode needs the capability boundary its composition built.");
+            plan = await BoundaryPlanAsync(request, package,
+                new NarrationSelection(source, "named explicitly below the narration source rule: the vendor path under test", [], []), cancellationToken).ConfigureAwait(false);
         }
-
-        if (string.IsNullOrWhiteSpace(_settings.NarrationVoice))
+        catch (NarrationSplitRefusedException refused)
         {
-            _output.WriteLine("Refused before any call: no narration voice is configured (setting narrationVoice).");
+            _output.WriteLine($"Refused before any call: {refused.Message}");
             return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
         }
 
-        var run = await ProductionRun.OpenAsync(this, request, plan, gateway, cancellationToken).ConfigureAwait(false);
+        plan.Print(_output, request.Mode, request.Designation, _settings, request.Loaded.Material);
+        return await StartAsync(request, plan, source, gateway, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<ProduceResult> StartAsync(ProduceRequest request, ProductionPlan plan, NarrationSource source, ICapabilityGateway? gateway, CancellationToken cancellationToken)
+    {
+        if (source is NarrationSource.Fake or NarrationSource.Vendor)
+        {
+            if (plan.Package.Cap is null)
+            {
+                _output.WriteLine("Refused before any call: the item has no recorded cap.");
+                return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+            }
+
+            if (gateway is null)
+            {
+                throw new InvalidOperationException("A boundary source needs the capability boundary its composition built.");
+            }
+
+            if (string.IsNullOrWhiteSpace(_settings.NarrationVoice))
+            {
+                _output.WriteLine("Refused before any call: no narration voice is configured (setting narrationVoice).");
+                return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+            }
+        }
+        else if (source == NarrationSource.InHouseModel && (_voice is null || _settings.InHouseModel is null))
+        {
+            _output.WriteLine("Refused before any call: the in-house model is selected and no model process is composed for this run.");
+            return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+        }
+
+        var run = await ProductionRun.OpenAsync(this, request, plan, source, gateway, cancellationToken).ConfigureAwait(false);
         return await run.ExecuteAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>One produced narration part: the part, its stored file, its decoded measurement and its provenance where own-sourced.</summary>
+    private sealed record ProducedPart(NarrationPart Part, StoredFile File, AudioMeasurement Measured);
 
     /// <summary>One production version in progress, and every record it writes.</summary>
     private sealed class ProductionRun
@@ -162,15 +291,17 @@ public sealed class ProduceItemService
         private readonly ProduceItemService _service;
         private readonly ProduceRequest _request;
         private readonly ProductionPlan _plan;
-        private readonly ICapabilityGateway _gateway;
+        private readonly NarrationSource _source;
+        private readonly ICapabilityGateway? _gateway;
         private readonly List<OperationRecord> _operations = [];
         private readonly JobId _job = JobId.New();
 
-        private ProductionRun(ProduceItemService service, ProduceRequest request, ProductionPlan plan, ICapabilityGateway gateway, ItemVersion version, string folder)
+        private ProductionRun(ProduceItemService service, ProduceRequest request, ProductionPlan plan, NarrationSource source, ICapabilityGateway? gateway, ItemVersion version, string folder)
         {
             _service = service;
             _request = request;
             _plan = plan;
+            _source = source;
             _gateway = gateway;
             Version = version;
             Folder = folder;
@@ -188,26 +319,28 @@ public sealed class ProduceItemService
 
         private ItemMaterial Material => _request.Loaded.Material;
 
+        private bool OwnSource => _source is NarrationSource.Recording or NarrationSource.InHouseModel;
+
         /// <summary>A path inside this production's own folder under the output root.</summary>
         private string Rel(string inRun) => $"{Folder}/{inRun}";
 
         private TextWriter Output => _service._output;
 
         public static async Task<ProductionRun> OpenAsync(
-            ProduceItemService service, ProduceRequest request, ProductionPlan plan, ICapabilityGateway gateway, CancellationToken cancellationToken)
+            ProduceItemService service, ProduceRequest request, ProductionPlan plan, NarrationSource source, ICapabilityGateway? gateway, CancellationToken cancellationToken)
         {
             ProductionVersionOpened opened;
             await using (var transaction = await service._unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false))
             {
-                opened = await transaction.Production.OpenProductionVersionAsync(request.Item, request.Mode, cancellationToken).ConfigureAwait(false);
+                opened = await transaction.Production.OpenProductionVersionAsync(request.Item, request.Mode, source, cancellationToken).ConfigureAwait(false);
                 await transaction.Audit.AppendAsync(Entry(request.Item, opened.Version, "production.version-opened",
-                    $"production version {opened.Version} opened in {request.Mode} mode", "production version record"), cancellationToken).ConfigureAwait(false);
+                    $"production version {opened.Version} opened in {request.Mode} mode, narrated from the {source} source", "production version record"), cancellationToken).ConfigureAwait(false);
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             }
 
             var folder = $"{request.Loaded.Material.Item}/v{opened.Version}";
-            service._output.WriteLine($"Opened item version {opened.Version} at {opened.OpenedAt:O} (the datastore's instant); output folder {service._store.FullPath(folder)}");
-            return new ProductionRun(service, request, plan, gateway, opened.Version, folder);
+            service._output.WriteLine($"Opened item version {opened.Version} at {opened.OpenedAt:O} (the datastore's instant), narration source {source}; output folder {service._store.FullPath(folder)}");
+            return new ProductionRun(service, request, plan, source, gateway, opened.Version, folder);
         }
 
         /// <summary>
@@ -319,44 +452,47 @@ public sealed class ProduceItemService
         }
 
         // -------------------------------------------------------------------
-        // Audio: the whole recorded narration through the boundary
+        // Audio: the whole recorded narration from the one selected source
         // -------------------------------------------------------------------
 
         private async Task<(ProduceResult? Ended, IReadOnlyList<(int Beat, TimeSpan MeasuredDuration)>? BeatDurations, StoredFile? Narration)> AudioAsync(
             CancellationToken cancellationToken)
         {
             _stage = ProductionStage.Audio;
-            var partFiles = new List<(NarrationPart Part, StoredFile File, TimeSpan Duration)>();
-            foreach (var planned in _plan.Operations)
+            var parts = _source switch
             {
-                var part = planned.Part;
-                var outcome = await CallAsync(part, cancellationToken).ConfigureAwait(false);
-                if (outcome.Ended is { } ended)
-                {
-                    return (ended, null, null);
-                }
+                NarrationSource.Recording => await RecordingPartsAsync(cancellationToken).ConfigureAwait(false),
+                NarrationSource.InHouseModel => await ModelPartsAsync(cancellationToken).ConfigureAwait(false),
+                _ => await BoundaryPartsAsync(cancellationToken).ConfigureAwait(false),
+            };
+            if (parts.Ended is { } ended)
+            {
+                return (ended, null, null);
+            }
 
-                var content = outcome.Content!;
-                var stored = await _service._store.StoreAsync(Staging, content.Bytes, Rel($"audio/part-{part.Ordinal:000}.wav"), cancellationToken).ConfigureAwait(false);
-                var probe = await ProbeAsync(stored.FullPath, ProductionStage.Audio, cancellationToken).ConfigureAwait(false);
-                await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.NarrationPart, $"part {part.Ordinal} of beat {part.Beat}", stored, probe.Duration, cancellationToken).ConfigureAwait(false);
-                partFiles.Add((part, stored, probe.Duration));
+            var produced = parts.Parts!;
+
+            // The join is exact only over one rate, one channel count and one sample format; nothing is converted.
+            var mixed = RecordingSetCheck.MixedFormats(produced.Select(p => (p.Part.Beat, p.Measured)).ToArray());
+            if (mixed.Count > 0)
+            {
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed, string.Join("; ", mixed), ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
             }
 
             var list = new StringBuilder();
-            foreach (var (_, file, _) in partFiles)
+            foreach (var part in produced)
             {
-                list.Append(CultureInfo.InvariantCulture, $"file '../audio/{Path.GetFileName(file.RelativePath)}'\n");
+                list.Append(CultureInfo.InvariantCulture, $"file '../audio/{Path.GetFileName(part.File.RelativePath)}'\n");
             }
 
             StoredFile narration;
-            MediaProbe measured;
+            AudioMeasurement joined;
             try
             {
                 await _service._store.WriteStagingTextAsync(Staging, "narration-parts.txt", list.ToString(), cancellationToken).ConfigureAwait(false);
-                await _service._tool.ConcatenateAudioAsync(Staging, "narration-parts.txt", "narration.wav", cancellationToken).ConfigureAwait(false);
+                await _service._tool.ConcatenateAudioAsync(Staging, "narration-parts.txt", "narration.wav", produced[0].Measured.SampleFormat, cancellationToken).ConfigureAwait(false);
                 narration = await _service._store.PromoteAsync(Staging, "narration.wav", Rel("audio/narration.wav"), cancellationToken).ConfigureAwait(false);
-                measured = await _service._tool.ProbeAsync(narration.FullPath, cancellationToken).ConfigureAwait(false);
+                joined = await _service._tool.MeasureAudioAsync(narration.FullPath, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception failure) when (failure is MediaToolBoundExceededException or MediaToolFailedException)
             {
@@ -364,20 +500,346 @@ public sealed class ProduceItemService
                 throw new UnreachableException();
             }
 
-            await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.Narration, "the whole recorded narration", narration, measured.Duration, cancellationToken).ConfigureAwait(false);
+            // The joined narration holds exactly its parts' decoded samples, to within one sample.
+            var sum = produced.Sum(p => p.Measured.DecodedSamples);
+            if (Math.Abs(joined.DecodedSamples - sum) > 1)
+            {
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                    string.Create(CultureInfo.InvariantCulture, $"the joined narration decodes to {joined.DecodedSamples:N0} samples and its parts to {sum:N0}; the join is not exact"),
+                    ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+            }
 
-            var beats = partFiles.GroupBy(p => p.Part.Beat)
-                .Select(g => (g.Key, TimeSpan.FromTicks(g.Sum(p => p.Duration.Ticks))))
+            // Every part artifact is re-hashed after the join read it: the bytes joined are the bytes recorded.
+            foreach (var part in produced)
+            {
+                var now = await FileHashes.Sha256Async(part.File.FullPath, cancellationToken).ConfigureAwait(false);
+                if (!string.Equals(now, part.File.Sha256, StringComparison.Ordinal))
+                {
+                    await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                        $"part {part.Part.Ordinal}'s file {part.File.RelativePath} changed while it was joined: sha256 {part.File.Sha256} recorded and {now} after the join",
+                        ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            var rate = _request.Loaded.Rate;
+            var words = produced.Sum(p => DurationExpectation.Words(p.Part.Text));
+            var expected = DurationExpectation.ExpectedSeconds(words, rate.WordsPerMinute);
+            await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.Narration, "the whole recorded narration", narration, joined.Duration, cancellationToken,
+                Measured(narration, joined, null, words, expected)).ConfigureAwait(false);
+
+            var report = DurationExpectation.Report("the whole narration", joined.DurationSeconds, words, expected, rate)
+                + (rate.DurationQuote is { } quoted ? $" (the script's own figure: {quoted})" : string.Empty);
+            Output.WriteLine($"  {report}; {joined.DescribeLoudness()}");
+
+            var beats = produced.GroupBy(p => p.Part.Beat)
+                .Select(g => (g.Key, TimeSpan.FromTicks(g.Sum(p => p.Measured.Duration.Ticks))))
                 .ToArray();
             var characters = _plan.Operations.Sum(o => o.Part.Text.Length);
 
+            var spend = OwnSource
+                ? $"no operation is booked and no metered spend is planned or made, USD 0.00; {Unmeasured()}"
+                : "each request booked through the capability boundary";
             await RecordStageAsync(ProductionStage.Audio, StageOutcome.Succeeded,
                 string.Create(CultureInfo.InvariantCulture,
-                    $"narration of the whole recorded text, {characters:N0} characters in {partFiles.Count} request(s), joined with no inserted silence; "
-                    + $"duration {measured.Duration.TotalSeconds:0.000} s MEASURED by probing the produced audio; no rate assumption is used"),
+                    $"narration of the whole recorded text from the {_source} source, {characters:N0} characters in {produced.Count} part(s), joined with no inserted silence "
+                    + $"and no level change; duration {joined.DurationSeconds:0.000} s MEASURED from decoded audio ({AudioMeasurement.DecodedBasis}); {joined.DescribeLoudness()}; ")
+                + $"{report}; {spend}",
                 $"artifact:{narration.RelativePath} sha256:{narration.Sha256}", cancellationToken).ConfigureAwait(false);
             return (null, beats, narration);
         }
+
+        /// <summary>What local work an own source leaves unmeasured; never zero.</summary>
+        private string Unmeasured() => _source == NarrationSource.Recording
+            ? "recording time unmeasured; local compute unmeasured"
+            : "local compute unmeasured";
+
+        /// <summary>The fake's or the vendor's parts through the boundary, as delivered, each measured from decoded audio.</summary>
+        private async Task<(ProduceResult? Ended, IReadOnlyList<ProducedPart>? Parts)> BoundaryPartsAsync(CancellationToken cancellationToken)
+        {
+            var produced = new List<ProducedPart>();
+            foreach (var planned in _plan.Operations)
+            {
+                var part = planned.Part;
+                var outcome = await CallAsync(part, cancellationToken).ConfigureAwait(false);
+                if (outcome.Ended is { } ended)
+                {
+                    return (ended, null);
+                }
+
+                var stored = await _service._store.StoreAsync(Staging, outcome.Content!.Bytes, Rel($"audio/part-{part.Ordinal:000}.wav"), cancellationToken).ConfigureAwait(false);
+                var measured = await MeasureAsync(stored, part, cancellationToken).ConfigureAwait(false);
+                await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.NarrationPart, $"part {part.Ordinal} of beat {part.Beat}", stored, measured.Duration, cancellationToken,
+                    Measured(stored, measured, null, DurationExpectation.Words(part.Text), null)).ConfigureAwait(false);
+                produced.Add(new ProducedPart(part, stored, measured));
+            }
+
+            return (null, produced);
+        }
+
+        /// <summary>
+        /// The registered recording's parts: before each, the source is re-derived; then the registered stored copy is copied
+        /// by the one writer into this run and promoted, and the promoted part must carry the REGISTERED hash, or the stage
+        /// fails naming both. The part is measured from its own decoded audio.
+        /// </summary>
+        private async Task<(ProduceResult? Ended, IReadOnlyList<ProducedPart>? Parts)> RecordingPartsAsync(CancellationToken cancellationToken)
+        {
+            var registration = _plan.Recording ?? throw new InvalidOperationException("A recording-sourced plan names its registration.");
+            var produced = new List<ProducedPart>();
+            foreach (var planned in _plan.Operations)
+            {
+                var part = planned.Part;
+                await RederiveAsync(part, cancellationToken).ConfigureAwait(false);
+
+                var beat = registration.Beats.Single(b => b.Beat == part.Beat);
+                var source = ArtifactWriter.StoredPath(_service._settings.OutputRoot, beat.StoredPath);
+                var extension = Path.GetExtension(beat.StoredPath);
+                await _service._store.CopyIntoStagingAsync(Staging, source, $"part-{part.Ordinal:000}{extension}", cancellationToken).ConfigureAwait(false);
+                var stored = await _service._store.PromoteAsync(Staging, $"part-{part.Ordinal:000}{extension}", Rel($"audio/part-{part.Ordinal:000}{extension}"), cancellationToken).ConfigureAwait(false);
+                if (!string.Equals(stored.Sha256, beat.Sha256, StringComparison.Ordinal))
+                {
+                    await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                        $"part {part.Ordinal}'s copy of beat {beat.Beat:00}'s registered file is not the registered bytes: sha256 {beat.Sha256} registered and {stored.Sha256} copied into this run; nothing narrates from it",
+                        ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                }
+
+                var measured = await MeasureAsync(stored, part, cancellationToken).ConfigureAwait(false);
+                var words = DurationExpectation.Words(part.Text);
+                var expected = DurationExpectation.ExpectedSeconds(words, _request.Loaded.Rate.WordsPerMinute);
+                await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.NarrationPart, $"part {part.Ordinal} of beat {part.Beat}", stored, measured.Duration, cancellationToken,
+                    Measured(stored, measured, part.Beat, words, expected),
+                    new NarrationProvenance
+                    {
+                        Item = _request.Item,
+                        Version = Version,
+                        RelativePath = stored.RelativePath,
+                        Source = NarrationSource.Recording,
+                        Registration = registration.Id,
+                        Beat = beat.Beat,
+                        PerformerName = registration.Release.PerformerName,
+                        Release = registration.Release.Describe(),
+                    }).ConfigureAwait(false);
+                Output.WriteLine($"  {DurationExpectation.Report($"beat {part.Beat:00}", measured.DurationSeconds, words, expected, _request.Loaded.Rate)}; {measured.DescribeLoudness()}");
+                produced.Add(new ProducedPart(part, stored, measured));
+            }
+
+            return (null, produced);
+        }
+
+        /// <summary>
+        /// The in-house model's parts. The whole installation, every record entry included, is verified before the first part
+        /// and after the last; before each part the source is re-derived, the core files are HELD read-only and hashed through
+        /// their handles, the part's text is staged by the one writer, and the one starter runs the model under its bound with
+        /// no transaction open; the handles are released only after the process exited. The first part is generated twice and
+        /// the bytes compared, so repeatability is recorded only as observed.
+        /// </summary>
+        private async Task<(ProduceResult? Ended, IReadOnlyList<ProducedPart>? Parts)> ModelPartsAsync(CancellationToken cancellationToken)
+        {
+            var settings = _service._settings.InHouseModel!;
+            var verifier = new InstallationVerifier(settings, _service._settings.RepositoryRoot);
+            var before = await verifier.VerifyAsync(entries: true, cancellationToken).ConfigureAwait(false);
+            if (!before.Verified)
+            {
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                    $"the narration source changed between the plan and part 1: the plan named {NarrationSource.InHouseModel}, and the installation no longer verifies: {string.Join("; ", before.Findings)}",
+                    ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+            }
+
+            var produced = new List<ProducedPart>();
+            foreach (var planned in _plan.Operations)
+            {
+                var part = planned.Part;
+                var text = $"part-{part.Ordinal:000}.txt";
+                var output = $"part-{part.Ordinal:000}.wav";
+                await _service._store.WriteStagingTextAsync(Staging, text, part.Text, cancellationToken).ConfigureAwait(false);
+
+                // The core files are held from their hash until the process exits; the hold is also the model's reading
+                // for the re-derivation, so the files hashed for the rule are the files the process loads.
+                IReadOnlyList<string> arguments;
+                string repeatability;
+                HeldInstallation? held = null;
+                ModelReading reading;
+                try
+                {
+                    held = await verifier.HoldAsync(cancellationToken).ConfigureAwait(false);
+                    reading = new ModelReading(ModelState.Verified, []);
+                }
+                catch (InstallationRefusedException refused)
+                {
+                    reading = new ModelReading(ModelState.Refused, refused.Findings);
+                }
+
+                string hashes;
+                await using (held)
+                {
+                    await RederiveAsync(part, cancellationToken, reading).ConfigureAwait(false);
+                    hashes = held!.Describe();
+                    try
+                    {
+                        arguments = await Generate(settings, text, output, cancellationToken).ConfigureAwait(false);
+                        if (part.Ordinal == 1)
+                        {
+                            var first = await FileHashes.Sha256Async(Path.Combine(Staging, output), cancellationToken).ConfigureAwait(false);
+                            await Generate(settings, text, "part-001-repeat.wav", cancellationToken).ConfigureAwait(false);
+                            var second = await FileHashes.Sha256Async(Path.Combine(Staging, "part-001-repeat.wav"), cancellationToken).ConfigureAwait(false);
+                            repeatability = string.Equals(first, second, StringComparison.Ordinal)
+                                ? $"repeats: part 1 generated twice with identical settings gave identical bytes (sha256 {first})"
+                                : $"not observed to repeat: part 1 generated twice with identical settings gave sha256 {first} and {second}";
+                        }
+                        else
+                        {
+                            repeatability = "not observed to repeat: generated once";
+                        }
+                    }
+                    catch (MediaToolBoundExceededException bound)
+                    {
+                        await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                            $"part {part.Ordinal} (beat {part.Beat}) passed the configured model part bound of {settings.PartBound.TotalSeconds:0} s on the monotonic clock; "
+                            + $"its process tree was terminated and nothing of it is recorded ({bound.Message})",
+                            ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                        throw new UnreachableException();
+                    }
+                    catch (MediaToolFailedException failed)
+                    {
+                        await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                            $"part {part.Ordinal} (beat {part.Beat}) could not be generated: {failed.Message}", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                        throw new UnreachableException();
+                    }
+                }
+
+                var stored = await _service._store.PromoteAsync(Staging, output, Rel($"audio/part-{part.Ordinal:000}.wav"), cancellationToken).ConfigureAwait(false);
+                var measured = await MeasureAsync(stored, part, cancellationToken).ConfigureAwait(false);
+                var words = DurationExpectation.Words(part.Text);
+                var expected = DurationExpectation.ExpectedSeconds(words, _request.Loaded.Rate.WordsPerMinute);
+                await RecordArtifactAsync(ProductionStage.Audio, ArtifactRole.NarrationPart, $"part {part.Ordinal} of beat {part.Beat}", stored, measured.Duration, cancellationToken,
+                    Measured(stored, measured, part.Beat, words, expected),
+                    Provenance(stored, settings, before, hashes, arguments, repeatability)).ConfigureAwait(false);
+                Output.WriteLine($"  {DurationExpectation.Report($"beat {part.Beat:00}", measured.DurationSeconds, words, expected, _request.Loaded.Rate)}; {measured.DescribeLoudness()}; {repeatability}");
+                produced.Add(new ProducedPart(part, stored, measured));
+            }
+
+            var after = await verifier.VerifyAsync(entries: true, cancellationToken).ConfigureAwait(false);
+            if (!after.Verified)
+            {
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                    $"the installation changed while the parts were generated: {string.Join("; ", after.Findings)}", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+            }
+
+            return (null, produced);
+        }
+
+        private Task<IReadOnlyList<string>> Generate(InHouseModelSettings settings, string text, string output, CancellationToken cancellationToken) =>
+            _service._voice!.GenerateAsync(
+                new VoiceGeneration(Staging, text, output, Path.GetFullPath(settings.Model.Path), Path.GetFullPath(settings.Configuration.Path), settings.Generation, settings.PartBound),
+                cancellationToken);
+
+        /// <summary>The model part's provenance: every value from the verified files and this run; licences from configuration say so.</summary>
+        private NarrationProvenance Provenance(
+            StoredFile stored, InHouseModelSettings settings, InstallationReport report, string hashes, IReadOnlyList<string> arguments, string repeatability)
+        {
+            const string NotStated = "not stated in the installed files";
+            var defaults = report.VoiceDefaults;
+            string Beside(decimal passed, string key) =>
+                defaults.TryGetValue(key, out var value) ? string.Create(CultureInfo.InvariantCulture, $"{passed} (the voice configuration states {value})") : string.Create(CultureInfo.InvariantCulture, $"{passed} (the voice configuration states none)");
+            var g = settings.Generation;
+            return new NarrationProvenance
+            {
+                Item = _request.Item,
+                Version = Version,
+                RelativePath = stored.RelativePath,
+                Source = NarrationSource.InHouseModel,
+                ModelName = report.RuntimeName ?? "not read",
+                ModelVersion = report.RuntimeVersion ?? "not read",
+                CodeLicence = (report.RuntimeLicence ?? "not stated") + " (read from the runtime's installed package metadata)",
+                VoiceName = (report.VoiceName ?? "not read") + " (composed from the verified voice configuration's language code, dataset and quality)",
+                DatasetLicence = report.DatasetLicence ?? "not read",
+                WeightsLicence = settings.WeightsLicence?.Describe() ?? NotStated,
+                VoiceLicence = settings.VoiceLicence?.Describe() ?? NotStated,
+                GenerationSettings = string.Create(CultureInfo.InvariantCulture,
+                    $"length scale {Beside(g.LengthScale, "length_scale")}; noise scale {Beside(g.NoiseScale, "noise_scale")}; noise width scale {Beside(g.NoiseWidthScale, "noise_w")}; ")
+                    + string.Create(CultureInfo.InvariantCulture, $"sentence silence {g.SentenceSilenceSeconds} s; volume {g.Volume}; output normalisation {(g.Normalise ? "on" : "off")} (all passed explicitly)"),
+                FileHashes = hashes,
+                RecordEntriesVerified = report.RecordEntriesVerified,
+                Arguments = string.Join(" ", arguments.Select(a => a.Contains(' ', StringComparison.Ordinal) ? $"\"{a}\"" : a)),
+                Repeatability = repeatability,
+            };
+        }
+
+        /// <summary>
+        /// Re-derives the narration source before a part, from the store and the files as they are now: the latest
+        /// registration with every stored copy re-hashed and, where it decides, the model's core files. A source or a
+        /// registration that differs from the plan's records the Audio stage failed naming both, before the part is produced.
+        /// </summary>
+        private async Task RederiveAsync(NarrationPart part, CancellationToken cancellationToken, ModelReading? held = null)
+        {
+            var material = Material;
+            var latest = await _service._reader.LatestRegistrationAsync(_request.Item, new ItemVersion(material.PackageVersion), cancellationToken).ConfigureAwait(false);
+            var registration = await RecordingRegistrar.ReadAsync(latest, _service._settings.OutputRoot, cancellationToken).ConfigureAwait(false);
+            var model = held ?? ModelReading.NotConfigured;
+            if (held is null && registration.State is not (RegistrationState.Verified or RegistrationState.FilesChanged) && _service._settings.InHouseModel is { } configured)
+            {
+                // The core files only: the record entries are verified before the first part and after the last.
+                try
+                {
+                    await using var hold = await new InstallationVerifier(configured, _service._settings.RepositoryRoot).HoldAsync(cancellationToken).ConfigureAwait(false);
+                    model = new ModelReading(ModelState.Verified, []);
+                }
+                catch (InstallationRefusedException refused)
+                {
+                    model = new ModelReading(ModelState.Refused, refused.Findings);
+                }
+            }
+
+            var derived = NarrationSourceRule.Select(_request.Mode, _request.Designation, registration, model);
+            var sameRegistration = _source != NarrationSource.Recording || registration.Registration == _plan.Recording?.Id;
+            if (derived.Source != _source || !sameRegistration)
+            {
+                var why = derived.Chosen ? derived.Reason : string.Join("; ", derived.Refusals);
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                    $"the narration source changed between the plan and part {part.Ordinal}: the plan named {_source}"
+                    + (_plan.Recording is { } planned ? $" (registration {planned.Id})" : string.Empty)
+                    + $", and the store and files now derive {(derived.Source?.ToString() ?? "no source")}"
+                    + (registration.Registration is { } now ? $" (registration {now})" : string.Empty)
+                    + $": {why}; no source is mixed into one production",
+                    ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>Measures a stored part from its own decoded audio; a measurement that fails, or reports corrupt input, fails the stage by name.</summary>
+        private async Task<AudioMeasurement> MeasureAsync(StoredFile stored, NarrationPart part, CancellationToken cancellationToken)
+        {
+            AudioMeasurement measured;
+            try
+            {
+                measured = await _service._tool.MeasureAudioAsync(stored.FullPath, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception failure) when (failure is MediaToolBoundExceededException or MediaToolFailedException)
+            {
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed, $"part {part.Ordinal}'s file could not be measured from decoded audio: {failure.Message}", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                throw new UnreachableException();
+            }
+
+            if (measured.DecodeFindings.Count > 0)
+            {
+                await EndStageAsync(ProductionStage.Audio, StageOutcome.Failed,
+                    $"part {part.Ordinal}'s file does not decode cleanly: {string.Join("; ", measured.DecodeFindings.Take(3))}", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+            }
+
+            return measured;
+        }
+
+        private NarrationMeasurement Measured(StoredFile stored, AudioMeasurement measured, int? beat, int words, decimal? expected) => new()
+        {
+            Item = _request.Item,
+            Version = Version,
+            RelativePath = stored.RelativePath,
+            Measured = measured,
+            Beat = beat,
+            Words = words,
+            ExpectedSeconds = expected,
+            ExpectationBasis = expected is null
+                ? (beat is null && !OwnSource ? "no expectation: a boundary part need not be one beat" : _request.Loaded.Rate.Describe())
+                : $"words times 60 over {_request.Loaded.Rate.Describe()}, to one decimal; a reported reference, never a target",
+        };
 
         /// <summary>One narration call through the boundary, and the outcome a production run takes from it.</summary>
         private async Task<(ProduceResult? Ended, ProducedContent? Content)> CallAsync(NarrationPart part, CancellationToken cancellationToken)
@@ -401,7 +863,7 @@ public sealed class ProduceItemService
             CapabilityOutcome outcome;
             try
             {
-                outcome = await _gateway.ExecuteAsync(
+                outcome = await _gateway!.ExecuteAsync(
                     request,
                     new CapabilityInvocationContext
                     {
@@ -609,8 +1071,9 @@ public sealed class ProduceItemService
             var placed = timeline.Where(s => Material.Clips.Any(c => c.Id == s.Implements)).ToArray();
             await RecordStageAsync(ProductionStage.Production, StageOutcome.Held,
                 string.Create(CultureInfo.InvariantCulture,
-                    $"rendered {rendered.RelativePath}: one video and one audio stream, decoded end to end with 0 errors; runtime {probe.Duration.TotalSeconds:0.000} s MEASURED from the file, "
-                    + $"beside the SPECIFIED {(int)specified.TotalMinutes} min {specified.Seconds} s; no music; {placed.Length} clip positions carry a labelled placeholder inside their beat's measured span; "
+                    $"rendered {rendered.RelativePath}: one video and one audio stream, decoded end to end with 0 errors; runtime {probe.Duration.TotalSeconds:0.000} s MEASURED from the file "
+                    + $"(the container duration of a file decoded end to end with zero errors), beside the SPECIFIED {(int)specified.TotalMinutes} min {specified.Seconds} s; narration from the {_source} source; no music; "
+                    + $"{placed.Length} clip positions carry a labelled placeholder inside their beat's measured span; "
                     + $"held: {string.Join(", ", Material.UnsourcedClips.Ids)} are specified but not sourced, and the first video carries no stock footage"),
                 $"artifact:{rendered.RelativePath} sha256:{rendered.Sha256}", cancellationToken).ConfigureAwait(false);
             return rendered;
@@ -621,8 +1084,9 @@ public sealed class ProduceItemService
             var booked = _operations.Aggregate(Money.Zero(), (sum, o) => sum + o.ComputedCost);
             Output.WriteLine($"Rendered: {rendered.FullPath}");
             Output.WriteLine(string.Create(CultureInfo.InvariantCulture, $"  size {rendered.Length:N0} bytes, sha256 {rendered.Sha256}"));
-            Output.WriteLine(string.Create(CultureInfo.InvariantCulture,
-                $"  operations: {_operations.Count}; booked {booked.Amount:0.00} {booked.Currency}, {Label()}"));
+            Output.WriteLine(OwnSource
+                ? string.Create(CultureInfo.InvariantCulture, $"  operations: {_operations.Count}; booked metered spend {booked.Amount:0.00} {booked.Currency} (no operation is booked by an own source); {Unmeasured()}")
+                : string.Create(CultureInfo.InvariantCulture, $"  operations: {_operations.Count}; booked {booked.Amount:0.00} {booked.Currency}, {Label()}"));
             Output.WriteLine("  nothing was published, uploaded or configured; the item stays held short of publish-ready.");
         }
 
@@ -641,21 +1105,13 @@ public sealed class ProduceItemService
             return await _service._store.PromoteAsync(Staging, name + ".png", Rel(relativePath), cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task<MediaProbe> ProbeAsync(string file, ProductionStage stage, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await _service._tool.ProbeAsync(file, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception failure) when (failure is MediaToolBoundExceededException or MediaToolFailedException)
-            {
-                await EndStageAsync(stage, StageOutcome.Failed, $"a produced file could not be probed: {failure.Message}", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
-                throw new UnreachableException();
-            }
-        }
-
+        /// <summary>
+        /// Records one artifact, and with a narration file its decoded measurement and, for an own source, its provenance, on
+        /// ONE short transaction after the file work they record: the three rows of one file commit together or not at all.
+        /// </summary>
         private async Task RecordArtifactAsync(
-            ProductionStage stage, ArtifactRole role, string implements, StoredFile stored, TimeSpan? duration, CancellationToken cancellationToken)
+            ProductionStage stage, ArtifactRole role, string implements, StoredFile stored, TimeSpan? duration, CancellationToken cancellationToken,
+            NarrationMeasurement? measurement = null, NarrationProvenance? provenance = null)
         {
             await using var transaction = await _service._unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
             var record = await transaction.Production.RecordArtifactAsync(
@@ -672,8 +1128,19 @@ public sealed class ProduceItemService
                     MeasuredDuration = duration,
                 },
                 cancellationToken).ConfigureAwait(false);
+            if (measurement is not null)
+            {
+                await transaction.Production.RecordMeasurementAsync(measurement, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (provenance is not null)
+            {
+                await transaction.Production.RecordProvenanceAsync(provenance, cancellationToken).ConfigureAwait(false);
+            }
+
             await transaction.Audit.AppendAsync(Entry(_request.Item, Version, "production.artifact-recorded",
-                $"{role} {implements} recorded after it was written, promoted and re-read", $"artifact:{stored.RelativePath} sha256:{stored.Sha256}"),
+                $"{role} {implements} recorded after it was written, promoted and re-read{(measurement is null ? string.Empty : ", with its decoded measurement")}{(provenance is null ? string.Empty : " and its provenance")}",
+                $"artifact:{stored.RelativePath} sha256:{stored.Sha256}"),
                 cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             Output.WriteLine(string.Create(CultureInfo.InvariantCulture,

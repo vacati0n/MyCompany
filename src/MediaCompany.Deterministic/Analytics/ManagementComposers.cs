@@ -164,7 +164,17 @@ public static class ManagementComposers
         foreach (var item in s.ProducedItems)
         {
             var demonstration = !string.Equals(item.Designation, "Company", StringComparison.Ordinal);
-            var tag = $"item {item.Item} version {item.Version} ({item.Mode} mode, {item.Designation} store)";
+
+            // The narration source (the own-voice change, decision D-010 of its design): a version recorded before the tenth
+            // resource carries none and reads as its mode's source, saying so.
+            var source = item.NarrationSource ?? item.Mode switch
+            {
+                "Fake" => "Fake, read from the mode: recorded before the tenth resource",
+                "Metered" => "Vendor, read from the mode: recorded before the tenth resource",
+                _ => "not recorded",
+            };
+            var own = string.Equals(item.Mode, "Own", StringComparison.Ordinal);
+            var tag = $"item {item.Item} version {item.Version} ({item.Mode} mode, narration source {source}, {item.Designation} store)";
 
             // A demonstration store's figures become demonstration figures by the one rule applied to every line.
             MeasurementQuantity Figure(MeasurementQuantity measured, string what) => measured;
@@ -180,7 +190,12 @@ public static class ManagementComposers
                 : MeasurementQuantity.Observed(item.Booked.Amount, item.Booked.Currency);
             yield return line(ReportLineKey.ProducedItemOperations, Heading, $"operations and booked cost of {tag}",
                 LineFigure.Of(Figure(booked, $"{item.Operations} operations booked {item.Booked}")),
-                RestsOn, "as of the snapshot", Informs, $"{item.Operations} operations", item.OpenedAt);
+                RestsOn, "as of the snapshot", Informs,
+                own
+                    ? $"{item.Operations} operations across every version of the item; this version narrated from its own source and booked none, "
+                        + "no metered spend; local compute unmeasured"
+                    : $"{item.Operations} operations",
+                item.OpenedAt);
 
             if (item.Cap is { } cap)
             {
@@ -497,6 +512,12 @@ public static class ManagementComposers
             string? text = null, DateTimeOffset? at = null) =>
             Line(ReportKind.Cto, key, heading, label, figure, restsOn, s, finality, informs, text, at);
 
+        // THE DEMONSTRATION LABEL WORDING (the own-voice change, decision D-014 of its design): in a store designated
+        // demonstration a quantity embedded in a controller label is described through the demonstration figure's own
+        // rendering, so no label reads as an observation of the company's spend; a company store's labels read as delivered.
+        var demonstration = s.Designation == MediaCompany.Domain.Production.StoreDesignation.Demonstration;
+        string Shown(MeasurementQuantity quantity) => demonstration ? LineFigure.Demonstrated(quantity).Describe() : quantity.Describe();
+
         // Cost and quality per task, with the comparable-run count against the owner's ten.
         lines.Add(L(ReportLineKey.OwnersTen, "Cost and quality per task", "the owner's comparable-run threshold",
             LineFigure.Of(RecordedProgrammeFacts.ComparableRunsPerTask), "the owner's decision of 2026-10-09", RecordedTag()));
@@ -561,7 +582,7 @@ public static class ManagementComposers
             {
                 lines.Add(L(ReportLineKey.ControllerReading, "Controller decisions",
                     $"decision for operation {decision.Operation}: {reading.Scope} reading utilisation, amount {reading.Amount.Describe()}, "
-                    + $"booked spend {reading.BookedSpend.Describe()}, threshold {(reading.Threshold is { } th ? ((int)th).ToString(CultureInfo.InvariantCulture) : "none reached")}, "
+                    + $"booked spend {Shown(reading.BookedSpend)}, threshold {(reading.Threshold is { } th ? ((int)th).ToString(CultureInfo.InvariantCulture) : "none reached")}, "
                     + $"action {reading.Action}{(reading.Reason is { } r ? $", reason {r}" : string.Empty)}",
                     LineFigure.Of(reading.Utilisation), "the admission decision readings, as recorded", week, at: decision.DecidedAt));
             }
@@ -570,8 +591,8 @@ public static class ManagementComposers
             {
                 lines.Add(L(ReportLineKey.ControllerReading, "Controller decisions",
                     $"decision for operation {decision.Operation}: candidate route {candidate.Route}, configured rating "
-                    + $"{candidate.ConfiguredRating.Value} (a rating, never an observed quality), observed quality "
-                    + $"{candidate.ObservedQuality.Describe()}, observed cost {candidate.ObservedCost.Describe()}",
+                    + $"{candidate.ConfiguredRating.Value} (a rating, never an observed quality), {(demonstration ? "quality" : "observed quality")} "
+                    + $"{Shown(candidate.ObservedQuality)}, {(demonstration ? "cost" : "observed cost")} {Shown(candidate.ObservedCost)}",
                     LineFigure.Of(candidate.Observations), "the admission decision candidates, as recorded", week, at: decision.DecidedAt));
             }
         }

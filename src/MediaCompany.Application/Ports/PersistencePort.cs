@@ -131,6 +131,29 @@ public interface IProductionLedger
     /// is refused.
     /// </summary>
     Task<ArtifactRecord> RecordArtifactAsync(ArtifactRecord draft, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Opens the next item version with its narration source recorded on the production header (the own-voice change,
+    /// decision D-010 of its design). Default-implemented so every delivered double compiles unchanged; a realization
+    /// without the tenth schema resource refuses by name.
+    /// </summary>
+    Task<ProductionVersionOpened> OpenProductionVersionAsync(ItemId item, ProductionMode mode, NarrationSource source, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This production record holds no narration source; the tenth schema resource adds it.");
+
+    /// <summary>
+    /// Records one recording registration and every beat file of it, write-once and stamped by the datastore (the own-voice
+    /// change, decision D-004 of its design); an absent release field is recorded absent.
+    /// </summary>
+    Task<RecordingRegistration> RecordRegistrationAsync(RecordingRegistration draft, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This production record holds no recording registration; the tenth schema resource adds it.");
+
+    /// <summary>Records one narration file's decoded measurement and its expectation, write-once (decision D-007).</summary>
+    Task<NarrationMeasurement> RecordMeasurementAsync(NarrationMeasurement draft, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This production record holds no narration measurement; the tenth schema resource adds it.");
+
+    /// <summary>Records one own-source narration file's provenance, write-once (decision D-008).</summary>
+    Task<NarrationProvenance> RecordProvenanceAsync(NarrationProvenance draft, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This production record holds no narration provenance; the tenth schema resource adds it.");
 }
 
 /// <summary>The item version a production opened, and the datastore's instant it opened at.</summary>

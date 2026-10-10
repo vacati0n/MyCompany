@@ -2024,3 +2024,101 @@ Narration must come from the company itself, in **both** forms:
   chosen in Wave 10.
 
 Decision block for Wave 10: `CEO-D-900`–`CEO-D-999`, `CEO-C-900`–`CEO-C-999`.
+
+## CEO-D-900 — Answers to the Wave 10 opening questions on the human recording
+
+**The CEO's own decision, 2026-10-10**, at the start of Wave 10 (`MC-11`), answering the
+orchestrator's opening questions.
+
+1. **Who records.** The CEO records the narration personally. The performer is the CEO; the
+   company holds the recording. How the performer's release is recorded is for the scope phase to
+   propose and the owner to confirm; nothing is assumed beyond this answer.
+2. **Order for item 001.** Item 001 is produced first with the in-house voice model; it does not
+   wait for a human recording. When the CEO's recording exists, item 001 is produced again from
+   it, replacing the model voice.
+3. **Loudness.** No loudness target is set. The pipeline measures and records the loudness of every
+   narration source and does not adjust it; a target may be set later from measured results.
+
+The in-house model and voice remain to be chosen: the scope phase proposes candidates with their
+licences (weights, code, voices), sizes and run-time requirements on this machine (Windows, no
+GPU); the owner approves the download by name, source, size and licence before it happens.
+
+---
+
+## CEO-D-901 — Answers to the Wave 10 scope phase's owner questions
+
+**The CEO's own decision, 2026-10-10**, answering the scope phase's questions (run
+`run-dfcae1756c32`).
+
+1. **The in-house model and voice.** Piper, package `piper-tts` 1.8.0 (PyPI, released 2026-09-04,
+   GPL-3.0-or-later, Windows wheel 34.1 MB), with the voice `en_GB-cori-high` (Hugging Face
+   `rhasspy/piper-voices`, about 114 MB; model card: trained from scratch on about 24 hours of
+   LibriVox recordings, listed as public domain; UK English, female, single speaker, 22,050 Hz).
+   The owner approves its download, installed outside the repository. The GPL licence of the
+   runtime and of espeak-ng is accepted for in-house use; the company does not distribute them.
+   **The owner accepts that the voice is trained on one real, unidentified LibriVox reader's public
+   domain recordings**; this is not treated as cloning a person's voice without a release.
+   Piper voices fine-tuned from or trained on non-commercial data (lessac and its derivatives,
+   CC BY-NC-SA voices) are not used.
+2. **The performer's release.** As proposed: a dated statement signed by the CEO naming the item,
+   granting the company the right to edit, publish and monetise the recording, and **not**
+   permitting its use to train a model. The document is held outside the repository; the store
+   keeps only its reference, date, the performer's name and its SHA-256.
+3. **How the CEO records.** One file per beat (13 beats for item 001), named by beat. A whole-file
+   recording with beat instants is not built this wave.
+4. **Format.** No format target. Any audio file that decodes with zero errors and holds exactly one
+   audio stream and no video stream is accepted; its container, codec, sample rate, channels,
+   duration and loudness are measured and recorded. The owner guide recommends WAV.
+
+---
+
+## CEO-D-902 — Install the in-house voice now; narrate with the voice's default settings
+
+**The CEO's own decision, 2026-10-10**, during the Wave 10 planning phase.
+
+1. **Install now.** The owner approved installing the model before the design phase, so the design
+   rests on measurements, with the full download list named first: `piper-tts` 1.8.0 and the
+   dependencies pip resolves for it (onnxruntime 1.31.0 MIT, numpy 2.5.3 BSD, protobuf 7.36.2 BSD,
+   flatbuffers 25.12.19 Apache-2.0, packaging 26.3 Apache-2.0/BSD, pathvalidate 3.3.1 MIT) from
+   PyPI, and the voice files from `huggingface.co/rhasspy/piper-voices` at revision
+   `c10ece1aade47bb51c153c893d14e5bf8e5b7117`. The orchestrator installed them on 2026-10-10 under
+   `C:/Users/vuhoangcao/MediaCompanyRun/voice/` (a virtual environment `venv/` on Python 3.14.0, and
+   `model/`), outside the repository:
+   - `en_GB-cori-high.onnx`, 114,219,352 bytes, SHA-256
+     `470b4dd634c98f8a4850d7626ffc3dfc90774628eeef6605a6dd8f88f30a5903` (equal to the hub's
+     recorded LFS object id);
+   - `en_GB-cori-high.onnx.json`, 4,963 bytes, SHA-256
+     `9e7fb5b5671612c22f3c81cbe46c1ae87b031a4632bcb509e499dad6f1e2adec`;
+   - `MODEL_CARD`, 468 bytes, SHA-256
+     `136e7bd168b6c35b4a5df01a0253297e5773b5775ceae0af5160f264aa58208f`.
+2. **What the orchestrator measured first hand** (trial outputs under `voice/trial/`, not records
+   of the company): Piper 1.8.0 runs on Python 3.14 on this machine's CPU. The whole item 001
+   narration (1,929 words) took 175 s with the voice's default settings and 161 s with both noise
+   scales at 0. With the defaults (noise scale 0.667, length scale 1, noise width 0.8, from the
+   voice's configuration; Piper's default output normalisation on), two runs of the same paragraph
+   produced different bytes and different lengths; with both noise scales at 0, two runs produced
+   identical bytes. The whole narration measured 10 min 31 s with the defaults and 9 min 42 s with
+   noise at 0, both shorter than the script's expectation of 12 min 51 s; integrated loudness
+   -15.5 LUFS for both (ffmpeg ebur128).
+3. **The decision.** Item 001 is narrated with **the voice's default settings** (the more natural
+   delivery), knowing that each generation differs and is therefore recorded as not observed to
+   repeat. The settings used are recorded with every artifact, passed explicitly rather than left to
+   the runtime's defaults. Piper's own output normalisation is part of the model's generation and
+   recorded as a setting; the pipeline applies no further level change to any narration source.
+
+---
+
+## CEO-D-903 — Wave 11 draws item 001's 22 graphics for real, by code
+
+**The CEO's own decision, 2026-10-10**, at the close of Wave 10, after the own-voice production of
+item 001 in the company store (item version 3; `wave-10/company-store-run/record.md`).
+
+The next wave renders the 22 motion graphics of item 001 (`GFX-01` to `GFX-22`) as real graphics
+drawn by code on the company's machine, from the shot list and the recorded claims, in place of the
+text cards — at no metered cost and with no model call. The 18 clip positions stay labelled
+placeholders; stock footage, music and their subscription remain the owner's later decision.
+
+Wave 11 runs in its own session (one session per wave) as ticket `MC-12`. Decision block for
+Wave 11: `CEO-D-1000`–`CEO-D-1099`, `CEO-C-1000`–`CEO-C-1099`.
+
+---

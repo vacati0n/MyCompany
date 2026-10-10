@@ -5,7 +5,14 @@ using MediaCompany.Domain.Production;
 namespace MediaCompany.Production;
 
 /// <summary>A loaded item: its material, its narration text with line endings normalised, and the material's own hash.</summary>
-public sealed record LoadedItem(ItemMaterial Material, string Narration, string MaterialPath);
+public sealed record LoadedItem(ItemMaterial Material, string Narration, string MaterialPath)
+{
+    /// <summary>
+    /// The delivery rate the script quoted by the material records, read from the script's own rows at load time (the
+    /// own-voice change, decision D-007 of its design), or not stated; no rate is added to the material or to source.
+    /// </summary>
+    public ScriptRate Rate { get; init; } = new(null, Material.SpecifiedRuntime.Source, null, null);
+}
 
 /// <summary>
 /// Reads an item's material and the records it quotes (the production change, decision D-011 of its design). Every
@@ -46,7 +53,9 @@ public static class ItemPackageLoader
             throw new ItemMaterialRefusedException(mismatch);
         }
 
-        return new LoadedItem(material, sources[material.NarrationFile], full);
+        // The script quoted for the specified runtime is the one whose rate rows the duration report cites.
+        var rate = DurationExpectation.ReadScript(sources[material.SpecifiedRuntime.Source], material.SpecifiedRuntime.Source);
+        return new LoadedItem(material, sources[material.NarrationFile], full) { Rate = rate };
     }
 
     /// <summary>UTF-8 text with every CRLF made a line feed, and nothing else changed.</summary>

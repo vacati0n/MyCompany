@@ -69,21 +69,63 @@ public static class SchemaInstaller
         // item-cap reason; and five decided register entries superseding the questions the owner answered.
         // Nothing here records a designation, a cap, a channel, a budget amount, a price or a route.
         "MediaCompany.Persistence.Schema.009-production.sql",
+
+        // Wave 10, the company's own voice. Additive: the own production mode and a narration source on the production
+        // version, checked against the mode; the recording registrations, their beat files, the narration measurements and
+        // the narration provenance, all created empty and write-once, every duration a generated column of decoded samples
+        // over sample rate. Applicable alone to a store holding the nine (install --from 10). Nothing here records a
+        // registration, a measurement, a provenance, an expected hash or a setting.
+        "MediaCompany.Persistence.Schema.010-own-voice.sql",
     ];
 
-
+    /// <summary>
+    /// Creates the record store: every ordered resource, then the closed action set's mirror. A FULL INSTALL over a store
+    /// that already holds the store designation table is REFUSED, naming the option that applies resources from an ordinal
+    /// (the own-voice change, decision D-010 of its design): the first four resources cannot be re-applied over real rows.
+    /// </summary>
     public static async Task InstallAsync(NpgsqlDataSource dataSource, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dataSource);
 
-        foreach (var resource in ResourceNames)
+        await using (var designated = dataSource.CreateCommand("SELECT to_regclass('store_designation') IS NOT NULL"))
+        {
+            if (await designated.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is true)
+            {
+                throw new SchemaInstallRefusedException(
+                    "this store already holds the store designation table, so a full install would re-apply resources that cannot be re-applied over its rows; "
+                    + $"apply only the resources it lacks with install --from <ordinal> (the tenth resource alone: install --from {ResourceNames.Count})");
+            }
+        }
+
+        await ApplyAsync(dataSource, 1, cancellationToken).ConfigureAwait(false);
+        await SeedClosedActionSetAsync(dataSource, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Applies the ordered resources from the one-based ordinal named, in order, and nothing before it (the own-voice change,
+    /// decision D-010 of its design): the tenth resource alone to a store holding the nine, which re-applies changing nothing.
+    /// The store must already hold every resource before the ordinal; the operator establishes the backup first.
+    /// </summary>
+    public static async Task InstallFromAsync(NpgsqlDataSource dataSource, int firstOrdinal, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dataSource);
+        if (firstOrdinal < 2 || firstOrdinal > ResourceNames.Count)
+        {
+            throw new SchemaInstallRefusedException(
+                $"the first ordinal to apply must be between 2 and {ResourceNames.Count}; the first resource is applied only by a full install of an empty store");
+        }
+
+        await ApplyAsync(dataSource, firstOrdinal, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task ApplyAsync(NpgsqlDataSource dataSource, int firstOrdinal, CancellationToken cancellationToken)
+    {
+        foreach (var resource in ResourceNames.Skip(firstOrdinal - 1))
         {
             var sql = ReadResource(resource);
             await using var command = dataSource.CreateCommand(sql);
             await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
-
-        await SeedClosedActionSetAsync(dataSource, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -140,3 +182,6 @@ public static class SchemaInstaller
         return reader.ReadToEnd();
     }
 }
+
+/// <summary>An install the store's state does not admit; refused before any resource is applied, naming why and what to run.</summary>
+public sealed class SchemaInstallRefusedException(string reason) : Exception($"the install is refused: {reason}");

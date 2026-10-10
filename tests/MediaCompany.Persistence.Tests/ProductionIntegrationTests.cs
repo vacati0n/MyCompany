@@ -98,7 +98,8 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheNinthResourceRecordsNothingAnswersFiveQuestionsAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.009-production.sql", SchemaInstaller.ResourceNames[^1]);
+        Assert.Equal("MediaCompany.Persistence.Schema.009-production.sql", SchemaInstaller.ResourceNames[^2]);
+        Assert.Equal("MediaCompany.Persistence.Schema.009-production.sql", SchemaInstaller.ResourceNames[8]);
         foreach (var table in new[] { "store_designation", "item_caps", "admission_reservations", "production_versions", "production_artifacts", "budgets", "configuration" })
         {
             Assert.Equal(0L, await ScalarAsync<long>($"SELECT count(*) FROM {table}"));
@@ -455,10 +456,13 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     ///   * fourteen operations, the whole narration exactly, booked at zero and labelled demonstration in every reader;
     ///     no benchmark observation; the publish-ready predicate refusing on the held stages;
     ///   * ZERO DATASTORE TRANSACTIONS OPEN while any external process runs;
-    ///   * then plan-only mode, which calls nothing and writes nothing;
-    ///   * then the METERED PATH below the host command, through the same service, with the vendor adapter over a stub
-    ///     handler and a fake secret: the narration requests reach the stub, the narration repeats byte for byte, and a
-    ///     render past its bound ends the Production stage failed by name with no rendered file recorded.
+    ///   * then plan-only mode, which previews the OWN mode (the own-voice change, decision D-002 of its design): it calls
+    ///     nothing, starts nothing and writes nothing, and states that no metered spend is planned; the vendor ESTIMATE it
+    ///     printed before is asserted on a direct composition of the vendor plan;
+    ///   * then METERED MODE THROUGH THE RULE, refused before any request naming the owner's decision of 2026-10-10;
+    ///   * then THE VENDOR PATH UNDER TEST, BELOW THE RULE, through the same service's internal entry, with the vendor adapter
+    ///     over a stub handler and a fake secret: the narration requests reach the stub, the narration repeats byte for byte,
+    ///     and a render past its bound ends the Production stage failed by name with no rendered file recorded.
     /// </summary>
     [RequiresPostgresAndMediaToolFact]
     public async Task TheZeroSpendProductionOfItemOneRendersOneDecodableFileAndRecordsEverything()
@@ -555,20 +559,41 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         Assert.Contains(verdict.Refusals, r => r.Refusal == PublishReadyRefusal.StageHeld && r.Detail.Contains("Production", StringComparison.Ordinal));
         Assert.Contains(verdict.Refusals, r => r.Refusal == PublishReadyRefusal.StageHeld && r.Detail.Contains("CopyrightCheck", StringComparison.Ordinal));
 
-        // Plan-only: the plan is printed, nothing is called, no version is opened, no file is written.
+        // Plan-only (REWRITTEN under the Planning Gate's ruling): it previews the own mode over a fixture installation of the
+        // in-house model — files read, no process started — and prints the cap and that no metered spend is planned; nothing
+        // is called, no version is opened, no file is written.
         var files = Directory.GetFiles(_output, "*", SearchOption.AllDirectories).Length;
         var planOutput = new StringWriter();
-        var plan = await new ProduceItemService(unitOfWork, reader, tool, store, settings, planOutput)
-            .RunAsync(Request(record, loaded, ProductionMode.PlanOnly), null, CancellationToken.None);
-        Assert.Equal(ProduceResult.Succeeded, plan.ExitCode);
-        Assert.Contains("ESTIMATE", planOutput.ToString(), StringComparison.Ordinal);
+        using (var installation = new MediaCompany.OwnVoice.Fixtures.FixtureInstallation("deterministic", TimeSpan.FromSeconds(60)))
+        {
+            var plan = await new ProduceItemService(unitOfWork, reader, new StartsNothing(), store, settings with { InHouseModel = installation.Settings() }, planOutput)
+                .RunAsync(Request(record, loaded, ProductionMode.PlanOnly), null, CancellationToken.None);
+            Assert.True(plan.ExitCode == ProduceResult.Succeeded, planOutput.ToString());
+        }
+
+        Assert.Contains("total: no metered spend is planned, USD 0.00; local compute unmeasured", planOutput.ToString(), StringComparison.Ordinal);
+        Assert.Contains("source: InHouseModel, for every part", planOutput.ToString(), StringComparison.Ordinal);
         Assert.Contains("item cap 5.95", planOutput.ToString(), StringComparison.Ordinal);
         Assert.Equal(files, Directory.GetFiles(_output, "*", SearchOption.AllDirectories).Length);
         Assert.Equal(14L, await ScalarAsync<long>("SELECT count(*) FROM agent_costs"));
         Assert.Equal(2, (await reader.PackageAsync(record.Item, new ItemVersion(1), CancellationToken.None))!.HighestVersion.Value);
 
-        // The metered path below the host command: the vendor adapter over a stub handler, a fake secret, the same
-        // service; a render bound of one millisecond ends the Production stage failed by name.
+        // The vendor ESTIMATE the plan-only section asserted before, on a direct composition of the vendor plan.
+        var vendorPlan = ProductionPlan.Compose(
+            (await reader.PackageAsync(record.Item, new ItemVersion(1), CancellationToken.None))!,
+            NarrationSplitter.Split(loaded.Narration, loaded.Material.Beats, settings.NarrationCharacterMaximum!.Value),
+            await reader.PricingAsync(CapabilityClass.Narration, CancellationToken.None)) with
+        {
+            Selection = new NarrationSelection(NarrationSource.Vendor, "named explicitly below the narration source rule: the vendor path under test", [], []),
+        };
+        var vendorOutput = new StringWriter();
+        vendorPlan.Print(vendorOutput, ProductionMode.Metered, StoreDesignation.Demonstration, settings, loaded.Material);
+        Assert.Contains("ESTIMATE", vendorOutput.ToString(), StringComparison.Ordinal);
+        Assert.Contains("item cap 5.95", vendorOutput.ToString(), StringComparison.Ordinal);
+
+        // THE VENDOR PATH UNDER TEST, BELOW THE RULE (rewritten under the Planning Gate's ruling): the vendor adapter over a
+        // stub handler, a fake secret, the same service through its internal entry naming the vendor source; a render bound
+        // of one millisecond ends the Production stage failed by name. Through the rule, metered mode is refused first.
         var variable = CredentialBrokerFactory.VariableName(Speech, null);
         // The variable's existing value is NEVER READ: it could hold a real secret. The fake value is set in this
         // process only, and removed from this process afterwards; nothing outside the process changes.
@@ -581,8 +606,15 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
                 [new ProviderEndpoint(Speech, new Uri("https://speech.stub.invalid/"), VendorContract.SpeechAudio)], new HttpClient(stub));
             var bounded = settings with { RenderBound = TimeSpan.FromMilliseconds(1) };
             var meteredOutput = new StringWriter();
-            var second = await new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(bounded), store, bounded, meteredOutput)
+            var barred = await new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(bounded), store, bounded, meteredOutput)
                 .RunAsync(Request(record, loaded, ProductionMode.Metered), metered, CancellationToken.None);
+            Assert.Equal(ProduceResult.RefusedBeforeAnyCall, barred.ExitCode);
+            Assert.Null(barred.Version);
+            Assert.Equal(0, stub.Requests);
+            Assert.Contains("2026-10-10", meteredOutput.ToString(), StringComparison.Ordinal);
+
+            var second = await new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(bounded), store, bounded, meteredOutput)
+                .RunBelowTheRuleAsync(Request(record, loaded, ProductionMode.Metered), NarrationSource.Vendor, metered, CancellationToken.None);
 
             Assert.Equal(ProduceResult.StageFailed, second.ExitCode);
             Assert.Equal(14, stub.Requests);
@@ -646,7 +678,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
 
     /// <summary>
     /// AN OPERATOR'S CANCELLATION DURING A VENDOR CALL, end to end through the produce service (corrections CR-003 and
-    /// CR-009): the stub vendor receives the first narration request and the operator cancels while it is unanswered.
+    /// CR-009), on THE VENDOR PATH UNDER TEST, BELOW THE RULE (rewritten under the Planning Gate's ruling: the service's
+    /// internal entry names the vendor source, since the rule refuses metered mode): the stub vendor receives the first
+    /// narration request and the operator cancels while it is unanswered.
     /// The attempt is booked at its worst case, labelled estimate, under its reservation; the Audio stage is recorded
     /// failed naming the cancellation; nothing after it runs; the run ends with exit code 6.
     /// </summary>
@@ -672,7 +706,7 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
             var output = new StringWriter();
 
             var ended = await new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(settings), new ArtifactWriter(_output, Repository()), settings, output)
-                .RunAsync(Request(record, loaded, ProductionMode.Metered), metered, cancellation.Token);
+                .RunBelowTheRuleAsync(Request(record, loaded, ProductionMode.Metered), NarrationSource.Vendor, metered, cancellation.Token);
 
             Assert.Equal(ProduceResult.Cancelled, ended.ExitCode);
             Assert.Equal(1, stub.Requests);
@@ -1029,10 +1063,16 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
             await inner.DrawStillAsync(still, cancellationToken);
         }
 
-        public async Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, CancellationToken cancellationToken)
+        public async Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, string sampleFormat, CancellationToken cancellationToken)
         {
             await observer.ObserveAsync();
-            await inner.ConcatenateAudioAsync(stagingFolder, listFile, outputFile, cancellationToken);
+            await inner.ConcatenateAudioAsync(stagingFolder, listFile, outputFile, sampleFormat, cancellationToken);
+        }
+
+        public async Task<AudioMeasurement> MeasureAudioAsync(string file, CancellationToken cancellationToken)
+        {
+            await observer.ObserveAsync();
+            return await inner.MeasureAudioAsync(file, cancellationToken);
         }
 
         public async Task RenderAsync(RenderSpecification render, CancellationToken cancellationToken)
@@ -1055,6 +1095,26 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
             await observer.ObserveAsync();
             return await inner.DecodeAsync(file, cancellationToken);
         }
+    }
+
+    /// <summary>A process starter that starts nothing and fails the test if a plan ever asks it to.</summary>
+    private sealed class StartsNothing : IMediaTool
+    {
+        private static InvalidOperationException Refused() => new("plan-only started a process");
+
+        public Task<string> VersionLineAsync(CancellationToken cancellationToken) => throw Refused();
+
+        public Task DrawStillAsync(StillSpecification still, CancellationToken cancellationToken) => throw Refused();
+
+        public Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, string sampleFormat, CancellationToken cancellationToken) => throw Refused();
+
+        public Task RenderAsync(RenderSpecification render, CancellationToken cancellationToken) => throw Refused();
+
+        public Task<MediaProbe> ProbeAsync(string file, CancellationToken cancellationToken) => throw Refused();
+
+        public Task<DecodeCheck> DecodeAsync(string file, CancellationToken cancellationToken) => throw Refused();
+
+        public Task<AudioMeasurement> MeasureAudioAsync(string file, CancellationToken cancellationToken) => throw Refused();
     }
 
     /// <summary>The writer, interrupted once: after a named file is promoted, and before it can be recorded.</summary>

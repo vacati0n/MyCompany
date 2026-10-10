@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The in-test stand-in for the in-house speech model's interpreter (the own-voice change, decision D-005 of its design).
+    No test runs the real model: the tests configure this executable as the "interpreter" and the one process starter starts
+    it with the runtime's exact argument list. It accepts only that list, reads the model and configuration files it is given,
+    and writes a WAV whose length follows the words of the text file. What it does is chosen by the first line of the fixture
+    model file: deterministic, random, slow or fail. It reaches no network.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="MediaCompany.Domain" />
+  </ItemGroup>
+</Project>

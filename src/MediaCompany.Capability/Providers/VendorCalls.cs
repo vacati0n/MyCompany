@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using MediaCompany.Credentials;
 using MediaCompany.Domain.Accounting;
 using MediaCompany.Domain.Capabilities;
@@ -15,8 +16,14 @@ namespace MediaCompany.Capability.Providers;
 /// admitted worst case and never at zero units as a measurement. Nothing here logs, and no message it builds
 /// carries a header, a body or a secret.
 /// </summary>
-internal static class VendorCalls
+internal static partial class VendorCalls
 {
+    /// <summary>The ruled length a screened vendor error text is truncated to (the Design Gate, 2026-10-10): a configured amount.</summary>
+    internal const int ScreenedLength = 200;
+
+    /// <summary>What replaces a removed secret, a bearer value or a token-shaped string.</summary>
+    internal const string Redacted = "[redacted]";
+
     /// <summary>What one send returned: the status, the one body buffer, the declared media type and the elapsed time.</summary>
     internal sealed record Sent(HttpStatusCode Status, byte[] Body, string? MediaType, TimeSpan Elapsed);
 
@@ -72,9 +79,15 @@ internal static class VendorCalls
             ChargeKnown = false,
         };
 
-    /// <summary>A non-success status: failed, its charge unknown, its signal mapped.</summary>
-    internal static ProviderAttempt NonSuccess(Sent sent) =>
-        Unknown(sent.Elapsed, $"the vendor returned status {(int)sent.Status}", sent.Status switch
+    /// <summary>
+    /// A non-success status: failed, its charge unknown, its signal mapped, and THE VENDOR'S CODE OR MESSAGE SCREENED (the
+    /// own-voice change, decision D-013 of its design). The text joins the status in the one failure reason every sink
+    /// receives — the availability record, the operation record, the audit entry, the stage summary and the console — so
+    /// each receives only the screened text: every value the credential exchange attached to the sent message removed,
+    /// bearer values and token-shaped strings redacted, control characters stripped, then truncated to the ruled length.
+    /// </summary>
+    internal static ProviderAttempt NonSuccess(Sent sent, HttpRequestMessage message) =>
+        Unknown(sent.Elapsed, $"the vendor returned status {(int)sent.Status}: {ErrorText(sent.Body, Attached(message))}", sent.Status switch
         {
             HttpStatusCode.TooManyRequests => ProviderFailureSignal.RateLimited,
             HttpStatusCode.PaymentRequired => ProviderFailureSignal.QuotaExhausted,
@@ -83,6 +96,114 @@ internal static class VendorCalls
             HttpStatusCode.GatewayTimeout => ProviderFailureSignal.Outage,
             _ => ProviderFailureSignal.Transient,
         });
+
+    /// <summary>Every value the sent message carries in its request headers — the exchange attached the credential there — and each bearer value alone.</summary>
+    internal static IReadOnlyList<string> Attached(HttpRequestMessage message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        var values = message.Headers.SelectMany(h => h.Value).Where(v => !string.IsNullOrEmpty(v)).ToList();
+        if (message.Headers.Authorization is { Parameter: { Length: > 0 } parameter })
+        {
+            values.Add(parameter);
+        }
+
+        // The longest first, so a value containing another is removed whole.
+        return values.Distinct(StringComparer.Ordinal).OrderByDescending(v => v.Length).ToArray();
+    }
+
+    /// <summary>
+    /// The vendor's error code or message from the one body buffer, screened and truncated: the first string among an error
+    /// object's code, type and message, or the top-level code, message and detail, of a JSON body; otherwise the body itself
+    /// where it is UTF-8 text without control characters; otherwise a statement that nothing readable was returned.
+    /// </summary>
+    internal static string ErrorText(byte[] body, IReadOnlyList<string> secrets)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(secrets);
+        if (body.Length == 0)
+        {
+            return "no error code or message was readable (empty body)";
+        }
+
+        string text;
+        try
+        {
+            text = new UTF8Encoding(false, true).GetString(body);
+        }
+        catch (DecoderFallbackException)
+        {
+            return "no error code or message was readable (not text)";
+        }
+
+        if (text.Any(c => char.IsControl(c) && c is not ('\n' or '\r' or '\t')))
+        {
+            return "no error code or message was readable (not text)";
+        }
+
+        var chosen = JsonCode(text) ?? text;
+        return Screen(chosen, secrets);
+    }
+
+    /// <summary>Removes every attached value, redacts bearer values and token-shaped runs, strips control characters, then truncates.</summary>
+    internal static string Screen(string text, IReadOnlyList<string> secrets)
+    {
+        var screened = text;
+        foreach (var secret in secrets.Where(s => s.Length > 0))
+        {
+            screened = screened.Replace(secret, Redacted, StringComparison.Ordinal);
+        }
+
+        screened = Bearer().Replace(screened, "Bearer " + Redacted);
+        screened = DottedToken().Replace(screened, Redacted);
+        screened = TokenRun().Replace(screened, m => m.Value.Any(char.IsLetter) && m.Value.Any(char.IsDigit) ? Redacted : m.Value);
+        screened = new string(screened.Select(c => char.IsControl(c) ? ' ' : c).ToArray()).Trim();
+        return screened.Length > ScreenedLength ? screened[..ScreenedLength] : screened;
+    }
+
+    private static string? JsonCode(string text)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            if (root.TryGetProperty("error", out var error))
+            {
+                if (error.ValueKind == JsonValueKind.String)
+                {
+                    return error.GetString();
+                }
+
+                if (error.ValueKind == JsonValueKind.Object && First(error, "code", "type", "message") is { } inner)
+                {
+                    return inner;
+                }
+            }
+
+            return First(root, "code", "message", "detail");
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static string? First(JsonElement element, params string[] names) =>
+        names.Select(n => element.TryGetProperty(n, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null)
+            .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+    [GeneratedRegex(@"Bearer\s+\S+", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex Bearer();
+
+    [GeneratedRegex(@"[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}", RegexOptions.CultureInvariant)]
+    private static partial Regex DottedToken();
+
+    [GeneratedRegex(@"[A-Za-z0-9_.\-]{20,}", RegexOptions.CultureInvariant)]
+    private static partial Regex TokenRun();
 
     /// <summary>A request whose payload is not the one this vendor path takes: nothing is sent, so the charge is known to be none.</summary>
     internal static ProviderAttempt WrongPayload(string path) =>
