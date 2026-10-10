@@ -1987,3 +1987,40 @@ narration voice has no default; metered mode refuses until it is set). The narra
 speech-and-image vendor's voice **`onyx`** (a deep male voice suited to documentary narration).
 The orchestrator verifies first-hand that the voice name is current with the vendor before the go
 and sets it in the run's settings; no code default is added.
+
+---
+
+## CEO-D-805 — The company's narration is its own: a human recording, or a voice model run in house
+
+**The CEO's own decision, 2026-10-10**, after the first metered attempt of `CEO-D-800`.
+
+**What happened first.** On 2026-10-10 at 07:50 UTC the orchestrator ran `produce --mode metered`
+once on the owner's go, against the company store `mediacompany` (backed up beforehand). Item
+version 2 opened; the Design stage drew its 22 stills locally; the first narration request (513
+characters) was answered by the speech vendor with HTTP status 429. The run stopped without retry
+(exit 3). The attempt is booked at its admitted worst case, **USD 0.007695, labelled estimate**
+(operation `4087889c-2f31-4868-8d91-5223a3b4134b`); the vendor's actual charge is not known and is
+probably zero. The vendor's error body was not recorded, so the cause (rate limit or no prepaid
+quota) is not known. **No video was produced.**
+
+**The decision.** The owner does not want the company's voice to depend on the speech vendor.
+Narration must come from the company itself, in **both** forms:
+
+1. **A human recording**: a person working for the company records the narration; the pipeline
+   imports the recorded audio file, checks it, and assembles the video from it.
+2. **A voice model run in house**: an open-licensed speech model running on the company's own
+   machine, used when no human recording exists — no vendor, no per-use charge, no content leaving
+   the machine.
+
+**Consequences.**
+
+- The speech vendor's narration route is **not attempted again**. The `CEO-D-800` authority is not
+  spent further on that vendor; the counted total under the USD 5.95 cap stays at its recorded
+  USD 0.007695 estimate.
+- The owner-set credential variable for that vendor is no longer needed and may be removed.
+- **Wave 10** builds the in-house narration in its own session (one session per wave); Wave 9 closes
+  as delivered.
+- The voice `onyx` (`CEO-D-804`) belonged to the vendor and lapses with it; the in-house voice is
+  chosen in Wave 10.
+
+Decision block for Wave 10: `CEO-D-900`–`CEO-D-999`, `CEO-C-900`–`CEO-C-999`.

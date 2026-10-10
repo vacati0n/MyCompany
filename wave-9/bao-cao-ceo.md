@@ -78,3 +78,26 @@ Chín wave liền, mọi phản đối của agent đều đúng. Ít nhất nă
 ## 7. Tệp đính kèm
 
 `wave-9/00-ticket-mc-10.md` đến `05-review-package.md`, `release-note.md` (113 vấn đề đã biết), `owner-guide-metered-run.md`, `cost-ledger.md`, và quyết định `CEO-D-800` đến `CEO-D-804` trong `research/ceo-decision-record.md`.
+
+---
+
+## 8. Phụ lục (10/10/2026): lần chạy thật đầu tiên và quyết định mới
+
+**Đã làm theo đồng ý của anh:**
+- Kiểm tra trực tiếp trên trang của OpenAI: giá, endpoint, điều khoản, giọng `onyx`. Kết quả ghi vào cấu hình (commit `66a546c`).
+- Cài store công ty `mediacompany` lần đầu và nạp 26 dòng cấu hình.
+- Chạy `plan-only` để xem trước: ước tính USD 0.166.
+- Sao lưu store trước khi chạy thật.
+
+**Lần chạy thật (07:50 UTC):**
+- Hệ thống mở item version 2 và vẽ xong 22 hình.
+- Request giọng đọc đầu tiên bị OpenAI trả về **HTTP 429**. Hệ thống dừng, không thử lại.
+- Lệnh lỗi được ghi theo mức tối đa: **USD 0.0077** (ước tính; chi phí thực có lẽ là 0).
+- **Chưa có video thật.**
+- Nội dung lỗi OpenAI trả về chưa được lưu, nên chưa biết nguyên nhân. Đây là thiếu sót, sẽ sửa ở Wave 10.
+
+**Quyết định mới của anh (`CEO-D-805`):** không phụ thuộc giọng đọc của OpenAI. Giọng đọc là của công ty, theo cả hai cách:
+- Người thật thu âm, pipeline nhập file đã thu.
+- Khi chưa có bản thu, dùng một mô hình giọng đọc mã nguồn mở chạy trên máy công ty.
+
+Việc này là **Wave 10 (`MC-11`)**: ticket đã tạo và lên kế hoạch; xem `wave-10/HANDOFF.md`. Giọng `onyx` hết hiệu lực cùng với OpenAI. Biến môi trường chứa key OpenAI không còn cần nữa, anh có thể xóa.
