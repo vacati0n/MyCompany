@@ -2,7 +2,7 @@
 
 **Run by the orchestrator on 2026-10-10, on the owner's explicit go given in the session after the
 Verification Gate**, at the feature head `1ed872a` (version 1.7.0), against the company store
-`mediacompany`. Logs and the settings used are in `wave-10/company-store-run/`. This record is the
+`mediacompany`. Logs (`*.log.txt`) and the settings used are in `wave-10/company-store-run/`. This record is the
 evidence for the scope's criteria of the post-phase run (scope criteria 42, 50, 51 and 52).
 
 ## Steps, in order
@@ -73,5 +73,5 @@ voice reads about 184 words a minute against the script's assumed 150.
 
 The real model ran once in `mediacompany_demo` before this run (the Design Gate's ruling): exit 0 in
 327 s, video 634.233 s, SHA-256 `cd406a0cdd6d5274d136cb4743b957b855325e0ad1d04dbb0755dd0e08dfda5b`,
-0 operations, USD 0.00. Logs `demo-real-plan.log` and `demo-real-own.log` in the same folder; that
+0 operations, USD 0.00. Logs `demo-real-plan.log.txt` and `demo-real-own.log.txt` in the same folder; that
 store's schema has since been dropped by the live test suite, as expected.
