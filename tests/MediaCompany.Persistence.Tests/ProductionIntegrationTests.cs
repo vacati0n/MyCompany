@@ -342,6 +342,12 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         Assert.Equal(12L, await ScalarAsync<long>($"SELECT count(*) FROM dossier_stage_evidence WHERE item_id = '{record.Item}' AND item_version = 1"));
         Assert.Equal(5.95m, await ScalarAsync<decimal>($"SELECT amount FROM item_caps WHERE item_id = '{record.Item}'"));
 
+        // The company record reader reads each channel's cap coverage in its one snapshot (the unbudgeted-channel ruling).
+        var coverage = Assert.Single((await new NpgsqlCompanyRecordReader(Source).ReadAsync(null, CancellationToken.None)).ItemCapCoverage!);
+        Assert.Equal(record.Channel, coverage.Channel);
+        Assert.Equal(1, coverage.Items);
+        Assert.Equal(1, coverage.CappedItems);
+
         var differing = await writer.PrepareAsync(record with { ItemTitle = "a different title" }, StoreDesignation.Demonstration, CancellationToken.None);
         Assert.True(differing.Refused);
         Assert.Contains(differing.Refusals, r => r.Contains($"item {record.Item}", StringComparison.Ordinal) && r.Contains("title", StringComparison.Ordinal));

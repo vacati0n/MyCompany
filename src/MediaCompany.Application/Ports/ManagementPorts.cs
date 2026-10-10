@@ -202,6 +202,23 @@ public sealed record CompanySnapshot
     /// figure and is never read, counted or rendered as an observation.
     /// </summary>
     public MediaCompany.Domain.Production.StoreDesignation? Designation { get; init; }
+
+    /// <summary>
+    /// How many of each channel's items carry a recorded cap, read in the same snapshot (the production change; the
+    /// ruling on the review's question of the unbudgeted-channel rule). Null where the reader did not read it or the
+    /// cap record is absent, which keeps the delivered rule exactly; a channel with no row has no item.
+    /// </summary>
+    public IReadOnlyList<ChannelItemCapCoverage>? ItemCapCoverage { get; init; }
+}
+
+/// <summary>One channel's items, and how many of them carry a recorded cap, BARE, as the snapshot read them.</summary>
+public sealed record ChannelItemCapCoverage
+{
+    public required ChannelId Channel { get; init; }
+
+    public required long Items { get; init; }
+
+    public required long CappedItems { get; init; }
 }
 
 /// <summary>

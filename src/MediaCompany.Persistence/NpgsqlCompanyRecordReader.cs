@@ -211,6 +211,7 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
             Reverifications = await ReverificationsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             ProducedItems = await ProducedItemsAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
             Designation = await DesignationAsync(connection, transaction, cancellationToken).ConfigureAwait(false),
+            ItemCapCoverage = await ItemCapCoverageAsync(connection, transaction, asOf, cancellationToken).ConfigureAwait(false),
         };
 
         // Nothing was written; ending the read-only transaction releases its share locks and its snapshot.
@@ -752,6 +753,51 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
     /// reservations, and the rendered file's measured runtime. A store the ninth resource was never applied to reads
     /// none, and the composer composes nothing.
     /// </summary>
+    /// <summary>
+    /// Each channel's items and how many carry a cap recorded at or before the instant, in the same snapshot; null where
+    /// the cap record is absent (a store the ninth resource was never applied to), which keeps the delivered rule.
+    /// </summary>
+    private static async Task<IReadOnlyList<ChannelItemCapCoverage>?> ItemCapCoverageAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        DateTimeOffset asOf,
+        CancellationToken cancellationToken)
+    {
+        await using (var present = new NpgsqlCommand("SELECT to_regclass('item_caps') IS NOT NULL", connection, transaction))
+        {
+            if (await present.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not true)
+            {
+                return null;
+            }
+        }
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT i.channel_id, count(*), count(c.item_id)
+            FROM items i
+            LEFT JOIN item_caps c ON c.item_id = i.item_id AND c.recorded_at <= @as_of
+            GROUP BY i.channel_id
+            ORDER BY i.channel_id
+            """,
+            connection,
+            transaction);
+        command.Parameters.AddWithValue("as_of", asOf);
+
+        var coverage = new List<ChannelItemCapCoverage>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            coverage.Add(new ChannelItemCapCoverage
+            {
+                Channel = new ChannelId(reader.GetGuid(0)),
+                Items = reader.GetInt64(1),
+                CappedItems = reader.GetInt64(2),
+            });
+        }
+
+        return coverage;
+    }
+
     /// <summary>The store's recorded designation in the same snapshot, or null where none is recorded or the record is absent.</summary>
     private static async Task<MediaCompany.Domain.Production.StoreDesignation?> DesignationAsync(
         NpgsqlConnection connection,
