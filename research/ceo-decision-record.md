@@ -2024,3 +2024,23 @@ Narration must come from the company itself, in **both** forms:
   chosen in Wave 10.
 
 Decision block for Wave 10: `CEO-D-900`–`CEO-D-999`, `CEO-C-900`–`CEO-C-999`.
+
+## CEO-D-900 — Answers to the Wave 10 opening questions on the human recording
+
+**The CEO's own decision, 2026-10-10**, at the start of Wave 10 (`MC-11`), answering the
+orchestrator's opening questions.
+
+1. **Who records.** The CEO records the narration personally. The performer is the CEO; the
+   company holds the recording. How the performer's release is recorded is for the scope phase to
+   propose and the owner to confirm; nothing is assumed beyond this answer.
+2. **Order for item 001.** Item 001 is produced first with the in-house voice model; it does not
+   wait for a human recording. When the CEO's recording exists, item 001 is produced again from
+   it, replacing the model voice.
+3. **Loudness.** No loudness target is set. The pipeline measures and records the loudness of every
+   narration source and does not adjust it; a target may be set later from measured results.
+
+The in-house model and voice remain to be chosen: the scope phase proposes candidates with their
+licences (weights, code, voices), sizes and run-time requirements on this machine (Windows, no
+GPU); the owner approves the download by name, source, size and licence before it happens.
+
+---
