@@ -17,7 +17,9 @@ dotnet run --project src/MediaCompany.Host -- <command> <options>
 `<settings.json>` below is a copy of `config/production-settings.sample.json` kept **outside the
 repository** (for example `C:/Users/vuhoangcao/MediaCompanyRun/settings.own.json`) with every
 `<...>` value set. Its `inHouseModel` section already names the model installed on 2026-10-10 and
-the SHA-256 of each of its files.
+the SHA-256 of each of its files; **before using the copy, check each expected value against the
+owner's decision record** (`research/ceo-decision-record.md`): the run's settings file written from
+that record is the trust anchor, not the repository sample.
 
 ---
 
@@ -112,8 +114,21 @@ both hashes, a file inside the repository, a configuration that is not the model
 |---|---|---|
 | plan only — prints every part's source and why, the verified files and the bounds; starts nothing, writes nothing | demonstration or company | `produce --mode plan-only --settings <settings.json>` |
 | own — the company's own narration | demonstration (`mediacompany_demo`) or company (`mediacompany`, on the owner's go) | `produce --mode own --settings <settings.json>` |
-| fake — the demonstration composition | demonstration only | `produce --mode fake --settings <settings.json>` |
+| fake — the demonstration composition; needs `narrationVoice` set in the settings (any name: the fakes ignore it; the own mode reads none of it) | demonstration only | `produce --mode fake --settings <settings.json>` |
 | metered — the speech vendor | **refused**, naming the owner's decision of 2026-10-10 | `produce --mode metered --settings <settings.json>` exits 2 |
+
+**The demonstration store first.** Before any command above runs against the demonstration
+database `mediacompany_demo`, create its schema and designate it, with the connection string naming
+that database:
+
+```powershell
+dotnet run --project src/MediaCompany.Host -- install
+dotnet run --project src/MediaCompany.Host -- prepare --settings <settings.json> --designation demonstration
+```
+
+The live test suite drops the demonstration database's schema every time it runs, so after a test
+run repeat these two steps (and register any recording again) before producing there. Never point
+either step, or the test suite, at the company store.
 
 Which source narrates is decided by one fixed rule, printed per part before anything runs: **your
 registered recording**, when its release is complete and every stored file still matches;
@@ -158,3 +173,10 @@ credential; store the release document, a recording outside the output root, the
 runtime in the repository or the store; change any loudness, duration, format or sample rate;
 claim a repeatability it did not observe; publish, upload or configure anything — the item stays
 held short of publish-ready.
+
+**What verification does not cover** (a recorded residual risk): verify-model and every run hash the
+environment's interpreter, its configuration, the base interpreter's executable, the voice files and
+every hashed entry of the runtime's and its dependencies' installed-files records; they do **not**
+hash the base interpreter's own libraries (such as `python314.dll`) and its standard library, nor
+the 863 record entries the packages list without a hash (compiled caches and the records
+themselves). That code runs unverified.

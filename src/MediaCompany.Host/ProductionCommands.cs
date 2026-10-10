@@ -66,7 +66,8 @@ public static class ProductionCommands
             StillBound = TimeSpan.FromSeconds(Number("stillBoundSeconds")),
             ProviderCallBound = Optional("providerCallBoundSeconds") is { } call ? TimeSpan.FromSeconds(call) : null,
             NarrationCharacterMaximum = Optional("narrationCharacterMaximum"),
-            NarrationVoice = json["narrationVoice"]?.GetValue<string>(),
+            // A <...> placeholder is a value still to set (fake mode only), never a voice.
+            NarrationVoice = json["narrationVoice"]?.GetValue<string>() is { Length: > 0 } voice && !voice.StartsWith('<') ? voice : null,
             InHouseModel = json["inHouseModel"] is JsonObject model ? ReadModel(model) : null,
         };
 
@@ -470,38 +471,6 @@ public static class ProductionCommands
 
         await output.WriteLineAsync("Verified: every configured file of the in-house model hashes to its expected value, outside the repository.").ConfigureAwait(false);
         return 0;
-    }
-
-    /// <summary>Gathers every value the metered preconditions read, before any call, reading no secret value.</summary>
-    public static async Task<MeteredReadiness> ReadinessAsync(
-        IUnitOfWork unitOfWork, ProductionPlan plan, StoreGuardVerdict guard, HostProductionSettings settings, PreparationRecord preparation, CancellationToken cancellationToken)
-    {
-        ControllerDecision? controller = null;
-        await using (var transaction = await unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false))
-        {
-            // Read only: the transaction reserves the datastore's instant, reads the governing readings and is rolled back.
-            var reserved = await transaction.Admission.ReserveAsync(cancellationToken).ConfigureAwait(false);
-            var readings = await transaction.Admission.GoverningReadingsAsync(
-                new Attribution(preparation.Item, plan.Package.Channel, preparation.Department, preparation.Agent), ApprovedEnvelope.Metered, cancellationToken).ConfigureAwait(false);
-            controller = CostController.Decide(readings, reserved.Instant, itemCapped: plan.Package.Cap is not null);
-        }
-
-        var planned = plan.Account is null ? [] : new[] { plan.Account };
-        return new MeteredReadiness
-        {
-            Plan = plan,
-            StoreRefusals = guard.Refusals,
-            ControllerRestriction = controller is not null && CostController.RestrictsToZeroCost(controller.Action)
-                ? $"{controller.Action} for {controller.BookingMonth:yyyy-MM}{(controller.Reason is { } reason ? $" ({reason})" : string.Empty)}"
-                : null,
-            Credentials = planned
-                .Select(a => (CredentialBrokerFactory.VariableName(a.Id, a.Scope == CredentialScope.Company ? null : plan.Package.Channel),
-                              CredentialBrokerFactory.IsPublished(a.Id, a.Scope == CredentialScope.Company ? null : plan.Package.Channel)))
-                .ToArray(),
-            FakesConfigured = planned.Where(a => settings.Fakes.Any(f => f.ProviderAccount == a.Id)).Select(a => a.Id).ToArray(),
-            EndpointsMissing = planned.Where(a => !settings.Endpoints.Any(e => e.ProviderAccount == a.Id && e.Contract == VendorContract.SpeechAudio)).Select(a => a.Id).ToArray(),
-            NarrationVoice = settings.Production.NarrationVoice,
-        };
     }
 
     private static bool TryMode(string text, out ProductionMode mode)

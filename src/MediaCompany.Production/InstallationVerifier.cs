@@ -79,6 +79,12 @@ public sealed class InstallationVerifier
     }
 
     /// <summary>
+    /// A test seam, invoked with each core file's full path right after its bytes were read and hashed and before anything is
+    /// parsed from them, so a test can replace the file in that window and prove the parse reads the bytes hashed, not the disk.
+    /// </summary>
+    internal Action<string>? AfterHash { get; set; }
+
+    /// <summary>
     /// The whole verification, files only: every configured file, the base interpreter the environment names, and, where
     /// <paramref name="entries"/> is set, every hashed entry of every configured installed-files record.
     /// </summary>
@@ -95,9 +101,13 @@ public sealed class InstallationVerifier
                 + "which is the file the runtime loads; the hashed configuration would not be the loaded one");
         }
 
+        // ONE READ PER FILE (the correction of the quality review): every file the verifier both hashes and parses — the
+        // environment configuration, the voice configuration, the model card and each installed-files record — is read ONCE;
+        // the buffer hashed is the buffer parsed, and nothing is parsed from a second read of the disk.
         byte[]? environment = null;
         byte[]? configuration = null;
         byte[]? card = null;
+        var records = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         foreach (var (name, expected) in Core())
         {
             if (Placed(name, expected.Path, findings) is not { } path)
@@ -119,6 +129,7 @@ public sealed class InstallationVerifier
                 computed = await FileHashes.Sha256Async(path, cancellationToken).ConfigureAwait(false);
             }
 
+            AfterHash?.Invoke(path);
             var verified = new VerifiedFile(name, path, expected.Sha256, computed);
             files.Add(verified);
             if (!verified.Matches)
@@ -138,6 +149,10 @@ public sealed class InstallationVerifier
             else if (ReferenceEquals(expected, _settings.ModelCard))
             {
                 card = bytes;
+            }
+            else if (bytes is not null && Records().Any(r => ReferenceEquals(r, expected)))
+            {
+                records[path] = bytes;
             }
         }
 
@@ -163,7 +178,6 @@ public sealed class InstallationVerifier
         var report = new InstallationReport { Findings = findings, Files = files };
         if (configuration is not null)
         {
-            report = report with { VoiceName = null };
             report = Voice(configuration, report, findings);
         }
 
@@ -178,18 +192,19 @@ public sealed class InstallationVerifier
             var withoutHash = 0;
             foreach (var record in Records())
             {
-                if (files.FirstOrDefault(f => ReferenceEquals(f.Path, record.Path) || string.Equals(f.Path, Full(record.Path), StringComparison.OrdinalIgnoreCase)) is not { Matches: true })
+                // Only a record whose bytes matched is parsed, and from those very bytes.
+                if (!records.TryGetValue(Full(record.Path), out var recorded))
                 {
                     continue;
                 }
 
-                var (ok, without) = await VerifyEntriesAsync(Full(record.Path), findings, cancellationToken).ConfigureAwait(false);
+                var (ok, without) = await VerifyEntriesAsync(Full(record.Path), recorded, findings, cancellationToken).ConfigureAwait(false);
                 verifiedEntries += ok;
                 withoutHash += without;
             }
 
             report = report with { RecordEntriesVerified = verifiedEntries, RecordEntriesWithoutHash = withoutHash };
-            report = await MetadataAsync(report, findings, cancellationToken).ConfigureAwait(false);
+            report = await MetadataAsync(report, records, findings, cancellationToken).ConfigureAwait(false);
         }
 
         return report with { Findings = findings.ToArray() };
@@ -381,12 +396,12 @@ public sealed class InstallationVerifier
     /// Verifies every hashed entry of one installed-files record against the file it names, relative to the folder that
     /// holds the record's package-information folder. A missing or changed file is a finding naming it and both hashes.
     /// </summary>
-    private static async Task<(int Verified, int WithoutHash)> VerifyEntriesAsync(string record, List<string> findings, CancellationToken cancellationToken)
+    private static async Task<(int Verified, int WithoutHash)> VerifyEntriesAsync(string record, byte[] recorded, List<string> findings, CancellationToken cancellationToken)
     {
         var packages = Directory.GetParent(Path.GetDirectoryName(record)!)!.FullName;
         var verified = 0;
         var without = 0;
-        foreach (var line in (await File.ReadAllTextAsync(record, Encoding.UTF8, cancellationToken).ConfigureAwait(false)).Split('\n'))
+        foreach (var line in Encoding.UTF8.GetString(recorded).Split('\n'))
         {
             var fields = Csv(line.TrimEnd('\r'));
             if (fields.Count < 2 || fields[0].Length == 0)
@@ -425,10 +440,10 @@ public sealed class InstallationVerifier
     /// The runtime's name, version and licence, read from its package metadata, after its bytes hash to the value the
     /// verified runtime record lists for it; otherwise a finding, and the three read not stated.
     /// </summary>
-    private async Task<InstallationReport> MetadataAsync(InstallationReport report, List<string> findings, CancellationToken cancellationToken)
+    private async Task<InstallationReport> MetadataAsync(InstallationReport report, IReadOnlyDictionary<string, byte[]> records, List<string> findings, CancellationToken cancellationToken)
     {
         var record = Full(_settings.RuntimeRecord.Path);
-        if (!report.Files.Any(f => string.Equals(f.Path, record, StringComparison.OrdinalIgnoreCase) && f.Matches))
+        if (!records.TryGetValue(record, out var recorded))
         {
             return report;
         }
@@ -436,7 +451,7 @@ public sealed class InstallationVerifier
         var folder = Path.GetDirectoryName(record)!;
         var metadata = Path.Combine(folder, "METADATA");
         var entry = Path.GetFileName(folder) + "/METADATA";
-        var listed = (await File.ReadAllTextAsync(record, Encoding.UTF8, cancellationToken).ConfigureAwait(false)).Split('\n')
+        var listed = Encoding.UTF8.GetString(recorded).Split('\n')
             .Select(l => Csv(l.TrimEnd('\r')))
             .FirstOrDefault(f => f.Count >= 2 && string.Equals(f[0], entry, StringComparison.Ordinal) && f[1].StartsWith("sha256=", StringComparison.Ordinal));
         if (listed is null || !File.Exists(metadata))

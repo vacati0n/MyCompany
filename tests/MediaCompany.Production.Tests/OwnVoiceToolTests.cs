@@ -301,6 +301,53 @@ public sealed class OwnVoiceToolTests : IDisposable
     }
 
     /// <summary>
+    /// ONE READ PER RECORD (the quality review's correction): a runtime record REPLACED BETWEEN ITS HASH AND ITS PARSE by a
+    /// forged one — listing a changed module and changed metadata at their new hashes — cannot pass. The entries and the
+    /// metadata's expected hash are parsed from the very bytes whose SHA-256 matched, so the changed module and the changed
+    /// metadata are each refused, and the forged licence is never read.
+    /// </summary>
+    [Fact]
+    public async Task ARecordReplacedBetweenItsHashAndItsParseIsVerifiedFromTheBytesHashed()
+    {
+        using var installation = new FixtureInstallation("deterministic", TimeSpan.FromSeconds(60));
+        var settings = installation.Settings();
+        var packages = Path.GetDirectoryName(Path.GetDirectoryName(installation.RuntimeRecord)!)!;
+        var module = Path.Combine(packages, "runtime_fixture", "__init__.py");
+        var metadata = Path.Combine(Path.GetDirectoryName(installation.RuntimeRecord)!, "METADATA");
+        var original = await File.ReadAllTextAsync(installation.RuntimeRecord);
+
+        static string Listed(string path) =>
+            Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path))).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        var oldModule = Listed(module);
+        var oldMetadata = Listed(metadata);
+        await File.AppendAllTextAsync(module, "# changed after installation\n");
+        await File.WriteAllTextAsync(metadata, (await File.ReadAllTextAsync(metadata)).Replace("a-fixture-code-licence", "a-forged-licence", StringComparison.Ordinal));
+        var forged = original.Replace(oldModule, Listed(module), StringComparison.Ordinal).Replace(oldMetadata, Listed(metadata), StringComparison.Ordinal);
+        Assert.NotEqual(original, forged);
+
+        var verifier = new InstallationVerifier(settings, MediaTool.RepositoryRoot())
+        {
+            AfterHash = path =>
+            {
+                if (string.Equals(path, Path.GetFullPath(installation.RuntimeRecord), StringComparison.OrdinalIgnoreCase))
+                {
+                    File.WriteAllText(installation.RuntimeRecord, forged);
+                }
+            },
+        };
+
+        var report = await verifier.VerifyAsync(entries: true, CancellationToken.None);
+
+        Assert.Equal(forged, await File.ReadAllTextAsync(installation.RuntimeRecord));
+        Assert.True(Assert.Single(report.Files, f => f.Name == "runtime record").Matches);
+        Assert.Contains(report.Findings, f => f.Contains("__init__.py", StringComparison.Ordinal) && f.Contains("changed", StringComparison.Ordinal));
+        Assert.Contains(report.Findings, f => f.Contains("METADATA", StringComparison.Ordinal));
+        Assert.NotEqual("a-forged-licence", report.RuntimeLicence);
+        Assert.False(report.Verified);
+    }
+
+    /// <summary>
     /// THE HOLD: while the core files are held, the platform refuses replacing, renaming, writing or deleting the model — the
     /// bytes hashed are the bytes the stand-in loads — and the stand-in still opens and reads them. Released, a swapped model
     /// is found by the next hold, naming both hashes.
