@@ -132,6 +132,23 @@ public sealed class OwnVoiceToolTests : IDisposable
         Assert.Equal("s32", joined.SampleFormat);
         Assert.Equal("pcm_s32le", joined.Codec);
         Assert.Throws<MediaToolFailedException>(() => ExternalMediaTool.PcmFor("not-a-format"));
+
+        // 16-bit parts join BIT-EXACT: the joined samples are the parts' samples, in order, with no gain change, stretch,
+        // pad or trim — the narration source is never adjusted.
+        var pcm = new List<byte>();
+        for (var i = 1; i <= 3; i++)
+        {
+            var wave = AudioFixtures.Wave(22_050, 1, 16, 0.4 * i, 250 + (i * 70), 0.25);
+            await File.WriteAllBytesAsync(Path.Combine(_root, "join", $"s{i}.wav"), wave);
+            pcm.AddRange(wave[44..]);
+        }
+
+        await writer.WriteStagingTextAsync(staging, "list16.txt", "file '../s1.wav'\nfile '../s2.wav'\nfile '../s3.wav'\n", CancellationToken.None);
+        await tool.ConcatenateAudioAsync(staging, "list16.txt", "joined16.wav", "s16", CancellationToken.None);
+        var joinedBytes = await File.ReadAllBytesAsync(Path.Combine(staging, "joined16.wav"));
+        var data = joinedBytes.AsSpan().IndexOf("data"u8.ToArray());
+        Assert.True(data > 0);
+        Assert.Equal(pcm.ToArray(), joinedBytes[(data + 8)..]);
     }
 
     // -----------------------------------------------------------------------
