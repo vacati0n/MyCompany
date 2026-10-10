@@ -530,7 +530,7 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
 
         // No transaction was open while the external tool ran.
         Assert.True(observer.Observations > 50);
-        Assert.Equal(0, observer.MostOpen);
+        Assert.True(observer.MostOpen == 0, string.Join(" ## ", observer.Seen));
 
         // The readers label the demonstration: the produced item's lines are never observed.
         var lines = ManagementComposers.Compose(await new NpgsqlCompanyRecordReader(Source).ReadAsync(null, CancellationToken.None)).Lines
@@ -981,18 +981,32 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         }
     }
 
-    /// <summary>Counts the transactions open in this database, from a connection of its own, each time the tool is about to run.</summary>
+    /// <summary>
+    /// Counts the CLIENT transactions open in this database, from a connection of its own, each time the tool is about to
+    /// run. The datastore's own autovacuum workers also carry a transaction start and are not the company's transactions,
+    /// so they are not counted; a failure names every transaction it saw.
+    /// </summary>
     private sealed class TransactionObserver(NpgsqlDataSource source)
     {
         public int MostOpen { get; private set; }
 
         public int Observations { get; private set; }
 
+        /// <summary>What each open transaction was, where one was seen, so a failure names it.</summary>
+        public List<string> Seen { get; } = [];
+
         public async Task ObserveAsync()
         {
             await using var command = source.CreateCommand(
-                "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid() AND xact_start IS NOT NULL");
+                "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid() AND xact_start IS NOT NULL AND backend_type = 'client backend'");
             var open = (int)(long)(await command.ExecuteScalarAsync())!;
+            if (open > 0)
+            {
+                await using var detail = source.CreateCommand(
+                    "SELECT string_agg(backend_type || ':' || state || ':' || left(query, 200), ' || ') FROM pg_stat_activity WHERE datname = current_database() AND pid <> pg_backend_pid() AND xact_start IS NOT NULL AND backend_type = 'client backend'");
+                Seen.Add(await detail.ExecuteScalarAsync() as string ?? "?");
+            }
+
             MostOpen = Math.Max(MostOpen, open);
             Observations++;
         }

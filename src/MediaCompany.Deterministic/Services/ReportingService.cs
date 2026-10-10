@@ -67,13 +67,12 @@ public sealed class ReportingService
     /// Its current month comes from the datastore's clock through the company record reader (the
     /// AI-management change, decision D-015 of its design), never from the process clock; the closure the
     /// partition reading takes is unchanged.
-    /// </summary>
-    /// <para>
+    ///
     /// The store's designation (the production change, decision D-005 of its design; correction CR-001): in a store
     /// designated demonstration, every observed figure, zero included, is labelled DEMONSTRATION, because fake
     /// providers booked it. Without a designation reader, or in a store with no designation recorded, every line is
     /// exactly as delivered.
-    /// </para>
+    /// </summary>
     public ReportingService(
         IChannelPartitionReader partitions,
         ICompanyRecordReader records,
