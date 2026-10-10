@@ -13,4 +13,8 @@
     <ProjectReference Include="..\..\src\MediaCompany.Host\MediaCompany.Host.csproj" />
     <ProjectReference Include="..\MediaCompany.VoiceStandIn\MediaCompany.VoiceStandIn.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The own-voice fixtures (audio written by the test, the fixture installation of the in-house model), shared with the production tests. -->
+    <Compile Include="..\MediaCompany.Production.Tests\Fixtures\OwnVoiceFixtures.cs" Link="Fixtures\OwnVoiceFixtures.cs" />
+  </ItemGroup>
 </Project>

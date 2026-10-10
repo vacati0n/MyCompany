@@ -150,7 +150,7 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         header.Parameters.Add("date", NpgsqlDbType.Date).Value = draft.Release.DocumentDate is { } date ? date : DBNull.Value;
         header.Parameters.Add("document", NpgsqlDbType.Text).Value = (object?)draft.Release.DocumentSha256 ?? DBNull.Value;
         header.Parameters.Add("training", NpgsqlDbType.Text).Value = (object?)draft.Release.TrainingTerm ?? DBNull.Value;
-        var at = (DateTimeOffset)(await header.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        var at = await StampAsync(header, cancellationToken).ConfigureAwait(false);
 
         foreach (var beat in draft.Beats)
         {
@@ -198,7 +198,7 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         command.Parameters.Add("words", NpgsqlDbType.Integer).Value = draft.Words is { } words ? words : DBNull.Value;
         command.Parameters.Add("expected", NpgsqlDbType.Numeric).Value = draft.ExpectedSeconds is { } expected ? expected : DBNull.Value;
         command.Parameters.AddWithValue("expectation", draft.ExpectationBasis);
-        var at = (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        var at = await StampAsync(command, cancellationToken).ConfigureAwait(false);
         return draft with { RecordedAt = at };
     }
 
@@ -236,8 +236,16 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         command.Parameters.Add("entries", NpgsqlDbType.Integer).Value = draft.RecordEntriesVerified is { } entries ? entries : DBNull.Value;
         command.Parameters.Add("registration", NpgsqlDbType.Uuid).Value = draft.Registration is { } registration ? registration : DBNull.Value;
         command.Parameters.Add("beat", NpgsqlDbType.Integer).Value = draft.Beat is { } beat ? beat : DBNull.Value;
-        var at = (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        var at = await StampAsync(command, cancellationToken).ConfigureAwait(false);
         return draft with { RecordedAt = at };
+    }
+
+    /// <summary>The datastore's instant a statement's RETURNING clause states.</summary>
+    private static async Task<DateTimeOffset> StampAsync(NpgsqlCommand command, CancellationToken cancellationToken)
+    {
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
+        return reader.GetFieldValue<DateTimeOffset>(0);
     }
 
     /// <summary>The decoded measurement's parameters; the duration is the store's generated column, never written.</summary>
