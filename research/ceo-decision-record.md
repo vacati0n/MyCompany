@@ -2044,3 +2044,30 @@ licences (weights, code, voices), sizes and run-time requirements on this machin
 GPU); the owner approves the download by name, source, size and licence before it happens.
 
 ---
+
+## CEO-D-901 — Answers to the Wave 10 scope phase's owner questions
+
+**The CEO's own decision, 2026-10-10**, answering the scope phase's questions (run
+`run-dfcae1756c32`).
+
+1. **The in-house model and voice.** Piper, package `piper-tts` 1.8.0 (PyPI, released 2026-09-04,
+   GPL-3.0-or-later, Windows wheel 34.1 MB), with the voice `en_GB-cori-high` (Hugging Face
+   `rhasspy/piper-voices`, about 114 MB; model card: trained from scratch on about 24 hours of
+   LibriVox recordings, listed as public domain; UK English, female, single speaker, 22,050 Hz).
+   The owner approves its download, installed outside the repository. The GPL licence of the
+   runtime and of espeak-ng is accepted for in-house use; the company does not distribute them.
+   **The owner accepts that the voice is trained on one real, unidentified LibriVox reader's public
+   domain recordings**; this is not treated as cloning a person's voice without a release.
+   Piper voices fine-tuned from or trained on non-commercial data (lessac and its derivatives,
+   CC BY-NC-SA voices) are not used.
+2. **The performer's release.** As proposed: a dated statement signed by the CEO naming the item,
+   granting the company the right to edit, publish and monetise the recording, and **not**
+   permitting its use to train a model. The document is held outside the repository; the store
+   keeps only its reference, date, the performer's name and its SHA-256.
+3. **How the CEO records.** One file per beat (13 beats for item 001), named by beat. A whole-file
+   recording with beat instants is not built this wave.
+4. **Format.** No format target. Any audio file that decodes with zero errors and holds exactly one
+   audio stream and no video stream is accepted; its container, codec, sample rate, channels,
+   duration and loudness are measured and recorded. The owner guide recommends WAV.
+
+---
