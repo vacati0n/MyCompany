@@ -35,7 +35,11 @@ public static class ProductionCommands
         IReadOnlyList<DemonstrationProvider> Fakes,
         IReadOnlyList<ProviderEndpoint> Endpoints);
 
-    /// <summary>Reads the settings file; every bound and the profile is required and has no default here.</summary>
+    /// <summary>
+    /// Reads the settings file; every bound and the profile is required and has no default here. The vendor members (the
+    /// provider-call bound, the character maximum and the voice) are optional and required by name only by the modes that
+    /// use them; the in-house model's section is optional and, where present, every member of it is required.
+    /// </summary>
     public static HostProductionSettings ReadSettings(string path)
     {
         var json = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
@@ -44,6 +48,7 @@ public static class ProductionCommands
             ? value
             : throw new ProductionSettingRefusedException(key, "it is not configured in the settings file");
         int Number(string key) => json[key]?.GetValue<int>() ?? throw new ProductionSettingRefusedException(key, "it is not configured in the settings file");
+        int? Optional(string key) => json[key] is { } node ? node.GetValue<int>() : null;
 
         var production = new ProductionSettings
         {
@@ -59,9 +64,10 @@ public static class ProductionCommands
             DecodeBound = TimeSpan.FromMinutes(Number("decodeBoundMinutes")),
             ProbeBound = TimeSpan.FromSeconds(Number("probeBoundSeconds")),
             StillBound = TimeSpan.FromSeconds(Number("stillBoundSeconds")),
-            ProviderCallBound = TimeSpan.FromSeconds(Number("providerCallBoundSeconds")),
-            NarrationCharacterMaximum = Number("narrationCharacterMaximum"),
+            ProviderCallBound = Optional("providerCallBoundSeconds") is { } call ? TimeSpan.FromSeconds(call) : null,
+            NarrationCharacterMaximum = Optional("narrationCharacterMaximum"),
             NarrationVoice = json["narrationVoice"]?.GetValue<string>(),
+            InHouseModel = json["inHouseModel"] is JsonObject model ? ReadModel(model) : null,
         };
 
         var fakes = (json["demonstrationProviders"]?.AsArray() ?? [])
@@ -93,6 +99,60 @@ public static class ProductionCommands
             Text("preparationPath"),
             fakes,
             endpoints);
+    }
+
+    /// <summary>
+    /// Reads the in-house model's section (the own-voice change, decision D-011 of its design). Every member is required and
+    /// refused by name where absent or a placeholder; no member has a default here. The licences are optional and, where
+    /// given, carry the source the configuration names.
+    /// </summary>
+    private static InHouseModelSettings ReadModel(JsonObject model)
+    {
+        string Text(JsonNode? node, string key) => node?[key]?.GetValue<string>() is { Length: > 0 } value && !value.StartsWith('<')
+            ? value
+            : throw new ProductionSettingRefusedException($"inHouseModel.{key}", "it is not configured in the settings file");
+        ExpectedFile File(string key) => model[key] is JsonObject file
+            ? new ExpectedFile(Text(file, "path"), Text(file, "sha256").ToLowerInvariant())
+            : throw new ProductionSettingRefusedException($"inHouseModel.{key}", "it is not configured in the settings file (a path and a sha256)");
+        decimal Value(JsonNode? node, string key) => node?[key] is { } value
+            ? value.GetValue<decimal>()
+            : throw new ProductionSettingRefusedException($"inHouseModel.generation.{key}", "it is not configured in the settings file");
+        ConfiguredLicence? Licence(string key) => model[key] is JsonObject licence
+            ? new ConfiguredLicence(Text(licence, "value"), Text(licence, "source"))
+            : null;
+
+        var generation = model["generation"] as JsonObject
+            ?? throw new ProductionSettingRefusedException("inHouseModel.generation", "it is not configured in the settings file");
+        var bound = model["partBoundSeconds"]?.GetValue<int>()
+            ?? throw new ProductionSettingRefusedException("inHouseModel.partBoundSeconds", "it is not configured in the settings file; the model part bound has no default");
+        return new InHouseModelSettings
+        {
+            Interpreter = File("interpreter"),
+            EnvironmentConfiguration = File("environmentConfiguration"),
+            BaseInterpreterSha256 = Text(model, "baseInterpreterSha256").ToLowerInvariant(),
+            RuntimeModule = Text(model, "runtimeModule"),
+            Model = File("model"),
+            Configuration = File("configuration"),
+            ModelCard = File("modelCard"),
+            RuntimeRecord = File("runtimeRecord"),
+            DependencyRecords = (model["dependencyRecords"] as JsonArray
+                    ?? throw new ProductionSettingRefusedException("inHouseModel.dependencyRecords", "it is not configured in the settings file"))
+                .Select(d => new ExpectedFile(Text(d, "path"), Text(d, "sha256").ToLowerInvariant()))
+                .ToArray(),
+            Generation = new VoiceGenerationSettings(
+                Value(generation, "lengthScale"),
+                Value(generation, "noiseScale"),
+                Value(generation, "noiseWidthScale"),
+                Value(generation, "sentenceSilenceSeconds"),
+                Value(generation, "volume"),
+                generation["normalize"]?.GetValue<bool>()
+                    ?? throw new ProductionSettingRefusedException("inHouseModel.generation.normalize", "it is not configured in the settings file")),
+            PartBound = bound > 0
+                ? TimeSpan.FromSeconds(bound)
+                : throw new ProductionSettingRefusedException("inHouseModel.partBoundSeconds", "it must be a positive number of seconds"),
+            WeightsLicence = Licence("weightsLicence"),
+            VoiceLicence = Licence("voiceLicence"),
+        };
     }
 
     /// <summary>Reads the recorded preparation configuration into the record the preparation writes.</summary>
@@ -189,8 +249,11 @@ public static class ProductionCommands
     }
 
     /// <summary>
-    /// produce: one item in fake, plan-only or metered mode. The plan, its estimate and the cap are printed before
-    /// any call; metered mode refuses before any call naming every unmet precondition.
+    /// produce: one item in own, fake, plan-only or metered mode. The plan, with every part's narration source and the reason
+    /// it was chosen, is printed before anything runs. The own mode composes the writer and the one process starter (which
+    /// also runs the in-house model) and NO capability boundary, no credential broker and no network client; fake mode
+    /// composes the demonstration boundary; plan-only composes neither writer nor starter; metered mode is refused by the
+    /// narration source rule naming the owner's decision of 2026-10-10, before anything is composed.
     /// </summary>
     public static async Task<int> ProduceAsync(ServiceProvider provider, string[] args, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
     {
@@ -198,7 +261,7 @@ public static class ProductionCommands
         var modeText = Option(args, "--mode");
         if (settingsPath is null || modeText is null || !TryMode(modeText, out var mode))
         {
-            await errors.WriteLineAsync("Usage: produce --mode fake|plan-only|metered --settings <settings.json>").ConfigureAwait(false);
+            await errors.WriteLineAsync("Usage: produce --mode own|fake|plan-only|metered --settings <settings.json>").ConfigureAwait(false);
             return 2;
         }
 
@@ -219,7 +282,15 @@ public static class ProductionCommands
 
         var identity = await provider.GetRequiredService<IStoreDesignationReader>().ReadAsync(cancellationToken).ConfigureAwait(false);
         var guard = StoreGuard.Judge(mode, identity.Designation, identity.DatabaseName, settings.CompanyStoreIdentity);
-        if (mode != ProductionMode.Metered && !guard.Admitted)
+        if (mode == ProductionMode.Metered)
+        {
+            // THE VENDOR BAR (the own-voice change, decision D-002 of its design): the rule reads no setting, so no settings
+            // value composes the vendor; nothing is read, composed or called.
+            await errors.WriteLineAsync($"Refused before any call: {NarrationSourceRule.VendorBar}").ConfigureAwait(false);
+            return 2;
+        }
+
+        if (!guard.Admitted)
         {
             foreach (var refusal in guard.Refusals)
             {
@@ -244,13 +315,14 @@ public static class ProductionCommands
 
         if (mode == ProductionMode.PlanOnly)
         {
-            // Plan only reads: it builds neither the writer nor the process starter, so it can write nothing and start nothing.
+            // Plan only reads: it builds neither the writer nor the process starter, so it can write nothing and start nothing;
+            // it re-hashes registered copies and verifies the model's files by reading them.
             var planOnly = new ProduceItemService(unitOfWork, reader, new NothingStarted(), new NothingWritten(), settings.Production, output);
             return (await planOnly.RunAsync(request, null, cancellationToken).ConfigureAwait(false)).ExitCode;
         }
 
         IArtifactStore store;
-        IMediaTool tool;
+        ExternalMediaTool tool;
         try
         {
             store = new ArtifactWriter(settings.Production.OutputRoot, settings.Production.RepositoryRoot);
@@ -262,41 +334,142 @@ public static class ProductionCommands
             return 2;
         }
 
+        if (mode == ProductionMode.Own)
+        {
+            // The own composition: the writer and the one starter, which also runs the in-house model. No capability boundary,
+            // no credential broker and no network client is constructed.
+            var own = new ProduceItemService(unitOfWork, reader, tool, store, settings.Production, output, tool);
+            return (await own.RunAsync(request, null, cancellationToken).ConfigureAwait(false)).ExitCode;
+        }
+
+        // The demonstration composition: the fakes, a broker reading no variable, and no network client.
         var service = new ProduceItemService(unitOfWork, reader, tool, store, settings.Production, output);
-        ICapabilityGateway gateway;
-
-        if (mode == ProductionMode.Fake)
-        {
-            // The demonstration composition: the fakes, a broker reading no variable, and no network client.
-            gateway = CapabilityGatewayFactory.CreateDemonstration(unitOfWork, settings.Fakes, () => DateTimeOffset.UtcNow);
-        }
-        else
-        {
-            var plan = await service.PlanAsync(request, cancellationToken).ConfigureAwait(false);
-            if (plan is null)
-            {
-                return 2;
-            }
-
-            var unmet = MeteredPreconditions.Unmet(await ReadinessAsync(unitOfWork, plan, guard, settings, preparation, cancellationToken).ConfigureAwait(false));
-            if (unmet.Count > 0)
-            {
-                plan.Print(output, mode, request.Designation, settings.Production, loaded.Material);
-                foreach (var condition in unmet)
-                {
-                    await errors.WriteLineAsync($"Refused before any call: {condition}").ConfigureAwait(false);
-                }
-
-                return 2;
-            }
-
-            var secrets = new SecretStoreOptions();
-            var broker = CredentialBrokerFactory.Create(secrets, () => DateTimeOffset.UtcNow);
-            var http = CapabilityGatewayFactory.VendorClient(settings.Production.ProviderCallBound);
-            gateway = CapabilityGatewayFactory.Create(unitOfWork, broker, broker, new SystemClock(), settings.Endpoints, http);
-        }
-
+        var gateway = CapabilityGatewayFactory.CreateDemonstration(unitOfWork, settings.Fakes, () => DateTimeOffset.UtcNow);
         return (await service.RunAsync(request, gateway, cancellationToken).ConfigureAwait(false)).ExitCode;
+    }
+
+    /// <summary>
+    /// register-recording: registers one folder of beat recordings against the item the settings' material names (the own-voice
+    /// change, decision D-011 of its design). Exits 0 registered, 2 refused before anything is recorded naming every finding,
+    /// 3 a tool or store failure named. The release fields are each optional and recorded ABSENT when not given.
+    /// </summary>
+    public static async Task<int> RegisterRecordingAsync(ServiceProvider provider, string[] args, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
+    {
+        var settingsPath = Option(args, "--settings");
+        var folder = Option(args, "--recordings");
+        if (settingsPath is null || folder is null)
+        {
+            await errors.WriteLineAsync("Usage: register-recording --settings <settings.json> --recordings <folder> [--performer <name>] "
+                + "[--release-reference <reference>] [--release-date yyyy-mm-dd] [--release-document <path outside the repository>] [--training-term <term>]").ConfigureAwait(false);
+            return 2;
+        }
+
+        DateOnly? date = null;
+        if (Option(args, "--release-date") is { } dateText)
+        {
+            if (!DateOnly.TryParseExact(dateText, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            {
+                await errors.WriteLineAsync($"Refused, nothing was recorded: the release date {dateText} is not a date written yyyy-mm-dd").ConfigureAwait(false);
+                return 2;
+            }
+
+            date = parsed;
+        }
+
+        HostProductionSettings settings;
+        LoadedItem loaded;
+        PreparationRecord preparation;
+        IArtifactStore store;
+        ExternalMediaTool tool;
+        try
+        {
+            settings = ReadSettings(settingsPath);
+            loaded = await ItemPackageLoader.LoadAsync(settings.Production.RepositoryRoot, settings.MaterialPath, cancellationToken).ConfigureAwait(false);
+            preparation = ReadPreparation(Path.Combine(settings.Production.RepositoryRoot, settings.PreparationPath));
+            store = new ArtifactWriter(settings.Production.OutputRoot, settings.Production.RepositoryRoot);
+            tool = new ExternalMediaTool(settings.Production);
+        }
+        catch (Exception refused) when (refused is ProductionSettingRefusedException or ItemMaterialRefusedException or FileNotFoundException)
+        {
+            await errors.WriteLineAsync($"Refused, nothing was recorded: {refused.Message}").ConfigureAwait(false);
+            return 2;
+        }
+
+        var identity = await provider.GetRequiredService<IStoreDesignationReader>().ReadAsync(cancellationToken).ConfigureAwait(false);
+        if (identity.Designation is null)
+        {
+            await errors.WriteLineAsync($"Refused, nothing was recorded: the store {identity.DatabaseName} records no designation").ConfigureAwait(false);
+            return 2;
+        }
+
+        var registrar = new RecordingRegistrar(
+            provider.GetRequiredService<IUnitOfWork>(), provider.GetRequiredService<IProductionReader>(), tool, store, settings.Production, output);
+        var result = await registrar.RegisterAsync(new RegistrationRequest
+        {
+            Item = preparation.Item,
+            Loaded = loaded,
+            RecordingsFolder = folder,
+            PerformerName = Option(args, "--performer"),
+            ReleaseDocumentReference = Option(args, "--release-reference"),
+            ReleaseDocumentDate = date,
+            ReleaseDocumentPath = Option(args, "--release-document"),
+            TrainingTerm = Option(args, "--training-term"),
+        }, cancellationToken).ConfigureAwait(false);
+        return result.ExitCode;
+    }
+
+    /// <summary>
+    /// verify-model: verifies the in-house model's installation from the settings, READING FILES ONLY and starting no process
+    /// (the own-voice change, decision D-011 of its design). Exits 0 verified, printing every file with both hashes and the
+    /// runtime's metadata, or 2 refused naming every finding. It reads no datastore.
+    /// </summary>
+    public static async Task<int> VerifyModelAsync(string[] args, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
+    {
+        var settingsPath = Option(args, "--settings");
+        if (settingsPath is null)
+        {
+            await errors.WriteLineAsync("Usage: verify-model --settings <settings.json>").ConfigureAwait(false);
+            return 2;
+        }
+
+        InHouseModelSettings model;
+        string repository;
+        try
+        {
+            var settings = ReadSettings(settingsPath);
+            model = settings.Production.InHouseModel
+                ?? throw new ProductionSettingRefusedException("inHouseModel", "no in-house model section is configured in the settings file");
+            repository = settings.Production.RepositoryRoot;
+        }
+        catch (Exception refused) when (refused is ProductionSettingRefusedException or FileNotFoundException)
+        {
+            await errors.WriteLineAsync($"Refused: {refused.Message}").ConfigureAwait(false);
+            return 2;
+        }
+
+        var report = await new InstallationVerifier(model, repository).VerifyAsync(entries: true, cancellationToken).ConfigureAwait(false);
+        foreach (var file in report.Files)
+        {
+            await output.WriteLineAsync($"  {file.Describe()}").ConfigureAwait(false);
+        }
+
+        await output.WriteLineAsync($"  runtime: {report.RuntimeName ?? "not read"} {report.RuntimeVersion ?? "not read"}, licence {report.RuntimeLicence ?? "not read"} (read from its package metadata); "
+            + $"voice {report.VoiceName ?? "not read"} at {report.VoiceSampleRate?.ToString(CultureInfo.InvariantCulture) ?? "no stated"} Hz; dataset licence {report.DatasetLicence ?? "not read"}; "
+            + $"weights licence {model.WeightsLicence?.Describe() ?? "not stated in the installed files"}; voice licence {model.VoiceLicence?.Describe() ?? "not stated in the installed files"}").ConfigureAwait(false);
+        await output.WriteLineAsync(string.Create(CultureInfo.InvariantCulture,
+            $"  record entries verified: {report.RecordEntriesVerified}; listed without a hash by their packages: {report.RecordEntriesWithoutHash}; no process was started")).ConfigureAwait(false);
+        if (!report.Verified)
+        {
+            foreach (var finding in report.Findings)
+            {
+                await errors.WriteLineAsync($"Refused: {finding}").ConfigureAwait(false);
+            }
+
+            return 2;
+        }
+
+        await output.WriteLineAsync("Verified: every configured file of the in-house model hashes to its expected value, outside the repository.").ConfigureAwait(false);
+        return 0;
     }
 
     /// <summary>Gathers every value the metered preconditions read, before any call, reading no secret value.</summary>
@@ -335,6 +508,7 @@ public static class ProductionCommands
     {
         mode = text switch
         {
+            "own" => ProductionMode.Own,
             "fake" => ProductionMode.Fake,
             "plan-only" => ProductionMode.PlanOnly,
             "metered" => ProductionMode.Metered,
@@ -358,7 +532,9 @@ public static class ProductionCommands
 
         public Task DrawStillAsync(StillSpecification still, CancellationToken cancellationToken) => throw Refused();
 
-        public Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, CancellationToken cancellationToken) => throw Refused();
+        public Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, string sampleFormat, CancellationToken cancellationToken) => throw Refused();
+
+        public Task<AudioMeasurement> MeasureAudioAsync(string file, CancellationToken cancellationToken) => throw Refused();
 
         public Task RenderAsync(RenderSpecification render, CancellationToken cancellationToken) => throw Refused();
 

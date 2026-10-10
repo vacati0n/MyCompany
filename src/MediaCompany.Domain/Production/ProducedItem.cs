@@ -24,8 +24,14 @@ public enum ProductionMode
     /// <summary>The plan, its estimate and the cap are printed; no call is made and no file is written.</summary>
     PlanOnly = 2,
 
-    /// <summary>The owner's billed vendors, in the company store only.</summary>
+    /// <summary>The owner's billed vendors, in the company store only. Refused by the narration source rule while the owner's decision of 2026-10-10 stands.</summary>
     Metered = 3,
+
+    /// <summary>
+    /// The company's own narration (the own-voice change, decision D-003 of its design): a registered recording with a recorded
+    /// release, else the verified in-house model, in the company store or a demonstration store; no capability call, no cap needed.
+    /// </summary>
+    Own = 4,
 }
 
 /// <summary>What a recorded artifact is to the item (the production change, decision D-014 of its design).</summary>

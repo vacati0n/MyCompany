@@ -202,6 +202,14 @@ public static class NarrationSplitter
         return parts;
     }
 
+    /// <summary>
+    /// One part per beat (the own-voice change, decision D-001 of its design): the own sources narrate a beat as one part,
+    /// matching recordings registered one file per beat; the vendor's character maximum does not apply. The parts concatenate
+    /// to the recorded text exactly, or the split is refused.
+    /// </summary>
+    public static IReadOnlyList<NarrationPart> SplitByBeat(string narration, IReadOnlyList<MaterialBeat> beats) =>
+        Split(narration, beats, int.MaxValue);
+
     /// <summary>Greedy packing of pieces under the maximum; a piece over the maximum is cut at sentences.</summary>
     private static IEnumerable<string> Pack(IEnumerable<string> pieces, int maximum, int beat)
     {
@@ -351,7 +359,9 @@ public sealed record StoreGuardVerdict(bool Admitted, IReadOnlyList<string> Refu
 /// The store guard (the production change, decision D-005 of its design), a pure function over the recorded
 /// designation, the connected database's name and the configured company identity. Fake mode is admitted ONLY on a
 /// demonstration store; metered mode ONLY on the company store whose database name matches the configured identity;
-/// an absent designation refuses both; plan-only reads and writes nothing, and is admitted on any designated store.
+/// an absent designation refuses both; plan-only reads and writes nothing, and is admitted on any designated store. The own
+/// mode (the own-voice change) is admitted on a demonstration store and on the company store matching the configured
+/// identity; metered mode keeps its delivered verdicts here and is refused by the narration source rule instead.
 /// </summary>
 public static class StoreGuard
 {
@@ -377,6 +387,15 @@ public static class StoreGuard
                 break;
             case ProductionMode.Metered when !string.Equals(companyIdentity, databaseName, StringComparison.Ordinal):
                 refusals.Add($"metered mode books only into the configured company store {companyIdentity}, and this store is {databaseName}");
+                break;
+
+            // The own mode (the own-voice change, decision D-003 of its design): a demonstration store, or the company store
+            // whose database name matches the configured identity. Which source narrates is the narration source rule's.
+            case ProductionMode.Own when designation == StoreDesignation.Company && string.IsNullOrWhiteSpace(companyIdentity):
+                refusals.Add("the own mode records into the company store only under the company store's configured identity, and none is configured");
+                break;
+            case ProductionMode.Own when designation == StoreDesignation.Company && !string.Equals(companyIdentity, databaseName, StringComparison.Ordinal):
+                refusals.Add($"the own mode records into the configured company store {companyIdentity} only, and this store is {databaseName}");
                 break;
         }
 

@@ -25,7 +25,17 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         _transaction = transaction;
     }
 
-    public async Task<ProductionVersionOpened> OpenProductionVersionAsync(ItemId item, ProductionMode mode, CancellationToken cancellationToken)
+    public Task<ProductionVersionOpened> OpenProductionVersionAsync(ItemId item, ProductionMode mode, CancellationToken cancellationToken) =>
+        OpenAsync(item, mode, null, cancellationToken);
+
+    /// <summary>
+    /// Opens the next item version with its narration source on the production header (the own-voice change, decision D-010
+    /// of its design); the tenth resource checks the source against the mode.
+    /// </summary>
+    public Task<ProductionVersionOpened> OpenProductionVersionAsync(ItemId item, ProductionMode mode, NarrationSource source, CancellationToken cancellationToken) =>
+        OpenAsync(item, mode, source, cancellationToken);
+
+    private async Task<ProductionVersionOpened> OpenAsync(ItemId item, ProductionMode mode, NarrationSource? source, CancellationToken cancellationToken)
     {
         if (mode == ProductionMode.PlanOnly)
         {
@@ -59,16 +69,27 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
             openedAt = reader.GetFieldValue<DateTimeOffset>(1);
         }
 
+        // A store without the tenth resource has no source column; a source is written only where one is named.
         await using var header = new NpgsqlCommand(
-            """
-            INSERT INTO production_versions (item_id, item_version, mode, designation, recorded_at)
-            VALUES (@item_id, @item_version, @mode, (SELECT designation FROM store_designation), clock_timestamp())
-            """,
+            source is null
+                ? """
+                  INSERT INTO production_versions (item_id, item_version, mode, designation, recorded_at)
+                  VALUES (@item_id, @item_version, @mode, (SELECT designation FROM store_designation), clock_timestamp())
+                  """
+                : """
+                  INSERT INTO production_versions (item_id, item_version, mode, designation, narration_source, recorded_at)
+                  VALUES (@item_id, @item_version, @mode, (SELECT designation FROM store_designation), @source, clock_timestamp())
+                  """,
             _connection,
             _transaction);
         header.Parameters.AddWithValue("item_id", item.Value);
         header.Parameters.AddWithValue("item_version", version);
         header.Parameters.AddWithValue("mode", mode.ToString());
+        if (source is { } named)
+        {
+            header.Parameters.AddWithValue("source", named.ToString());
+        }
+
         await header.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
         return new ProductionVersionOpened(new ItemVersion(version), openedAt);
@@ -106,6 +127,133 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         }
 
         return draft with { RecordedAt = at };
+    }
+
+    public async Task<RecordingRegistration> RecordRegistrationAsync(RecordingRegistration draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        await using var header = new NpgsqlCommand(
+            """
+            INSERT INTO recording_registrations (
+                registration_id, item_id, package_version, performer_name, release_document_reference, release_document_date,
+                release_document_sha256, release_training_term, recorded_at)
+            VALUES (@id, @item_id, @package_version, @performer, @reference, @date, @document, @training, clock_timestamp())
+            RETURNING recorded_at
+            """,
+            _connection,
+            _transaction);
+        header.Parameters.AddWithValue("id", draft.Id);
+        header.Parameters.AddWithValue("item_id", draft.Item.Value);
+        header.Parameters.AddWithValue("package_version", draft.PackageVersion.Value);
+        header.Parameters.Add("performer", NpgsqlDbType.Text).Value = (object?)draft.Release.PerformerName ?? DBNull.Value;
+        header.Parameters.Add("reference", NpgsqlDbType.Text).Value = (object?)draft.Release.DocumentReference ?? DBNull.Value;
+        header.Parameters.Add("date", NpgsqlDbType.Date).Value = draft.Release.DocumentDate is { } date ? date : DBNull.Value;
+        header.Parameters.Add("document", NpgsqlDbType.Text).Value = (object?)draft.Release.DocumentSha256 ?? DBNull.Value;
+        header.Parameters.Add("training", NpgsqlDbType.Text).Value = (object?)draft.Release.TrainingTerm ?? DBNull.Value;
+        var at = (DateTimeOffset)(await header.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+
+        foreach (var beat in draft.Beats)
+        {
+            await using var row = new NpgsqlCommand(
+                """
+                INSERT INTO registered_beat_files (
+                    registration_id, beat, stored_path, length_bytes, sha256, container, codec, sample_rate, channels, sample_format,
+                    decoded_samples, duration_basis, loudness_lufs, loudness_measure, loudness_unit, loudness_not_measurable, recorded_at)
+                VALUES (@id, @beat, @path, @length, @sha256, @container, @codec, @rate, @channels, @format,
+                        @samples, @basis, @lufs, @measure, @unit, @not_measurable, clock_timestamp())
+                """,
+                _connection,
+                _transaction);
+            row.Parameters.AddWithValue("id", draft.Id);
+            row.Parameters.AddWithValue("beat", beat.Beat);
+            row.Parameters.AddWithValue("path", beat.StoredPath);
+            row.Parameters.AddWithValue("length", beat.Length);
+            row.Parameters.AddWithValue("sha256", beat.Sha256);
+            Measurement(row, beat.Measured);
+            await row.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return draft with { RecordedAt = at };
+    }
+
+    public async Task<NarrationMeasurement> RecordMeasurementAsync(NarrationMeasurement draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        await using var command = new NpgsqlCommand(
+            """
+            INSERT INTO narration_measurements (
+                item_id, item_version, relative_path, container, codec, sample_rate, channels, sample_format, decoded_samples, duration_basis,
+                loudness_lufs, loudness_measure, loudness_unit, loudness_not_measurable, beat, words, expected_seconds, expectation_basis, recorded_at)
+            VALUES (@item_id, @item_version, @path, @container, @codec, @rate, @channels, @format, @samples, @basis,
+                    @lufs, @measure, @unit, @not_measurable, @beat, @words, @expected, @expectation, clock_timestamp())
+            RETURNING recorded_at
+            """,
+            _connection,
+            _transaction);
+        command.Parameters.AddWithValue("item_id", draft.Item.Value);
+        command.Parameters.AddWithValue("item_version", draft.Version.Value);
+        command.Parameters.AddWithValue("path", draft.RelativePath);
+        Measurement(command, draft.Measured);
+        command.Parameters.Add("beat", NpgsqlDbType.Integer).Value = draft.Beat is { } beat ? beat : DBNull.Value;
+        command.Parameters.Add("words", NpgsqlDbType.Integer).Value = draft.Words is { } words ? words : DBNull.Value;
+        command.Parameters.Add("expected", NpgsqlDbType.Numeric).Value = draft.ExpectedSeconds is { } expected ? expected : DBNull.Value;
+        command.Parameters.AddWithValue("expectation", draft.ExpectationBasis);
+        var at = (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        return draft with { RecordedAt = at };
+    }
+
+    public async Task<NarrationProvenance> RecordProvenanceAsync(NarrationProvenance draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        await using var command = new NpgsqlCommand(
+            """
+            INSERT INTO narration_provenance (
+                item_id, item_version, relative_path, narration_source, model_name, model_version, code_licence, voice_name, dataset_licence,
+                weights_licence, voice_licence, generation_settings, file_hashes, record_entries_verified, arguments, repeatability,
+                registration_id, beat, performer_name, release_statement, recorded_at)
+            VALUES (@item_id, @item_version, @path, @source, @model_name, @model_version, @code_licence, @voice_name, @dataset_licence,
+                    @weights_licence, @voice_licence, @settings, @hashes, @entries, @arguments, @repeatability,
+                    @registration, @beat, @performer, @release, clock_timestamp())
+            RETURNING recorded_at
+            """,
+            _connection,
+            _transaction);
+        command.Parameters.AddWithValue("item_id", draft.Item.Value);
+        command.Parameters.AddWithValue("item_version", draft.Version.Value);
+        command.Parameters.AddWithValue("path", draft.RelativePath);
+        command.Parameters.AddWithValue("source", draft.Source.ToString());
+        foreach (var (name, value) in new (string, string?)[]
+        {
+            ("model_name", draft.ModelName), ("model_version", draft.ModelVersion), ("code_licence", draft.CodeLicence), ("voice_name", draft.VoiceName),
+            ("dataset_licence", draft.DatasetLicence), ("weights_licence", draft.WeightsLicence), ("voice_licence", draft.VoiceLicence),
+            ("settings", draft.GenerationSettings), ("hashes", draft.FileHashes), ("arguments", draft.Arguments), ("repeatability", draft.Repeatability),
+            ("performer", draft.PerformerName), ("release", draft.Release),
+        })
+        {
+            command.Parameters.Add(name, NpgsqlDbType.Text).Value = (object?)value ?? DBNull.Value;
+        }
+
+        command.Parameters.Add("entries", NpgsqlDbType.Integer).Value = draft.RecordEntriesVerified is { } entries ? entries : DBNull.Value;
+        command.Parameters.Add("registration", NpgsqlDbType.Uuid).Value = draft.Registration is { } registration ? registration : DBNull.Value;
+        command.Parameters.Add("beat", NpgsqlDbType.Integer).Value = draft.Beat is { } beat ? beat : DBNull.Value;
+        var at = (DateTimeOffset)(await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false))!;
+        return draft with { RecordedAt = at };
+    }
+
+    /// <summary>The decoded measurement's parameters; the duration is the store's generated column, never written.</summary>
+    private static void Measurement(NpgsqlCommand command, AudioMeasurement measured)
+    {
+        command.Parameters.AddWithValue("container", measured.Container);
+        command.Parameters.AddWithValue("codec", measured.Codec);
+        command.Parameters.AddWithValue("rate", measured.SampleRate);
+        command.Parameters.AddWithValue("channels", measured.Channels);
+        command.Parameters.AddWithValue("format", measured.SampleFormat);
+        command.Parameters.AddWithValue("samples", measured.DecodedSamples);
+        command.Parameters.AddWithValue("basis", AudioMeasurement.DecodedBasis);
+        command.Parameters.Add("lufs", NpgsqlDbType.Numeric).Value = measured.IntegratedLoudness is { } lufs ? lufs : DBNull.Value;
+        command.Parameters.AddWithValue("measure", AudioMeasurement.LoudnessMeasure);
+        command.Parameters.AddWithValue("unit", AudioMeasurement.LoudnessUnit);
+        command.Parameters.Add("not_measurable", NpgsqlDbType.Text).Value = (object?)measured.LoudnessNotMeasurable ?? DBNull.Value;
     }
 }
 
@@ -318,6 +466,184 @@ public sealed class NpgsqlProductionReader : IProductionReader
         }
 
         return artifacts;
+    }
+
+    public async Task<RecordingRegistration?> LatestRegistrationAsync(ItemId item, ItemVersion packageVersion, CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT registration_id, performer_name, release_document_reference, release_document_date, release_document_sha256,
+                   release_training_term, recorded_at
+            FROM recording_registrations
+            WHERE item_id = @item_id AND package_version = @package_version
+            ORDER BY recorded_at DESC, registration_id DESC
+            LIMIT 1
+            """,
+            connection);
+        command.Parameters.AddWithValue("item_id", item.Value);
+        command.Parameters.AddWithValue("package_version", packageVersion.Value);
+
+        Guid id;
+        ReleaseRecord release;
+        DateTimeOffset at;
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if (!await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return null;
+            }
+
+            id = reader.GetGuid(0);
+            release = new ReleaseRecord
+            {
+                PerformerName = reader.IsDBNull(1) ? null : reader.GetString(1),
+                DocumentReference = reader.IsDBNull(2) ? null : reader.GetString(2),
+                DocumentDate = reader.IsDBNull(3) ? null : reader.GetFieldValue<DateOnly>(3),
+                DocumentSha256 = reader.IsDBNull(4) ? null : reader.GetString(4),
+                TrainingTerm = reader.IsDBNull(5) ? null : reader.GetString(5),
+            };
+            at = reader.GetFieldValue<DateTimeOffset>(6);
+        }
+
+        await using var files = new NpgsqlCommand(
+            $"""
+            SELECT beat, stored_path, length_bytes, sha256, {MeasurementColumns}
+            FROM registered_beat_files WHERE registration_id = @id ORDER BY beat
+            """,
+            connection);
+        files.Parameters.AddWithValue("id", id);
+        var beats = new List<RegisteredBeatFile>();
+        await using (var reader = await files.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                beats.Add(new RegisteredBeatFile
+                {
+                    Beat = reader.GetInt32(0),
+                    StoredPath = reader.GetString(1),
+                    Length = reader.GetInt64(2),
+                    Sha256 = reader.GetString(3),
+                    Measured = MeasurementAt(reader, 4),
+                });
+            }
+        }
+
+        return new RecordingRegistration { Id = id, Item = item, PackageVersion = packageVersion, Release = release, Beats = beats, RecordedAt = at };
+    }
+
+    public async Task<IReadOnlyList<NarrationMeasurement>> MeasurementsAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            $"""
+            SELECT relative_path, beat, words, expected_seconds, expectation_basis, recorded_at, {MeasurementColumns}
+            FROM narration_measurements WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY recorded_at, relative_path
+            """,
+            connection);
+        command.Parameters.AddWithValue("item_id", item.Value);
+        command.Parameters.AddWithValue("item_version", version.Value);
+        var measurements = new List<NarrationMeasurement>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            measurements.Add(new NarrationMeasurement
+            {
+                Item = item,
+                Version = version,
+                RelativePath = reader.GetString(0),
+                Beat = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                Words = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                ExpectedSeconds = reader.IsDBNull(3) ? null : reader.GetDecimal(3),
+                ExpectationBasis = reader.GetString(4),
+                RecordedAt = reader.GetFieldValue<DateTimeOffset>(5),
+                Measured = MeasurementAt(reader, 6),
+            });
+        }
+
+        return measurements;
+    }
+
+    public async Task<IReadOnlyList<NarrationProvenance>> ProvenanceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT relative_path, narration_source, model_name, model_version, code_licence, voice_name, dataset_licence, weights_licence,
+                   voice_licence, generation_settings, file_hashes, record_entries_verified, arguments, repeatability, registration_id, beat,
+                   performer_name, release_statement, recorded_at
+            FROM narration_provenance WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY recorded_at, relative_path
+            """,
+            connection);
+        command.Parameters.AddWithValue("item_id", item.Value);
+        command.Parameters.AddWithValue("item_version", version.Value);
+        var rows = new List<NarrationProvenance>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        string? Text(int at) => reader.IsDBNull(at) ? null : reader.GetString(at);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            rows.Add(new NarrationProvenance
+            {
+                Item = item,
+                Version = version,
+                RelativePath = reader.GetString(0),
+                Source = Enum.Parse<NarrationSource>(reader.GetString(1)),
+                ModelName = Text(2),
+                ModelVersion = Text(3),
+                CodeLicence = Text(4),
+                VoiceName = Text(5),
+                DatasetLicence = Text(6),
+                WeightsLicence = Text(7),
+                VoiceLicence = Text(8),
+                GenerationSettings = Text(9),
+                FileHashes = Text(10),
+                RecordEntriesVerified = reader.IsDBNull(11) ? null : reader.GetInt32(11),
+                Arguments = Text(12),
+                Repeatability = Text(13),
+                Registration = reader.IsDBNull(14) ? null : reader.GetGuid(14),
+                Beat = reader.IsDBNull(15) ? null : reader.GetInt32(15),
+                PerformerName = Text(16),
+                Release = Text(17),
+                RecordedAt = reader.GetFieldValue<DateTimeOffset>(18),
+            });
+        }
+
+        return rows;
+    }
+
+    public async Task<NarrationSource?> VersionSourceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            "SELECT narration_source FROM production_versions WHERE item_id = @item_id AND item_version = @item_version", connection);
+        command.Parameters.AddWithValue("item_id", item.Value);
+        command.Parameters.AddWithValue("item_version", version.Value);
+        return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is string source ? Enum.Parse<NarrationSource>(source) : null;
+    }
+
+    private const string MeasurementColumns =
+        "container, codec, sample_rate, channels, sample_format, decoded_samples, duration_seconds, loudness_lufs, loudness_not_measurable";
+
+    /// <summary>A stored measurement read back; the stored duration is checked to be decoded samples over sample rate.</summary>
+    private static AudioMeasurement MeasurementAt(NpgsqlDataReader reader, int at)
+    {
+        var measured = new AudioMeasurement
+        {
+            Container = reader.GetString(at),
+            Codec = reader.GetString(at + 1),
+            SampleRate = reader.GetInt32(at + 2),
+            Channels = reader.GetInt32(at + 3),
+            SampleFormat = reader.GetString(at + 4),
+            DecodedSamples = reader.GetInt64(at + 5),
+            IntegratedLoudness = reader.IsDBNull(at + 7) ? null : reader.GetDecimal(at + 7),
+            LoudnessNotMeasurable = reader.IsDBNull(at + 8) ? null : reader.GetString(at + 8),
+        };
+        var stored = reader.GetDecimal(at + 6);
+        return Math.Abs(stored - measured.DurationSeconds) < 0.000001m
+            ? measured
+            : throw new InvalidOperationException($"a stored duration of {stored} s is not its decoded samples over its sample rate");
     }
 }
 

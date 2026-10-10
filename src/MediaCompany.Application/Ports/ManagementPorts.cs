@@ -244,6 +244,12 @@ public sealed record ProducedItemReading
     public required long OpenReservationCount { get; init; }
     public TimeSpan? MeasuredRuntime { get; init; }
     public string? RenderedPath { get; init; }
+
+    /// <summary>
+    /// The narration source the production version recorded (the own-voice change, decision D-010 of its design), or null
+    /// where it was recorded before the tenth resource, which a composer reads as its mode's source and says so.
+    /// </summary>
+    public string? NarrationSource { get; init; }
 }
 
 /// <summary>One booking month the week touches: its closure as stored, and its readings bounded by the instant.</summary>

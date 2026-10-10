@@ -71,7 +71,7 @@ internal sealed class SpeechAudioAdapter : IProviderAdapter
 
         if (sent!.Status != HttpStatusCode.OK)
         {
-            return VendorCalls.NonSuccess(sent);
+            return VendorCalls.NonSuccess(sent, message);
         }
 
         // The body is the audio. It states no usage, so the charge is not known from the response: the boundary

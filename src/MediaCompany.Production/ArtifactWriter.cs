@@ -110,15 +110,23 @@ public sealed class ArtifactWriter : IArtifactStore
     public string FullPath(string relativePath) => Inside(relativePath);
 
     /// <summary>A path under the output root, refused where it would leave it.</summary>
-    private string Inside(string relativePath)
+    private string Inside(string relativePath) => Under(OutputRoot, relativePath);
+
+    /// <summary>
+    /// The full path a stored file has under a configured output root, refused where it would leave it; nothing is created
+    /// or written (the own-voice change: the plan re-hashes registered copies without composing this writer).
+    /// </summary>
+    internal static string StoredPath(string outputRoot, string relativePath) => Under(Resolve(outputRoot), relativePath);
+
+    private static string Under(string root, string relativePath)
     {
         if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
         {
             throw new ArgumentException("A produced file is named relative to the output root.", nameof(relativePath));
         }
 
-        var full = Path.GetFullPath(Path.Combine(OutputRoot, relativePath));
-        if (!Contains(OutputRoot, full) || string.Equals(full, OutputRoot, PathComparison))
+        var full = Path.GetFullPath(Path.Combine(root, relativePath));
+        if (!Contains(root, full) || string.Equals(full, root, PathComparison))
         {
             throw new ArgumentException($"{relativePath} would leave the output root.", nameof(relativePath));
         }

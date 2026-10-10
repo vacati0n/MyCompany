@@ -44,9 +44,34 @@ switch (command)
 {
     case "install":
     {
+        // The own-voice change (decision D-010 of its design): --from <ordinal> applies the ordered resources from that one on,
+        // the tenth alone to a store holding nine; a full install over a designated store is refused, naming that option.
         var dataSource = provider.GetRequiredService<NpgsqlDataSource>();
-        await SchemaInstaller.InstallAsync(dataSource, cancellation.Token);
-        Console.WriteLine("Record store created. Establish the backup and restore position before the first entry is written.");
+        var from = Array.IndexOf(args, "--from") is var at and >= 0 && at + 1 < args.Length ? args[at + 1] : null;
+        try
+        {
+            if (from is null)
+            {
+                await SchemaInstaller.InstallAsync(dataSource, cancellation.Token);
+                Console.WriteLine("Record store created. Establish the backup and restore position before the first entry is written.");
+            }
+            else if (int.TryParse(from, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var ordinal))
+            {
+                await SchemaInstaller.InstallFromAsync(dataSource, ordinal, cancellation.Token);
+                Console.WriteLine($"Applied the ordered resources from {ordinal} to {SchemaInstaller.ResourceNames.Count}; nothing before {ordinal} was applied.");
+            }
+            else
+            {
+                Console.Error.WriteLine("Usage: install [--from <ordinal>]");
+                return 2;
+            }
+        }
+        catch (SchemaInstallRefusedException refused)
+        {
+            Console.Error.WriteLine(refused.Message);
+            return 2;
+        }
+
         return 0;
     }
 
@@ -183,10 +208,19 @@ switch (command)
         return await ProductionCommands.PrepareAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
 
     case "produce":
-        // The production change (decision D-015 of its design): fake, plan-only or metered; nothing is published.
+        // The production change (decision D-015 of its design) and the own-voice change (decision D-011): own, fake,
+        // plan-only or metered (refused by the narration source rule); nothing is published.
         return await ProductionCommands.ProduceAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
 
+    case "register-recording":
+        // The own-voice change (decision D-011 of its design): one file per beat, with the release as given.
+        return await ProductionCommands.RegisterRecordingAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
+
+    case "verify-model":
+        // The own-voice change (decision D-011 of its design): files only, no process and no datastore.
+        return await ProductionCommands.VerifyModelAsync(args, Console.Out, Console.Error, cancellation.Token);
+
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard, prepare, produce.");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard, prepare, produce, register-recording, verify-model.");
         return 2;
 }

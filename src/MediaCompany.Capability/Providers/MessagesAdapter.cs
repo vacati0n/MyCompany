@@ -82,7 +82,7 @@ internal sealed class MessagesAdapter : IProviderAdapter
 
         if (sent!.Status != HttpStatusCode.OK)
         {
-            return VendorCalls.NonSuccess(sent);
+            return VendorCalls.NonSuccess(sent, message);
         }
 
         try

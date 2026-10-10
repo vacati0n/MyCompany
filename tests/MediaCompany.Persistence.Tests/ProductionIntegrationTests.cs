@@ -1029,10 +1029,16 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
             await inner.DrawStillAsync(still, cancellationToken);
         }
 
-        public async Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, CancellationToken cancellationToken)
+        public async Task ConcatenateAudioAsync(string stagingFolder, string listFile, string outputFile, string sampleFormat, CancellationToken cancellationToken)
         {
             await observer.ObserveAsync();
-            await inner.ConcatenateAudioAsync(stagingFolder, listFile, outputFile, cancellationToken);
+            await inner.ConcatenateAudioAsync(stagingFolder, listFile, outputFile, sampleFormat, cancellationToken);
+        }
+
+        public async Task<AudioMeasurement> MeasureAudioAsync(string file, CancellationToken cancellationToken)
+        {
+            await observer.ObserveAsync();
+            return await inner.MeasureAudioAsync(file, cancellationToken);
         }
 
         public async Task RenderAsync(RenderSpecification render, CancellationToken cancellationToken)

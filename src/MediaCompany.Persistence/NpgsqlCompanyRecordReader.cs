@@ -832,10 +832,21 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
             }
         }
 
+        // The narration source column exists from the tenth resource on; a store holding nine reads it as not recorded.
+        bool sourced;
+        await using (var column = new NpgsqlCommand(
+            "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'production_versions' AND column_name = 'narration_source')",
+            connection,
+            transaction))
+        {
+            sourced = await column.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is true;
+        }
+
         await using var command = new NpgsqlCommand(
-            """
+            $$"""
             WITH latest AS (
-                SELECT DISTINCT ON (v.item_id) v.item_id, v.item_version, v.mode, v.designation, v.recorded_at
+                SELECT DISTINCT ON (v.item_id) v.item_id, v.item_version, v.mode, v.designation, v.recorded_at,
+                       {{(sourced ? "v.narration_source" : "NULL::text")}} AS narration_source
                 FROM production_versions v
                 WHERE v.recorded_at <= @as_of
                 ORDER BY v.item_id, v.item_version DESC
@@ -860,7 +871,8 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
                     ORDER BY p.recorded_at DESC LIMIT 1),
                    (SELECT p.relative_path FROM production_artifacts p
                     WHERE p.item_id = l.item_id AND p.item_version = l.item_version AND p.role = 'RenderedVideo' AND p.recorded_at <= @as_of
-                    ORDER BY p.recorded_at DESC LIMIT 1)
+                    ORDER BY p.recorded_at DESC LIMIT 1),
+                   l.narration_source
             FROM latest l
             LEFT JOIN item_caps c ON c.item_id = l.item_id
             ORDER BY l.item_id
@@ -896,6 +908,7 @@ public sealed class NpgsqlCompanyRecordReader : ICompanyRecordReader
                 OpenReservationCount = reader.GetInt64(13),
                 MeasuredRuntime = reader.IsDBNull(14) ? null : TimeSpan.FromMilliseconds(reader.GetInt64(14)),
                 RenderedPath = reader.IsDBNull(15) ? null : reader.GetString(15),
+                NarrationSource = reader.IsDBNull(16) ? null : reader.GetString(16),
             });
         }
 

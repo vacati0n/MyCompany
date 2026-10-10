@@ -867,12 +867,12 @@ public sealed partial class BoundaryTests
         foreach (var name in ProductionAssemblies)
         {
             var assembly = Load(name);
-            // 1.6.0, decided at the Design Gate of the production change.
-            Assert.Equal(new Version(1, 6, 0, 0), assembly.GetName().Version);
+            // 1.7.0, decided at the Design Gate of the own-voice change.
+            Assert.Equal(new Version(1, 7, 0, 0), assembly.GetName().Version);
 
             var informational = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             Assert.NotNull(informational);
-            Assert.StartsWith("1.6.0", informational, StringComparison.Ordinal);
+            Assert.StartsWith("1.7.0", informational, StringComparison.Ordinal);
         }
     }
 
