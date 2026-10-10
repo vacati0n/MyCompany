@@ -1,0 +1,99 @@
+{
+  "about": "Orchestrator's settings for own-voice production in the company store of item 001 (CEO-D-805, CEO-D-900..902), made from config/production-settings.sample.json at the Wave 10 implementation head. Holds no secret.",
+  "outputRoot": "C:/Users/vuhoangcao/MediaCompanyRun/output-company",
+  "repositoryRoot": "D:/Project/MyCompany/.worktrees/mc-11-feature",
+  "rendererPath": "C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/ffmpeg.exe",
+  "probePath": "C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/ffprobe.exe",
+  "fontFile": "C:/Windows/Fonts/arial.ttf",
+  "width": 1920,
+  "height": 1080,
+  "framesPerSecond": 30,
+  "renderBoundMinutes": 60,
+  "decodeBoundMinutes": 60,
+  "probeBoundSeconds": 60,
+  "stillBoundSeconds": 60,
+  "providerCallBoundSeconds": 60,
+  "narrationCharacterMaximum": 1500,
+  "narrationVoice": null,
+  "companyStoreIdentity": "mediacompany",
+  "materialPath": "D:/Project/MyCompany/.worktrees/mc-11-feature/wave-2/item-001/item-material.json",
+  "preparationPath": "D:/Project/MyCompany/.worktrees/mc-11-feature/config/preparation-item-001.json",
+  "demonstrationProviders": [
+    {
+      "account": "openai",
+      "contract": "SpeechAudio"
+    }
+  ],
+  "endpoints": [],
+  "inHouseModel": {
+    "interpreter": {
+      "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Scripts/python.exe",
+      "sha256": "7bcdf892816a8d651e89f008cfc2f1544a41f13089af70a227b9fc54ced8551f"
+    },
+    "environmentConfiguration": {
+      "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/pyvenv.cfg",
+      "sha256": "07fd39a2a0e0845b8c1a92c68e35d0c4ab0c503a2b2930e05ad0709fd0f7a0d7"
+    },
+    "baseInterpreterSha256": "467014615a5255aca450ae88100dd2caf887da87657f00e3c2171ec44a685aec",
+    "runtimeModule": "piper",
+    "model": {
+      "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/model/en_GB-cori-high.onnx",
+      "sha256": "470b4dd634c98f8a4850d7626ffc3dfc90774628eeef6605a6dd8f88f30a5903"
+    },
+    "configuration": {
+      "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/model/en_GB-cori-high.onnx.json",
+      "sha256": "9e7fb5b5671612c22f3c81cbe46c1ae87b031a4632bcb509e499dad6f1e2adec"
+    },
+    "modelCard": {
+      "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/model/MODEL_CARD",
+      "sha256": "136e7bd168b6c35b4a5df01a0253297e5773b5775ceae0af5160f264aa58208f"
+    },
+    "runtimeRecord": {
+      "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/piper_tts-1.8.0.dist-info/RECORD",
+      "sha256": "34754f9fb9cee7f5e42a75fbc53f5bf106b10ad0d0d99e88d8cf17b5fa9a19f6"
+    },
+    "dependencyRecords": [
+      {
+        "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/onnxruntime-1.31.0.dist-info/RECORD",
+        "sha256": "ec8da06b26f21e48ee97b0c2625be96ab59cf843e05fad66d0d1c3f9918ba74d"
+      },
+      {
+        "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/numpy-2.5.3.dist-info/RECORD",
+        "sha256": "352bfccfb0a190b0da0cfd9d6e59d159477602cd0a454ba35d65f469c1ba12aa"
+      },
+      {
+        "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/protobuf-7.36.2.dist-info/RECORD",
+        "sha256": "8a9aae8b993d3217ca25945e3b87f32e6be0e424449f4175b80a4365080cf887"
+      },
+      {
+        "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/flatbuffers-25.12.19.dist-info/RECORD",
+        "sha256": "486609bc275f99fd53c5ebdb24799312ebee1f4abd04c8f22c98b01f09bed998"
+      },
+      {
+        "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/packaging-26.3.dist-info/RECORD",
+        "sha256": "fb96d1369585ab87d62ad98728c89d2e67274ad060f012c85e358ba17ca92577"
+      },
+      {
+        "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/pathvalidate-3.3.1.dist-info/RECORD",
+        "sha256": "ece95531e21ceddf20c00d29f421498252bbb57be790853ba4a20a7718c1bd04"
+      }
+    ],
+    "generation": {
+      "lengthScale": 1,
+      "noiseScale": 0.667,
+      "noiseWidthScale": 0.8,
+      "sentenceSilenceSeconds": 0,
+      "volume": 1,
+      "normalize": true
+    },
+    "partBoundSeconds": 350,
+    "weightsLicence": {
+      "value": "MIT",
+      "source": "declared in the hub repository rhasspy/piper-voices card metadata, read by the orchestrator on 2026-10-10 at revision c10ece1aade47bb51c153c893d14e5bf8e5b7117; no per-voice licence file is installed"
+    },
+    "voiceLicence": {
+      "value": "MIT",
+      "source": "declared in the hub repository rhasspy/piper-voices card metadata, read by the orchestrator on 2026-10-10 at revision c10ece1aade47bb51c153c893d14e5bf8e5b7117; no per-voice licence file is installed"
+    }
+  }
+}

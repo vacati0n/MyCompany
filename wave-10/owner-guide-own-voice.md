@@ -145,15 +145,18 @@ only); **6** cancelled by you (Ctrl+C), the interrupted stage recorded failed.
 
 ### The company store, on the owner's go (the orchestrator runs these)
 
-1. A fresh backup of the company store.
-2. The tenth schema resource applied **alone** to the store holding nine, and applied again to show
-   it changes nothing: `install --from 10`. (A plain `install` over a store that already holds a
-   designation is refused, naming this option.)
-3. `verify-model --settings <settings.json>`.
-4. Recommended first: `produce --mode own` against the demonstration database with the real model.
-5. `produce --mode plan-only` against the company store: every part named `InHouseModel`, every
+1. A fresh backup of the company store, and readings of it before any change (table count and the
+   rows of every table holding any).
+2. The run's settings written outside the repository from `config/production-settings.sample.json`,
+   every expected SHA-256 checked against the owner's decision record.
+3. The tenth schema resource applied **alone** to the store holding nine, and applied again to show
+   it changes nothing: `install --from 10`, with readings after each application. (A plain `install`
+   over a store that already holds a designation is refused, naming this option.)
+4. `verify-model --settings <settings.json>`.
+5. Recommended first: `produce --mode own` against the demonstration database with the real model.
+6. `produce --mode plan-only` against the company store: every part named `InHouseModel`, every
    hash verified, no metered spend planned.
-6. On your go: `produce --mode own` against the company store.
+7. On your go: `produce --mode own` against the company store, then readings of the store again.
 
 ## 6. What a run will and will not do
 

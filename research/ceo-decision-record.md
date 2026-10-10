@@ -2107,3 +2107,18 @@ GPU); the owner approves the download by name, source, size and licence before i
    recorded as a setting; the pipeline applies no further level change to any narration source.
 
 ---
+
+## CEO-D-903 — Wave 11 draws item 001's 22 graphics for real, by code
+
+**The CEO's own decision, 2026-10-10**, at the close of Wave 10, after the own-voice production of
+item 001 in the company store (item version 3; `wave-10/company-store-run/record.md`).
+
+The next wave renders the 22 motion graphics of item 001 (`GFX-01` to `GFX-22`) as real graphics
+drawn by code on the company's machine, from the shot list and the recorded claims, in place of the
+text cards — at no metered cost and with no model call. The 18 clip positions stay labelled
+placeholders; stock footage, music and their subscription remain the owner's later decision.
+
+Wave 11 runs in its own session (one session per wave) as ticket `MC-12`. Decision block for
+Wave 11: `CEO-D-1000`–`CEO-D-1099`, `CEO-C-1000`–`CEO-C-1099`.
+
+---
