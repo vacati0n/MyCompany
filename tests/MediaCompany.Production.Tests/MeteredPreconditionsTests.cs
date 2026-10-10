@@ -54,6 +54,30 @@ public sealed class MeteredPreconditionsTests
         Assert.Equal(8, unmet.Count);
     }
 
+    /// <summary>
+    /// THE TOTAL LINE STATES WHAT ITS PRICE ROWS RECORD (the own-voice change, decision D-015 of its design): the vendor plan's
+    /// total keeps its ESTIMATE label and its never-netted statement and names each price row's kind, recorded source and
+    /// verified-on date; it asserts neither a first-hand verification nor its absence, because no recorded field
+    /// distinguishes them; the price row's line drops "re-fetched first hand".
+    /// </summary>
+    [Fact]
+    public async Task TheVendorPlansTotalLineStatesEachPriceRowsRecordedSourceAndDate()
+    {
+        var plan = Plan(capped: true, priced: true) with
+        {
+            Selection = new NarrationSelection(NarrationSource.Vendor, "named explicitly below the narration source rule: the vendor path under test", [], []),
+        };
+        var output = new StringWriter();
+        plan.Print(output, ProductionMode.Metered, StoreDesignation.Company, MediaTool.Settings(Path.GetTempPath(), MediaTool.RepositoryRoot()),
+            (await ItemPackageLoader.LoadAsync(MediaTool.RepositoryRoot(), "wave-2/item-001/item-material.json", CancellationToken.None)).Material);
+        var text = output.ToString();
+
+        Assert.Contains("total: 0.000060 USD ESTIMATE at configured unit prices; each price row as recorded: CharacterUnit, ESTIMATE, verified on 2026-10-09; never netted with development cost", text, StringComparison.Ordinal);
+        Assert.Contains("price in force: CharacterUnit 0.000015 USD (ESTIMATE, verified on 2026-10-09) - a configured price, as recorded", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("first hand", text, StringComparison.Ordinal);
+        Assert.Contains("part 1 (beat 1): Vendor;", text, StringComparison.Ordinal);
+    }
+
     /// <summary>The exact variable names of the two company-level accounts, as the owner guide states them.</summary>
     [Fact]
     public void TheCompanyLevelAccountsVariableNamesAreTheGlobalForm()
