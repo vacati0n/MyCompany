@@ -140,6 +140,40 @@ bounds. The owner's guide to the metered run is `wave-9/owner-guide-metered-run.
 The live suite's production demonstrations need the media tool and the font on the machine; without
 them those demonstrations skip as not-run, saying why, and never pass.
 
+## The tenth resource and the company's own voice
+
+**The tenth resource is applied ALONE to a store that holds the nine**, after a backup:
+
+```bash
+dotnet run --project src/MediaCompany.Host -- install --from 10
+```
+
+`install --from <ordinal>` applies the ordered resources from that one on and nothing before it. A
+plain `install` over a store that already holds the store designation table is **refused**, naming
+this option, because the first four resources cannot be re-applied over real rows. The tenth
+resource (`010-own-voice.sql`) admits the own production mode, adds a nullable narration source to
+the production version, checked against the mode (a row recorded before it reads null, its mode's
+source), and creates, each empty and write-once: the recording registrations (the performer and the
+release fields, each null when not given), the registered beat files, the narration measurements
+and the narration provenance. Every duration there is a generated column, decoded samples over the
+sample rate; no column holds a document, a recording or a model file. It changes no delivered row
+and re-applies changing nothing. Its reversal is dropping what it creates while only demonstration
+rows exist; a company store holding a real registration, measurement or provenance is restored from
+the backup.
+
+```bash
+dotnet run --project src/MediaCompany.Host -- verify-model --settings <settings.json>
+dotnet run --project src/MediaCompany.Host -- register-recording --settings <settings.json> --recordings <folder>
+dotnet run --project src/MediaCompany.Host -- produce --mode own --settings <settings.json>
+```
+
+`verify-model` reads the in-house model's files only and starts no process; `register-recording`
+registers one file per beat with the release fields given; `produce --mode own` narrates from a
+registered recording with a complete release, else from the verified in-house model, in a
+demonstration store or in the company store matching the configured identity, books no operation and
+needs no credential; `produce --mode metered` is refused by the narration source rule (the owner's
+decision of 2026-10-10). The owner's guide is `wave-10/owner-guide-own-voice.md`.
+
 ## Stop and remove
 
 ```bash
