@@ -1,5 +1,5 @@
 {
-  "about": "A SAMPLE of the produce command's settings (the production change, decisions D-008, D-013, D-014 and D-015 of its design). Copy it OUTSIDE the repository, set every <...> value, and pass its path as --settings. The bounds, the profile and the character maximum are the values ruled at the Design Gate and are configured amounts, never measurements; the media tool's version check borrows the probe bound and the narration join borrows the decode bound, and neither has a setting of its own. narrationVoice is left empty here: the orchestrator sets the voice the owner decided. Before metered mode, demonstrationProviders is emptied and every endpoint is an https address verified first hand. It holds no secret: credentials are read only from the process environment, by name.",
+  "about": "A SAMPLE of the settings the produce, register-recording and verify-model commands read (the production change, decisions D-008, D-013, D-014 and D-015 of its design, and the own-voice change, decision D-011 of its design). Copy it OUTSIDE the repository, set every <...> value, and pass its path as --settings. It holds no secret: no command of the own mode reads a credential, and a credential is only ever read from the process environment, by name. The bounds, the profile and the character maximum are values ruled at a Design Gate and are configured amounts, never measurements; the media tool's version check borrows the probe bound, and the narration join and every audio measurement borrow the decode bound. providerCallBoundSeconds, narrationCharacterMaximum, narrationVoice, demonstrationProviders and endpoints are read only by fake mode (the demonstration composition); the own mode reads none of them, and metered mode is refused by the narration source rule (the owner's decision of 2026-10-10). The inHouseModel section names the in-house model installed by the orchestrator on 2026-10-10 OUTSIDE the repository, with the SHA-256 of each file as the orchestrator measured it first hand on that day (the voice files' values are also in the owner's decision record); verify-model and every own-mode plan and run recompute each hash over the file itself and refuse on any difference. The generation values are the voice's default settings the owner chose, passed explicitly; partBoundSeconds is the model part bound ruled at the Design Gate (350 s, twice the measured 175 s whole-narration generation on this CPU), a configured amount with no default in code. The two licences are configured values with their source, never read from an installed file: no installed file states them.",
   "outputRoot": "<a folder OUTSIDE the repository, for example C:/MediaCompanyOutput>",
   "repositoryRoot": "<the repository's root folder>",
   "rendererPath": "<the full path of ffmpeg.exe>",
@@ -19,5 +19,27 @@
   "materialPath": "wave-2/item-001/item-material.json",
   "preparationPath": "config/preparation-item-001.json",
   "demonstrationProviders": [ { "account": "openai", "contract": "SpeechAudio" } ],
-  "endpoints": [ { "account": "openai", "endpoint": "<the speech vendor's API base address, verified first hand>", "contract": "SpeechAudio" } ]
+  "endpoints": [ { "account": "openai", "endpoint": "<the speech vendor's API base address, verified first hand>", "contract": "SpeechAudio" } ],
+  "inHouseModel": {
+    "interpreter": { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Scripts/python.exe", "sha256": "7bcdf892816a8d651e89f008cfc2f1544a41f13089af70a227b9fc54ced8551f" },
+    "environmentConfiguration": { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/pyvenv.cfg", "sha256": "07fd39a2a0e0845b8c1a92c68e35d0c4ab0c503a2b2930e05ad0709fd0f7a0d7" },
+    "baseInterpreterSha256": "467014615a5255aca450ae88100dd2caf887da87657f00e3c2171ec44a685aec",
+    "runtimeModule": "piper",
+    "model": { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/model/en_GB-cori-high.onnx", "sha256": "470b4dd634c98f8a4850d7626ffc3dfc90774628eeef6605a6dd8f88f30a5903" },
+    "configuration": { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/model/en_GB-cori-high.onnx.json", "sha256": "9e7fb5b5671612c22f3c81cbe46c1ae87b031a4632bcb509e499dad6f1e2adec" },
+    "modelCard": { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/model/MODEL_CARD", "sha256": "136e7bd168b6c35b4a5df01a0253297e5773b5775ceae0af5160f264aa58208f" },
+    "runtimeRecord": { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/piper_tts-1.8.0.dist-info/RECORD", "sha256": "34754f9fb9cee7f5e42a75fbc53f5bf106b10ad0d0d99e88d8cf17b5fa9a19f6" },
+    "dependencyRecords": [
+      { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/onnxruntime-1.31.0.dist-info/RECORD", "sha256": "ec8da06b26f21e48ee97b0c2625be96ab59cf843e05fad66d0d1c3f9918ba74d" },
+      { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/numpy-2.5.3.dist-info/RECORD", "sha256": "352bfccfb0a190b0da0cfd9d6e59d159477602cd0a454ba35d65f469c1ba12aa" },
+      { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/protobuf-7.36.2.dist-info/RECORD", "sha256": "8a9aae8b993d3217ca25945e3b87f32e6be0e424449f4175b80a4365080cf887" },
+      { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/flatbuffers-25.12.19.dist-info/RECORD", "sha256": "486609bc275f99fd53c5ebdb24799312ebee1f4abd04c8f22c98b01f09bed998" },
+      { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/packaging-26.3.dist-info/RECORD", "sha256": "fb96d1369585ab87d62ad98728c89d2e67274ad060f012c85e358ba17ca92577" },
+      { "path": "C:/Users/vuhoangcao/MediaCompanyRun/voice/venv/Lib/site-packages/pathvalidate-3.3.1.dist-info/RECORD", "sha256": "ece95531e21ceddf20c00d29f421498252bbb57be790853ba4a20a7718c1bd04" }
+    ],
+    "generation": { "lengthScale": 1, "noiseScale": 0.667, "noiseWidthScale": 0.8, "sentenceSilenceSeconds": 0, "volume": 1, "normalize": true },
+    "partBoundSeconds": 350,
+    "weightsLicence": { "value": "MIT", "source": "declared in the hub repository rhasspy/piper-voices card metadata, read by the orchestrator on 2026-10-10 at revision c10ece1aade47bb51c153c893d14e5bf8e5b7117; no per-voice licence file is installed" },
+    "voiceLicence": { "value": "MIT", "source": "declared in the hub repository rhasspy/piper-voices card metadata, read by the orchestrator on 2026-10-10 at revision c10ece1aade47bb51c153c893d14e5bf8e5b7117; no per-voice licence file is installed" }
+  }
 }
