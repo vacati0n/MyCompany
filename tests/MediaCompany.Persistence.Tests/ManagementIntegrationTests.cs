@@ -113,7 +113,8 @@ public sealed class ManagementIntegrationTests : IAsyncLifetime
         // The ninth resource (the production change) now installs last; the eighth is still the eighth, and its
         // transcription is asserted below over the entries IT seeded, REG-001 to REG-021, exactly as delivered.
         // The ninth resource's five decided entries, superseding five of these, are asserted by its own test.
-        Assert.Equal("MediaCompany.Persistence.Schema.008-management.sql", SchemaInstaller.ResourceNames[^3]);
+        // The tenth and eleventh resources (the own-voice and graphics changes) install after the ninth.
+        Assert.Equal("MediaCompany.Persistence.Schema.008-management.sql", SchemaInstaller.ResourceNames[^4]);
         Assert.Equal("MediaCompany.Persistence.Schema.008-management.sql", SchemaInstaller.ResourceNames[7]);
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM platform_policy_statements"));
         Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM platform_policy_reverifications"));

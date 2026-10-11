@@ -111,7 +111,7 @@ if (args[1] == "bundle")
     return 0;
 }
 
-// Render: exactly the frames requested, each a palette PNG of the profile's size whose colour follows the motion progress.
+// Render: exactly the frames requested, each a truecolour PNG of the profile's size whose colour follows the motion progress.
 var specificationBytes = File.ReadAllBytes(root.GetProperty("specification").GetString()!);
 using var style = JsonDocument.Parse(File.ReadAllBytes(root.GetProperty("style").GetString()!));
 var timing = root.GetProperty("timing");
@@ -123,7 +123,7 @@ var motionEnd = style.RootElement.GetProperty("motionEnd").GetDouble();
 var output = Path.GetFullPath(root.GetProperty("output").GetString()!);
 Directory.CreateDirectory(output);
 var seed = SHA256.HashData(specificationBytes);
-var image = Image(width, height);
+var images = new Dictionary<(byte, byte, byte), byte[]>();
 var window = (long)Math.Floor(frames * motionEnd);
 for (long k = 0; k < frames; k++)
 {
@@ -131,7 +131,7 @@ for (long k = 0; k < frames; k++)
     var red = (byte)(seed[0] ^ (byte)Math.Round(progress * 200));
     var green = seed[1];
     var blue = behaviour == "vary" ? (byte)RandomNumberGenerator.GetInt32(256) : seed[2];
-    File.WriteAllBytes(Path.Combine(output, string.Create(CultureInfo.InvariantCulture, $"element-{k}.png")), Png(image, width, height, red, green, blue));
+    File.WriteAllBytes(Path.Combine(output, string.Create(CultureInfo.InvariantCulture, $"element-{k}.png")), Png(images, width, height, red, green, blue));
 }
 
 return 0;
@@ -149,30 +149,41 @@ static int Breach(string why)
     return 9;
 }
 
-// The compressed image data of an all-index-zero palette image: computed once, so a frame differs only in its palette.
-static byte[] Image(int width, int height)
+// A truecolour image of one colour, as the renderer's frames are (three channels, eight bits each): its compressed data is
+// computed once per colour, since a frame's colour changes only while its motion runs.
+static byte[] Png(Dictionary<(byte, byte, byte), byte[]> images, int width, int height, byte red, byte green, byte blue)
 {
-    var raw = new byte[(width + 1) * height];
-    using var buffer = new MemoryStream();
-    using (var zlib = new ZLibStream(buffer, CompressionLevel.Fastest, leaveOpen: true))
+    if (!images.TryGetValue((red, green, blue), out var image))
     {
-        zlib.Write(raw);
+        var row = new byte[1 + (width * 3)];
+        for (var x = 0; x < width; x++)
+        {
+            row[1 + (x * 3)] = red;
+            row[2 + (x * 3)] = green;
+            row[3 + (x * 3)] = blue;
+        }
+
+        using var buffer = new MemoryStream();
+        using (var zlib = new ZLibStream(buffer, CompressionLevel.Fastest, leaveOpen: true))
+        {
+            for (var y = 0; y < height; y++)
+            {
+                zlib.Write(row);
+            }
+        }
+
+        image = buffer.ToArray();
+        images[(red, green, blue)] = image;
     }
 
-    return buffer.ToArray();
-}
-
-static byte[] Png(byte[] image, int width, int height, byte red, byte green, byte blue)
-{
     using var png = new MemoryStream();
     png.Write([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
     var header = new byte[13];
     BinaryPrimitives.WriteInt32BigEndian(header, width);
     BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), height);
     header[8] = 8;
-    header[9] = 3;
+    header[9] = 2;
     Chunk(png, "IHDR", header);
-    Chunk(png, "PLTE", [red, green, blue]);
     Chunk(png, "IDAT", image);
     Chunk(png, "IEND", []);
     return png.ToArray();

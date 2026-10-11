@@ -199,8 +199,9 @@ public static class ProductionCommands
             RenderPerFrame = TimeSpan.FromSeconds((double)Value("renderPerFrameSeconds")),
             HashBound = TimeSpan.FromSeconds((double)Value("hashBoundSeconds")),
             Licence = new ConfiguredLicence(Text(licence, "value", "licence."), Text(licence, "source", "licence.")),
-            ApprovalFile = graphics["approvalFile"] is JsonObject approval
-                ? new ExpectedFile(Text(approval, "path", "approvalFile."), Text(approval, "sha256", "approvalFile.").ToLowerInvariant())
+            // A <...> placeholder is a value still to set (the company store only), never an approval file.
+            ApprovalFile = graphics["approvalFile"] is JsonObject approval && approval["path"]?.GetValue<string>() is { Length: > 0 } approvalPath && !approvalPath.StartsWith('<')
+                ? new ExpectedFile(approvalPath, Text(approval, "sha256", "approvalFile.").ToLowerInvariant())
                 : null,
         };
     }

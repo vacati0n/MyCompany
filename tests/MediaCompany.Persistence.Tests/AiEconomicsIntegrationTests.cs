@@ -110,7 +110,8 @@ public sealed class AiEconomicsIntegrationTests : IAsyncLifetime
     {
         // The eighth resource now installs after it (the AI-management change), and the ninth after that (the
         // production change); the seventh is still the seventh.
-        Assert.Equal("MediaCompany.Persistence.Schema.007-ai-economics.sql", SchemaInstaller.ResourceNames[^4]);
+        // The tenth and eleventh resources (the own-voice and graphics changes) install after those.
+        Assert.Equal("MediaCompany.Persistence.Schema.007-ai-economics.sql", SchemaInstaller.ResourceNames[^5]);
         Assert.Equal("MediaCompany.Persistence.Schema.007-ai-economics.sql", SchemaInstaller.ResourceNames[6]);
 
         foreach (var table in new[]

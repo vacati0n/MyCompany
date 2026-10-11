@@ -129,7 +129,7 @@ public sealed class ReviewGraphicsService
                     var now = await held.HoldAsync(full, cancellationToken).ConfigureAwait(false);
                     Require(now == artifact.Sha256, $"{graphic.Id}'s still {artifact.RelativePath} hashes {now}, and {artifact.Sha256} is recorded");
                     finalPath = full;
-                    preview.Append(c, $"file '{Escape(full)}'\nduration {BeatTimeline.Seconds(record.SegmentFrames, _settings.FramesPerSecond)}\n");
+                    preview.Append(c, $"file '{Escape(full)}'\noption framerate {_settings.FramesPerSecond}\nduration {BeatTimeline.Seconds(record.SegmentFrames, _settings.FramesPerSecond)}\n");
                     last = full;
                 }
                 else
@@ -144,7 +144,7 @@ public sealed class ReviewGraphicsService
                         var frame = Path.Combine(_store.FullPath(folder), line.RunPath);
                         var now = await held.HoldAsync(frame, cancellationToken).ConfigureAwait(false);
                         Require(now == line.Sha256, $"{graphic.Id}'s frame {line.RunPath} hashes {now}, and its manifest lists {line.Sha256}");
-                        preview.Append(c, $"file '{Escape(frame)}'\nduration {BeatTimeline.Seconds(1, _settings.FramesPerSecond)}\n");
+                        preview.Append(c, $"file '{Escape(frame)}'\noption framerate {_settings.FramesPerSecond}\nduration {BeatTimeline.Seconds(1, _settings.FramesPerSecond)}\n");
                         finalPath = frame;
                         last = frame;
                     }
@@ -166,7 +166,7 @@ public sealed class ReviewGraphicsService
                 finals.Add((graphic.Id, finalSha, copy.RelativePath));
             }
 
-            preview.Append(c, $"file '{Escape(last)}'\n");
+            preview.Append(c, $"file '{Escape(last)}'\noption framerate {_settings.FramesPerSecond}\n");
 
             // The sheet, composed from the byte copies, which are re-hashed and held while the media tool reads them.
             foreach (var (position, sha, copy) in finals)

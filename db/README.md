@@ -174,6 +174,41 @@ demonstration store or in the company store matching the configured identity, bo
 needs no credential; `produce --mode metered` is refused by the narration source rule (the owner's
 decision of 2026-10-10). The owner's guide is `wave-10/owner-guide-own-voice.md`.
 
+## The eleventh resource and graphics drawn by code
+
+**The eleventh resource is applied ALONE to a store that holds the ten**, after a backup:
+
+```bash
+dotnet run --project src/MediaCompany.Host -- install --from 11
+```
+
+The eleventh resource (`011-graphics.sql`) widens the production artifact's role to admit four more
+values (`GraphicMotion`, a motion graphic's frame manifest; `ContactSheet`; `ContactSheetFrame`, a
+graphic's final frame copied byte for byte beside the sheet; `GraphicPreview`), keeping the seven
+delivered values, and creates the graphic provenance, empty, write-once and stamped by the datastore:
+one row per graphic artifact naming its specification, style, drawing program, render script and
+bundle by their hashes, the renderer, browser, Node and face identities read from verified bytes, the
+four manifests' hashes, the segment and its changing frames, the final-frame and frame-set digests,
+the argument list, the render seconds observed on this machine, the processes left in the job and the
+sameness statement. No column holds an image, a frame or a font. It changes no delivered row and
+re-applies changing nothing. Its reversal is dropping the graphic provenance and restoring the
+seven-value role check while only demonstration rows use the new values; a company store holding a
+graphics row is restored from the backup taken before it was applied.
+
+```bash
+dotnet run --project src/MediaCompany.Host -- verify-graphics --settings <settings.json>
+dotnet run --project src/MediaCompany.Host -- review-graphics --settings <settings.json> --version <production version>
+```
+
+`verify-graphics` reads files only and starts no process: the installed renderer, browser, font and
+Node from their manifests, every specification of the item and every drawn character against the
+verified faces. `review-graphics` builds the owner's contact sheet and preview from a production
+version of a DEMONSTRATION store, and is refused on any other store before any process. The live
+suite's graphics demonstrations use a fixture installation made in the test with an in-test stand-in
+for Node; the tests that need the installed renderer are marked and skip, naming why, unless
+`MEDIACOMPANY_GRAPHICS_ROOT` names the installed graphics folder. The owner's guide is
+`wave-11/owner-guide-graphics.md`.
+
 ## Stop and remove
 
 ```bash

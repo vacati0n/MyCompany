@@ -453,7 +453,10 @@ public sealed partial class ProduceItemService
             void Entry(string runPath, long frames)
             {
                 var seconds = BeatTimeline.Seconds(frames, fps);
-                list.Append(CultureInfo.InvariantCulture, $"file '../{runPath}'\nduration {seconds}\n");
+                // Each image is read at the profile's frame rate: without it the image reader's own default rate quantises every
+                // entry's start onto its grid, and a motion graphic's one-frame entries are dropped and duplicated (measured: 15 of
+                // every 90 frames at a 25 a second default against a profile of 30).
+                list.Append(CultureInfo.InvariantCulture, $"file '../{runPath}'\noption framerate {fps}\nduration {seconds}\n");
                 written += decimal.Parse(seconds, CultureInfo.InvariantCulture);
                 entries++;
                 last = runPath;
@@ -507,7 +510,7 @@ public sealed partial class ProduceItemService
             }
 
             // The last file is named once more, so the segment list's final duration is honoured.
-            list.Append(CultureInfo.InvariantCulture, $"file '../{last}'\n");
+            list.Append(CultureInfo.InvariantCulture, $"file '../{last}'\noption framerate {fps}\n");
 
             var drift = Math.Abs(written - ((decimal)total / fps));
             if (drift >= 0.5m / fps)

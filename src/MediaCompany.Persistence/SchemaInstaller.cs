@@ -99,7 +99,7 @@ public static class SchemaInstaller
             {
                 throw new SchemaInstallRefusedException(
                     "this store already holds the store designation table, so a full install would re-apply resources that cannot be re-applied over its rows; "
-                    + $"apply only the resources it lacks with install --from <ordinal> (the tenth resource alone: install --from {ResourceNames.Count})");
+                    + $"apply only the resources it lacks with install --from <ordinal> (the newest resource alone: install --from {ResourceNames.Count})");
             }
         }
 
