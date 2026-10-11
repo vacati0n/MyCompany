@@ -952,12 +952,29 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
         }
     }
 
-    /// <summary>The media tool that swaps a file when the run draws its first still, after the plan verified the installation.</summary>
-    private sealed class SwapOnFirstStill(IMediaTool inner, Action swap) : IMediaTool
+    /// <summary>
+    /// The media tool that swaps a file at the run's first call after the plan verified the installation. The graphics change
+    /// moved Design after Audio, so the first call is now the tool's version line (it was the first still of the Design stage);
+    /// the swap still lands after the plan's verification and before the first part, as the test requires. It renders the
+    /// graphics through the media tool it wraps.
+    /// </summary>
+    private sealed class SwapOnFirstStill(IMediaTool inner, Action swap) : IMediaTool, IGraphicRenderer
     {
         private bool _swapped;
 
-        public Task<string> VersionLineAsync(CancellationToken cancellationToken) => inner.VersionLineAsync(cancellationToken);
+        public Task<GraphicInvocation> InvokeAsync(GraphicInvocationRequest request, CancellationToken cancellationToken) =>
+            ((IGraphicRenderer)inner).InvokeAsync(request, cancellationToken);
+
+        public Task<string> VersionLineAsync(CancellationToken cancellationToken)
+        {
+            if (!_swapped)
+            {
+                _swapped = true;
+                swap();
+            }
+
+            return inner.VersionLineAsync(cancellationToken);
+        }
 
         public Task DrawStillAsync(StillSpecification still, CancellationToken cancellationToken)
         {
@@ -1001,6 +1018,11 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
 
         public Task CopyIntoStagingAsync(string stagingFolder, string sourceFile, string staged, CancellationToken cancellationToken) =>
             inner.CopyIntoStagingAsync(stagingFolder, sourceFile, staged, cancellationToken);
+
+        public Task WriteStagingBytesAsync(string stagingFolder, string staged, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+            inner.WriteStagingBytesAsync(stagingFolder, staged, bytes, cancellationToken);
+
+        public string StagingSubfolder(string stagingFolder, string folder) => inner.StagingSubfolder(stagingFolder, folder);
 
         public Task<StoredFile> StoreAsync(string stagingFolder, ReadOnlyMemory<byte> bytes, string relativePath, CancellationToken cancellationToken) =>
             inner.StoreAsync(stagingFolder, bytes, relativePath, cancellationToken);

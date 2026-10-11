@@ -94,6 +94,68 @@ public sealed class HostSettingsTests
         }
     }
 
+    /// <summary>
+    /// THE SAMPLE'S GRAPHICS SECTION reads with its placeholders set (the graphics change, decision D-014 of its design): the four
+    /// manifests, the repository-relative render script, drawing program and style file, the bounds and the concurrency as the
+    /// Design Gate ruled them, the licence as configured with its source, and no approval file outside the company store.
+    /// </summary>
+    [Fact]
+    public void TheSamplesGraphicsSectionReadsWithTheRuledBoundsAndNoApprovalFile()
+    {
+        var path = Write("https://speech.example.invalid/");
+        try
+        {
+            var graphics = ProductionCommands.ReadSettings(path).Production.Graphics!;
+            Assert.Equal("graphics/render.mjs", graphics.RenderScript);
+            Assert.Equal("graphics/drawing", graphics.DrawingFolder);
+            Assert.Equal("config/graphics-style.json", graphics.StyleFile);
+            Assert.Equal(4, graphics.Concurrency);
+            Assert.Equal(TimeSpan.FromSeconds(30), graphics.FrameTimeout);
+            Assert.Equal(TimeSpan.FromSeconds(120), graphics.BundleBound);
+            Assert.Equal(TimeSpan.FromSeconds(300), graphics.HashBound);
+            Assert.Equal(TimeSpan.FromSeconds(120.5), graphics.RenderBound(1));
+            Assert.Equal("renderer-folder-of-this-test", graphics.Renderer.Folder);
+            Assert.Null(graphics.ApprovalFile);
+            Assert.Contains("CONFIGURED, not read from an installed file", graphics.Licence.Describe(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>EVERY GRAPHICS MEMBER IS REQUIRED, refused by its name where absent; no bound has a default in code.</summary>
+    [Theory]
+    [InlineData("nodeExecutable")]
+    [InlineData("browserExecutable")]
+    [InlineData("regularFace")]
+    [InlineData("italicFace")]
+    [InlineData("renderScript")]
+    [InlineData("concurrency")]
+    [InlineData("frameTimeoutSeconds")]
+    [InlineData("bundleBoundSeconds")]
+    [InlineData("renderFixedSeconds")]
+    [InlineData("renderPerFrameSeconds")]
+    [InlineData("hashBoundSeconds")]
+    [InlineData("licence")]
+    [InlineData("manifests")]
+    public void EveryGraphicsMemberIsRequiredByName(string member)
+    {
+        var path = Write("https://speech.example.invalid/");
+        var sample = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        sample["graphics"]!.AsObject().Remove(member);
+        File.WriteAllText(path, sample.ToJsonString());
+        try
+        {
+            var refused = Assert.Throws<ProductionSettingRefusedException>(() => ProductionCommands.ReadSettings(path));
+            Assert.Equal($"graphics.{member}", refused.Setting);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     /// <summary>EVERY MEMBER OF THE MODEL SECTION IS REQUIRED, refused by its name where absent; the part bound has NO DEFAULT.</summary>
     [Theory]
     [InlineData("interpreter")]
@@ -144,6 +206,27 @@ public sealed class HostSettingsTests
         sample["rendererPath"] = "renderer-not-started-by-this-test";
         sample["probePath"] = "probe-not-started-by-this-test";
         sample["endpoints"]![0]!["endpoint"] = endpoint;
+
+        // The graphics section's placeholders (the graphics change), each set to a value of this test; the approval file, read in
+        // the company store only, stays a placeholder and reads as not configured.
+        if (sample["graphics"] is JsonObject graphics)
+        {
+            foreach (var manifest in new[] { "renderer", "browser", "font", "node" })
+            {
+                var entry = graphics["manifests"]![manifest]!.AsObject();
+                entry["manifest"] = $"{manifest}-manifest-of-this-test";
+                entry["folder"] = $"{manifest}-folder-of-this-test";
+                entry["sha256"] = new string('a', 64);
+            }
+
+            foreach (var member in new[] { "nodeExecutable", "browserExecutable", "regularFace", "italicFace" })
+            {
+                graphics[member] = $"{member}-of-this-test";
+            }
+
+            graphics["licence"] = new JsonObject { ["value"] = "a licence of this test", ["source"] = "this test" };
+        }
+
         var path = Path.Combine(Path.GetTempPath(), "mediacompany-settings-" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(path, sample.ToJsonString());
         return path;
