@@ -2255,3 +2255,69 @@ After these runs the installed `remotion/` folder still matched `manifests/remot
 for file (no bundler cache written).
 
 ---
+
+## CEO-D-1003 — The owner approves the 22 graphics, the palette and the italic species name
+
+**The CEO's own decision, 2026-10-11**, after viewing the contact sheet, the graphics preview and
+the full demonstration video rendered from the demonstration store (`mediacompany_demo`).
+
+1. **All 22 graphics are approved**, with one change: the end card (`GFX-22`) omits the recorded
+   source "comparative dialect literature" (no author), the same class as the three sources already
+   omitted by `CEO-D-1002` item 8 — **four** recorded sources are therefore omitted from the end
+   card. Ten authored citations remain, in their recorded wording.
+2. **The palette is approved**: background `#F5F1E8`, line and text `#1F2328`, secondary line
+   `#5F646B`, accent `#A8481A`, region shade `#DEDCD5` (`config/graphics-style.json`).
+3. **The species name stays in italic** (Inter Italic, the scientific-name convention).
+4. **Approved renders** (re-rendered after the change at feature-branch head `ac3a634`, every
+   graphic rendered twice with byte-identical pairs; graphics 1–21 equal to the first review):
+   contact sheet SHA-256 `51ce3f5b935201b669fb9bbd71f07fab7a4d0dc25c52cb77c7bb3c79703d0f28`, preview
+   SHA-256 `e25532133f1a669170e74f32bc142eb734cc183a5ebf2d0ba9d451af927b66c6`. Final-frame SHA-256
+   per graphic (for a still, the still itself — these must be equal in the company-store run; motion
+   graphics are re-timed from that run's narration):
+
+| Graphic | Kind | Final frame SHA-256 |
+|---|---|---|
+| `GFX-01` | still | `92d9b1eeeba32e5d52293c39fa4fd6faa28884904fd794fd970f2613e5000ecb` |
+| `GFX-02` | motion | `db50637296ec19baf93ebdb2b7bee76c6341b7f19703170c4aaaf7b629d84fb5` |
+| `GFX-03` | still | `30d19ce25f6bf733e74805b7f2376f4d042ce1d0f3157014789ce1313b316ffa` |
+| `GFX-04` | still | `3aa594f360e8c8e845c0c18f26d63a17f0f1573834ef359a6710c78bd35db092` |
+| `GFX-05` | motion | `02cd68b54e9b3085c3c4b519b9b377f82a37ba86c395c3810a6138b5291a84fa` |
+| `GFX-06` | motion | `4b03dbf65ae686c5a7f24c287c67768bde24cb515a04e830502bd20d03504316` |
+| `GFX-07` | motion | `cbf7e0f3cd9e702427fc12d7a5873e71d2ab220bfed56c017aa5586c8b118d23` |
+| `GFX-08` | motion | `8261a07c036cd20e8dfeea283ec751309b889b2d58e4d3c35ece67e176bbb368` |
+| `GFX-09` | motion | `03f947f20126020681c330e5318447891e9a531de7558899017705b4945ec253` |
+| `GFX-10` | still | `e7fbe762d35b9e40f7277147de698e66e3cf09297b83cf343c0863d5661eda23` |
+| `GFX-11` | motion | `1f109e162079bd8aaa3f1113feb9bb152f1e2d904db9d574e59106508ed4fc43` |
+| `GFX-12` | motion | `8f44cad0d0b38eaaf5f26bef9b1990312804a5b8651e3f9e1aa44a93ace86b49` |
+| `GFX-13` | still | `6fdaf44c061c3ce4fb21d8b2abdbcddede11d0d2449ce893912be8d596d7d569` |
+| `GFX-14` | motion | `02a0752863fb512451d831a477829d59f225940cdc38855bb85c29a95d1209ef` |
+| `GFX-15` | still | `2566b916c141de5fc7b9a5e84316f32a240d859bad6558923b2c2f5fd41607b4` |
+| `GFX-16` | motion | `d3b57bf876f9f7420af30841f566f2200487f72dd87f1dd76d99a2f1f4b41cae` |
+| `GFX-17` | still | `098a95bed87486d2ece61cb65ac635191d8b1030b6b907d8526a1bfc31223bab` |
+| `GFX-18` | motion | `3c34ff575e0317655d5d1ec3897c3787e52ff605b8ce1e90dfabaa5e26a01281` |
+| `GFX-19` | still | `34ebe77b92be0933df56428ec6fa54a15d1ffe3b3ba5774471348e58429119a6` |
+| `GFX-20` | still | `9b06940efc7fbb65c4bfb53e6081f523a5c3933d40d4f38431a8ae62aa843357` |
+| `GFX-21` | motion | `3ee1a8f7ffc380c5949b8abd641dc41c6add0fc56199fb43de016068c74d04d0` |
+| `GFX-22` | still | `d56fb9a1e7b72aee286bb865ae12907557157bc1e59df18fa3507f2fd74f8122` |
+
+---
+
+## CEO-D-1004 — Wave 12 makes the company's video engaging with 3D animation drawn by code
+
+**The CEO's own decision, 2026-10-11**, during Wave 11, after viewing two competitor reels with high
+engagement (a 17.6 s vertical reel built around a recurring cat character, 507K reactions; a 30.2 s
+vertical 3D-animated episodic frog series, "Episode 2", 3.1M reactions, 50K shares).
+
+1. The CEO judges the current video too dull to attract viewers: making it engaging needs a lot of
+   3D animation.
+2. **Wave 11 closes as approved** (the 22 two-dimensional graphics, the Remotion pipeline with its
+   hashes, sameness checks and provenance). **Wave 12** (its own session) adds 3D animation on that
+   foundation, replacing the 2D graphics and the 18 clip placeholders progressively.
+3. **Only free 3D tools driven by code** (for example Three.js / React Three Fiber through
+   Remotion's three-dimensional package, Blender, CC0 model libraries); **no generative AI model,
+   free tier or otherwise** — `CEO-D-903`'s bar on model calls stands. Every download remains
+   owner-approved by name, source, size and licence.
+4. **Formats: both** — the long 16:9 video for YouTube and several short vertical 9:16 cuts
+   (15–30 s) from the same 3D scenes for Reels and Shorts.
+
+---
