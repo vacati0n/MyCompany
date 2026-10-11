@@ -2122,3 +2122,26 @@ Wave 11 runs in its own session (one session per wave) as ticket `MC-12`. Decisi
 Wave 11: `CEO-D-1000`–`CEO-D-1099`, `CEO-C-1000`–`CEO-C-1099`.
 
 ---
+
+## CEO-D-1000 — Answers to the Wave 11 opening questions on the graphics
+
+**The CEO's own decision, 2026-10-11**, at the start of Wave 11 (`MC-12`), answering the
+orchestrator's opening questions.
+
+1. **The renderer.** The CEO prefers proven, effective existing libraries and tools over drawing
+   from scratch, and named Remotion (a React-based framework that renders video from code) as an
+   example. The scope phase evaluates Remotion as a primary candidate alongside the alternatives
+   (the vector drawing already inside the installed ffmpeg, a .NET drawing library, others it
+   finds), each with its licence and the licence's terms for a company, its download size and
+   run-time requirements on this machine (Windows 11, no GPU, Node.js 24.11.1 already installed),
+   and whether the same input renders the same bytes. Any download is approved by the owner by
+   name, source, size and licence before it happens; any paid licence or subscription is the
+   owner's decision and is not assumed.
+2. **Palette.** A light, paper-style background with dark line work and a single accent colour.
+   The exact colour values are for the design to propose and the owner to see.
+3. **Typeface.** An open font under the SIL Open Font License is downloaded for the graphics, on the
+   owner's approval of its name, source, size and licence; the scope phase proposes candidates.
+4. **Review before production.** The owner reviews a contact sheet of all 22 graphics, with a short
+   preview, rendered from the demonstration store, before any production against the company store.
+
+---
