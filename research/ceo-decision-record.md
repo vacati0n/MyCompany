@@ -2239,3 +2239,19 @@ per file, paths relative to the folder named) were then written under
 | `node.sha256` | `C:/Program Files/nodejs/node.exe` (Node.js 24.11.1, 89,894,400 bytes, installed before this wave) | 1 | `c6a624a174f070a0e459f130429a246719f53573274b57203fc770d14a19c946` |
 
 ---
+
+### Orchestrator's second note to CEO-D-1001 — Node manifest path and concurrency (2026-10-11)
+
+Not a decision of the owner. (1) `manifests/node.sha256` was rewritten with its entry relative to
+`C:/Program Files/nodejs/` (`node.exe`, SHA-256
+`f13ac3ca23248dc389507e8fe38c34489ab7edb3e6d6700eb6da6a0b7e128eaf`), like the other three
+manifests; the manifest's own SHA-256 is now
+`5f9476a3211380c12569710ccf26079b979eb6d6c4be8982e7463ce1bd637746` (replacing the value in the
+first note). (2) Measured first hand with the trial graphic (90 frames, 1080p), bundler caching
+off and the temporary directory redirected outside the installation: frames took 9.4–9.7 s at
+concurrency 1, 4.4–4.6 s at concurrency 4 and 4.4–4.5 s at concurrency 8; at each concurrency two
+runs gave byte-identical PNG frames, identical to the concurrency-1 frames, and an identical MP4.
+After these runs the installed `remotion/` folder still matched `manifests/remotion.sha256` file
+for file (no bundler cache written).
+
+---
