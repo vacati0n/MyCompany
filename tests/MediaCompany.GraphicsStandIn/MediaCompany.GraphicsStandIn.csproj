@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The in-test stand-in for Node running the render script (the graphics change, decision D-002 of its design). No default test
+    runs the installed renderer: the tests configure this executable as the "Node executable" of a fixture installation, and the
+    one process starter starts it with the render script's exact argument list in a cleared environment inside a job. It accepts
+    only that list and only that environment, waits for the start line, and in bundle mode writes a fixture bundle, in render
+    mode exactly the frames requested as PNG files whose colour follows the motion progress. What it does besides is chosen by
+    the fixture installation's behaviour file: deterministic, vary, slow, grandchild, orphan, fail, excluded or cache. It
+    reaches no network.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="MediaCompany.Domain" />
+  </ItemGroup>
+</Project>

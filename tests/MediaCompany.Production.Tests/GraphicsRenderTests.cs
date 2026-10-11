@@ -1,0 +1,296 @@
+using System.Diagnostics;
+using MediaCompany.Application.Ports;
+using MediaCompany.Graphics.Fixtures;
+using Xunit;
+
+namespace MediaCompany.Production.Tests;
+
+/// <summary>
+/// The installation verifier and the render invocation through the one process starter (the graphics change, decisions D-002
+/// and D-003 of its design), over a fixture installation made in the test with the graphics stand-in as its Node. No test here
+/// runs the installed renderer.
+/// </summary>
+public sealed class GraphicsRenderTests : IDisposable
+{
+    private readonly string _output = Path.Combine(Path.GetTempPath(), "mediacompany-graphics-test-" + Guid.NewGuid().ToString("N"));
+
+    public void Dispose()
+    {
+        try
+        {
+            Directory.Delete(_output, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // The installation verifier
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task AFixtureInstallationVerifiesAndItsIdentitiesAreReadFromItsVerifiedBytes()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var settings = fixture.Settings() with { Licence = new ConfiguredLicence("a configured licence that is not an identity", "the test") };
+        var report = await new RendererInstallationVerifier(settings).VerifyAsync(CancellationToken.None);
+
+        Assert.True(report.Verified, string.Join("\n", report.Findings));
+        Assert.Equal("remotion", report.RendererName);
+        Assert.Equal("0.0.0-fixture", report.RendererVersion);
+        Assert.Equal("1.2.3.4", report.BrowserVersion);
+        Assert.Equal("Fixture Sans", report.Regular!.Reading.Family);
+        Assert.Equal("Italic", report.Italic!.Reading.Subfamily);
+        Assert.Equal(GraphicsFixture.Sha256(fixture.RegularFace), report.Regular.Sha256);
+        Assert.Equal(GraphicsFixture.Sha256(fixture.NodeExecutable), report.NodeSha256);
+        Assert.Equal(4, report.Manifests.Count);
+        Assert.DoesNotContain("a configured licence", report.DescribeManifests() + report.DescribeFaces() + report.RendererPackages, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AChangedByteIsRefusedNamingBothHashes()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var before = GraphicsFixture.Sha256(fixture.BrowserExecutable);
+        await File.AppendAllTextAsync(fixture.BrowserExecutable, "x");
+        var after = GraphicsFixture.Sha256(fixture.BrowserExecutable);
+
+        var report = await new RendererInstallationVerifier(fixture.Settings()).VerifyAsync(CancellationToken.None);
+        Assert.False(report.Verified);
+        Assert.Contains(report.Findings, f => f.Contains(after, StringComparison.Ordinal) && f.Contains(before, StringComparison.Ordinal) && f.Contains("fixture-browser.bin", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AnUnlistedFileUnderTheRenderersPackagesIsRefused()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        Directory.CreateDirectory(Path.Combine(fixture.Renderer, "node_modules", ".cache", "webpack"));
+        await File.WriteAllTextAsync(Path.Combine(fixture.Renderer, "node_modules", ".cache", "webpack", "planted.pack"), "a re-created cache");
+
+        var report = await new RendererInstallationVerifier(fixture.Settings()).VerifyAsync(CancellationToken.None);
+        Assert.Contains(report.Findings, f => f.Contains("planted.pack", StringComparison.Ordinal) && f.Contains("does not list", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AnAbsoluteOrClimbingManifestEntryIsRefused()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var node = fixture.NodeManifest;
+        var absolute = $"{GraphicsFixture.Sha256(fixture.NodeExecutable)} */c/Program Files/nodejs/node.exe\n";
+        await File.WriteAllTextAsync(node.Manifest, absolute);
+        var settings = fixture.Settings() with { Node = node with { Sha256 = GraphicsFixture.Sha256(node.Manifest) } };
+
+        var report = await new RendererInstallationVerifier(settings).VerifyAsync(CancellationToken.None);
+        Assert.Contains(report.Findings, f => f.Contains("is absolute or climbs out of its folder", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AManifestThatDiffersFromItsConfiguredHashIsRefused()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var settings = fixture.Settings() with { Font = fixture.FontManifest with { Sha256 = new string('0', 64) } };
+        var report = await new RendererInstallationVerifier(settings).VerifyAsync(CancellationToken.None);
+        Assert.Contains(report.Findings, f => f.Contains("the font manifest", StringComparison.Ordinal) && f.Contains(new string('0', 64), StringComparison.Ordinal));
+    }
+
+    /// <summary>The hold: while held, a listed file can be neither replaced nor deleted; released, it can.</summary>
+    [Fact]
+    public async Task AHeldInstallationCannotBeChangedUntilItIsReleased()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var (report, held) = await new RendererInstallationVerifier(fixture.Settings()).HoldAsync(CancellationToken.None);
+        Assert.True(report.Verified);
+        await using (held)
+        {
+            Assert.ThrowsAny<IOException>(() => File.WriteAllText(fixture.BrowserExecutable, "replaced"));
+            Assert.ThrowsAny<IOException>(() => File.Delete(fixture.RegularFace));
+        }
+
+        File.WriteAllText(fixture.BrowserExecutable, "replaced after the hold was released");
+    }
+
+    /// <summary>Verification reads files only: it writes nothing and starts no process.</summary>
+    [Fact]
+    public async Task VerificationWritesNothingAndStartsNoProcess()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var files = Directory.GetFiles(fixture.Root, "*", SearchOption.AllDirectories).Select(f => (f, File.GetLastWriteTimeUtc(f))).ToArray();
+        var standIns = Process.GetProcessesByName("MediaCompany.GraphicsStandIn").Length;
+
+        await new RendererInstallationVerifier(fixture.Settings()).VerifyAsync(CancellationToken.None);
+
+        Assert.Equal(files, Directory.GetFiles(fixture.Root, "*", SearchOption.AllDirectories).Select(f => (f, File.GetLastWriteTimeUtc(f))).ToArray());
+        Assert.Equal(standIns, Process.GetProcessesByName("MediaCompany.GraphicsStandIn").Length);
+    }
+
+    // -----------------------------------------------------------------------
+    // The render invocation through the one starter
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// A stand-in bundle and render through the boundary: the stand-in accepts only the three arguments and only the cleared
+    /// environment pointing into staging (it exits 9 naming any breach), so success is the evidence; the frames land in staging
+    /// and the one writer promotes them.
+    /// </summary>
+    [Fact]
+    public async Task AStandInRenderStartedThroughTheBoundaryWritesItsFramesInStagingAndIsPromoted()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var (tool, store, folder, temporary) = Compose(fixture);
+        await StageAsync(store, folder, fixture);
+
+        var bundled = await tool.InvokeAsync(new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Bundle, "bundle-request.json", temporary, TimeSpan.FromSeconds(60)), CancellationToken.None);
+        Assert.Equal(new[] { fixture.NodeExecutable, "render.mjs", "bundle", "bundle-request.json" }, bundled.Arguments);
+        Assert.True(File.Exists(Path.Combine(folder, "bundle", "index.html")));
+
+        var rendered = await tool.InvokeAsync(new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Render, "render-request.json", temporary, TimeSpan.FromSeconds(60)), CancellationToken.None);
+        Assert.Equal(0, rendered.LeftoverProcesses);
+        Assert.Equal(12, Directory.GetFiles(Path.Combine(folder, "frames")).Length);
+        var promoted = await store.PromoteAsync(Path.Combine(folder, "frames"), "element-0.png", "item/v2/design/frame-000000.png", CancellationToken.None);
+        Assert.StartsWith(store.OutputRoot, promoted.FullPath, StringComparison.OrdinalIgnoreCase);
+
+        // No licence key and no telemetry option is passed: the whole argument list is the four values above.
+        Assert.DoesNotContain(rendered.Arguments, a => a.Contains("licen", StringComparison.OrdinalIgnoreCase) || a.Contains("telemetry", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(4, rendered.Arguments.Count);
+    }
+
+    /// <summary>
+    /// PAST ITS BOUND THE WHOLE JOB ENDS: a stand-in that started a grandchild and then waits outlasts a short bound; the
+    /// invocation ends under the bound outcome and no stand-in process started by this test remains.
+    /// </summary>
+    [Fact]
+    public async Task AStandInOutlastingAShortBoundEndsUnderTheBoundAndLeavesNoProcess()
+    {
+        using var fixture = new GraphicsFixture("grandchild");
+        var (tool, store, folder, temporary) = Compose(fixture);
+        await StageAsync(store, folder, fixture);
+        var started = DateTime.Now;
+
+        var exceeded = await Assert.ThrowsAsync<MediaToolBoundExceededException>(() =>
+            tool.InvokeAsync(new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Render, "render-request.json", temporary, TimeSpan.FromSeconds(3)), CancellationToken.None));
+        Assert.Equal("graphic render", exceeded.Invocation);
+        await Task.Delay(500);
+        Assert.DoesNotContain(Process.GetProcessesByName("MediaCompany.GraphicsStandIn"), p => Started(p) >= started.AddSeconds(-1));
+    }
+
+    /// <summary>An orphan the stand-in left behind is counted in the job before it is closed, and closing the job ends it.</summary>
+    [Fact]
+    public async Task AnOrphanLeftInTheJobIsCountedAndEnded()
+    {
+        using var fixture = new GraphicsFixture("orphan");
+        var (tool, store, folder, temporary) = Compose(fixture);
+        await StageAsync(store, folder, fixture);
+        var started = DateTime.Now;
+
+        var rendered = await tool.InvokeAsync(new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Render, "render-request.json", temporary, TimeSpan.FromSeconds(60)), CancellationToken.None);
+        Assert.True(rendered.LeftoverProcesses >= 1);
+        await Task.Delay(500);
+        Assert.DoesNotContain(Process.GetProcessesByName("MediaCompany.GraphicsStandIn"), p => Started(p) >= started.AddSeconds(-1));
+    }
+
+    [Fact]
+    public async Task ARendererFailureIsNamedWithItsExitCode()
+    {
+        using var fixture = new GraphicsFixture("fail");
+        var (tool, store, folder, temporary) = Compose(fixture);
+        await StageAsync(store, folder, fixture);
+        var failed = await Assert.ThrowsAsync<MediaToolFailedException>(() =>
+            tool.InvokeAsync(new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Render, "render-request.json", temporary, TimeSpan.FromSeconds(60)), CancellationToken.None));
+        Assert.Equal(4, failed.ExitCode);
+        Assert.Contains("the renderer failed", failed.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>An absent Node, browser, face or staged render script refuses by name before any process starts.</summary>
+    [Theory]
+    [InlineData("node", "graphics.nodeExecutable")]
+    [InlineData("browser", "graphics.browserExecutable")]
+    [InlineData("face", "graphics.regularFace")]
+    [InlineData("script", "graphics.renderScript")]
+    public async Task ARefusedSettingStopsBeforeAnyProcessNamingIt(string absent, string setting)
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var graphics = fixture.Settings();
+        graphics = absent switch
+        {
+            "node" => graphics with { NodeExecutable = Path.Combine(fixture.Node, "absent.bin") },
+            "browser" => graphics with { BrowserExecutable = Path.Combine(fixture.Browser, "absent.bin") },
+            "face" => graphics with { RegularFace = Path.Combine(fixture.Font, "absent.ttf") },
+            _ => graphics,
+        };
+        var settings = MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with
+        {
+            Graphics = graphics, RendererPath = fixture.NodeExecutable, ProbePath = fixture.NodeExecutable, FontFile = fixture.ItalicFace,
+        };
+        var store = new ArtifactWriter(_output, MediaTool.RepositoryRoot());
+        var folder = store.StagingSubfolder(store.BeginRun("item/v2"), "graphics");
+        if (absent != "script")
+        {
+            await store.WriteStagingTextAsync(folder, "render.mjs", "staged", CancellationToken.None);
+        }
+
+        await store.WriteStagingTextAsync(folder, "render-request.json", "{}", CancellationToken.None);
+        var standIns = Process.GetProcessesByName("MediaCompany.GraphicsStandIn").Length;
+        var refused = await Assert.ThrowsAsync<ProductionSettingRefusedException>(async () =>
+        {
+            var tool = new ExternalMediaTool(settings);
+            await tool.InvokeAsync(new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Render, "render-request.json", folder, TimeSpan.FromSeconds(10)), CancellationToken.None);
+        });
+        Assert.StartsWith(setting, refused.Setting, StringComparison.Ordinal);
+        Assert.Equal(standIns, Process.GetProcessesByName("MediaCompany.GraphicsStandIn").Length);
+    }
+
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private (ExternalMediaTool Tool, ArtifactWriter Store, string Folder, string Temporary) Compose(GraphicsFixture fixture)
+    {
+        var settings = MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with
+        {
+            Graphics = fixture.Settings(), RendererPath = fixture.NodeExecutable, ProbePath = fixture.NodeExecutable, FontFile = fixture.ItalicFace,
+        };
+        var store = new ArtifactWriter(_output, MediaTool.RepositoryRoot());
+        var staging = store.BeginRun("item/v2");
+        var folder = store.StagingSubfolder(staging, "graphics");
+        var temporary = store.StagingSubfolder(folder, "tmp");
+        return (new ExternalMediaTool(settings), store, folder, temporary);
+    }
+
+    private static async Task StageAsync(ArtifactWriter store, string folder, GraphicsFixture fixture)
+    {
+        var repository = MediaTool.RepositoryRoot();
+        await store.WriteStagingBytesAsync(folder, "render.mjs", await File.ReadAllBytesAsync(Path.Combine(repository, "graphics", "render.mjs")), CancellationToken.None);
+        var drawing = store.StagingSubfolder(folder, "drawing");
+        await store.WriteStagingBytesAsync(drawing, "index.jsx", await File.ReadAllBytesAsync(Path.Combine(repository, "graphics", "drawing", "index.jsx")), CancellationToken.None);
+        var publicFolder = store.StagingSubfolder(folder, "public");
+        await store.CopyIntoStagingAsync(publicFolder, fixture.RegularFace, "face-regular.ttf", CancellationToken.None);
+        await store.WriteStagingBytesAsync(folder, "style.json", await File.ReadAllBytesAsync(Path.Combine(repository, "config", "graphics-style.json")), CancellationToken.None);
+        await store.WriteStagingBytesAsync(folder, "gfx-02.json", await File.ReadAllBytesAsync(Path.Combine(repository, "wave-2", "item-001", "graphics", "gfx-02.json")), CancellationToken.None);
+        var anchor = Path.Combine(fixture.Renderer, "package.json");
+        await store.WriteStagingBytesAsync(folder, "bundle-request.json", System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object>
+        {
+            ["anchor"] = anchor, ["modules"] = Path.Combine(fixture.Renderer, "node_modules"), ["entry"] = "drawing/index.jsx",
+            ["publicDir"] = "public", ["outDir"] = "bundle", ["moduleList"] = "bundle-modules.json",
+        }), CancellationToken.None);
+        await store.WriteStagingBytesAsync(folder, "render-request.json", System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, object>
+        {
+            ["anchor"] = anchor, ["bundle"] = "bundle", ["browser"] = fixture.BrowserExecutable, ["specification"] = "gfx-02.json", ["style"] = "style.json",
+            ["timing"] = new Dictionary<string, object> { ["kind"] = "motion", ["frames"] = 12, ["fps"] = 30, ["width"] = 64, ["height"] = 36 },
+            ["faces"] = new Dictionary<string, object> { ["regular"] = "face-regular.ttf", ["italic"] = "face-italic.ttf" },
+            ["output"] = "frames", ["concurrency"] = 1, ["frameTimeoutMs"] = 30000,
+        }), CancellationToken.None);
+    }
+
+    private static DateTime Started(Process process)
+    {
+        try
+        {
+            return process.StartTime;
+        }
+        catch (Exception unreadable) when (unreadable is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            return DateTime.MinValue;
+        }
+    }
+}
