@@ -25,7 +25,7 @@ public sealed class GraphicSpecificationTests
     public async Task ItemOnesTwentyTwoSpecificationsPassTheCheck()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
 
         Assert.True(result.Passed, string.Join("\n", result.Findings));
         Assert.Equal(22, result.Specifications.Count);
@@ -37,7 +37,7 @@ public sealed class GraphicSpecificationTests
     public async Task ExactlyTheTwelveListedPositionsAreMotionGraphics()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
 
         string[] moving = ["GFX-02", "GFX-05", "GFX-06", "GFX-07", "GFX-08", "GFX-09", "GFX-11", "GFX-12", "GFX-14", "GFX-16", "GFX-18", "GFX-21"];
         Assert.Equal(moving, result.Specifications.Where(s => s.Kind == GraphicKind.Motion).Select(s => s.Position));
@@ -52,7 +52,7 @@ public sealed class GraphicSpecificationTests
     public async Task TheItemsFigureSetIsTheRuledSet()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         Assert.True(result.Passed, string.Join("\n", result.Findings));
 
         var figures = result.Figures.Where(f => f.Role != "citation").Select(f => f.Text).Order(StringComparer.Ordinal).ToArray();
@@ -74,7 +74,7 @@ public sealed class GraphicSpecificationTests
     public async Task TheEndCardOmitsTheRecordedSourceWithNoAuthor()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         Assert.True(result.Passed, string.Join("\n", result.Findings));
 
         var endCard = Encoding.UTF8.GetString(specifications["gfx-22.json"]);
@@ -90,7 +90,7 @@ public sealed class GraphicSpecificationTests
         var (material, specifications, sources) = await ItemOneAsync();
         Mutate(specifications, "gfx-10.json", root => Elements(root).Add(Text("conversion", "roughly one second of waggling per kilometre", "wave-2/item-001/narration.txt")));
 
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         Assert.Contains(result.Findings, f => f.Contains("gfx-10.json element conversion", StringComparison.Ordinal) && f.Contains("is not admitted", StringComparison.Ordinal));
     }
 
@@ -98,7 +98,7 @@ public sealed class GraphicSpecificationTests
     public async Task TheCheckHashesExactlyTheBytesItRead()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
 
         Assert.All(result.Specifications, s =>
         {
@@ -207,7 +207,7 @@ public sealed class GraphicSpecificationTests
                 break;
         }
 
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         Assert.False(result.Passed);
         Assert.Contains(result.Findings, f => f.Contains(expected, StringComparison.Ordinal));
     }
@@ -218,7 +218,7 @@ public sealed class GraphicSpecificationTests
     {
         var (material, specifications, sources) = await ItemOneAsync();
         Mutate(specifications, "gfx-04.json", root => root["position"] = "GFX-03");
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         Assert.Contains(result.Findings, f => f.Contains("gfx-04.json: its position GFX-03 is not the material's GFX-04", StringComparison.Ordinal));
     }
 
@@ -228,8 +228,139 @@ public sealed class GraphicSpecificationTests
     {
         var (material, specifications, sources) = await ItemOneAsync();
         Mutate(specifications, "gfx-04.json", root => Elements(root).Add(Text("markup", "<b>how long it lasts</b>", "wave-2/item-001/narration.txt")));
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         Assert.Contains(result.Findings, f => f.Contains("gfx-04.json element markup: its quotation is not found", StringComparison.Ordinal));
+    }
+
+    // -----------------------------------------------------------------------
+    // The number and text rule (the review's correction CR-001)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// THE REVIEWER'S FIRST PROBE: a figure cut out of a longer figure of the claim record ("5 Hz" and "15 Hz" out of "13–15 Hz")
+    /// is refused, as a quotation not found on token boundaries and as a figure not admitted; the whole figure stays admitted.
+    /// </summary>
+    [Theory]
+    [InlineData("5 Hz")]
+    [InlineData("15 Hz")]
+    [InlineData("13–15 H")]
+    public async Task AFigureCutOutOfALongerFigureIsRefused(string cut)
+    {
+        var (material, specifications, sources) = await ItemOneAsync();
+        Mutate(specifications, "gfx-03.json", root => Elements(root).Add(Text("cut", cut, "wave-2/item-001/claim-to-source.md")));
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
+
+        Assert.Contains(result.Findings, f => f.Contains("gfx-03.json element cut: its quotation is not found in wave-2/item-001/claim-to-source.md", StringComparison.Ordinal));
+        Assert.Contains(result.Findings, f => f.Contains($"gfx-03.json element cut: the figure \"{cut}\"", StringComparison.Ordinal) && f.Contains("is not admitted", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Figures, f => f.Element == "cut");
+    }
+
+    /// <summary>
+    /// THE REVIEWER'S SECOND PROBE: a specification naming another file as its owner's record (the owner guide) to admit an
+    /// unruled figure ("15,000") is refused: the records are the item's own, located from its package.
+    /// </summary>
+    [Fact]
+    public async Task ASpecificationNamingItsOwnOwnerRecordIsRefusedAndItsFigureIsNotAdmitted()
+    {
+        var (material, specifications, sources) = await ItemOneAsync();
+        const string guidePath = "wave-11/owner-guide-graphics.md";
+        sources[guidePath] = ItemPackageLoader.Normalised(File.ReadAllBytes(Path.Combine(Repository, guidePath)));
+        Mutate(specifications, "gfx-10.json", root =>
+        {
+            root["records"]!["owner"] = guidePath;
+            var figure = Text("count", "15,000", guidePath);
+            figure["admittedBy"] = new JsonObject { ["source"] = guidePath, ["quote"] = "it hashes about 15,000 installed files" };
+            Elements(root).Add(figure);
+        });
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
+
+        Assert.Contains(result.Findings, f => f.Contains($"gfx-10.json: its records name wave-2/item-001/claim-to-source.md and {guidePath}", StringComparison.Ordinal)
+            && f.Contains("a specification does not name its own records", StringComparison.Ordinal));
+        Assert.DoesNotContain(result.Figures, f => f.Text == "15,000");
+        Assert.DoesNotContain(result.Specifications, s => s.Position == "GFX-10");
+    }
+
+    /// <summary>
+    /// THE REVIEWER'S THIRD PROBE: a label quoted from a file that is none of the item's four recorded sources (the owner guide) is
+    /// refused naming the closed set, though the file was read and the quotation is in it.
+    /// </summary>
+    [Fact]
+    public async Task ALabelQuotedFromAFileOutsideTheRecordedSourcesIsRefused()
+    {
+        var (material, specifications, sources) = await ItemOneAsync();
+        const string guidePath = "wave-11/owner-guide-graphics.md";
+        sources[guidePath] = ItemPackageLoader.Normalised(File.ReadAllBytes(Path.Combine(Repository, guidePath)));
+        Mutate(specifications, "gfx-04.json", root => Elements(root).Add(Text("guide", "installed files", guidePath)));
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
+
+        Assert.Contains(result.Findings, f => f.Contains($"gfx-04.json element guide: its source {guidePath} is not one of the item's recorded sources", StringComparison.Ordinal)
+            && f.Contains("wave-2/item-001/claim-to-source.md, wave-2/item-001/shot-list.md, wave-2/item-001/narration.txt, research/ceo-decision-record.md", StringComparison.Ordinal));
+    }
+
+    /// <summary>A geometry element fixed by a quotation from a file outside the recorded sources is refused naming its source.</summary>
+    [Fact]
+    public async Task AFixingQuotationFromAFileOutsideTheRecordedSourcesIsRefused()
+    {
+        var (material, specifications, sources) = await ItemOneAsync();
+        const string guidePath = "wave-11/owner-guide-graphics.md";
+        sources[guidePath] = ItemPackageLoader.Normalised(File.ReadAllBytes(Path.Combine(Repository, guidePath)));
+        Mutate(specifications, "gfx-04.json", root => Elements(root).OfType<JsonObject>().First(e => (string?)e["id"] == "runA")["fixedBy"] =
+            new JsonObject { ["source"] = guidePath, ["quote"] = "installed files" });
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
+
+        Assert.Contains(result.Findings, f => f.Contains($"gfx-04.json element runA: its fixing quotation's source {guidePath} is not one of the item's recorded sources", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// NUMERIC FORMS: a number word of the extended list ("twice") is a figure and refused unadmitted; a number character other
+    /// than the ASCII digits (a fraction, a superscript, a full-width or another script's digit, a Roman numeral) is refused
+    /// outright, naming its code point.
+    /// </summary>
+    [Theory]
+    [InlineData("twice", "the figure \"twice\" (tokens twice) is not admitted")]
+    [InlineData("½", "it draws the number character '½' (U+00BD)")]
+    [InlineData("km²", "it draws the number character '²' (U+00B2)")]
+    [InlineData("５ km", "it draws the number character '５' (U+FF15)")]
+    [InlineData("٥", "it draws the number character '٥' (U+0665)")]
+    [InlineData("Ⅻ", "it draws the number character 'Ⅻ' (U+216B)")]
+    public async Task OtherNumericFormsAreFiguresOrRefused(string drawn, string expected)
+    {
+        var (material, specifications, sources) = await ItemOneAsync();
+        Mutate(specifications, "gfx-04.json", root => Elements(root).Add(Text("numeric", drawn, "wave-2/item-001/narration.txt")));
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
+
+        Assert.Contains(result.Findings, f => f.Contains("gfx-04.json element numeric: " + expected, StringComparison.Ordinal));
+    }
+
+    /// <summary>Token-boundary matching on its own: whole words and whole figures pass, a word or figure continued does not.</summary>
+    [Theory]
+    [InlineData("about 13–15 Hz here", "13–15 Hz", true)]
+    [InlineData("about 13–15 Hz here", "5 Hz", false)]
+    [InlineData("about 13–15 Hz here", "15 Hz", false)]
+    [InlineData("about 13–15 Hz here", "13", false)]
+    [InlineData("roughly ~2 km away", "~2 km", true)]
+    [InlineData("roughly ~2 km away", "2 km", false)]
+    [InlineData("at 60° right", "60", false)]
+    [InlineData("at 60° right", "60°", true)]
+    [InlineData("over 15,000 files", "15", false)]
+    [InlineData("over 15,000 files", "000 files", false)]
+    [InlineData("it took 15, then 20", "15", true)]
+    [InlineData("nine o'clock", "clock", false)]
+    [InlineData("often", "ten", false)]
+    [InlineData("the run's angle", "the run", false)]
+    [InlineData("the run's angle", "angle", true)]
+    [InlineData("angle θ, duration t", "θ", true)]
+    [InlineData("time-compensated sun", "time", true)]
+    public void AQuotationMatchesOnTokenBoundaries(string source, string quote, bool expected) =>
+        Assert.Equal(expected, GraphicSpecificationCheck.Within(source, quote));
+
+    /// <summary>The recorded sources are located from the item package: the material's own rows, narration and owner record.</summary>
+    [Fact]
+    public async Task TheRecordedSourcesAreLocatedFromTheItemPackage()
+    {
+        var (material, _, _) = await ItemOneAsync();
+        var recorded = Recorded(material);
+        Assert.Equal(["wave-2/item-001/claim-to-source.md", "wave-2/item-001/shot-list.md", "wave-2/item-001/narration.txt", "research/ceo-decision-record.md"], recorded.All);
     }
 
     // -----------------------------------------------------------------------
@@ -241,7 +372,7 @@ public sealed class GraphicSpecificationTests
     public async Task AFaceLackingOneCharacterRefusesTheGraphicDrawingItNamingTheCharacter()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         var lacking = FontCoverage.Read(MediaCompany.Graphics.Fixtures.FixtureFace.Build("Fixture Sans", "Regular", null, new HashSet<int> { 0x03B8 }));
         var drawn = result.Specifications.SelectMany(s => s.Texts.Where(t => !t.Italic).Select(t => ($"{s.FileName} element {t.Element}", t.Text)));
 
@@ -269,7 +400,7 @@ public sealed class GraphicSpecificationTests
     public async Task TheInstalledFacesCoverEveryCharacterOfItemOne()
     {
         var (material, specifications, sources) = await ItemOneAsync();
-        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        var result = GraphicSpecificationCheck.Check(material, Recorded(material), specifications, sources);
         var regular = FontCoverage.Read(await File.ReadAllBytesAsync(InstalledRenderer.RegularFace!));
         var italic = FontCoverage.Read(await File.ReadAllBytesAsync(InstalledRenderer.ItalicFace!));
 
@@ -289,11 +420,12 @@ public sealed class GraphicSpecificationTests
         var loaded = await ItemPackageLoader.LoadAsync(Repository, "wave-2/item-001/item-material.json", CancellationToken.None);
         var folder = Path.Combine(Repository, "wave-2", "item-001", "graphics");
         var specifications = Directory.GetFiles(folder).ToDictionary(f => Path.GetFileName(f), f => File.ReadAllBytes(f), StringComparer.Ordinal);
-        var sources = GraphicSpecificationCheck.CitedSources(specifications)
-            .Where(p => File.Exists(Path.Combine(Repository, p)))
+        var sources = Recorded(loaded.Material).All.Distinct(StringComparer.Ordinal)
             .ToDictionary(p => p, p => ItemPackageLoader.Normalised(File.ReadAllBytes(Path.Combine(Repository, p))), StringComparer.Ordinal);
         return (loaded.Material, specifications, sources);
     }
+
+    internal static GraphicSources Recorded(ItemMaterial material) => GraphicSources.Of(material, "wave-2/item-001");
 
     private static void Mutate(Dictionary<string, byte[]> specifications, string file, Action<JsonObject> change)
     {

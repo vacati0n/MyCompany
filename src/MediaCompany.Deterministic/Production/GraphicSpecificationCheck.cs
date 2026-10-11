@@ -25,6 +25,40 @@ public sealed record CheckedSpecification(
     GraphicKind Kind,
     IReadOnlyList<DrawnText> Texts);
 
+/// <summary>
+/// THE ITEM'S RECORDED SOURCES, the closed set a specification may quote (decision D-001 of the graphics design; the review's
+/// correction CR-001): the claim record, the shot list, the narration and the owner's decision record. They are located from the
+/// item package (its material and its folder), never from a path a specification supplies; any other file is refused.
+/// </summary>
+public sealed record GraphicSources(string ClaimRecord, string ShotList, string Narration, string OwnerRecord)
+{
+    /// <summary>The claim record's file name in the item package's folder, as the Research stage records it.</summary>
+    public const string ClaimRecordName = "claim-to-source.md";
+
+    /// <summary>The four paths, repository-relative.</summary>
+    public IReadOnlyList<string> All => [ClaimRecord, ShotList, Narration, OwnerRecord];
+
+    /// <summary>
+    /// The recorded sources of an item: the claim record beside the material in <paramref name="itemFolder"/> (the material's
+    /// repository-relative folder), the shot list every graphic row of the material quotes, the narration file the material names,
+    /// and the owner's decision record the material quotes for its clip placeholders. Refused when the material's graphic rows do
+    /// not all quote one shot list.
+    /// </summary>
+    public static GraphicSources Of(ItemMaterial material, string itemFolder)
+    {
+        ArgumentNullException.ThrowIfNull(material);
+        ArgumentNullException.ThrowIfNull(itemFolder);
+        var shotLists = material.Graphics.Select(g => g.Source).Distinct(StringComparer.Ordinal).ToArray();
+        if (shotLists.Length != 1)
+        {
+            throw new InvalidOperationException($"the material's graphic rows quote {shotLists.Length} shot lists, and one is recorded");
+        }
+
+        var folder = itemFolder.Replace('\\', '/').TrimEnd('/');
+        return new GraphicSources($"{folder}/{ClaimRecordName}", shotLists[0], material.NarrationFile, material.ClipPlaceholders.Source);
+    }
+}
+
 /// <summary>What the check found: every refusal, the specifications that passed, and the item's admitted figure set.</summary>
 public sealed record GraphicCheckResult(IReadOnlyList<string> Findings, IReadOnlyList<CheckedSpecification> Specifications, IReadOnlyList<AdmittedFigure> Figures)
 {
@@ -34,14 +68,20 @@ public sealed record GraphicCheckResult(IReadOnlyList<string> Findings, IReadOnl
 /// <summary>
 /// THE GRAPHIC SPECIFICATION CHECK (the graphics change, decision D-001 of its design), a pure function over the
 /// specifications' bytes, the item material and the recorded sources' text. It holds no subject term and no position
-/// identifier: every expected name is derived from the material, and every quotation is matched against the sources given.
+/// identifier: every expected name is derived from the material, and every quotation is matched against the item's four recorded
+/// sources (<see cref="GraphicSources"/>), the closed set located from the item package; a specification naming any other file,
+/// or naming its own claim or owner record, is refused.
 ///
 /// Matching: a source and a quotation are compared after removing the emphasis characters asterisk and backtick and
 /// collapsing every run of white space to one space (the recorded decision record wraps its lines); a drawn text must equal
-/// its quotation character for character. THE NUMBER RULE: a figure is a text holding a decimal digit or a word of the closed
-/// list below; it is admitted only from the claim record, or by a recorded owner answer whose quotation the element cites and
-/// which contains the figure's text. A quantity drawn by geometry (a bearing, an angle, a trace, bars or a region) is allowed
-/// only in a specification carrying the owner's disclosure, or where the element cites a recorded quotation that fixes it.
+/// its quotation character for character, and the quotation must sit in its source ON TOKEN BOUNDARIES: a quotation whose edge
+/// is a letter or a number does not continue a longer word or figure of the source (a figure "5 Hz" is not cut out of
+/// "13–15 Hz", nor "2 km" out of "~2 km"). THE NUMBER RULE: a figure is a text holding a number character or a word of the closed
+/// list below; any number character other than the ASCII digits (a fraction, a superscript, a digit of another script, a
+/// Roman numeral) is refused outright; a figure is admitted only from the claim record, or by a recorded owner answer whose
+/// quotation the element cites and which contains the figure's text on token boundaries. A quantity drawn by geometry (a
+/// bearing, an angle, a trace, bars or a region) is allowed only in a specification carrying the owner's disclosure, or where
+/// the element cites a recorded quotation that fixes it.
 /// </summary>
 public static partial class GraphicSpecificationCheck
 {
@@ -53,7 +93,9 @@ public static partial class GraphicSpecificationCheck
         "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
         "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty",
         "seventy", "eighty", "ninety", "hundred", "hundreds", "thousand", "thousands", "million", "tens", "dozen", "half",
-        "quarter", "o'clock", "noon", "midnight",
+        "quarter", "o'clock", "noon", "midnight", "once", "twice", "thrice", "double", "doubled", "triple", "tripled", "treble",
+        "quadruple", "halve", "halved", "halves", "percent", "twofold", "threefold", "fourfold", "fivefold", "tenfold",
+        "hundredfold", "thousandfold",
     ];
 
     private static readonly string[] TopFields =
@@ -94,69 +136,37 @@ public static partial class GraphicSpecificationCheck
     private static readonly HashSet<string> Anchors = new(StringComparer.Ordinal) { "start", "middle", "end" };
     private static readonly HashSet<string> GrowProperties = new(StringComparer.Ordinal) { "a", "b", "length", "radius", "width", "height" };
 
-    /// <summary>The source paths every specification cites, read before the check so the check itself stays pure.</summary>
-    public static IReadOnlySet<string> CitedSources(IReadOnlyDictionary<string, byte[]> specifications)
-    {
-        ArgumentNullException.ThrowIfNull(specifications);
-        var paths = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var bytes in specifications.Values)
-        {
-            try
-            {
-                using var document = JsonDocument.Parse(bytes);
-                Collect(document.RootElement, paths);
-            }
-            catch (JsonException)
-            {
-                // The check names it.
-            }
-        }
-
-        return paths;
-
-        static void Collect(JsonElement element, HashSet<string> paths)
-        {
-            switch (element.ValueKind)
-            {
-                case JsonValueKind.Object:
-                    foreach (var property in element.EnumerateObject())
-                    {
-                        if (property.Name is "source" or "claims" or "owner" && property.Value.ValueKind == JsonValueKind.String)
-                        {
-                            paths.Add(property.Value.GetString()!);
-                        }
-
-                        Collect(property.Value, paths);
-                    }
-
-                    break;
-                case JsonValueKind.Array:
-                    foreach (var item in element.EnumerateArray())
-                    {
-                        Collect(item, paths);
-                    }
-
-                    break;
-            }
-        }
-    }
-
     /// <summary>
     /// Checks every specification of an item. <paramref name="specifications"/> maps each file name found in the item's
-    /// graphics folder to its bytes, read once; <paramref name="sources"/> maps each cited source path to its text with line
-    /// endings normalised. Every refusal names the file and the element.
+    /// graphics folder to its bytes, read once; <paramref name="recorded"/> names the item's four recorded sources and
+    /// <paramref name="read"/> maps each of them to its text with line endings normalised (any other entry is ignored, so no
+    /// other file can admit a quotation). Every refusal names the file and the element.
     /// </summary>
-    public static GraphicCheckResult Check(ItemMaterial material, IReadOnlyDictionary<string, byte[]> specifications, IReadOnlyDictionary<string, string> sources)
+    public static GraphicCheckResult Check(ItemMaterial material, GraphicSources recorded, IReadOnlyDictionary<string, byte[]> specifications, IReadOnlyDictionary<string, string> read)
     {
         ArgumentNullException.ThrowIfNull(material);
+        ArgumentNullException.ThrowIfNull(recorded);
         ArgumentNullException.ThrowIfNull(specifications);
-        ArgumentNullException.ThrowIfNull(sources);
+        ArgumentNullException.ThrowIfNull(read);
 
         var findings = new List<string>();
+        var sources = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var path in recorded.All.Distinct(StringComparer.Ordinal))
+        {
+            if (read.TryGetValue(path, out var text))
+            {
+                sources[path] = text;
+            }
+            else
+            {
+                findings.Add($"the item's recorded source {path} was not read");
+            }
+        }
+
+        var closedList = string.Join(", ", recorded.All.Distinct(StringComparer.Ordinal));
         var checkedSpecs = new List<CheckedSpecification>();
         var figures = new List<AdmittedFigure>();
         var shared = new Dictionary<string, (decimal Value, string File)>(StringComparer.Ordinal);
-        string? claimRecordPath = null;
 
         var expected = material.Graphics.ToDictionary(g => FileName(g.Id), g => g, StringComparer.Ordinal);
         foreach (var missing in expected.Keys.Where(k => !specifications.ContainsKey(k)).Order(StringComparer.Ordinal))
@@ -223,22 +233,24 @@ public static partial class GraphicSpecificationCheck
                     findings.Add($"{file}: its row differs from the material's quotation of {graphic.Source}");
                 }
 
-                // The records it reads: the claim record and the owner's decision record, the same for every specification.
+                // The records it reads are the item's own claim record and owner's decision record, located from the item
+                // package: a specification restates them and never chooses them.
                 var records = root.TryGetProperty("records", out var r) ? r : default;
-                var claimsPath = records.ValueKind == JsonValueKind.Object ? Str(records, "claims") : null;
-                var ownerPath = records.ValueKind == JsonValueKind.Object ? Str(records, "owner") : null;
-                if (claimsPath is null || ownerPath is null || !sources.ContainsKey(claimsPath) || !sources.ContainsKey(ownerPath))
+                var claimsNamed = records.ValueKind == JsonValueKind.Object ? Str(records, "claims") : null;
+                var ownerNamed = records.ValueKind == JsonValueKind.Object ? Str(records, "owner") : null;
+                if (claimsNamed != recorded.ClaimRecord || ownerNamed != recorded.OwnerRecord)
                 {
-                    findings.Add($"{file}: its records do not name a read claim record and owner record");
+                    findings.Add($"{file}: its records name {claimsNamed ?? "(none)"} and {ownerNamed ?? "(none)"}, and the item's recorded claim record and owner's decision record are {recorded.ClaimRecord} and {recorded.OwnerRecord}; a specification does not name its own records");
                     continue;
                 }
 
-                if (claimRecordPath is not null && claimRecordPath != claimsPath)
+                if (!sources.ContainsKey(recorded.ClaimRecord) || !sources.ContainsKey(recorded.OwnerRecord))
                 {
-                    findings.Add($"{file}: its claim record {claimsPath} differs from {claimRecordPath}");
+                    continue;
                 }
 
-                claimRecordPath ??= claimsPath;
+                var claimsPath = recorded.ClaimRecord;
+                var ownerPath = recorded.OwnerRecord;
                 var positions = material.Graphics.Select(g => g.Id).ToArray();
                 var claimRows = ClaimRows(sources[claimsPath], positions);
 
@@ -369,6 +381,11 @@ public static partial class GraphicSpecificationCheck
                     Numbers(element, sharedHere, where, findings);
                     Addresses(element, where, findings);
 
+                    if (element.TryGetProperty("fixedBy", out var fixing) && Str(fixing, "source") is { } fixingSource && !sources.ContainsKey(fixingSource))
+                    {
+                        findings.Add($"{where}: its fixing quotation's source {fixingSource} is not one of the item's recorded sources ({closedList})");
+                    }
+
                     if (QuantityTypes.Contains(type) && !disclosed
                         && (!element.TryGetProperty("fixedBy", out var fixedBy) || !Found(sources, Str(fixedBy, "source"), Str(fixedBy, "quote"))))
                     {
@@ -378,7 +395,7 @@ public static partial class GraphicSpecificationCheck
                     switch (type)
                     {
                         case "text":
-                            CheckText(element, where, graphic.Id, id, claimsPath, ownerPath, sources, texts, figures, findings);
+                            CheckText(element, where, graphic.Id, id, claimsPath, ownerPath, closedList, sources, texts, figures, findings);
                             break;
                         case "path" when Str(element, "form") is not ("polyline" or "smooth" or "loop"):
                             findings.Add($"{where}: unknown path form {Str(element, "form")}");
@@ -442,7 +459,10 @@ public static partial class GraphicSpecificationCheck
         return WhiteSpace().Replace(text.Replace("*", string.Empty, StringComparison.Ordinal).Replace("`", string.Empty, StringComparison.Ordinal), " ");
     }
 
-    /// <summary>The figure tokens of a text: every run of decimal digits and every listed number word, on word boundaries.</summary>
+    /// <summary>
+    /// The figure tokens of a text: every run of number characters (decimal digits of any script, fractions, superscripts and
+    /// other numerals, Unicode categories Nd, Nl and No) and every listed number word, on word boundaries.
+    /// </summary>
     public static IReadOnlyList<string> FigureTokens(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -459,7 +479,7 @@ public static partial class GraphicSpecificationCheck
     }
 
     private static void CheckText(
-        JsonElement element, string where, string position, string id, string claimsPath, string ownerPath,
+        JsonElement element, string where, string position, string id, string claimsPath, string ownerPath, string closedList,
         IReadOnlyDictionary<string, string> sources, List<DrawnText> texts, List<AdmittedFigure> figures, List<string> findings)
     {
         var text = Str(element, "text") ?? string.Empty;
@@ -499,11 +519,16 @@ public static partial class GraphicSpecificationCheck
 
         if (source is null || !sources.ContainsKey(source))
         {
-            findings.Add($"{where}: its source {source ?? "(none)"} is not a recorded source that was read");
+            findings.Add($"{where}: its source {source ?? "(none)"} is not one of the item's recorded sources ({closedList})");
         }
         else if (!Found(sources, source, quote))
         {
             findings.Add($"{where}: its quotation is not found in {source}: \"{quote}\"");
+        }
+
+        foreach (var numeral in text.Where(ch => char.IsNumber(ch) && ch is not (>= '0' and <= '9')).Distinct())
+        {
+            findings.Add(string.Create(CultureInfo.InvariantCulture, $"{where}: it draws the number character '{numeral}' (U+{(int)numeral:X4}), which is not an ASCII digit; a figure is written in ASCII digits or a listed number word"));
         }
 
         var tokens = FigureTokens(text);
@@ -516,7 +541,7 @@ public static partial class GraphicSpecificationCheck
             else if (element.TryGetProperty("admittedBy", out var admitted)
                      && Str(admitted, "source") == ownerPath
                      && Found(sources, ownerPath, Str(admitted, "quote"))
-                     && Collapse(Str(admitted, "quote")!).Contains(Collapse(text), StringComparison.Ordinal))
+                     && Within(Collapse(Str(admitted, "quote")!), Collapse(text)))
             {
                 figures.Add(new AdmittedFigure(position, id, text, role, tokens, $"the owner answer quoted from {ownerPath}"));
             }
@@ -668,7 +693,71 @@ public static partial class GraphicSpecificationCheck
 
     private static bool Found(IReadOnlyDictionary<string, string> sources, string? source, string? quote) =>
         source is not null && quote is { Length: > 0 } && sources.TryGetValue(source, out var text)
-        && Collapse(text).Contains(Collapse(quote), StringComparison.Ordinal);
+        && Within(Collapse(text), Collapse(quote));
+
+    /// <summary>
+    /// Whether <paramref name="quote"/> occurs in <paramref name="text"/> ON TOKEN BOUNDARIES: at one occurrence at least, an
+    /// edge of the quotation that is a letter or a number does not continue a word or a figure of the text. A letter edge needs
+    /// no letter, number or in-word apostrophe beside it; a number edge needs beside it only white space, an opening or closing
+    /// bracket or quotation mark, or sentence punctuation that no number continues: never a number, a letter, a range or
+    /// decimal joiner, a sign, an approximation mark or a unit symbol.
+    /// </summary>
+    public static bool Within(string text, string quote)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(quote);
+        if (quote.Length == 0)
+        {
+            return false;
+        }
+
+        for (var at = text.IndexOf(quote, StringComparison.Ordinal); at >= 0; at = text.IndexOf(quote, at + 1, StringComparison.Ordinal))
+        {
+            var before = at > 0 ? text[at - 1] : (char?)null;
+            var beforeThat = at > 1 ? text[at - 2] : (char?)null;
+            var end = at + quote.Length;
+            var after = end < text.Length ? text[end] : (char?)null;
+            var afterThat = end + 1 < text.Length ? text[end + 1] : (char?)null;
+            if (Bounded(quote[0], before, beforeThat, opening: true) && Bounded(quote[^1], after, afterThat, opening: false))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool Bounded(char edge, char? beside, char? further, bool opening)
+    {
+        if (beside is not { } next)
+        {
+            return true;
+        }
+
+        if (char.IsNumber(edge))
+        {
+            if (char.IsWhiteSpace(next) || "([{\"“‘)]}”’!?;".Contains(next, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            // A comma, full stop or colon closes a sentence after a figure when no number continues it.
+            return !opening && next is ',' or '.' or ':' && (further is not { } beyond || !char.IsNumber(beyond));
+        }
+
+        if (char.IsLetter(edge))
+        {
+            if (char.IsLetterOrDigit(next) || char.IsNumber(next))
+            {
+                return false;
+            }
+
+            // An apostrophe inside a word (o'clock, the run's) joins it.
+            return !(next is '\'' or '’' && further is { } inWord && char.IsLetter(inWord));
+        }
+
+        return true;
+    }
 
     private static string? Str(JsonElement node, string name) =>
         node.ValueKind == JsonValueKind.Object && node.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
@@ -708,7 +797,7 @@ public static partial class GraphicSpecificationCheck
     [GeneratedRegex(@"\s+", RegexOptions.CultureInvariant)]
     private static partial Regex WhiteSpace();
 
-    [GeneratedRegex(@"\d+", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"[\p{Nd}\p{Nl}\p{No}]+", RegexOptions.CultureInvariant)]
     private static partial Regex Digits();
 
     [GeneratedRegex(@"[A-Za-z][A-Za-z']*", RegexOptions.CultureInvariant)]

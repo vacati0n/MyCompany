@@ -128,19 +128,31 @@ public static class GraphicsPlanner
             findings.Add($"the item's graphics folder {folder} is missing");
         }
 
+        // The sources a specification may quote: the item's four recorded sources, located from the item package (the
+        // material and its folder), never from a path a specification names (the review's correction CR-001).
         var sources = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var path in GraphicSpecificationCheck.CitedSources(specifications).Order(StringComparer.Ordinal))
+        GraphicSources? recorded = null;
+        try
         {
-            var full = Path.Combine(repository, path);
-            if (Path.IsPathRooted(path) || path.Contains("..", StringComparison.Ordinal) || !File.Exists(full))
-            {
-                continue;
-            }
-
-            sources[path] = ItemPackageLoader.Normalised(await File.ReadAllBytesAsync(full, cancellationToken).ConfigureAwait(false));
+            recorded = GraphicSources.Of(loaded.Material, Path.GetRelativePath(repository, Path.GetDirectoryName(loaded.MaterialPath)!));
+        }
+        catch (InvalidOperationException refused)
+        {
+            findings.Add(refused.Message);
         }
 
-        var check = GraphicSpecificationCheck.Check(loaded.Material, specifications, sources);
+        foreach (var path in recorded?.All.Distinct(StringComparer.Ordinal) ?? [])
+        {
+            var full = Path.Combine(repository, path);
+            if (!Path.IsPathRooted(path) && !path.Contains("..", StringComparison.Ordinal) && File.Exists(full))
+            {
+                sources[path] = ItemPackageLoader.Normalised(await File.ReadAllBytesAsync(full, cancellationToken).ConfigureAwait(false));
+            }
+        }
+
+        var check = recorded is null
+            ? new GraphicCheckResult([], [], [])
+            : GraphicSpecificationCheck.Check(loaded.Material, recorded, specifications, sources);
         findings.AddRange(check.Findings);
 
         async Task<ProgramFile?> ReadAsync(string relative, string setting)
