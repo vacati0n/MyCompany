@@ -326,7 +326,7 @@ public sealed partial class ProduceItemService
                         NodeSha256 = report.NodeSha256 ?? "not verified",
                         NodeVersion = report.NodeVersion ?? "not read",
                         BrowserSha256 = report.BrowserSha256 ?? "not verified",
-                        BrowserVersion = report.BrowserVersion ?? "not read",
+                        BrowserVersion = report.BrowserVersion ?? "not stated by its executable",
                         Faces = report.DescribeFaces(),
                         SegmentStartFrame = segment.StartFrame,
                         SegmentFrames = segment.Frames,
@@ -372,7 +372,7 @@ public sealed partial class ProduceItemService
 
             var stills = drawn.Values.Count(d => d.Kind == GraphicKind.Still);
             await RecordStageAsync(ProductionStage.Design, StageOutcome.Succeeded,
-                string.Create(c, $"{drawn.Count} graphics drawn by code from their checked specifications with {report.RendererName} {report.RendererVersion} (browser {report.BrowserVersion}, Node {report.NodeVersion}, {report.Regular!.Reading.Family} {report.Regular.Reading.Version}): ")
+                string.Create(c, $"{drawn.Count} graphics drawn by code from their checked specifications with {report.RendererName} {report.RendererVersion} (browser {report.BrowserVersion ?? $"sha256 {report.BrowserSha256}"}, Node {report.NodeVersion}, {report.Regular!.Reading.Family} {report.Regular.Reading.Version}): ")
                 + string.Create(c, $"{stills} still and {drawn.Count - stills} motion, timed from the measured beat durations; installation verified before and after, held throughout; ")
                 + string.Create(c, $"{(demonstration ? "each rendered twice and compared" : "stills compared with the owner's approval, motion re-timed")}: {sameness.Count(s => s.EndsWith(nameof(SamenessKind.RepeatsTwoRenders), StringComparison.Ordinal) || s.EndsWith(nameof(SamenessKind.EqualsApprovedStill), StringComparison.Ordinal))} repeat or equal; ")
                 + string.Create(c, $"render time {seconds.TotalSeconds:0.0} s observed on this machine; no model call and no capability call; booked metered spend USD 0.00; local compute unmeasured"),

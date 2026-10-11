@@ -125,6 +125,44 @@ public sealed class GraphicsRenderTests : IDisposable
     }
 
     // -----------------------------------------------------------------------
+    // The plan: the check, the installation and the coverage, read only
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// THE PLAN REFUSES A CHARACTER THE FACE LACKS, before any process: over a fixture installation whose regular face lacks the
+    /// theta, the graphics plan names the character, its code point and every graphic drawing it; over a complete face it passes.
+    /// </summary>
+    [Fact]
+    public async Task ThePlanRefusesACharacterTheFaceLacksNamingItAndPassesWithACompleteFace()
+    {
+        var loaded = await ItemPackageLoader.LoadAsync(MediaTool.RepositoryRoot(), "wave-2/item-001/item-material.json", CancellationToken.None);
+        using var lacking = new GraphicsFixture("deterministic", excludedFromRegular: new HashSet<int> { 0x03B8 });
+        var refused = await GraphicsPlanner.ComposeAsync(
+            MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with { Graphics = lacking.Settings() }, loaded, MediaCompany.Domain.Production.StoreDesignation.Demonstration, CancellationToken.None);
+        Assert.True(refused.Refused);
+        Assert.Contains(refused.Findings, f => f.Contains("gfx-05.json element thetaLabel", StringComparison.Ordinal) && f.Contains("U+03B8", StringComparison.Ordinal));
+        Assert.All(refused.Findings, f => Assert.Contains("U+03B8", f, StringComparison.Ordinal));
+
+        using var complete = new GraphicsFixture("deterministic");
+        var passed = await GraphicsPlanner.ComposeAsync(
+            MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with { Graphics = complete.Settings() }, loaded, MediaCompany.Domain.Production.StoreDesignation.Demonstration, CancellationToken.None);
+        Assert.False(passed.Refused, string.Join("\n", passed.Findings));
+        Assert.Equal(22, passed.Check!.Specifications.Count);
+    }
+
+    /// <summary>In the company store the plan refuses before any call without the owner's approval file.</summary>
+    [Fact]
+    public async Task InTheCompanyStoreThePlanRefusesWithoutTheOwnersApproval()
+    {
+        var loaded = await ItemPackageLoader.LoadAsync(MediaTool.RepositoryRoot(), "wave-2/item-001/item-material.json", CancellationToken.None);
+        using var fixture = new GraphicsFixture("deterministic");
+        var plan = await GraphicsPlanner.ComposeAsync(
+            MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with { Graphics = fixture.Settings() }, loaded, MediaCompany.Domain.Production.StoreDesignation.Company, CancellationToken.None);
+        Assert.True(plan.Refused);
+        Assert.Contains(plan.Findings, f => f.Contains("no owner's approval file is configured", StringComparison.Ordinal));
+    }
+
+    // -----------------------------------------------------------------------
     // The render invocation through the one starter
     // -----------------------------------------------------------------------
 

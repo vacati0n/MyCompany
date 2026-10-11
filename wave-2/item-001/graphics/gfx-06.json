@@ -115,9 +115,9 @@
       "text": "stands for the direction of the sun",
       "source": "wave-2/item-001/narration.txt",
       "quote": "stands for the direction of the sun",
-      "x": 990,
-      "y": 340,
-      "anchor": "start",
+      "x": 960,
+      "y": 240,
+      "anchor": "middle",
       "size": "caption"
     },
     {

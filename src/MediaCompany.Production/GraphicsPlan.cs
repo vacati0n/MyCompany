@@ -77,7 +77,7 @@ public sealed record GraphicsPlan
         {
             output.WriteLine($"    renderer: {installed.RendererName ?? "not read"} {installed.RendererVersion ?? "not read"} ({installed.RendererPackages}), read from its verified package files; "
                 + string.Create(c, $"{installed.FilesVerified:N0} installed files verified from their manifests ({installed.DescribeManifests()})"));
-            output.WriteLine($"    browser: version {installed.BrowserVersion ?? "not read"} read from its verified executable, sha256 {installed.BrowserSha256 ?? "not verified"}");
+            output.WriteLine($"    browser: {(installed.BrowserVersion is { } v ? $"version {v} read from its verified executable" : "version not stated by its executable (it carries no version resource); identified by its verified hash")}, sha256 {installed.BrowserSha256 ?? "not verified"}");
             output.WriteLine($"    node: version {installed.NodeVersion ?? "not read"} read from its verified executable, sha256 {installed.NodeSha256 ?? "not verified"}");
             output.WriteLine($"    font: {installed.DescribeFaces()}; every drawn character checked against these faces' character maps");
         }
