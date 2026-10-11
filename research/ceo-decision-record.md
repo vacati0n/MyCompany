@@ -2222,3 +2222,20 @@ the orchestrator's record of the approved installation.
    colour of `CEO-D-1000`.
 
 ---
+
+### Orchestrator's note to CEO-D-1001 — installation manifests (2026-10-11)
+
+Not a decision of the owner; the orchestrator's record of the installation the owner approved.
+The bundler cache the trial left under `graphics/remotion/node_modules/.cache` was removed, so the
+installed folders hold only what was installed. Full SHA-256 manifests (sha256sum format, one line
+per file, paths relative to the folder named) were then written under
+`C:/Users/vuhoangcao/MediaCompanyRun/graphics/manifests/`:
+
+| Manifest | Folder | Files | SHA-256 of the manifest |
+|---|---|---|---|
+| `remotion.sha256` | `graphics/remotion/` (`node_modules/`, `package.json`, `package-lock.json`; the `trial/` folder excluded) | 14,789 | `8e83d9efe269894d47f864394818b11a776a66f223b0688e531b2f33725003ce` |
+| `browser.sha256` | `graphics/browser/` (`chrome-headless-shell-win64/`) | 288 | `251af3fd7df8317db134d654b4d46d468852ddc0af2109242e4344c1ab3a196f` |
+| `font.sha256` | `graphics/font/` (Inter 4.1 TTF files and `LICENSE.txt`) | 39 | `42c4e4303b77979e17d1d7ee43b9a26d7c54d9c705045dd3ada55fedf742c163` |
+| `node.sha256` | `C:/Program Files/nodejs/node.exe` (Node.js 24.11.1, 89,894,400 bytes, installed before this wave) | 1 | `c6a624a174f070a0e459f130429a246719f53573274b57203fc770d14a19c946` |
+
+---
