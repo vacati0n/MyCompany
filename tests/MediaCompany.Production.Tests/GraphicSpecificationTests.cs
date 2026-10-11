@@ -65,6 +65,24 @@ public sealed class GraphicSpecificationTests
         Assert.All(result.Figures.Where(f => f.Role == "citation"), f => Assert.Equal("GFX-22", f.Position));
     }
 
+    /// <summary>
+    /// THE END CARD LISTS ONLY AUTHORED CITATIONS (the owner's ruling at the contact-sheet review): the recorded source with no
+    /// author, "comparative dialect literature", is omitted like the three sources the owner omitted earlier; the ten
+    /// authored citations stay, in the claim record's order.
+    /// </summary>
+    [Fact]
+    public async Task TheEndCardOmitsTheRecordedSourceWithNoAuthor()
+    {
+        var (material, specifications, sources) = await ItemOneAsync();
+        var result = GraphicSpecificationCheck.Check(material, specifications, sources);
+        Assert.True(result.Passed, string.Join("\n", result.Findings));
+
+        var endCard = Encoding.UTF8.GetString(specifications["gfx-22.json"]);
+        Assert.DoesNotContain("comparative dialect literature", endCard, StringComparison.Ordinal);
+        Assert.Equal(10, JsonNode.Parse(endCard)!["elements"]!.AsArray()
+            .Count(e => (string?)e!["role"] == "citation" && !((string)e["text"]!).StartsWith("studied by", StringComparison.Ordinal)));
+    }
+
     /// <summary>The not-admitted conversion figure stays off screen: quoting it from the narration is refused by the number rule.</summary>
     [Fact]
     public async Task AFigureTheOwnerDidNotAdmitIsRefusedThoughItIsQuoted()
