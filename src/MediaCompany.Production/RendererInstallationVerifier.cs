@@ -168,6 +168,19 @@ public sealed class RendererInstallationVerifier
             }
         }
 
+        // Module resolution cannot leave the verified renderer folder (the review's correction CR-002): Node and the bundler
+        // resolve a package missing from the installed node_modules by walking up to every ancestor's node_modules, which no
+        // manifest covers, so any such folder (or file) refuses the render by name while it exists. Checked in the plan, at the
+        // Design stage's hold and again after the last render; the render script also refuses any module resolving outside.
+        for (var ancestor = Directory.GetParent(Full(_settings.Renderer.Folder)); ancestor is not null; ancestor = ancestor.Parent)
+        {
+            var resolution = Path.Combine(ancestor.FullName, "node_modules");
+            if (Directory.Exists(resolution) || File.Exists(resolution))
+            {
+                findings.Add($"{resolution}: a node_modules in an ancestor folder of the installed renderer folder, from which Node and the bundler would load a module no manifest covers; a render is refused while it exists");
+            }
+        }
+
         // The executables and faces the settings name must be files a manifest listed.
         foreach (var (setting, path, folder) in new[]
                  {

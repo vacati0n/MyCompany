@@ -4,22 +4,41 @@
 // so every process the renderer or the browser starts is in the job. It imports nothing but Node's file, path and module
 // modules, and loads the bundler and the frame renderer through a require anchored at the installed renderer folder's package
 // file; it never passes a licence key, never calls the still or media render functions and never fetches a browser.
+// Before it loads anything it registers a module resolution hook: every module Node resolves for this process (the bundler,
+// the frame renderer and all they require, optional dependencies included) must be a file inside the installed renderer
+// folder or a Node built-in; a module resolving anywhere else (a parent folder's node_modules) is not loaded, and the run is
+// refused naming it (the review's correction CR-002).
 //
-// Exit codes: 0 done; 3 refused before the renderer was called (no start line, an invalid request, a missing file);
-// 4 the renderer failed. Anything it writes lands in the staging folder the request names.
+// Exit codes: 0 done; 3 refused before the renderer was called (no start line, an invalid request, a missing file) or a module
+// resolved outside the installed renderer folder; 4 the renderer failed. Anything it writes lands in the staging folder the
+// request names.
 
 import fs from 'node:fs';
 import path from 'node:path';
-import {createRequire} from 'node:module';
+import {createRequire, registerHooks} from 'node:module';
 
 const refuse = (why) => {
 	process.stderr.write(`refused: ${why}\n`);
 	process.exit(3);
 };
 
+const outside = [];
+
 const fail = (error) => {
+	if (outside.length > 0) {
+		refuse(`${outside.length} module(s) resolved outside the installed renderer folder, the first ${outside[0]}`);
+	}
+
 	process.stderr.write(`renderer failed: ${error && error.message ? error.message : error}\n`);
 	process.exit(4);
+};
+
+const done = () => {
+	if (outside.length > 0) {
+		refuse(`${outside.length} module(s) resolved outside the installed renderer folder, the first ${outside[0]}`);
+	}
+
+	process.exit(0);
 };
 
 const startLine = () =>
@@ -70,6 +89,29 @@ try {
 }
 
 const anchor = existing(required(request, 'anchor'), 'anchor');
+const installed = path.resolve(path.dirname(anchor));
+const within = (file) => {
+	const resolved = path.resolve(file).toLowerCase();
+	const root = installed.toLowerCase();
+	return resolved === root || resolved.startsWith(root.endsWith(path.sep) ? root : root + path.sep);
+};
+
+registerHooks({
+	resolve(specifier, context, nextResolve) {
+		const result = nextResolve(specifier, context);
+		if (result.url.startsWith('file:')) {
+			const file = path.resolve(decodeURIComponent(new URL(result.url).pathname).replace(/^\/([A-Za-z]:)/, '$1'));
+			if (!within(file)) {
+				outside.push(file);
+				process.stderr.write(`refused: the module ${file} resolves outside the installed renderer folder ${installed}\n`);
+				throw new Error(`the module ${file} resolves outside the installed renderer folder`);
+			}
+		}
+
+		return result;
+	},
+});
+
 const load = createRequire(anchor);
 
 if (mode === 'bundle') {
@@ -118,7 +160,7 @@ if (mode === 'bundle') {
 	}
 
 	fs.writeFileSync(moduleList, JSON.stringify(resources.sort()));
-	process.exit(0);
+	done();
 }
 
 const serveUrl = existing(path.resolve(required(request, 'bundle')), 'bundle');
@@ -177,4 +219,4 @@ try {
 	fail(error);
 }
 
-process.exit(0);
+done();

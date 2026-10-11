@@ -178,6 +178,20 @@ public sealed partial class ProduceItemService
                 seconds += bundled.Elapsed;
                 var (_, moduleBytes) = await inputs.HoldBytesAsync(Path.Combine(folder, "bundle-modules.json"), cancellationToken).ConfigureAwait(false);
                 var modules = JsonSerializer.Deserialize<string[]>(moduleBytes) ?? [];
+                // Every module the bundle holds is a verified file of the installed renderer or the staged drawing program (the
+                // review's correction CR-002); a module resolved from anywhere else (a parent folder's node_modules) is refused.
+                var verifiedRoots = new[] { Path.GetFullPath(graphics.Renderer.Folder), Path.GetFullPath(drawing) };
+                var outside = modules
+                    .Select(m => m.Split('?')[0])
+                    .Select(m => Path.GetFullPath(Path.IsPathRooted(m) ? m : Path.Combine(folder, m)))
+                    .Where(m => !verifiedRoots.Any(r => m.StartsWith(r.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+                    .ToArray();
+                if (outside.Length > 0)
+                {
+                    await EndStageAsync(ProductionStage.Design, StageOutcome.Failed,
+                        $"the bundle holds {outside.Length} module(s) from outside the verified renderer folder and the staged drawing program, the first {outside[0]}; a render loads only verified files", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                }
+
                 var excluded = modules.Where(m => ExcludedPackages.Any(p => m.Replace('\\', '/').Contains("/node_modules/" + p + "/", StringComparison.OrdinalIgnoreCase))).ToArray();
                 if (excluded.Length > 0)
                 {

@@ -95,6 +95,12 @@ if (args[1] == "bundle")
     }
 
     var modules = new List<string> { entry, Path.Combine(root.GetProperty("modules").GetString()!, "remotion", "index.js") };
+    if (behaviour == "outside")
+    {
+        // As a bundler resolving a package from a parent folder's node_modules would.
+        modules.Add(Path.Combine(Path.GetDirectoryName(installed)!, "node_modules", "bufferutil", "index.js"));
+    }
+
     if (behaviour == "excluded")
     {
         modules.Add(Path.Combine(root.GetProperty("modules").GetString()!, "@remotion", "elevenlabs", "dist", "index.js"));

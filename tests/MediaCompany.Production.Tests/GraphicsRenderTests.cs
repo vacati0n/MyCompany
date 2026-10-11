@@ -72,6 +72,62 @@ public sealed class GraphicsRenderTests : IDisposable
         Assert.Contains(report.Findings, f => f.Contains("planted.pack", StringComparison.Ordinal) && f.Contains("does not list", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// A NODE_MODULES IN A PARENT FOLDER of the installed renderer folder (the review's correction CR-002), from which Node and
+    /// the bundler would resolve a module no manifest covers, refuses the installation by name; removed, it verifies again.
+    /// </summary>
+    [Fact]
+    public async Task ANodeModulesFolderInAParentOfTheRendererFolderIsRefused()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var planted = Path.Combine(fixture.Root, "node_modules", "bufferutil");
+        Directory.CreateDirectory(planted);
+        await File.WriteAllTextAsync(Path.Combine(planted, "index.js"), "module.exports = 'a planted module';");
+
+        var report = await new RendererInstallationVerifier(fixture.Settings()).VerifyAsync(CancellationToken.None);
+        Assert.False(report.Verified);
+        Assert.Contains(report.Findings, f => f.StartsWith(Path.Combine(fixture.Root, "node_modules") + ":", StringComparison.OrdinalIgnoreCase)
+            && f.Contains("a node_modules in an ancestor folder of the installed renderer folder", StringComparison.Ordinal));
+
+        Directory.Delete(Path.Combine(fixture.Root, "node_modules"), recursive: true);
+        Assert.True((await new RendererInstallationVerifier(fixture.Settings()).VerifyAsync(CancellationToken.None)).Verified);
+    }
+
+    /// <summary>
+    /// THE RENDER SCRIPT REFUSES A MODULE RESOLVING OUTSIDE THE INSTALLED RENDERER FOLDER (the review's correction CR-002), run by
+    /// the real Node through the one starter: with the installed bundler package absent and a planted one in the renderer
+    /// folder's parent node_modules, the script exits 3 naming the planted file, and the planted module never ran. Needs Node
+    /// installed; not-run, saying why, where it is not.
+    /// </summary>
+    [RequiresNodeFact]
+    public async Task TheRenderScriptRefusesAModuleResolvingOutsideTheInstalledRendererFolderAndNeverRunsIt()
+    {
+        using var fixture = new GraphicsFixture("deterministic");
+        var planted = Path.Combine(fixture.Root, "node_modules", "@remotion", "bundler");
+        Directory.CreateDirectory(planted);
+        var marker = Path.Combine(fixture.Root, "planted-module-ran.txt");
+        await File.WriteAllTextAsync(Path.Combine(planted, "package.json"), """{"name":"@remotion/bundler","main":"index.js"}""");
+        await File.WriteAllTextAsync(Path.Combine(planted, "index.js"),
+            $"require('fs').writeFileSync({System.Text.Json.JsonSerializer.Serialize(marker)}, 'ran'); module.exports = {{ bundle: async () => {{}} }};");
+        Directory.Delete(Path.Combine(fixture.Renderer, "node_modules", "@remotion", "bundler"), recursive: true);
+
+        var settings = MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with
+        {
+            Graphics = fixture.Settings() with { NodeExecutable = RequiresNodeFactAttribute.Node },
+            RendererPath = fixture.NodeExecutable, ProbePath = fixture.NodeExecutable, FontFile = fixture.ItalicFace,
+        };
+        var store = new ArtifactWriter(_output, MediaTool.RepositoryRoot());
+        var folder = store.StagingSubfolder(store.BeginRun("item/v2"), "graphics");
+        var temporary = store.StagingSubfolder(folder, "tmp");
+        await StageAsync(store, folder, fixture);
+
+        var refused = await Assert.ThrowsAsync<MediaToolFailedException>(() => new ExternalMediaTool(settings).InvokeAsync(
+            new GraphicInvocationRequest(folder, "render.mjs", GraphicMode.Bundle, "bundle-request.json", temporary, TimeSpan.FromSeconds(60)), CancellationToken.None));
+        Assert.Contains("exited with code 3", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("refused: the module " + Path.Combine(planted, "index.js"), refused.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.False(File.Exists(marker), "the planted module ran");
+    }
+
     [Fact]
     public async Task AnAbsoluteOrClimbingManifestEntryIsRefused()
     {
@@ -329,6 +385,20 @@ public sealed class GraphicsRenderTests : IDisposable
         catch (Exception unreadable) when (unreadable is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
             return DateTime.MinValue;
+        }
+    }
+}
+
+/// <summary>A fact that needs Node installed in its usual folder; not-run, naming why, where it is not.</summary>
+public sealed class RequiresNodeFactAttribute : FactAttribute
+{
+    internal static string Node { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "nodejs", "node.exe");
+
+    public RequiresNodeFactAttribute()
+    {
+        if (!File.Exists(Node))
+        {
+            Skip = $"not-run: needs Node at {Node}.";
         }
     }
 }

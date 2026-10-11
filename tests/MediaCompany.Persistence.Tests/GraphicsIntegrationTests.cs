@@ -320,7 +320,8 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
 
     /// <summary>
     /// A FILE A RENDER LEFT UNDER THE INSTALLED FOLDER (as a bundler cache would) fails the Design stage by name at the
-    /// verification after the last render; a bundle holding an excluded speech client's module is refused by name.
+    /// verification after the last render; a bundle holding an excluded speech client's module, or a module from outside the
+    /// verified renderer folder (a parent folder's node_modules), is refused by name.
     /// </summary>
     [RequiresPostgresAndMediaToolFact]
     public async Task AFileLeftUnderTheInstalledFolderOrAnExcludedModuleFailsTheDesignStage()
@@ -332,6 +333,7 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
                  {
                      ("cache", "the graphics installation changed while the graphics were rendered"),
                      ("excluded", "module(s) of an excluded speech client package"),
+                     ("outside", "module(s) from outside the verified renderer folder and the staged drawing program"),
                  })
         {
             using var graphics = new GraphicsFixture(behaviour);
