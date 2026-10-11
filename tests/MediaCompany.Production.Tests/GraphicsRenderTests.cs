@@ -286,6 +286,34 @@ public sealed class GraphicsRenderTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// THE OWNER GUIDE'S APPROVAL FILE IS ACCEPTED AS WRITTEN (the review's correction CR-003): the complete example in
+    /// wave-11/owner-guide-graphics.md, written to a file as it stands, passes the company plan's shape and every comparison
+    /// against this repository's specifications, style file, drawing program and render script.
+    /// </summary>
+    [Fact]
+    public async Task TheOwnerGuidesApprovalFileExampleIsAcceptedByTheCompanyPlanAsWritten()
+    {
+        var guide = await File.ReadAllTextAsync(Path.Combine(MediaTool.RepositoryRoot(), "wave-11", "owner-guide-graphics.md"));
+        var start = guide.IndexOf("```json", StringComparison.Ordinal);
+        Assert.True(start >= 0, "the guide holds no approval file example");
+        var body = guide[(guide.IndexOf('\n', start) + 1)..guide.IndexOf("```", start + 7, StringComparison.Ordinal)];
+
+        Directory.CreateDirectory(_output);
+        var path = Path.Combine(_output, "approval-from-the-guide.json");
+        await File.WriteAllTextAsync(path, body);
+        var sha = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(await File.ReadAllBytesAsync(path)));
+        var loaded = await ItemPackageLoader.LoadAsync(MediaTool.RepositoryRoot(), "wave-2/item-001/item-material.json", CancellationToken.None);
+        using var fixture = new GraphicsFixture("deterministic");
+        var plan = await GraphicsPlanner.ComposeAsync(
+            MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with { Graphics = fixture.Settings() with { ApprovalFile = new ExpectedFile(path, sha) } },
+            loaded, MediaCompany.Domain.Production.StoreDesignation.Company, CancellationToken.None);
+
+        Assert.False(plan.Refused, string.Join("\n", plan.Findings));
+        Assert.Equal(22, plan.Approval!.Graphics.Count);
+        Assert.Equal(10, plan.Approval.Graphics.Count(g => g.StillSha256 is not null));
+    }
+
     // -----------------------------------------------------------------------
     // The render invocation through the one starter
     // -----------------------------------------------------------------------
