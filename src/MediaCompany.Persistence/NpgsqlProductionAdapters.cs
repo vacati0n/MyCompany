@@ -240,6 +240,54 @@ internal sealed class NpgsqlProductionLedger : IProductionLedger
         return draft with { RecordedAt = at };
     }
 
+    public async Task<GraphicProvenance> RecordGraphicProvenanceAsync(GraphicProvenance draft, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(draft);
+        await using var command = new NpgsqlCommand(
+            """
+            INSERT INTO graphic_provenance (
+                item_id, item_version, relative_path, position, kind, specification_path, specification_sha256, style_sha256,
+                drawing_program_digest, render_script_sha256, bundle_digest, renderer_name, renderer_version, manifests, node_sha256,
+                node_version, browser_sha256, browser_version, faces, segment_start_frame, segment_frames, frames_rendered,
+                first_changing_frame, last_changing_frame, final_frame_sha256, frame_set_digest, concurrency, arguments, request_sha256,
+                render_seconds, leftover_processes, sameness, sameness_statement, recorded_at)
+            VALUES (@item_id, @item_version, @path, @position, @kind, @spec_path, @spec_sha, @style_sha,
+                    @drawing, @script, @bundle, @renderer_name, @renderer_version, @manifests, @node_sha,
+                    @node_version, @browser_sha, @browser_version, @faces, @start, @frames, @rendered,
+                    @first, @last, @final, @set, @concurrency, @arguments, @request,
+                    @seconds, @leftover, @sameness, @statement, clock_timestamp())
+            RETURNING recorded_at
+            """,
+            _connection,
+            _transaction);
+        command.Parameters.AddWithValue("item_id", draft.Item.Value);
+        command.Parameters.AddWithValue("item_version", draft.Version.Value);
+        foreach (var (name, value) in new (string, string)[]
+        {
+            ("path", draft.RelativePath), ("position", draft.Position), ("kind", draft.Kind.ToString()), ("spec_path", draft.SpecificationPath),
+            ("spec_sha", draft.SpecificationSha256), ("style_sha", draft.StyleSha256), ("drawing", draft.DrawingProgramDigest),
+            ("script", draft.RenderScriptSha256), ("bundle", draft.BundleDigest), ("renderer_name", draft.RendererName),
+            ("renderer_version", draft.RendererVersion), ("manifests", draft.Manifests), ("node_sha", draft.NodeSha256),
+            ("node_version", draft.NodeVersion), ("browser_sha", draft.BrowserSha256), ("browser_version", draft.BrowserVersion),
+            ("faces", draft.Faces), ("final", draft.FinalFrameSha256), ("set", draft.FrameSetDigest), ("arguments", draft.Arguments),
+            ("request", draft.RequestSha256), ("sameness", draft.Sameness.ToString()), ("statement", draft.SamenessStatement),
+        })
+        {
+            command.Parameters.Add(name, NpgsqlDbType.Text).Value = value;
+        }
+
+        command.Parameters.Add("start", NpgsqlDbType.Bigint).Value = draft.SegmentStartFrame;
+        command.Parameters.Add("frames", NpgsqlDbType.Bigint).Value = draft.SegmentFrames;
+        command.Parameters.Add("rendered", NpgsqlDbType.Bigint).Value = draft.FramesRendered;
+        command.Parameters.Add("first", NpgsqlDbType.Bigint).Value = draft.FirstChangingFrame is { } first ? first : DBNull.Value;
+        command.Parameters.Add("last", NpgsqlDbType.Bigint).Value = draft.LastChangingFrame is { } last ? last : DBNull.Value;
+        command.Parameters.Add("concurrency", NpgsqlDbType.Integer).Value = draft.Concurrency;
+        command.Parameters.Add("seconds", NpgsqlDbType.Numeric).Value = draft.RenderSeconds;
+        command.Parameters.Add("leftover", NpgsqlDbType.Integer).Value = draft.LeftoverProcesses;
+        var at = await StampAsync(command, cancellationToken).ConfigureAwait(false);
+        return draft with { RecordedAt = at };
+    }
+
     /// <summary>The datastore's instant a statement's RETURNING clause states.</summary>
     private static async Task<DateTimeOffset> StampAsync(NpgsqlCommand command, CancellationToken cancellationToken)
     {
@@ -615,6 +663,68 @@ public sealed class NpgsqlProductionReader : IProductionReader
                 PerformerName = Text(16),
                 Release = Text(17),
                 RecordedAt = reader.GetFieldValue<DateTimeOffset>(18),
+            });
+        }
+
+        return rows;
+    }
+
+    public async Task<IReadOnlyList<GraphicProvenance>> GraphicProvenanceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT relative_path, position, kind, specification_path, specification_sha256, style_sha256, drawing_program_digest,
+                   render_script_sha256, bundle_digest, renderer_name, renderer_version, manifests, node_sha256, node_version,
+                   browser_sha256, browser_version, faces, segment_start_frame, segment_frames, frames_rendered, first_changing_frame,
+                   last_changing_frame, final_frame_sha256, frame_set_digest, concurrency, arguments, request_sha256, render_seconds,
+                   leftover_processes, sameness, sameness_statement, recorded_at
+            FROM graphic_provenance WHERE item_id = @item_id AND item_version = @item_version
+            ORDER BY position, relative_path
+            """,
+            connection);
+        command.Parameters.AddWithValue("item_id", item.Value);
+        command.Parameters.AddWithValue("item_version", version.Value);
+        var rows = new List<GraphicProvenance>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            rows.Add(new GraphicProvenance
+            {
+                Item = item,
+                Version = version,
+                RelativePath = reader.GetString(0),
+                Position = reader.GetString(1),
+                Kind = Enum.Parse<GraphicKind>(reader.GetString(2)),
+                SpecificationPath = reader.GetString(3),
+                SpecificationSha256 = reader.GetString(4),
+                StyleSha256 = reader.GetString(5),
+                DrawingProgramDigest = reader.GetString(6),
+                RenderScriptSha256 = reader.GetString(7),
+                BundleDigest = reader.GetString(8),
+                RendererName = reader.GetString(9),
+                RendererVersion = reader.GetString(10),
+                Manifests = reader.GetString(11),
+                NodeSha256 = reader.GetString(12),
+                NodeVersion = reader.GetString(13),
+                BrowserSha256 = reader.GetString(14),
+                BrowserVersion = reader.GetString(15),
+                Faces = reader.GetString(16),
+                SegmentStartFrame = reader.GetInt64(17),
+                SegmentFrames = reader.GetInt64(18),
+                FramesRendered = reader.GetInt64(19),
+                FirstChangingFrame = reader.IsDBNull(20) ? null : reader.GetInt64(20),
+                LastChangingFrame = reader.IsDBNull(21) ? null : reader.GetInt64(21),
+                FinalFrameSha256 = reader.GetString(22),
+                FrameSetDigest = reader.GetString(23),
+                Concurrency = reader.GetInt32(24),
+                Arguments = reader.GetString(25),
+                RequestSha256 = reader.GetString(26),
+                RenderSeconds = reader.GetDecimal(27),
+                LeftoverProcesses = reader.GetInt32(28),
+                Sameness = Enum.Parse<SamenessKind>(reader.GetString(29)),
+                SamenessStatement = reader.GetString(30),
+                RecordedAt = reader.GetFieldValue<DateTimeOffset>(31),
             });
         }
 

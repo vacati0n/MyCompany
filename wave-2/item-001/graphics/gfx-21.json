@@ -1,0 +1,137 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-21",
+  "beat": 13,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-21` | The whole mechanism as one block diagram: measure, encode, transmit, decode, fly | Summary |"
+  },
+  "claims": [],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "So, to state the mechanism as a whole.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "So, to state the mechanism as a whole.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "chain",
+      "type": "blocks",
+      "x": 140,
+      "y": 460,
+      "boxWidth": 280,
+      "boxHeight": 150,
+      "gap": 70,
+      "count": 5,
+      "focus": false
+    },
+    {
+      "id": "w0",
+      "type": "text",
+      "role": "label",
+      "text": "measure",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "measure",
+      "x": 280,
+      "y": 548,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "w1",
+      "type": "text",
+      "role": "label",
+      "text": "encode",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "encode",
+      "x": 630,
+      "y": 548,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "w2",
+      "type": "text",
+      "role": "label",
+      "text": "transmit",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "transmit",
+      "x": 980,
+      "y": 548,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "w3",
+      "type": "text",
+      "role": "label",
+      "text": "decode",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "decode",
+      "x": 1330,
+      "y": 548,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "w4",
+      "type": "text",
+      "role": "label",
+      "text": "fly",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "fly",
+      "x": 1680,
+      "y": 548,
+      "anchor": "middle",
+      "size": "label"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "chain"
+      ],
+      "from": 0,
+      "to": 0.85
+    },
+    {
+      "type": "sequence",
+      "sets": [
+        [
+          "w0"
+        ],
+        [
+          "w1"
+        ],
+        [
+          "w2"
+        ],
+        [
+          "w3"
+        ],
+        [
+          "w4"
+        ]
+      ],
+      "accumulate": true,
+      "from": 0,
+      "to": 0.85
+    }
+  ]
+}

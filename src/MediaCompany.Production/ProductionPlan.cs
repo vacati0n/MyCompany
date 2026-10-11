@@ -53,6 +53,9 @@ public sealed record ProductionPlan
 
     public DateTimeOffset PricedAt { get; init; }
 
+    /// <summary>The graphics plan (the graphics change, decision D-014 of its design); not configured unless composed.</summary>
+    public GraphicsPlan Graphics { get; init; } = GraphicsPlan.NotConfigured;
+
     /// <summary>Composes a boundary source's plan from the recorded package, the split narration and the prices in force.</summary>
     public static ProductionPlan Compose(RecordedPackage package, IReadOnlyList<NarrationPart> parts, PlanPricing pricing)
     {
@@ -145,6 +148,7 @@ public sealed record ProductionPlan
             PrintOwn(output, source, settings, c);
         }
 
+        Graphics.Print(output, settings.Graphics);
         output.WriteLine(Package.Cap is { } cap
             ? $"  cap: {cap.Describe()}"
             : "  cap: none recorded for the item");
@@ -152,6 +156,7 @@ public sealed record ProductionPlan
         output.WriteLine(source is NarrationSource.Fake or NarrationSource.Vendor
             ? "  calls: narration only; no reasoning call and no image call; no stock footage and no music; nothing is published"
             : "  calls: none; no capability call, no network client and no metered charge; no stock footage and no music; nothing is published");
+        output.WriteLine("  image calls: none; every graphic is drawn by code with no model call of any kind");
     }
 
     private void PrintBoundary(TextWriter output, CultureInfo c)

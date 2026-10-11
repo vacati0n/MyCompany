@@ -1,0 +1,129 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-13",
+  "beat": 7,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-13` | Unit substitution: metres set beside accumulated image motion | `CL-15` |"
+  },
+  "claims": [
+    "CL-15"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The unit of the distance signal is not the metre.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The unit of the distance signal is not the metre.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "role": "caption",
+      "text": "Unit substitution",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Unit substitution",
+      "x": 120,
+      "y": 196,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "metreBox",
+      "type": "region",
+      "form": "box",
+      "x": 240,
+      "y": 420,
+      "a": 560,
+      "b": 240,
+      "angle": 0,
+      "shading": "outline"
+    },
+    {
+      "id": "flowBox",
+      "type": "region",
+      "form": "box",
+      "x": 1120,
+      "y": 420,
+      "a": 560,
+      "b": 240,
+      "angle": 0,
+      "shading": "outline",
+      "focus": true
+    },
+    {
+      "id": "metre",
+      "type": "text",
+      "role": "label",
+      "text": "the metre",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "the metre",
+      "x": 520,
+      "y": 560,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "flowText",
+      "type": "text",
+      "role": "label",
+      "text": "accumulated image motion",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "accumulated image motion",
+      "x": 1400,
+      "y": 560,
+      "anchor": "middle",
+      "size": "label",
+      "focus": true
+    },
+    {
+      "id": "instead",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          840,
+          540
+        ],
+        [
+          1080,
+          540
+        ]
+      ],
+      "arrow": true,
+      "dashed": false
+    },
+    {
+      "id": "quote",
+      "type": "text",
+      "role": "label",
+      "text": "It is accumulated image motion.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "It is accumulated image motion.",
+      "x": 960,
+      "y": 820,
+      "anchor": "middle",
+      "size": "caption"
+    }
+  ]
+}

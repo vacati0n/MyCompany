@@ -44,6 +44,21 @@ public enum ArtifactRole
     ThumbnailPlaceholder = 5,
     ClipPlaceholder = 6,
     RenderedVideo = 7,
+
+    /// <summary>
+    /// A motion graphic's frame manifest (the graphics change, decision D-005 of its design): one line per frame with its
+    /// ordinal, relative path, length and SHA-256; the frames themselves are re-hashed against it before the assembly reads them.
+    /// </summary>
+    GraphicMotion = 8,
+
+    /// <summary>The owner's contact sheet of every graphic of a demonstration production (decision D-007).</summary>
+    ContactSheet = 9,
+
+    /// <summary>A graphic's full-size final frame, copied byte for byte beside the contact sheet (decision D-007).</summary>
+    ContactSheetFrame = 10,
+
+    /// <summary>The owner's video-only preview of every graphic at its production span (decision D-007).</summary>
+    GraphicPreview = 11,
 }
 
 /// <summary>

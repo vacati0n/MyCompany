@@ -1,0 +1,86 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-17",
+  "beat": 10,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-17` | Angular scatter: successive run angles distributed around the true bearing | `CL-20` |"
+  },
+  "claims": [
+    "CL-20"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The angles scatter.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The angles scatter.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "spread",
+      "type": "region",
+      "form": "spread",
+      "x": 960,
+      "y": 940,
+      "a": 680,
+      "b": 22,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "trueBearing",
+      "type": "bearing",
+      "x": 960,
+      "y": 940,
+      "angle": 0,
+      "length": 720,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "trueLabel",
+      "type": "text",
+      "role": "label",
+      "text": "the true bearing",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "the true bearing",
+      "x": 1000,
+      "y": 240,
+      "anchor": "start",
+      "size": "label"
+    },
+    {
+      "id": "runsLabel",
+      "type": "text",
+      "role": "label",
+      "text": "successive run angles",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "successive run angles",
+      "x": 960,
+      "y": 1020,
+      "anchor": "middle",
+      "size": "caption"
+    }
+  ]
+}

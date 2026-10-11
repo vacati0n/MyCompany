@@ -1,0 +1,178 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-06",
+  "beat": 4,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-06` | Comb frame, elevation view: gravity vertical, waggle run at angle θ | `CL-07` |"
+  },
+  "claims": [
+    "CL-07"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "shared": {
+    "theta": 38
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "On the vertical comb she uses gravity.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "On the vertical comb she uses gravity.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "frame",
+      "type": "text",
+      "role": "caption",
+      "text": "Comb frame, elevation view",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Comb frame, elevation view",
+      "x": 120,
+      "y": 196,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "comb",
+      "type": "region",
+      "form": "box",
+      "x": 560,
+      "y": 260,
+      "a": 800,
+      "b": 700,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "vertical",
+      "type": "bearing",
+      "x": 960,
+      "y": 880,
+      "angle": 0,
+      "length": 560,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "runC",
+      "type": "bearing",
+      "x": 960,
+      "y": 880,
+      "angle": {
+        "shared": "theta"
+      },
+      "length": 540,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "theta",
+      "type": "angle",
+      "x": 960,
+      "y": 880,
+      "from": 0,
+      "to": {
+        "shared": "theta"
+      },
+      "radius": 200
+    },
+    {
+      "id": "thetaLabel",
+      "type": "text",
+      "role": "label",
+      "text": "θ",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "θ",
+      "x": 1010,
+      "y": 640,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "upLabel",
+      "type": "text",
+      "role": "label",
+      "text": "stands for the direction of the sun",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "stands for the direction of the sun",
+      "x": 990,
+      "y": 340,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "gravity",
+      "type": "bearing",
+      "x": 1560,
+      "y": 360,
+      "angle": 180,
+      "length": 320,
+      "arrow": true,
+      "dashed": false
+    },
+    {
+      "id": "gravityLabel",
+      "type": "text",
+      "role": "label",
+      "text": "gravity",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "gravity",
+      "x": 1600,
+      "y": 540,
+      "anchor": "start",
+      "size": "label"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "vertical",
+        "upLabel",
+        "gravity",
+        "gravityLabel"
+      ],
+      "from": 0,
+      "to": 0.3
+    },
+    {
+      "type": "rotate",
+      "targets": [
+        "runC",
+        "theta"
+      ],
+      "fromAngle": 0,
+      "toAngle": 38,
+      "from": 0.35,
+      "to": 0.85
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "thetaLabel"
+      ],
+      "from": 0.8,
+      "to": 1
+    }
+  ]
+}

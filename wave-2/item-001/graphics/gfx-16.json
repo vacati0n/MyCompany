@@ -1,0 +1,172 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-16",
+  "beat": 9,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-16` | Harmonic radar flight paths: outbound vector, then search pattern | `CL-18`, `CL-19` |"
+  },
+  "claims": [
+    "CL-18",
+    "CL-19"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "They flew the vector first, then looked.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "They flew the vector first, then looked.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "role": "caption",
+      "text": "Harmonic radar flight paths",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Harmonic radar flight paths",
+      "x": 120,
+      "y": 196,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "hive",
+      "type": "point",
+      "x": 300,
+      "y": 820,
+      "r": 20,
+      "filled": true
+    },
+    {
+      "id": "outbound",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          300,
+          820
+        ],
+        [
+          1300,
+          380
+        ]
+      ],
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "searching",
+      "type": "path",
+      "form": "smooth",
+      "points": [
+        [
+          1300,
+          380
+        ],
+        [
+          1380,
+          330
+        ],
+        [
+          1430,
+          420
+        ],
+        [
+          1330,
+          480
+        ],
+        [
+          1230,
+          400
+        ],
+        [
+          1300,
+          280
+        ],
+        [
+          1460,
+          300
+        ],
+        [
+          1500,
+          470
+        ],
+        [
+          1350,
+          560
+        ],
+        [
+          1180,
+          470
+        ]
+      ],
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "outLabel",
+      "type": "text",
+      "role": "label",
+      "text": "outbound vector",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "outbound vector",
+      "x": 700,
+      "y": 700,
+      "anchor": "start",
+      "size": "label"
+    },
+    {
+      "id": "searchLabel",
+      "type": "text",
+      "role": "label",
+      "text": "search pattern",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "search pattern",
+      "x": 1530,
+      "y": 450,
+      "anchor": "start",
+      "size": "label"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "outbound",
+        "outLabel"
+      ],
+      "from": 0,
+      "to": 0.5
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "searching",
+        "searchLabel"
+      ],
+      "from": 0.5,
+      "to": 0.95
+    }
+  ]
+}

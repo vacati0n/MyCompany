@@ -1,0 +1,182 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-02",
+  "beat": 3,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-02` | The figure of eight, annotated: two return loops, one straight waggle run | `CL-03` |"
+  },
+  "claims": [
+    "CL-03"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The looping returns trace a rough figure of eight.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The looping returns trace a rough figure of eight.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "loopRight",
+      "type": "path",
+      "form": "smooth",
+      "points": [
+        [
+          960,
+          330
+        ],
+        [
+          1200,
+          300
+        ],
+        [
+          1340,
+          555
+        ],
+        [
+          1200,
+          810
+        ],
+        [
+          960,
+          780
+        ]
+      ],
+      "arrow": true,
+      "dashed": false
+    },
+    {
+      "id": "loopLeft",
+      "type": "path",
+      "form": "smooth",
+      "points": [
+        [
+          960,
+          330
+        ],
+        [
+          720,
+          300
+        ],
+        [
+          580,
+          555
+        ],
+        [
+          720,
+          810
+        ],
+        [
+          960,
+          780
+        ]
+      ],
+      "arrow": true,
+      "dashed": false
+    },
+    {
+      "id": "run",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          960,
+          780
+        ],
+        [
+          960,
+          330
+        ]
+      ],
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "runLabel",
+      "type": "text",
+      "role": "label",
+      "text": "straight waggle run",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "straight waggle run",
+      "x": 960,
+      "y": 240,
+      "anchor": "middle",
+      "size": "label",
+      "focus": true
+    },
+    {
+      "id": "loopLabel",
+      "type": "text",
+      "role": "label",
+      "text": "return loops",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "return loops",
+      "x": 1380,
+      "y": 560,
+      "anchor": "start",
+      "size": "label"
+    },
+    {
+      "id": "loopLabel2",
+      "type": "text",
+      "role": "label",
+      "text": "return loops",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "return loops",
+      "x": 540,
+      "y": 560,
+      "anchor": "end",
+      "size": "label"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "run",
+        "runLabel"
+      ],
+      "from": 0,
+      "to": 0.3
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "loopRight",
+        "loopLabel"
+      ],
+      "from": 0.3,
+      "to": 0.6
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "loopLeft",
+        "loopLabel2"
+      ],
+      "from": 0.6,
+      "to": 0.95
+    }
+  ]
+}

@@ -69,6 +69,7 @@ public static class ProductionCommands
             // A <...> placeholder is a value still to set (fake mode only), never a voice.
             NarrationVoice = json["narrationVoice"]?.GetValue<string>() is { Length: > 0 } voice && !voice.StartsWith('<') ? voice : null,
             InHouseModel = json["inHouseModel"] is JsonObject model ? ReadModel(model) : null,
+            Graphics = json["graphics"] is JsonObject graphics ? ReadGraphics(graphics) : null,
         };
 
         var fakes = (json["demonstrationProviders"]?.AsArray() ?? [])
@@ -153,6 +154,54 @@ public static class ProductionCommands
                 : throw new ProductionSettingRefusedException("inHouseModel.partBoundSeconds", "it must be a positive number of seconds"),
             WeightsLicence = Licence("weightsLicence"),
             VoiceLicence = Licence("voiceLicence"),
+        };
+    }
+
+    /// <summary>
+    /// Reads the graphics section (the graphics change, decision D-014 of its design). Every member but the approval file is
+    /// required and refused by name where absent or a placeholder; no member has a default here. The four manifests each name
+    /// the manifest file, the folder its entries are relative to and the manifest's expected SHA-256 from the owner's decision
+    /// record; the approval file is read in the company store only.
+    /// </summary>
+    private static GraphicsSettings ReadGraphics(JsonObject graphics)
+    {
+        string Text(JsonNode? node, string key, string where) => node?[key]?.GetValue<string>() is { Length: > 0 } value && !value.StartsWith('<')
+            ? value
+            : throw new ProductionSettingRefusedException($"graphics.{where}{key}", "it is not configured in the settings file");
+        decimal Value(string key) => graphics[key] is { } value
+            ? value.GetValue<decimal>() is var v && v > 0 ? v : throw new ProductionSettingRefusedException($"graphics.{key}", "it must be a positive number")
+            : throw new ProductionSettingRefusedException($"graphics.{key}", "it is not configured in the settings file; it has no default");
+        var manifests = graphics["manifests"] as JsonObject
+            ?? throw new ProductionSettingRefusedException("graphics.manifests", "it is not configured in the settings file (renderer, browser, font and node)");
+        InstalledManifest Manifest(string name) => manifests[name] is JsonObject m
+            ? new InstalledManifest(Text(m, "manifest", $"manifests.{name}."), Text(m, "folder", $"manifests.{name}."), Text(m, "sha256", $"manifests.{name}.").ToLowerInvariant())
+            : throw new ProductionSettingRefusedException($"graphics.manifests.{name}", "it is not configured in the settings file (a manifest, a folder and a sha256)");
+        var licence = graphics["licence"] as JsonObject
+            ?? throw new ProductionSettingRefusedException("graphics.licence", "it is not configured in the settings file (a value and its source)");
+        var concurrency = Value("concurrency");
+        return new GraphicsSettings
+        {
+            Renderer = Manifest("renderer"),
+            Browser = Manifest("browser"),
+            Font = Manifest("font"),
+            Node = Manifest("node"),
+            NodeExecutable = Text(graphics, "nodeExecutable", string.Empty),
+            BrowserExecutable = Text(graphics, "browserExecutable", string.Empty),
+            RegularFace = Text(graphics, "regularFace", string.Empty),
+            ItalicFace = Text(graphics, "italicFace", string.Empty),
+            RenderScript = Text(graphics, "renderScript", string.Empty),
+            DrawingFolder = Text(graphics, "drawingFolder", string.Empty),
+            StyleFile = Text(graphics, "styleFile", string.Empty),
+            Concurrency = concurrency == decimal.Truncate(concurrency) ? (int)concurrency : throw new ProductionSettingRefusedException("graphics.concurrency", "it must be a whole number"),
+            FrameTimeout = TimeSpan.FromSeconds((double)Value("frameTimeoutSeconds")),
+            BundleBound = TimeSpan.FromSeconds((double)Value("bundleBoundSeconds")),
+            RenderFixed = TimeSpan.FromSeconds((double)Value("renderFixedSeconds")),
+            RenderPerFrame = TimeSpan.FromSeconds((double)Value("renderPerFrameSeconds")),
+            HashBound = TimeSpan.FromSeconds((double)Value("hashBoundSeconds")),
+            Licence = new ConfiguredLicence(Text(licence, "value", "licence."), Text(licence, "source", "licence.")),
+            ApprovalFile = graphics["approvalFile"] is JsonObject approval
+                ? new ExpectedFile(Text(approval, "path", "approvalFile."), Text(approval, "sha256", "approvalFile.").ToLowerInvariant())
+                : null,
         };
     }
 
@@ -471,6 +520,112 @@ public static class ProductionCommands
 
         await output.WriteLineAsync("Verified: every configured file of the in-house model hashes to its expected value, outside the repository.").ConfigureAwait(false);
         return 0;
+    }
+
+    /// <summary>
+    /// verify-graphics: verifies the graphics installation from its manifests, checks every specification of the item the
+    /// settings' material names and every drawn character against the verified faces, READING FILES ONLY and starting no
+    /// process (the graphics change, decision D-014 of its design). Exits 0 verified, printing every identity and hash, or 2
+    /// refused naming every finding. It reads no datastore.
+    /// </summary>
+    public static async Task<int> VerifyGraphicsAsync(string[] args, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
+    {
+        var settingsPath = Option(args, "--settings");
+        if (settingsPath is null)
+        {
+            await errors.WriteLineAsync("Usage: verify-graphics --settings <settings.json>").ConfigureAwait(false);
+            return 2;
+        }
+
+        HostProductionSettings settings;
+        LoadedItem loaded;
+        try
+        {
+            settings = ReadSettings(settingsPath);
+            if (settings.Production.Graphics is null)
+            {
+                throw new ProductionSettingRefusedException("graphics", "no graphics section is configured in the settings file");
+            }
+
+            loaded = await ItemPackageLoader.LoadAsync(settings.Production.RepositoryRoot, settings.MaterialPath, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception refused) when (refused is ProductionSettingRefusedException or ItemMaterialRefusedException or FileNotFoundException)
+        {
+            await errors.WriteLineAsync($"Refused: {refused.Message}").ConfigureAwait(false);
+            return 2;
+        }
+
+        var plan = await GraphicsPlanner.ComposeAsync(settings.Production, loaded, StoreDesignation.Demonstration, cancellationToken).ConfigureAwait(false);
+        plan.Print(output, settings.Production.Graphics);
+        foreach (var figure in plan.Check?.Figures ?? [])
+        {
+            await output.WriteLineAsync($"  figure {figure.Position} {figure.Element}: \"{figure.Text}\" ({figure.Role}; admitted by {figure.AdmittedBy})").ConfigureAwait(false);
+        }
+
+        await output.WriteLineAsync("  no process was started and no file was written").ConfigureAwait(false);
+        if (plan.Refused)
+        {
+            foreach (var finding in plan.Findings)
+            {
+                await errors.WriteLineAsync($"Refused: {finding}").ConfigureAwait(false);
+            }
+
+            return 2;
+        }
+
+        await output.WriteLineAsync("Verified: every installed graphics file hashes to its manifest, no unlisted file is present, every specification passes its check and every drawn character is in its face.").ConfigureAwait(false);
+        return 0;
+    }
+
+    /// <summary>
+    /// review-graphics: the owner's contact sheet and preview of one production version of a DEMONSTRATION store (the graphics
+    /// change, decision D-007 of its design). Refused, before any process, on any store not designated demonstration. Exits 0
+    /// reviewed, 2 refused before any process, 3 a step failed.
+    /// </summary>
+    public static async Task<int> ReviewGraphicsAsync(ServiceProvider provider, string[] args, TextWriter output, TextWriter errors, CancellationToken cancellationToken)
+    {
+        var settingsPath = Option(args, "--settings");
+        var versionText = Option(args, "--version");
+        if (settingsPath is null || versionText is null || !int.TryParse(versionText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var version) || version < 2)
+        {
+            await errors.WriteLineAsync("Usage: review-graphics --settings <settings.json> --version <production version>").ConfigureAwait(false);
+            return 2;
+        }
+
+        var identity = await provider.GetRequiredService<IStoreDesignationReader>().ReadAsync(cancellationToken).ConfigureAwait(false);
+        var verdict = StoreGuard.JudgeReview(identity.Designation, identity.DatabaseName);
+        if (!verdict.Admitted)
+        {
+            foreach (var refusal in verdict.Refusals)
+            {
+                await errors.WriteLineAsync($"Refused before any process: {refusal}").ConfigureAwait(false);
+            }
+
+            return 2;
+        }
+
+        HostProductionSettings settings;
+        LoadedItem loaded;
+        PreparationRecord preparation;
+        IArtifactStore store;
+        ExternalMediaTool tool;
+        try
+        {
+            settings = ReadSettings(settingsPath);
+            loaded = await ItemPackageLoader.LoadAsync(settings.Production.RepositoryRoot, settings.MaterialPath, cancellationToken).ConfigureAwait(false);
+            preparation = ReadPreparation(Path.Combine(settings.Production.RepositoryRoot, settings.PreparationPath));
+            store = new ArtifactWriter(settings.Production.OutputRoot, settings.Production.RepositoryRoot);
+            tool = new ExternalMediaTool(settings.Production);
+        }
+        catch (Exception refused) when (refused is ProductionSettingRefusedException or ItemMaterialRefusedException or FileNotFoundException)
+        {
+            await errors.WriteLineAsync($"Refused before any process: {refused.Message}").ConfigureAwait(false);
+            return 2;
+        }
+
+        var service = new ReviewGraphicsService(
+            provider.GetRequiredService<IUnitOfWork>(), provider.GetRequiredService<IProductionReader>(), tool, store, settings.Production, output);
+        return await service.RunAsync(new ReviewRequest(preparation.Item, new ItemVersion(version), loaded, identity.Designation, identity.DatabaseName), cancellationToken).ConfigureAwait(false);
     }
 
     private static bool TryMode(string text, out ProductionMode mode)

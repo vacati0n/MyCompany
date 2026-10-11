@@ -1,0 +1,180 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-01",
+  "beat": 1,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-01` | Plan view: nest, resource at ~2 km, no line of sight, no shared landmark | The problem the mechanism solves |"
+  },
+  "claims": [],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "alsoCarries": [
+    {
+      "claim": "CL-01",
+      "source": "research/ceo-decision-record.md",
+      "quote": "**`GFX-01`** shows the species name *Apis mellifera* (claim 1)"
+    }
+  ],
+  "elements": [
+    {
+      "id": "species",
+      "type": "text",
+      "role": "title",
+      "text": "Apis mellifera",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Apis mellifera",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title",
+      "face": "italic"
+    },
+    {
+      "id": "common",
+      "type": "text",
+      "role": "caption",
+      "text": "the western honey bee",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "the western honey bee",
+      "x": 120,
+      "y": 192,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "obstacle",
+      "type": "region",
+      "form": "ellipse",
+      "x": 980,
+      "y": 560,
+      "a": 150,
+      "b": 230,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "route",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          420,
+          640
+        ],
+        [
+          1500,
+          480
+        ]
+      ],
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "nest",
+      "type": "point",
+      "x": 420,
+      "y": 640,
+      "r": 22,
+      "filled": true
+    },
+    {
+      "id": "resource",
+      "type": "point",
+      "x": 1500,
+      "y": 480,
+      "r": 22,
+      "filled": true,
+      "focus": true
+    },
+    {
+      "id": "nestLabel",
+      "type": "text",
+      "role": "label",
+      "text": "nest",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "nest",
+      "x": 420,
+      "y": 720,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "resourceLabel",
+      "type": "text",
+      "role": "label",
+      "text": "resource",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "resource",
+      "x": 1500,
+      "y": 420,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "distance",
+      "type": "text",
+      "role": "figure",
+      "text": "~2 km",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "~2 km",
+      "x": 1240,
+      "y": 600,
+      "anchor": "middle",
+      "size": "label",
+      "focus": true,
+      "admittedBy": {
+        "source": "research/ceo-decision-record.md",
+        "quote": "\"~2 km\" (`GFX-01`), \"60°\" (`GFX-08`), \"nine o'clock\" and \"noon\" (`GFX-09`)"
+      }
+    },
+    {
+      "id": "sight",
+      "type": "text",
+      "role": "label",
+      "text": "no line of sight",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "no line of sight",
+      "x": 980,
+      "y": 870,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "landmark",
+      "type": "text",
+      "role": "label",
+      "text": "no shared landmark",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "no shared landmark",
+      "x": 980,
+      "y": 930,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "view",
+      "type": "text",
+      "role": "caption",
+      "text": "Plan view",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Plan view",
+      "x": 120,
+      "y": 1036,
+      "anchor": "start",
+      "size": "small"
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-05",
+  "beat": 4,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-05` | Outdoor frame, plan view: sun azimuth, resource bearing, angle θ between them | `CL-06` |"
+  },
+  "claims": [
+    "CL-06"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "shared": {
+    "theta": 38
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "Direction outdoors is referred to the sun",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "Direction outdoors is referred to the sun",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "frame",
+      "type": "text",
+      "role": "caption",
+      "text": "Outdoor frame, plan view",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Outdoor frame, plan view",
+      "x": 120,
+      "y": 196,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "sun",
+      "type": "bearing",
+      "x": 860,
+      "y": 900,
+      "angle": 0,
+      "length": 600,
+      "arrow": true,
+      "dashed": true
+    },
+    {
+      "id": "resourceBearing",
+      "type": "bearing",
+      "x": 860,
+      "y": 900,
+      "angle": {
+        "shared": "theta"
+      },
+      "length": 640,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "theta",
+      "type": "angle",
+      "x": 860,
+      "y": 900,
+      "from": 0,
+      "to": {
+        "shared": "theta"
+      },
+      "radius": 220
+    },
+    {
+      "id": "nest",
+      "type": "point",
+      "x": 860,
+      "y": 900,
+      "r": 18,
+      "filled": true
+    },
+    {
+      "id": "sunLabel",
+      "type": "text",
+      "role": "label",
+      "text": "the sun's azimuth",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "the sun's azimuth",
+      "x": 840,
+      "y": 280,
+      "anchor": "end",
+      "size": "label"
+    },
+    {
+      "id": "bearingLabel",
+      "type": "text",
+      "role": "label",
+      "text": "resource bearing",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "resource bearing",
+      "x": 1320,
+      "y": 330,
+      "anchor": "start",
+      "size": "label"
+    },
+    {
+      "id": "thetaLabel",
+      "type": "text",
+      "role": "label",
+      "text": "θ",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "θ",
+      "x": 920,
+      "y": 640,
+      "anchor": "start",
+      "size": "title"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "sun",
+        "sunLabel"
+      ],
+      "from": 0,
+      "to": 0.3
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "resourceBearing",
+        "bearingLabel"
+      ],
+      "from": 0.3,
+      "to": 0.6
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "theta",
+        "thetaLabel"
+      ],
+      "from": 0.6,
+      "to": 0.9
+    }
+  ]
+}

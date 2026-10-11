@@ -1,0 +1,140 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-15",
+  "beat": 9,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-15` | The mechanical model-bee experiment, schematic | `CL-17` |"
+  },
+  "claims": [
+    "CL-17"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "Axel Michelsen and colleagues built a model bee",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "Axel Michelsen and colleagues built a model bee",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "comb",
+      "type": "region",
+      "form": "box",
+      "x": 160,
+      "y": 300,
+      "a": 640,
+      "b": 600,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "device",
+      "type": "region",
+      "form": "box",
+      "x": 400,
+      "y": 560,
+      "a": 160,
+      "b": 90,
+      "angle": 0,
+      "shading": "outline",
+      "focus": true
+    },
+    {
+      "id": "deviceLabel",
+      "type": "text",
+      "role": "label",
+      "text": "a small motorised device",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "a small motorised device",
+      "x": 480,
+      "y": 700,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "modelRun",
+      "type": "bearing",
+      "x": 480,
+      "y": 540,
+      "angle": 30,
+      "length": 180,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "chosen",
+      "type": "text",
+      "role": "label",
+      "text": "a chosen angle and duration",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "a chosen angle and duration",
+      "x": 480,
+      "y": 860,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "recruits",
+      "type": "path",
+      "form": "smooth",
+      "points": [
+        [
+          800,
+          560
+        ],
+        [
+          1150,
+          470
+        ],
+        [
+          1500,
+          420
+        ]
+      ],
+      "arrow": true,
+      "dashed": true
+    },
+    {
+      "id": "target",
+      "type": "point",
+      "x": 1560,
+      "y": 410,
+      "r": 22,
+      "filled": true,
+      "focus": true
+    },
+    {
+      "id": "targetLabel",
+      "type": "text",
+      "role": "label",
+      "text": "the specified location",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "the specified location",
+      "x": 1560,
+      "y": 340,
+      "anchor": "middle",
+      "size": "label"
+    }
+  ]
+}

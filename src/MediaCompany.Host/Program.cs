@@ -216,11 +216,17 @@ switch (command)
         // The own-voice change (decision D-011 of its design): one file per beat, with the release as given.
         return await ProductionCommands.RegisterRecordingAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
 
+    case "verify-graphics":
+        return await ProductionCommands.VerifyGraphicsAsync(args, Console.Out, Console.Error, cancellation.Token);
+
+    case "review-graphics":
+        return await ProductionCommands.ReviewGraphicsAsync(provider, args, Console.Out, Console.Error, cancellation.Token);
+
     case "verify-model":
         // The own-voice change (decision D-011 of its design): files only, no process and no datastore.
         return await ProductionCommands.VerifyModelAsync(args, Console.Out, Console.Error, cancellation.Token);
 
     default:
-        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard, prepare, produce, register-recording, verify-model.");
+        Console.Error.WriteLine($"Unknown command '{command}'. Known commands: check, install, registers, report, weekly, dashboard, prepare, produce, register-recording, verify-model, verify-graphics, review-graphics.");
         return 2;
 }
