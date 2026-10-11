@@ -2145,3 +2145,49 @@ orchestrator's opening questions.
    preview, rendered from the demonstration store, before any production against the company store.
 
 ---
+
+## CEO-D-1001 — The renderer, the font and on-screen figures; installation and first-hand measurements
+
+**The CEO's own decision, 2026-10-11**, answering the Wave 11 scope phase's blocking questions, and
+the orchestrator's record of the approved installation.
+
+1. **Renderer: Remotion 4.0.534**, under its free licence. The CEO confirmed the company has at most
+   three people (the AI agents are not counted as people), so the free tier applies; no paid licence
+   is bought. Remotion is used with no licence key, so it sends no usage event
+   (`@remotion/renderer` `render-media.js` sends one only when a licence key is given).
+2. **Font: Inter 4.1** (SIL Open Font License 1.1).
+3. **On-screen figures recorded only in the shot list or narration.** Admitted, each shown with its
+   citation (the shot-list row or the narration): "~2 km" (`GFX-01`), "60°" (`GFX-08`), "nine
+   o'clock" and "noon" (`GFX-09`). **Not admitted:** "one second of waggling per kilometre"
+   (`GFX-10`), which the claim record deliberately did not make a claim; `GFX-10` shows no
+   conversion figure.
+4. **Download approved by the CEO (2026-10-11) and installed by the orchestrator** under
+   `C:/Users/vuhoangcao/MediaCompanyRun/graphics/`, outside the repository:
+   - `remotion/`: npm packages `remotion`, `@remotion/renderer`, `@remotion/bundler`,
+     `@remotion/cli` 4.0.534 and `react`, `react-dom` 19.3.0 (MIT), pinned exactly; 252 packages,
+     about 236 MB installed. `package-lock.json` 140,334 bytes, SHA-256
+     `585156039637babf4d70638b18cdc1e51df2860ee6818bcad58da1c20657814f`. The dependency tree
+     includes Remotion's own client packages for a speech vendor and a speech-recognition model
+     (pulled in by `@remotion/studio`); they are never called (no model call, `CEO-D-903`).
+   - `browser/`: Chrome Headless Shell 157.0.8080.0 win64 (the version Remotion 4.0.534 pins), from
+     `https://storage.googleapis.com/chrome-for-testing-public/157.0.8080.0/win64/chrome-headless-shell-win64.zip`,
+     125,915,690 bytes, SHA-256 `ad0fe78fbe0783035fd71f81cd876a2e81962a40ac7de6b4f7afcbeb00901c11`
+     (MD5 equal to the store's published hash); extracted `chrome-headless-shell.exe` 221,143,040
+     bytes, SHA-256 `c4d6a64a7af8db5081de3d66bd6957b8999b08064ce8254bb4f99d33d9170e3c`. Its
+     licence file is the Chromium BSD-style licence with third-party notices; its `ABOUT` file names
+     Google's Chrome terms of service. Used on this machine only, not distributed.
+   - `font/`: Inter 4.1 release archive from `https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`,
+     33,707,794 bytes, SHA-256 `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`;
+     `extras/ttf/Inter-Regular.ttf` 411,640 bytes, SHA-256
+     `40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82`; `InterVariable.ttf`
+     879,708 bytes, SHA-256 `4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf`.
+5. **Measured first hand** (trial under `graphics/remotion/trial/`, not a record of the company): a
+   1920×1080, 30 fps, 90-frame test graphic (light paper background, a vertical, a rotating run at
+   angle θ, an arc, the θ glyph and a label in Inter), driven by a Node script through
+   `@remotion/bundler` and `@remotion/renderer` with `browserExecutable` set to the installed shell,
+   concurrency 1, on the Intel Core Ultra 7 165H (22 logical processors), no GPU: bundling 8.3 s
+   cold and 2.5 s warm; 90 PNG frames in 9.7–12.9 s; an H.264 MP4 in 8.7–9.8 s. **Rendered twice,
+   all 90 PNG frames and the MP4 were byte-identical between the runs.** The bundler writes a cache
+   of about 170 MB under `remotion/node_modules/.cache` — local state the design must account for.
+
+---
