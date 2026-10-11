@@ -133,7 +133,18 @@ internal sealed class GraphicsFixture : IDisposable
 
         RegularFace = Path.Combine(Font, "fixture-regular.ttf");
         ItalicFace = Path.Combine(Font, "fixture-italic.ttf");
-        File.WriteAllBytes(RegularFace, FixtureFace.Build("Fixture Sans", "Regular", null, excludedFromRegular));
+        // The regular face is also the one the contact sheet's labels are drawn in by the media tool, so where the platform's
+        // font is present (as the media tool's tests need it) a copy of it serves; a face lacking a character is made in the test.
+        var platformFont = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "arial.ttf");
+        if (excludedFromRegular is null && File.Exists(platformFont))
+        {
+            File.Copy(platformFont, RegularFace);
+        }
+        else
+        {
+            File.WriteAllBytes(RegularFace, FixtureFace.Build("Fixture Sans", "Regular", null, excludedFromRegular));
+        }
+
         File.WriteAllBytes(ItalicFace, FixtureFace.Build("Fixture Sans", "Italic"));
 
         // The stand-in executable and the files its launcher needs, copied OUT of the repository's build output.

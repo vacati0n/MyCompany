@@ -378,8 +378,10 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
         Assert.True(shown.ExitCode == ProduceResult.Succeeded, shownOutput);
         var approved = await new NpgsqlProductionReader(Source).GraphicProvenanceAsync(demonstration.Item, shown.Version!.Value, CancellationToken.None);
 
+        // A new store numbers its versions from 2 again, so the demonstration's produced files are moved out of the way first.
         await ThrowawayStore.DropAsync(Source);
         await SchemaInstaller.InstallAsync(Source, CancellationToken.None);
+        Directory.Delete(Output, recursive: true);
         var record = await PrepareAsync(StoreDesignation.Company);
 
         var (refused, refusedOutput, _) = await ProduceAsync(record, voice, 0.1m, GraphicsFixture.Shared, designation: StoreDesignation.Company);

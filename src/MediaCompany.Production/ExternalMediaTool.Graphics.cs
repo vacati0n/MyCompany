@@ -18,7 +18,7 @@ public sealed partial class ExternalMediaTool : IGraphicRenderer
     /// One render-script invocation. Refused by name, before any process, where Node, the staged render script or request, the
     /// browser or a face is absent. The child's environment is CLEARED and holds only the system root, a search path of the
     /// system folder alone, the temporary, application-data and profile variables all pointing at the request's staging
-    /// folder, the time zone UTC and the production flag; so nothing inherited can redirect what runs, and every file the
+    /// folder, the browser's log file in that folder, the time zone UTC and the production flag; so nothing inherited can redirect what runs, and every file the
     /// renderer, the browser or the compositor writes lands in staging. The process is put into a new job set to end every
     /// member when it closes BEFORE its start line is written: the render script reads that line before it loads anything, so
     /// every process it or the browser starts is in the job. Past the bound, on cancellation and after exit, the job is closed;
@@ -73,6 +73,10 @@ public sealed partial class ExternalMediaTool : IGraphicRenderer
         start.Environment["TZ"] = "UTC";
         start.Environment["NODE_ENV"] = "production";
 
+        // The browser writes its own log beside its executable unless told otherwise (measured: a debug.log under the installed
+        // browser folder after a direct render); its log file is named here, in staging, so nothing lands under an installed folder.
+        start.Environment["CHROME_LOG_FILE"] = Path.Combine(request.TemporaryFolder, "browser.log");
+
         var stopwatch = Stopwatch.StartNew();
         using var job = JobObject.Create();
         using var process = Process.Start(start)
@@ -117,7 +121,16 @@ public sealed partial class ExternalMediaTool : IGraphicRenderer
             throw;
         }
 
+        // A console process's host can outlive it by a moment; the job is read until it is empty or two seconds have passed,
+        // and whatever is still in it then is counted, recorded and ended by closing the job.
         var leftover = job.ActiveProcesses();
+        var settle = Stopwatch.StartNew();
+        while (leftover > 0 && settle.Elapsed < TimeSpan.FromSeconds(2))
+        {
+            await Task.Delay(50, CancellationToken.None).ConfigureAwait(false);
+            leftover = job.ActiveProcesses();
+        }
+
         job.Close();
         stopwatch.Stop();
         var said = await errors.ConfigureAwait(false);

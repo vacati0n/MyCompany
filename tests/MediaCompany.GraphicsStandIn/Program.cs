@@ -8,7 +8,7 @@ using System.Text.Json;
 
 // The stand-in for Node running the render script. Expected arguments, exactly: <staged script name> <bundle|render> <request name>.
 // Expected environment, exactly: SystemRoot, windir, PATH (the system folder alone), TEMP, TMP, LOCALAPPDATA, APPDATA, USERPROFILE and
-// HOME (all one folder inside the working directory), TZ=UTC and NODE_ENV=production. It reads its start line before anything else.
+// HOME (all one folder inside the working directory), CHROME_LOG_FILE (inside it too), TZ=UTC and NODE_ENV=production. It reads its start line before anything else.
 // Exit codes follow the render script: 0 done, 3 refused before the renderer was called, 4 the renderer failed; 9 a contract breach.
 
 if (args.Length == 1 && args[0] == "--sleeper")
@@ -27,7 +27,7 @@ if (args[0].IndexOfAny(['/', '\\', ':']) >= 0 || args[2].IndexOfAny(['/', '\\', 
     return Breach("the script and the request are not plain names of files in the working directory");
 }
 
-var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SystemRoot", "windir", "PATH", "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOME", "TZ", "NODE_ENV" };
+var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SystemRoot", "windir", "PATH", "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOME", "TZ", "NODE_ENV", "CHROME_LOG_FILE" };
 var environment = Environment.GetEnvironmentVariables().Keys.Cast<string>().ToArray();
 if (environment.FirstOrDefault(k => !allowed.Contains(k)) is { } extra)
 {
@@ -35,7 +35,7 @@ if (environment.FirstOrDefault(k => !allowed.Contains(k)) is { } extra)
 }
 
 var workingDirectory = Path.GetFullPath(Directory.GetCurrentDirectory()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-foreach (var redirected in new[] { "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOME" })
+foreach (var redirected in new[] { "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOME", "CHROME_LOG_FILE" })
 {
     var value = Environment.GetEnvironmentVariable(redirected);
     if (value is null || !Path.GetFullPath(value).StartsWith(workingDirectory, StringComparison.OrdinalIgnoreCase))

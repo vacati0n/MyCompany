@@ -59,8 +59,9 @@ public sealed record RendererReport
 /// THE GRAPHICS INSTALLATION VERIFIER (the graphics change, decision D-003 of its design). It READS FILES ONLY and starts no
 /// process. Each manifest is hashed against the SHA-256 the settings name and parsed from those very bytes; every entry is
 /// relative (an absolute entry, or one climbing out of its folder, is refused); every listed file is hashed and compared,
-/// naming both values; any file under the renderer's packages, the browser folder or the font folder that its manifest does
-/// not list is refused (a re-created cache, a planted module); Node is the one file its manifest lists. The renderer's name
+/// naming both values; any file its manifest does not list is refused where a render loads from (a re-created cache, a planted
+/// module, a log a process left): anywhere under the renderer's packages, anywhere under the browser executable's folder, and
+/// in each face file's own folder; Node is the one file its manifest lists, in a folder that holds other installed programs. The renderer's name
 /// and version are read from its verified package files, the browser's and Node's versions from the version resource of their
 /// verified executables, and each face's family, version and character map from its verified bytes.
 ///
@@ -149,12 +150,15 @@ public sealed class RendererInstallationVerifier
             Full(Path.Combine(_settings.Renderer.Folder, "node_modules", "@remotion", "bundler", "package.json")),
         };
 
+        // Where an unlisted file is refused: the folders a render loads from, as the installed manifests cover them (the
+        // browser folder also holds the archive it was extracted from, and the font folder release formats no render reads).
+        var faceFolders = new[] { _settings.RegularFace, _settings.ItalicFace }.Select(f => (Path.GetDirectoryName(Full(f))!, false)).Distinct().ToArray();
         foreach (var (name, manifest, extras) in new[]
                  {
-                     ("renderer", _settings.Renderer, (string?)"node_modules"),
-                     ("browser", _settings.Browser, (string?)string.Empty),
-                     ("font", _settings.Font, (string?)string.Empty),
-                     ("node", _settings.Node, (string?)null),
+                     ("renderer", _settings.Renderer, new[] { (Full(Path.Combine(_settings.Renderer.Folder, "node_modules")), true) }),
+                     ("browser", _settings.Browser, new[] { (Path.GetDirectoryName(Full(_settings.BrowserExecutable))!, true) }),
+                     ("font", _settings.Font, faceFolders),
+                     ("node", _settings.Node, Array.Empty<(string, bool)>()),
                  })
         {
             var verified = await ManifestAsync(name, manifest, extras, held, keep, listed, bytesOf, findings, cancellationToken).ConfigureAwait(false);
@@ -228,11 +232,11 @@ public sealed class RendererInstallationVerifier
     }
 
     /// <summary>
-    /// Verifies one manifest: its own hash, then every entry. <paramref name="extrasUnder"/> names the folder, relative to the
-    /// manifest's, under which an unlisted file is refused; null for Node, which is verified as the one file listed.
+    /// Verifies one manifest: its own hash, then every entry. <paramref name="extrasIn"/> names the folders, each recursive or
+    /// not, in which an unlisted file is refused; none for Node, which is verified as the one file listed.
     /// </summary>
     private static async Task<VerifiedManifest?> ManifestAsync(
-        string name, InstalledManifest manifest, string? extrasUnder, HeldInstallation? held, HashSet<string> keep,
+        string name, InstalledManifest manifest, IReadOnlyList<(string Folder, bool Recursive)> extrasIn, HeldInstallation? held, HashSet<string> keep,
         Dictionary<string, string> listed, Dictionary<string, byte[]> bytesOf, List<string> findings, CancellationToken cancellationToken)
     {
         if (!File.Exists(manifest.Manifest))
@@ -252,9 +256,9 @@ public sealed class RendererInstallationVerifier
         var folder = Full(manifest.Folder);
         var files = 0;
         var mine = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var entries = new List<(string Path, string Expected)>();
         foreach (var line in Encoding.UTF8.GetString(bytes).Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            cancellationToken.ThrowIfCancellationRequested();
             var trimmed = line.TrimEnd('\r');
             var space = trimmed.IndexOf(' ', StringComparison.Ordinal);
             if (space != 64 || trimmed.Length < 67)
@@ -279,60 +283,102 @@ public sealed class RendererInstallationVerifier
                 continue;
             }
 
+            entries.Add((path, expected));
+        }
+
+        // Every listed file hashed, several at a time; the results are then taken in the manifest's order, so the findings and
+        // the held set do not depend on which file finished first.
+        var results = new (bool Present, string? Actual, byte[]? Bytes, FileStream? Stream)[entries.Count];
+        try
+        {
+        await Parallel.ForAsync(0, entries.Count, new ParallelOptions { MaxDegreeOfParallelism = 8, CancellationToken = cancellationToken }, async (i, token) =>
+        {
+            var (path, _) = entries[i];
             if (!File.Exists(path))
+            {
+                results[i] = (false, null, null, null);
+                return;
+            }
+
+            FileStream? stream = null;
+            try
+            {
+                stream = held is not null
+                    ? File.Open(path, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read, Share = FileShare.Read, BufferSize = 0 })
+                    : File.OpenRead(path);
+                if (keep.Contains(path))
+                {
+                    var all = await ReadAllAsync(stream, token).ConfigureAwait(false);
+                    results[i] = (true, Convert.ToHexStringLower(SHA256.HashData(all)), all, held is not null ? stream : null);
+                }
+                else
+                {
+                    results[i] = (true, Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, token).ConfigureAwait(false)), null, held is not null ? stream : null);
+                }
+            }
+            finally
+            {
+                if (held is null && stream is not null)
+                {
+                    await stream.DisposeAsync().ConfigureAwait(false);
+                }
+                else if (held is not null && stream is not null && results[i].Stream is null)
+                {
+                    await stream.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+        }).ConfigureAwait(false);
+        }
+        catch
+        {
+            foreach (var result in results)
+            {
+                if (result.Stream is not null)
+                {
+                    await result.Stream.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+
+            throw;
+        }
+
+        for (var i = 0; i < entries.Count; i++)
+        {
+            var (path, expected) = entries[i];
+            var (present, actual, all, stream) = results[i];
+            if (stream is not null)
+            {
+                held!.Streams.Add(stream);
+                held.Files.Add(new VerifiedFile(name, path, expected, actual!));
+            }
+
+            if (!present)
             {
                 findings.Add($"{path}: listed by the {name} manifest and missing");
                 continue;
             }
 
-            string actual;
-            if (held is not null)
-            {
-                var stream = File.Open(path, new FileStreamOptions { Mode = FileMode.Open, Access = FileAccess.Read, Share = FileShare.Read, BufferSize = 0 });
-                held.Streams.Add(stream);
-                if (keep.Contains(path))
-                {
-                    var all = await ReadAllAsync(stream, cancellationToken).ConfigureAwait(false);
-                    bytesOf[path] = all;
-                    actual = Convert.ToHexStringLower(SHA256.HashData(all));
-                }
-                else
-                {
-                    actual = Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false));
-                }
-
-                held.Files.Add(new VerifiedFile(name, path, expected, actual));
-            }
-            else if (keep.Contains(path))
-            {
-                var all = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
-                bytesOf[path] = all;
-                actual = Convert.ToHexStringLower(SHA256.HashData(all));
-            }
-            else
-            {
-                await using var stream = File.OpenRead(path);
-                actual = Convert.ToHexStringLower(await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false));
-            }
-
             if (!string.Equals(actual, expected, StringComparison.Ordinal))
             {
                 findings.Add($"{path}: sha256 {actual} computed over the file in this run, and {expected} listed by the {name} manifest");
-                bytesOf.Remove(path);
                 continue;
             }
 
-            listed[path] = actual;
+            if (all is not null)
+            {
+                bytesOf[path] = all;
+            }
+
+            listed[path] = actual!;
             mine.Add(path);
             files++;
         }
 
-        if (extrasUnder is not null)
+        foreach (var (root, recursive) in extrasIn)
         {
-            var root = extrasUnder.Length == 0 ? folder : Full(Path.Combine(folder, extrasUnder));
             if (Directory.Exists(root))
             {
-                foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+                foreach (var file in Directory.EnumerateFiles(root, "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
                 {
                     var full = Full(file);
                     if (!mine.Contains(full) && !listed.ContainsKey(full))
@@ -363,11 +409,11 @@ public sealed class RendererInstallationVerifier
 
     /// <summary>
     /// An executable's file version, read from the fixed version information in its verified bytes (the signature 0xFEEF04BD
-    /// followed by the structure version and the most and least significant halves of the file version).
+    /// followed by the structure version 1.0, then the most and least significant halves of the file version).
     /// </summary>
     internal static string? ExecutableVersion(byte[] bytes)
     {
-        ReadOnlySpan<byte> signature = [0xBD, 0x04, 0xEF, 0xFE];
+        ReadOnlySpan<byte> signature = [0xBD, 0x04, 0xEF, 0xFE, 0x00, 0x00, 0x01, 0x00];
         var at = bytes.AsSpan().IndexOf(signature);
         if (at < 0 || at + 16 > bytes.Length)
         {

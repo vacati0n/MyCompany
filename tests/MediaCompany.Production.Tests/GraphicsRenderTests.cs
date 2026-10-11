@@ -40,9 +40,9 @@ public sealed class GraphicsRenderTests : IDisposable
         Assert.Equal("remotion", report.RendererName);
         Assert.Equal("0.0.0-fixture", report.RendererVersion);
         Assert.Equal("1.2.3.4", report.BrowserVersion);
-        Assert.Equal("Fixture Sans", report.Regular!.Reading.Family);
-        Assert.Equal("Italic", report.Italic!.Reading.Subfamily);
-        Assert.Equal(GraphicsFixture.Sha256(fixture.RegularFace), report.Regular.Sha256);
+        Assert.Equal("Fixture Sans", report.Italic!.Reading.Family);
+        Assert.Equal("Italic", report.Italic.Reading.Subfamily);
+        Assert.Equal(GraphicsFixture.Sha256(fixture.RegularFace), report.Regular!.Sha256);
         Assert.Equal(GraphicsFixture.Sha256(fixture.NodeExecutable), report.NodeSha256);
         Assert.Equal(4, report.Manifests.Count);
         Assert.DoesNotContain("a configured licence", report.DescribeManifests() + report.DescribeFaces() + report.RendererPackages, StringComparison.Ordinal);
