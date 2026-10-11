@@ -2191,3 +2191,34 @@ the orchestrator's record of the approved installation.
    of about 170 MB under `remotion/node_modules/.cache` — local state the design must account for.
 
 ---
+
+## CEO-D-1002 — The visual choices the shot list leaves open
+
+**The CEO's own decision, 2026-10-11**, answering the Wave 11 scope phase's non-blocking questions.
+
+1. **`GFX-20`** uses the narration's words: "substantial" (patchy habitat) and "dense and evenly
+   spread"; "negligible" (found only in the shot-list row) is not shown. Any bars or areas carry no
+   value and are disclosed as schematic.
+2. **`GFX-17`** shows the angular scatter as a shaded spread around the true bearing, with no
+   points (no individual run drawn as data).
+3. **`GFX-18`** draws the error region with an angle that narrows with distance while the region's
+   area still widens (consistent with claims 20 and 21); schematic, with no values.
+4. **Schematic disclosure:** every graphic with a schematic element carries the small label
+   "schematic, not to scale". **`GFX-03`** is a trace with no time scale, labelled with claim 4's
+   "13–15 Hz" only.
+5. **Motion:** the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`,
+   `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still.
+   Graphics 17 to 20 show no statistic, since no claim records one.
+6. **Preview:** the owner's preview shows all 22 graphics at their production spans (about 375 s
+   with Wave 10's narration). In the company-store run, motion graphics are re-timed from that run's
+   narration and so may differ in bytes from the preview; still graphics must equal the approved
+   renders.
+7. **`GFX-01`** shows the species name *Apis mellifera* (claim 1).
+8. **`GFX-22`** (end card) lists only the real citations recorded in the claim record; the three
+   recorded sources that are not citations (claim 1's "standard taxonomic authority", claim 9's
+   "standard astronomical reference", claim 21's source being the graphic itself) are omitted.
+9. **Palette values** remain for the design to propose and the owner to approve at the
+   contact-sheet review, within the light paper-style background, dark line work and one accent
+   colour of `CEO-D-1000`.
+
+---
