@@ -390,7 +390,7 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
         Assert.Equal(ProduceResult.RefusedBeforeAnyCall, refused.ExitCode);
         Assert.Contains("no owner's approval file is configured", refusedOutput, StringComparison.Ordinal);
 
-        var approval = ApprovalFile(approved, still => still);
+        var approval = ApprovalFile(approved);
         var (produced, output, _) = await ProduceAsync(record, voice, 0.1m, GraphicsFixture.Shared, designation: StoreDesignation.Company, approval: approval);
         Assert.True(produced.ExitCode == ProduceResult.Succeeded, output);
         Assert.Contains("owner's approval: a fixture approver on 2026-10-11", output, StringComparison.Ordinal);
@@ -400,13 +400,18 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
         {
             Assert.Equal(SamenessKind.RetimedRenderedOnce, p.Sameness);
             Assert.StartsWith("re-timed from this run's narration", p.SamenessStatement, StringComparison.Ordinal);
+            Assert.Contains("its final frame equal to the owner's approved final frame sha256 " + p.FinalFrameSha256, p.SamenessStatement, StringComparison.Ordinal);
         });
 
-        var wrong = ApprovalFile(approved, still => still[..^4] + "0000");
-        var (failed, failedOutput, _) = await ProduceAsync(record, voice, 0.1m, GraphicsFixture.Shared, designation: StoreDesignation.Company, approval: wrong);
-        Assert.True(failed.ExitCode == ProduceResult.StageFailed, failedOutput);
-        var design = (await new NpgsqlProductionReader(Source).StagesAsync(record.Item, failed.Version!.Value, CancellationToken.None)).Single(s => s.Stage == ProductionStage.Design);
-        Assert.Contains("a still must equal its approved render", design.Summary, StringComparison.Ordinal);
+        // A still or a motion graphic's final frame other than the approved one fails the Design stage naming both hashes.
+        foreach (var (kind, expected) in new[] { (GraphicKind.Still, "a still must equal its approved render"), (GraphicKind.Motion, "a motion graphic ends on its approved final state") })
+        {
+            var wrong = ApprovalFile(approved, p => p.Kind == kind ? p.FinalFrameSha256[..^4] + "0000" : p.FinalFrameSha256);
+            var (failed, failedOutput, _) = await ProduceAsync(record, voice, 0.1m, GraphicsFixture.Shared, designation: StoreDesignation.Company, approval: wrong);
+            Assert.True(failed.ExitCode == ProduceResult.StageFailed, failedOutput);
+            var design = (await new NpgsqlProductionReader(Source).StagesAsync(record.Item, failed.Version!.Value, CancellationToken.None)).Single(s => s.Stage == ProductionStage.Design);
+            Assert.Contains(expected, design.Summary, StringComparison.Ordinal);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -491,8 +496,9 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>The owner's approval file as the orchestrator writes one, from a demonstration production's provenance.</summary>
-    private string ApprovalFile(IReadOnlyList<GraphicProvenance> approved, Func<string, string> still)
+    private string ApprovalFile(IReadOnlyList<GraphicProvenance> approved, Func<GraphicProvenance, string>? final = null)
     {
+        final ??= p => p.FinalFrameSha256;
         var json = new JsonObject
         {
             ["date"] = "2026-10-11",
@@ -503,14 +509,16 @@ public sealed class GraphicsIntegrationTests : IAsyncLifetime
             ["contactSheetSha256"] = new string('c', 64),
             ["previewSha256"] = new string('d', 64),
             ["styleSha256"] = approved[0].StyleSha256,
+            ["drawingProgramDigest"] = approved[0].DrawingProgramDigest,
+            ["renderScriptSha256"] = approved[0].RenderScriptSha256,
             ["manifests"] = approved[0].Manifests,
             ["graphics"] = new JsonArray(approved.Select(p => (JsonNode)new JsonObject
             {
                 ["position"] = p.Position,
                 ["specificationSha256"] = p.SpecificationSha256,
-                ["kind"] = p.Kind.ToString(),
-                ["finalFrameSha256"] = p.FinalFrameSha256,
-                ["stillSha256"] = p.Kind == GraphicKind.Still ? still(p.FinalFrameSha256) : null,
+                ["kind"] = p.Kind == GraphicKind.Still ? "still" : "motion",
+                ["finalFrameSha256"] = final(p),
+                ["stillSha256"] = p.Kind == GraphicKind.Still ? final(p) : null,
             }).ToArray()),
         };
         Directory.CreateDirectory(_root);

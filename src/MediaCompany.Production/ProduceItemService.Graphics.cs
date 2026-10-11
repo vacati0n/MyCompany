@@ -314,7 +314,15 @@ public sealed partial class ProduceItemService
                     }
                     else
                     {
-                        (kind, statement) = (SamenessKind.RetimedRenderedOnce, string.Create(c, $"re-timed from this run's narration: {frames} frames rendered once and not compared (the owner's preview was timed from another narration)"));
+                        var approvedFinal = plan.Approval?.For(spec.Position)?.FinalFrameSha256;
+                        if (!string.Equals(approvedFinal, first.Hashes[^1], StringComparison.Ordinal))
+                        {
+                            await EndStageAsync(ProductionStage.Design, StageOutcome.Failed,
+                                $"{spec.Position}'s final frame renders as sha256 {first.Hashes[^1]}, and the owner approved the final frame sha256 {approvedFinal ?? "(none recorded)"}; a motion graphic ends on its approved final state",
+                                ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
+                        }
+
+                        (kind, statement) = (SamenessKind.RetimedRenderedOnce, string.Create(c, $"re-timed from this run's narration: {frames} frames rendered once, its final frame equal to the owner's approved final frame sha256 {first.Hashes[^1]}; the frames before it are not compared (the owner's preview was timed from another narration)"));
                     }
 
                     sameness.Add($"{spec.Position} {kind}");

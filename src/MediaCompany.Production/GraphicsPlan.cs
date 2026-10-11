@@ -12,9 +12,23 @@ public sealed record ProgramFile(string Name, byte[] Bytes, string Sha256);
 /// <summary>One graphic the owner approved at the contact-sheet review, as the approval file records it (decision D-006).</summary>
 public sealed record ApprovedGraphic(string Position, string SpecificationSha256, GraphicKind Kind, string FinalFrameSha256, string? StillSha256);
 
-/// <summary>The owner's approval file, parsed from the very bytes whose SHA-256 matched its configured value (decision D-006).</summary>
-public sealed record GraphicsApproval(string Sha256, string Date, string Approver, string StyleSha256, IReadOnlyList<ApprovedGraphic> Graphics)
+/// <summary>
+/// The owner's approval file, parsed from the very bytes whose SHA-256 matched its configured value (decision D-006, extended
+/// by the review's ruling on its question 2): the approved style, drawing program and render script, and per graphic its
+/// specification, kind and final frame (for a still, the still itself).
+/// </summary>
+public sealed record GraphicsApproval(
+    string Sha256, string Date, string Approver, string StyleSha256, string DrawingProgramDigest, string RenderScriptSha256, IReadOnlyList<ApprovedGraphic> Graphics)
 {
+    /// <summary>The members the approval file must hold, each read; every other member is refused unless listed as recorded.</summary>
+    public static readonly IReadOnlyList<string> RequiredMembers = ["date", "approver", "styleSha256", "drawingProgramDigest", "renderScriptSha256", "graphics"];
+
+    /// <summary>Members the orchestrator may record for the reader and the plan does not compare.</summary>
+    public static readonly IReadOnlyList<string> RecordedMembers = ["decisionRecordEntry", "demonstrationStore", "demonstrationVersion", "contactSheetSha256", "previewSha256", "manifests"];
+
+    /// <summary>The members of each graphic's entry; stillSha256 is required for a still (equal to its final frame) and absent or null for a motion graphic.</summary>
+    public static readonly IReadOnlyList<string> GraphicMembers = ["position", "specificationSha256", "kind", "finalFrameSha256", "stillSha256"];
+
     public ApprovedGraphic? For(string position) => Graphics.FirstOrDefault(g => g.Position == position);
 }
 
@@ -87,7 +101,7 @@ public sealed record GraphicsPlan
         output.WriteLine($"    bounds (configured): {settings.DescribeBounds()}");
         if (Approval is { } approval)
         {
-            output.WriteLine($"    owner's approval: {approval.Approver} on {approval.Date}, file sha256 {approval.Sha256} (equals its configured value); {approval.Graphics.Count} graphics approved; every still must equal its approved bytes and every motion graphic is re-timed from this run's narration");
+            output.WriteLine($"    owner's approval: {approval.Approver} on {approval.Date}, file sha256 {approval.Sha256} (equals its configured value); {approval.Graphics.Count} graphics approved; the style, the drawing program, the render script and every specification equal their approved hashes; every graphic's final frame must equal its approved final frame (a still is its final frame) and every motion graphic is re-timed from this run's narration");
         }
 
         output.WriteLine("    graphics cost: no metered spend is planned, USD 0.00; no model call; local compute unmeasured");
@@ -224,17 +238,40 @@ public static class GraphicsPlanner
                     findings.Add($"the owner approved the style sha256 {approval.StyleSha256}, and the style file now hashes {style.Sha256}");
                 }
 
+                var drawingDigest = GraphicsPlan.Digest(drawing.Select(f => (f.Name, f.Sha256)));
+                if (!string.Equals(approval.DrawingProgramDigest, drawingDigest, StringComparison.Ordinal))
+                {
+                    findings.Add($"the owner approved the drawing program digest {approval.DrawingProgramDigest}, and the drawing program now digests {drawingDigest}");
+                }
+
+                if (script is not null && !string.Equals(approval.RenderScriptSha256, script.Sha256, StringComparison.Ordinal))
+                {
+                    findings.Add($"the owner approved the render script sha256 {approval.RenderScriptSha256}, and the render script now hashes {script.Sha256}");
+                }
+
                 foreach (var spec in check.Specifications)
                 {
                     var approved = approval.For(spec.Position);
                     if (approved is null)
                     {
                         findings.Add($"{spec.Position}: the owner's approval names no approved graphic for it");
+                        continue;
                     }
-                    else if (!string.Equals(approved.SpecificationSha256, spec.Sha256, StringComparison.Ordinal))
+
+                    if (!string.Equals(approved.SpecificationSha256, spec.Sha256, StringComparison.Ordinal))
                     {
                         findings.Add($"{spec.Position}: the owner approved its specification sha256 {approved.SpecificationSha256}, and it now hashes {spec.Sha256}");
                     }
+
+                    if (approved.Kind != spec.Kind)
+                    {
+                        findings.Add($"{spec.Position}: the owner approved it as {approved.Kind}, and its specification is {spec.Kind}");
+                    }
+                }
+
+                foreach (var extra in approval.Graphics.Where(g => check.Specifications.All(s => s.Position != g.Position)))
+                {
+                    findings.Add($"{extra.Position}: the owner's approval names a graphic no checked specification draws");
                 }
             }
         }
@@ -280,13 +317,49 @@ public static class GraphicsPlanner
             using var document = JsonDocument.Parse(bytes);
             var root = document.RootElement;
             string S(JsonElement e, string key) => e.GetProperty(key).GetString() ?? throw new KeyNotFoundException(key);
-            var graphicsApproved = root.GetProperty("graphics").EnumerateArray().Select(g => new ApprovedGraphic(
-                S(g, "position"),
-                S(g, "specificationSha256"),
-                Enum.Parse<GraphicKind>(S(g, "kind"), ignoreCase: true),
-                S(g, "finalFrameSha256"),
-                g.TryGetProperty("stillSha256", out var still) && still.ValueKind == JsonValueKind.String ? still.GetString() : null)).ToArray();
-            return new GraphicsApproval(sha, S(root, "date"), S(root, "approver"), S(root, "styleSha256"), graphicsApproved);
+            string Hash(JsonElement e, string key) =>
+                S(e, key) is { Length: 64 } value && value.All(char.IsAsciiHexDigitLower) ? value : throw new ArgumentException($"{key} is not a lower-case SHA-256");
+            var unknown = root.EnumerateObject().Select(p => p.Name)
+                .Where(n => !GraphicsApproval.RequiredMembers.Contains(n, StringComparer.Ordinal) && !GraphicsApproval.RecordedMembers.Contains(n, StringComparer.Ordinal)).ToArray();
+            if (unknown.Length > 0)
+            {
+                throw new ArgumentException($"unknown member {unknown[0]}");
+            }
+
+            var graphicsApproved = root.GetProperty("graphics").EnumerateArray().Select(g =>
+            {
+                var extra = g.EnumerateObject().Select(p => p.Name).FirstOrDefault(n => !GraphicsApproval.GraphicMembers.Contains(n, StringComparer.Ordinal));
+                if (extra is not null)
+                {
+                    throw new ArgumentException($"unknown graphic member {extra}");
+                }
+
+                var kind = S(g, "kind") switch
+                {
+                    "still" => GraphicKind.Still,
+                    "motion" => GraphicKind.Motion,
+                    var other => throw new ArgumentException($"kind {other} is neither still nor motion"),
+                };
+                var final = Hash(g, "finalFrameSha256");
+                var still = g.TryGetProperty("stillSha256", out var s) && s.ValueKind == JsonValueKind.String ? s.GetString() : null;
+                if (kind == GraphicKind.Still && still != final)
+                {
+                    throw new ArgumentException($"{S(g, "position")}: a still's stillSha256 is its finalFrameSha256");
+                }
+
+                if (kind == GraphicKind.Motion && still is not null)
+                {
+                    throw new ArgumentException($"{S(g, "position")}: a motion graphic has no stillSha256");
+                }
+
+                return new ApprovedGraphic(S(g, "position"), Hash(g, "specificationSha256"), kind, final, still);
+            }).ToArray();
+            if (graphicsApproved.Select(g => g.Position).Distinct(StringComparer.Ordinal).Count() != graphicsApproved.Length)
+            {
+                throw new ArgumentException("a position is approved twice");
+            }
+
+            return new GraphicsApproval(sha, S(root, "date"), S(root, "approver"), Hash(root, "styleSha256"), Hash(root, "drawingProgramDigest"), Hash(root, "renderScriptSha256"), graphicsApproved);
         }
         catch (Exception unreadable) when (unreadable is JsonException or KeyNotFoundException or InvalidOperationException or ArgumentException)
         {

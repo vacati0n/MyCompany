@@ -218,6 +218,74 @@ public sealed class GraphicsRenderTests : IDisposable
         Assert.Contains(plan.Findings, f => f.Contains("no owner's approval file is configured", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// THE APPROVAL FILE'S SHAPE AND COMPARISONS (the review's ruling on its question 2): an approval written from the plan's own
+    /// hashes passes in the company store; a drawing program digest, a render script hash, a specification hash or a kind other
+    /// than the approved one is refused by name before any call, and a file with an unknown member, an upper-case kind, a still
+    /// whose still hash is not its final frame or a motion graphic carrying a still hash is refused as not of the recorded shape.
+    /// </summary>
+    [Theory]
+    [InlineData("none", null)]
+    [InlineData("drawing", "the owner approved the drawing program digest")]
+    [InlineData("script", "the owner approved the render script sha256")]
+    [InlineData("specification", "GFX-04: the owner approved its specification sha256")]
+    [InlineData("kind", "GFX-04: the owner approved it as Motion, and its specification is Still")]
+    [InlineData("unknown", "is not an approval file of the recorded shape (unknown member approvedBy)")]
+    [InlineData("upperKind", "is not an approval file of the recorded shape (kind Still is neither still nor motion)")]
+    [InlineData("stillHash", "is not an approval file of the recorded shape (GFX-01: a still's stillSha256 is its finalFrameSha256)")]
+    [InlineData("motionStill", "is not an approval file of the recorded shape (GFX-02: a motion graphic has no stillSha256)")]
+    public async Task TheApprovalFileIsReadInItsRecordedShapeAndComparedBeforeAnyCall(string fault, string? expected)
+    {
+        var loaded = await ItemPackageLoader.LoadAsync(MediaTool.RepositoryRoot(), "wave-2/item-001/item-material.json", CancellationToken.None);
+        using var fixture = new GraphicsFixture("deterministic");
+        var settings = MediaTool.Settings(_output, MediaTool.RepositoryRoot()) with { Graphics = fixture.Settings() };
+        var shown = await GraphicsPlanner.ComposeAsync(settings, loaded, MediaCompany.Domain.Production.StoreDesignation.Demonstration, CancellationToken.None);
+        Assert.False(shown.Refused, string.Join("\n", shown.Findings));
+
+        string Other(string hash) => hash[..^4] + (hash.EndsWith("0000", StringComparison.Ordinal) ? "1111" : "0000");
+        var frame = new string('f', 64);
+        var json = new System.Text.Json.Nodes.JsonObject
+        {
+            ["date"] = "2026-10-11",
+            ["approver"] = "a fixture approver",
+            ["styleSha256"] = shown.Style!.Sha256,
+            ["drawingProgramDigest"] = fault == "drawing" ? Other(shown.DrawingDigest) : shown.DrawingDigest,
+            ["renderScriptSha256"] = fault == "script" ? Other(shown.RenderScript!.Sha256) : shown.RenderScript!.Sha256,
+            ["graphics"] = new System.Text.Json.Nodes.JsonArray(shown.Check!.Specifications.Select(s => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject
+            {
+                ["position"] = s.Position,
+                ["specificationSha256"] = fault == "specification" && s.Position == "GFX-04" ? Other(s.Sha256) : s.Sha256,
+                ["kind"] = fault == "upperKind" ? s.Kind.ToString() : (fault == "kind" && s.Position == "GFX-04") || s.Kind == MediaCompany.Domain.Production.GraphicKind.Motion ? "motion" : "still",
+                ["finalFrameSha256"] = frame,
+                ["stillSha256"] = (s.Kind == MediaCompany.Domain.Production.GraphicKind.Still && !(fault == "kind" && s.Position == "GFX-04")) || (fault == "motionStill" && s.Position == "GFX-02")
+                    ? (fault == "stillHash" && s.Position == "GFX-01" ? Other(frame) : frame)
+                    : null,
+            }).ToArray()),
+        };
+        if (fault == "unknown")
+        {
+            json["approvedBy"] = "an unrecorded member";
+        }
+
+        Directory.CreateDirectory(_output);
+        var path = Path.Combine(_output, "approval.json");
+        await File.WriteAllTextAsync(path, json.ToJsonString());
+        var sha = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(await File.ReadAllBytesAsync(path)));
+        var company = await GraphicsPlanner.ComposeAsync(settings with { Graphics = fixture.Settings() with { ApprovalFile = new ExpectedFile(path, sha) } },
+            loaded, MediaCompany.Domain.Production.StoreDesignation.Company, CancellationToken.None);
+
+        if (expected is null)
+        {
+            Assert.False(company.Refused, string.Join("\n", company.Findings));
+            Assert.Equal(shown.DrawingDigest, company.Approval!.DrawingProgramDigest);
+        }
+        else
+        {
+            Assert.True(company.Refused);
+            Assert.Contains(company.Findings, f => f.Contains(expected, StringComparison.Ordinal));
+        }
+    }
+
     // -----------------------------------------------------------------------
     // The render invocation through the one starter
     // -----------------------------------------------------------------------
