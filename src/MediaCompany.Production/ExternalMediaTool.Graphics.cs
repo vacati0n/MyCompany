@@ -65,9 +65,14 @@ public sealed partial class ExternalMediaTool : IGraphicRenderer
         }
 
         start.Environment["PATH"] = Environment.SystemDirectory;
+
+        // The same staging folder in its short form where the volume keeps one: the browser builds its profile and caches
+        // several folders deep inside it, and past the platform's path limit it fails to create them and logs each failure
+        // beside its own executable (measured: a debug.log under the browser folder from a render whose staging path was long).
+        var temporary = ShortForm(request.TemporaryFolder);
         foreach (var redirected in new[] { "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOME" })
         {
-            start.Environment[redirected] = request.TemporaryFolder;
+            start.Environment[redirected] = temporary;
         }
 
         start.Environment["TZ"] = "UTC";
@@ -75,7 +80,7 @@ public sealed partial class ExternalMediaTool : IGraphicRenderer
 
         // The browser writes its own log beside its executable unless told otherwise (measured: a debug.log under the installed
         // browser folder after a direct render); its log file is named here, in staging, so nothing lands under an installed folder.
-        start.Environment["CHROME_LOG_FILE"] = Path.Combine(request.TemporaryFolder, "browser.log");
+        start.Environment["CHROME_LOG_FILE"] = Path.Combine(temporary, "browser.log");
 
         var stopwatch = Stopwatch.StartNew();
         using var job = JobObject.Create();
@@ -210,6 +215,17 @@ public sealed partial class ExternalMediaTool : IGraphicRenderer
             _settings.RenderBound,
             cancellationToken);
     }
+
+    /// <summary>An existing folder's short form, or the folder as given where the volume keeps no short names.</summary>
+    private static string ShortForm(string folder)
+    {
+        var buffer = new StringBuilder(1024);
+        var length = GetShortPathNameW(folder, buffer, (uint)buffer.Capacity);
+        return length == 0 || length > buffer.Capacity ? folder : buffer.ToString();
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetShortPathNameW(string longPath, StringBuilder shortPath, uint bufferLength);
 
     /// <summary>
     /// A job object set to end every member when it is closed: a browser whose parent exited is still in the job, so closing it

@@ -34,11 +34,11 @@ if (environment.FirstOrDefault(k => !allowed.Contains(k)) is { } extra)
     return Breach($"the environment holds {extra}, which the starter does not pass");
 }
 
-var workingDirectory = Path.GetFullPath(Directory.GetCurrentDirectory()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+var workingDirectory = LongForm(Directory.GetCurrentDirectory()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
 foreach (var redirected in new[] { "TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "USERPROFILE", "HOME", "CHROME_LOG_FILE" })
 {
     var value = Environment.GetEnvironmentVariable(redirected);
-    if (value is null || !Path.GetFullPath(value).StartsWith(workingDirectory, StringComparison.OrdinalIgnoreCase))
+    if (value is null || !LongForm(value).StartsWith(workingDirectory, StringComparison.OrdinalIgnoreCase))
     {
         return Breach($"{redirected} does not point inside the staging folder");
     }
@@ -135,6 +135,24 @@ for (long k = 0; k < frames; k++)
 }
 
 return 0;
+
+// A path in its long form, the parts that exist expanded; the starter may pass a folder's short form.
+static string LongForm(string path)
+{
+    var full = Path.GetFullPath(path);
+    var existing = full;
+    while (!Directory.Exists(existing) && !File.Exists(existing) && Path.GetDirectoryName(existing) is { } parent)
+    {
+        existing = parent;
+    }
+
+    var buffer = new StringBuilder(1024);
+    var length = GetLongPathNameW(existing, buffer, (uint)buffer.Capacity);
+    return length == 0 || length > buffer.Capacity ? full : buffer + full[existing.Length..];
+}
+
+[System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+static extern uint GetLongPathNameW(string shortPath, StringBuilder longPath, uint bufferLength);
 
 static void Sleeper()
 {
