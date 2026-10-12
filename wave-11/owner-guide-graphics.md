@@ -32,7 +32,7 @@ Each graphic position used to show a text card (white text on a dark colour, dra
 tool). It now shows a graphic drawn from its specification (`wave-2/item-001/graphics/gfx-NN.json`)
 on a light paper background (#F5F1E8) with dark line work (#1F2328), a secondary grey (#5F646B), one
 accent colour (#A8481A) for the element each graphic focuses on, and a light shade (#DEDCD5) for
-regions. These values are proposed for the owner's approval at the contact-sheet review; changing
+regions. The owner approved these values at the contact-sheet review on 2026-10-11 (`CEO-D-1003`); changing
 them changes the style file only, never code. Every word and number on screen is quoted from the
 item's four recorded sources (the shot list, the narration, the claim record and the owner's
 decision record, found from the item package and never named by a specification), each on whole
@@ -329,6 +329,14 @@ lists (a change to any of these files changes its hash, and the file is written 
 ```
 
 ## 5. Re-produce item 001 in the company store (after the approval and a fresh backup)
+
+> **Not run in Wave 11.** The owner decided on 2026-10-12 (`CEO-D-1005`) that this wave runs no
+> company-store production: item 001 in the company store stays at version 3 and the eleventh
+> resource is not applied there. Wave 12 produces item 001 in the company store with 3D animation
+> (`CEO-D-1004`). The steps below remain the procedure for that later run; before it, also take the
+> store's readings (resources installed, item versions) before and after `install --from 11`, write
+> the run's settings from the decision record's recorded paths and hashes, and check the installed
+> folders against `manifests/*.sha256` again after the run.
 
 Preconditions, in this order: **(1)** the owner's contact-sheet approval is recorded and the approval
 file is written with its hash in the decision record; **(2)** a **fresh backup** of the company store
