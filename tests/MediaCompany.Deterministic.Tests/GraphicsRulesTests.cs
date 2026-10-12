@@ -39,14 +39,35 @@ public sealed class GraphicsRulesTests
         Assert.Equal(BeatTimeline.Frame(TimeSpan.FromSeconds(6.1333 + 31.6), 30), b.Sum(s => s.Frames));
     }
 
-    /// <summary>The figure tokens of a text: digits and the listed number words, nothing else.</summary>
+    /// <summary>The figure tokens of a text: written figures whole with their marks, other numerals and the listed number words.</summary>
     [Fact]
     public void TheNumberRuleFindsDigitsAndNumberWordsOnly()
     {
-        Assert.Equal(new[] { "13", "15" }, GraphicSpecificationCheck.FigureTokens("13–15 Hz"));
+        Assert.Equal(new[] { "13–15" }, GraphicSpecificationCheck.FigureTokens("13–15 Hz"));
+        Assert.Equal(new[] { "~2" }, GraphicSpecificationCheck.FigureTokens("~2 km"));
+        Assert.Equal(new[] { "60°" }, GraphicSpecificationCheck.FigureTokens("60° right"));
+        Assert.Equal(new[] { "15,000" }, GraphicSpecificationCheck.FigureTokens("about 15,000 files"));
+        Assert.Equal(new[] { "billion", "millions", "dozens" }, GraphicSpecificationCheck.FigureTokens("a billion, millions, dozens"));
         Assert.Equal(new[] { "nine", "o'clock" }, GraphicSpecificationCheck.FigureTokens("nine o'clock"));
         Assert.Equal(new[] { "noon" }, GraphicSpecificationCheck.FigureTokens("noon"));
         Assert.Empty(GraphicSpecificationCheck.FigureTokens("a region, not a point"));
         Assert.Equal(new[] { "eight" }, GraphicSpecificationCheck.FigureTokens("a rough figure of eight"));
+    }
+
+    /// <summary>THE NUMBER WORDS, pinned: the cardinals, the tens and powers, dozen and score, the fractions and multiplicatives, with plurals.</summary>
+    [Fact]
+    public void TheNumberWordListIsPinned()
+    {
+        string[] cardinals = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
+            "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty",
+            "ninety", "hundred", "thousand", "million", "billion", "trillion", "dozen", "score", "half", "quarter", "double", "triple"];
+        string[] plurals = ["zeros", "zeroes", "ones", "twos", "threes", "fours", "fives", "sixes", "sevens", "eights", "nines", "tens", "elevens",
+            "twelves", "thirteens", "fourteens", "fifteens", "sixteens", "seventeens", "eighteens", "nineteens", "twenties", "thirties", "forties",
+            "fifties", "sixties", "seventies", "eighties", "nineties", "hundreds", "thousands", "millions", "billions", "trillions", "dozens", "scores",
+            "halves", "quarters", "doubles", "triples"];
+        string[] others = ["once", "twice", "thrice", "doubled", "tripled", "treble", "quadruple", "halve", "halved", "percent", "twofold", "threefold",
+            "fourfold", "fivefold", "tenfold", "hundredfold", "thousandfold", "o'clock", "noon", "midnight"];
+        Assert.Equal(cardinals.Concat(plurals).Concat(others).Order(StringComparer.Ordinal), GraphicSpecificationCheck.NumberWords.Order(StringComparer.Ordinal));
+        Assert.All(cardinals.Concat(plurals).Concat(others), w => Assert.Equal([w], GraphicSpecificationCheck.FigureTokens("about " + w + " here")));
     }
 }

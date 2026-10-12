@@ -87,15 +87,25 @@ public static partial class GraphicSpecificationCheck
 {
     public const string Format = "graphic-specification/1";
 
-    /// <summary>The closed list of English number and time-of-day words that make a text a figure.</summary>
+    /// <summary>
+    /// THE CLOSED LIST OF NUMBER WORDS that make a text a figure, in one place (the review's correction 1): every English cardinal
+    /// from zero to nineteen and the tens, hundred, thousand, million, billion and trillion, dozen and score, the fractions half
+    /// and quarter, the multiplicatives once, twice, thrice, double and triple, each with its plural where English has one, and
+    /// the further counting and time-of-day words the drawings could carry. Matched whole-word and case-insensitively.
+    /// </summary>
     public static readonly IReadOnlyList<string> NumberWords =
     [
-        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
-        "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "forty", "fifty", "sixty",
-        "seventy", "eighty", "ninety", "hundred", "hundreds", "thousand", "thousands", "million", "tens", "dozen", "half",
-        "quarter", "o'clock", "noon", "midnight", "once", "twice", "thrice", "double", "doubled", "triple", "tripled", "treble",
-        "quadruple", "halve", "halved", "halves", "percent", "twofold", "threefold", "fourfold", "fivefold", "tenfold",
-        "hundredfold", "thousandfold",
+        "zero", "zeros", "zeroes", "one", "ones", "two", "twos", "three", "threes", "four", "fours", "five", "fives", "six", "sixes",
+        "seven", "sevens", "eight", "eights", "nine", "nines", "ten", "tens", "eleven", "elevens", "twelve", "twelves",
+        "thirteen", "thirteens", "fourteen", "fourteens", "fifteen", "fifteens", "sixteen", "sixteens", "seventeen", "seventeens",
+        "eighteen", "eighteens", "nineteen", "nineteens",
+        "twenty", "twenties", "thirty", "thirties", "forty", "forties", "fifty", "fifties", "sixty", "sixties", "seventy",
+        "seventies", "eighty", "eighties", "ninety", "nineties",
+        "hundred", "hundreds", "thousand", "thousands", "million", "millions", "billion", "billions", "trillion", "trillions",
+        "dozen", "dozens", "score", "scores", "half", "halves", "quarter", "quarters",
+        "once", "twice", "thrice", "double", "doubles", "triple", "triples",
+        "doubled", "tripled", "treble", "quadruple", "halve", "halved", "percent", "twofold", "threefold", "fourfold", "fivefold",
+        "tenfold", "hundredfold", "thousandfold", "o'clock", "noon", "midnight",
     ];
 
     private static readonly string[] TopFields =
@@ -460,13 +470,16 @@ public static partial class GraphicSpecificationCheck
     }
 
     /// <summary>
-    /// The figure tokens of a text: every run of number characters (decimal digits of any script, fractions, superscripts and
-    /// other numerals, Unicode categories Nd, Nl and No) and every listed number word, on word boundaries.
+    /// The figure tokens of a text, by the one figure tokenizer that also reads every source (<see cref="Within"/>): each written
+    /// figure as one token with its approximation, sign or range mark, its internal separators and its unit mark as written
+    /// ("~2", "13–15", "15,000", "60°"); each run of other number characters (another script's digits, fractions, superscripts,
+    /// numerals); and every listed number word.
     /// </summary>
     public static IReadOnlyList<string> FigureTokens(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        var tokens = Digits().Matches(text).Select(x => x.Value).ToList();
+        var tokens = Figure().Matches(text).Select(x => x.Value).ToList();
+        tokens.AddRange(OtherNumerals().Matches(text).Select(x => x.Value));
         foreach (Match word in Word().Matches(text))
         {
             if (NumberWords.Contains(word.Value.ToLowerInvariant(), StringComparer.Ordinal))
@@ -696,11 +709,11 @@ public static partial class GraphicSpecificationCheck
         && Within(Collapse(text), Collapse(quote));
 
     /// <summary>
-    /// Whether <paramref name="quote"/> occurs in <paramref name="text"/> ON TOKEN BOUNDARIES: at one occurrence at least, an
-    /// edge of the quotation that is a letter or a number does not continue a word or a figure of the text. A letter edge needs
-    /// no letter, number or in-word apostrophe beside it; a number edge needs beside it only white space, an opening or closing
-    /// bracket or quotation mark, or sentence punctuation that no number continues: never a number, a letter, a range or
-    /// decimal joiner, a sign, an approximation mark or a unit symbol.
+    /// Whether <paramref name="quote"/> occurs in <paramref name="text"/> ON WHOLE-TOKEN BOUNDARIES (the review's correction 1).
+    /// Both are read by the same tokenizer: words (letters with in-word apostrophes), written figures with their marks and
+    /// separators ("~2", "13–15", "60°") and other numerals. At one occurrence at least, (i) no token of the text is cut by the
+    /// quotation's edges, whatever character the edge is (a punctuation-led "–15 Hz" or a trailing "13–" cuts "13–15"), and
+    /// (ii) every token of the quotation is a complete token of the text at that position, never a part of one.
     /// </summary>
     public static bool Within(string text, string quote)
     {
@@ -711,14 +724,14 @@ public static partial class GraphicSpecificationCheck
             return false;
         }
 
+        var textTokens = TokenSpans(text);
+        var quoteTokens = TokenSpans(quote);
         for (var at = text.IndexOf(quote, StringComparison.Ordinal); at >= 0; at = text.IndexOf(quote, at + 1, StringComparison.Ordinal))
         {
-            var before = at > 0 ? text[at - 1] : (char?)null;
-            var beforeThat = at > 1 ? text[at - 2] : (char?)null;
             var end = at + quote.Length;
-            var after = end < text.Length ? text[end] : (char?)null;
-            var afterThat = end + 1 < text.Length ? text[end + 1] : (char?)null;
-            if (Bounded(quote[0], before, beforeThat, opening: true) && Bounded(quote[^1], after, afterThat, opening: false))
+            var uncut = textTokens.All(t => t.End <= at || t.Start >= end || (t.Start >= at && t.End <= end));
+            var whole = quoteTokens.All(q => textTokens.Contains((at + q.Start, at + q.End)));
+            if (uncut && whole)
             {
                 return true;
             }
@@ -727,36 +740,16 @@ public static partial class GraphicSpecificationCheck
         return false;
     }
 
-    private static bool Bounded(char edge, char? beside, char? further, bool opening)
+    /// <summary>The token spans of a text: its words, its written figures and its other numerals, each as start and end.</summary>
+    private static HashSet<(int Start, int End)> TokenSpans(string text)
     {
-        if (beside is not { } next)
+        var spans = new HashSet<(int Start, int End)>();
+        foreach (var match in Figure().Matches(text).Concat(OtherNumerals().Matches(text)).Concat(Letters().Matches(text)))
         {
-            return true;
+            spans.Add((match.Index, match.Index + match.Length));
         }
 
-        if (char.IsNumber(edge))
-        {
-            if (char.IsWhiteSpace(next) || "([{\"“‘)]}”’!?;".Contains(next, StringComparison.Ordinal))
-            {
-                return true;
-            }
-
-            // A comma, full stop or colon closes a sentence after a figure when no number continues it.
-            return !opening && next is ',' or '.' or ':' && (further is not { } beyond || !char.IsNumber(beyond));
-        }
-
-        if (char.IsLetter(edge))
-        {
-            if (char.IsLetterOrDigit(next) || char.IsNumber(next))
-            {
-                return false;
-            }
-
-            // An apostrophe inside a word (o'clock, the run's) joins it.
-            return !(next is '\'' or '’' && further is { } inWord && char.IsLetter(inWord));
-        }
-
-        return true;
+        return spans;
     }
 
     private static string? Str(JsonElement node, string name) =>
@@ -797,8 +790,17 @@ public static partial class GraphicSpecificationCheck
     [GeneratedRegex(@"\s+", RegexOptions.CultureInvariant)]
     private static partial Regex WhiteSpace();
 
-    [GeneratedRegex(@"[\p{Nd}\p{Nl}\p{No}]+", RegexOptions.CultureInvariant)]
-    private static partial Regex Digits();
+    /// <summary>A written figure: an optional approximation, sign or range mark, ASCII digits with internal separators, an optional unit mark.</summary>
+    [GeneratedRegex(@"[~≈±+\-−–]?[0-9]+(?:[.,:/–\-][0-9]+)*[°%‰′″]?", RegexOptions.CultureInvariant)]
+    private static partial Regex Figure();
+
+    /// <summary>A run of number characters other than the ASCII digits (refused where drawn).</summary>
+    [GeneratedRegex(@"[\p{N}-[0-9]]+", RegexOptions.CultureInvariant)]
+    private static partial Regex OtherNumerals();
+
+    /// <summary>A word: letters joined by in-word apostrophes.</summary>
+    [GeneratedRegex(@"\p{L}+(?:['’]\p{L}+)*", RegexOptions.CultureInvariant)]
+    private static partial Regex Letters();
 
     [GeneratedRegex(@"[A-Za-z][A-Za-z']*", RegexOptions.CultureInvariant)]
     private static partial Regex Word();

@@ -244,6 +244,8 @@ public sealed class GraphicSpecificationTests
     [InlineData("5 Hz")]
     [InlineData("15 Hz")]
     [InlineData("13–15 H")]
+    [InlineData("–15 Hz")]
+    [InlineData("13–")]
     public async Task AFigureCutOutOfALongerFigureIsRefused(string cut)
     {
         var (material, specifications, sources) = await ItemOneAsync();
@@ -318,6 +320,9 @@ public sealed class GraphicSpecificationTests
     /// </summary>
     [Theory]
     [InlineData("twice", "the figure \"twice\" (tokens twice) is not admitted")]
+    [InlineData("billion", "the figure \"billion\" (tokens billion) is not admitted")]
+    [InlineData("millions", "the figure \"millions\" (tokens millions) is not admitted")]
+    [InlineData("dozens", "the figure \"dozens\" (tokens dozens) is not admitted")]
     [InlineData("½", "it draws the number character '½' (U+00BD)")]
     [InlineData("km²", "it draws the number character '²' (U+00B2)")]
     [InlineData("５ km", "it draws the number character '５' (U+FF15)")]
@@ -338,6 +343,11 @@ public sealed class GraphicSpecificationTests
     [InlineData("about 13–15 Hz here", "5 Hz", false)]
     [InlineData("about 13–15 Hz here", "15 Hz", false)]
     [InlineData("about 13–15 Hz here", "13", false)]
+    [InlineData("about 13–15 Hz here", "–15 Hz", false)]
+    [InlineData("about 13–15 Hz here", "13–", false)]
+    [InlineData("about 13–15 Hz here", "–15", false)]
+    [InlineData("(13–15 Hz)", "13–15 Hz", true)]
+    [InlineData("it took 15. Then", "15.", true)]
     [InlineData("roughly ~2 km away", "~2 km", true)]
     [InlineData("roughly ~2 km away", "2 km", false)]
     [InlineData("at 60° right", "60", false)]
