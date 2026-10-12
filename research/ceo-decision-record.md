@@ -2321,3 +2321,17 @@ vertical 3D-animated episodic frog series, "Episode 2", 3.1M reactions, 50K shar
    (15–30 s) from the same 3D scenes for Reels and Shorts.
 
 ---
+
+## CEO-D-1005 — No company-store production in Wave 11; Wave 12 produces item 001 with 3D
+
+**The CEO's own decision, 2026-10-12**, on resuming Wave 11.
+
+Wave 11 does **not** run `produce` against the company store `mediacompany`: item 001 stays at
+version 3 (own voice, text cards), and the eleventh schema resource is not applied to the company
+store in this wave. The approved 22 graphics, their final-frame hashes (`CEO-D-1003`) and the
+approval-file shape remain the delivered capability. **Wave 12 produces item 001 in the company
+store with 3D animation drawn by code** (`CEO-D-1004`), building on this wave's pipeline. Wave 11
+closes after its review, verification, documentation and closure, with the change merged on the
+CEO's explicit go.
+
+---
