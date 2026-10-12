@@ -12,10 +12,10 @@
     <!--
       The one version the repository declares. Every built assembly carries it, and the release
       record reads it from here rather than deriving one. Decided at the Design Gate of the
-      own-voice change as a minor increment (1.7.0): the schema, the ports and the boundary change
+      graphics change as a minor increment (1.8.0): the schema, the ports and the boundary change
       additively, and the members whose signatures change have no consumer outside this solution.
     -->
-    <Version>1.7.0</Version>
+    <Version>1.8.0</Version>
   </PropertyGroup>
   <ItemGroup Condition="'$(MSBuildProjectName)' != 'MediaCompany.Domain'">
     <Using Include="MediaCompany.Domain" />

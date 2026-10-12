@@ -1,0 +1,6 @@
+# The graphics change: a specification, the style file, the render script and the drawing program are hashed as read,
+# staged from those bytes and compared with the owner's approved hashes, so their bytes must not depend on how a checkout
+# converts line endings. Every other file keeps the repository's setting.
+graphics/** text eol=lf
+wave-*/item-*/graphics/*.json text eol=lf
+config/graphics-style.json text eol=lf

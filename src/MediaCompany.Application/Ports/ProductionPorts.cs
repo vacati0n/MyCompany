@@ -66,6 +66,10 @@ public interface IProductionReader
     /// <summary>The narration source a production version recorded, or null where it was recorded before the tenth resource.</summary>
     Task<NarrationSource?> VersionSourceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken) =>
         throw new NotSupportedException("This reader holds no narration source; the tenth schema resource adds it.");
+
+    /// <summary>The graphic provenance recorded for one item version, in recording order (the graphics change, decision D-006).</summary>
+    Task<IReadOnlyList<GraphicProvenance>> GraphicProvenanceAsync(ItemId item, ItemVersion version, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This reader holds no graphic provenance; the eleventh schema resource adds it.");
 }
 
 /// <summary>The item a production reads, as recorded.</summary>
@@ -202,7 +206,71 @@ public interface IMediaTool
     /// </summary>
     Task<AudioMeasurement> MeasureAudioAsync(string file, CancellationToken cancellationToken) =>
         throw new NotSupportedException("This media tool measures no decoded audio.");
+
+    /// <summary>
+    /// Composes the owner's contact sheet (the graphics change, decision D-007 of its design): every tile file, a byte copy of a
+    /// graphic's final frame, scaled into a grid with its label file drawn beneath it in the staged face, one PNG out. Runs under
+    /// the still bound with no transaction open.
+    /// </summary>
+    Task ComposeSheetAsync(SheetSpecification sheet, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This media tool composes no contact sheet.");
+
+    /// <summary>
+    /// Encodes the owner's video-only preview from a segment list of the production's own stills and frames, with the
+    /// delivered encoder settings and no audio, under the render bound with no transaction open (decision D-007).
+    /// </summary>
+    Task RenderPreviewAsync(PreviewSpecification preview, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This media tool renders no preview.");
 }
+
+/// <summary>
+/// The graphics renderer (the graphics change, decision D-002 of its design), realised by the ONE type that starts a process.
+/// One invocation starts the configured Node executable with exactly three arguments, the staged render script, the mode and
+/// the staged request file, in the graphics staging folder, with a CLEARED environment whose temporary and profile folders
+/// all lie in staging, inside a job that ends every member when it closes; the start line is written to its standard input
+/// only after it is in the job. Past its bound, on cancellation and after it exits, the job is closed.
+/// </summary>
+public interface IGraphicRenderer
+{
+    Task<GraphicInvocation> InvokeAsync(GraphicInvocationRequest request, CancellationToken cancellationToken);
+}
+
+/// <summary>The two modes of the render script.</summary>
+public enum GraphicMode
+{
+    Bundle = 1,
+    Render = 2,
+}
+
+/// <summary>
+/// One render-script invocation: the graphics staging folder (its working directory), the staged script and request file
+/// (plain names in it), the staging folder the child's temporary and profile variables point at, and its own bound.
+/// </summary>
+public sealed record GraphicInvocationRequest(
+    string StagingFolder,
+    string ScriptFile,
+    GraphicMode Mode,
+    string RequestFile,
+    string TemporaryFolder,
+    TimeSpan Bound);
+
+/// <summary>What one invocation was: its exact argument list, executable first; the processes left in its job; the seconds observed.</summary>
+public sealed record GraphicInvocation(IReadOnlyList<string> Arguments, int LeftoverProcesses, TimeSpan Elapsed);
+
+/// <summary>A contact sheet: tile and label files (plain names in staging, in position order), the staged face and the output.</summary>
+public sealed record SheetSpecification(
+    string StagingFolder,
+    IReadOnlyList<string> TileFiles,
+    IReadOnlyList<string> LabelFiles,
+    string FaceFile,
+    string OutputFile,
+    int Columns,
+    int TileWidth,
+    int TileHeight,
+    int LabelHeight);
+
+/// <summary>A preview: its segment list file and output in staging, and its total frame count.</summary>
+public sealed record PreviewSpecification(string StagingFolder, string SegmentListFile, string OutputFile, long TotalFrames);
 
 /// <summary>
 /// The in-house speech model (the own-voice change, decision D-005 of its design), realised by the ONE type that starts a
@@ -329,6 +397,20 @@ public interface IArtifactStore
 
     /// <summary>The full path of a promoted file.</summary>
     string FullPath(string relativePath);
+
+    /// <summary>
+    /// Writes bytes already read and hashed (a specification, the style file, a drawing program file) into the staging folder
+    /// unchanged, so the bytes staged are the bytes hashed (the graphics change, decision D-002 of its design).
+    /// </summary>
+    Task WriteStagingBytesAsync(string stagingFolder, string name, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This store writes no staged bytes.");
+
+    /// <summary>
+    /// Creates, empty, a named folder inside the staging folder (a render's temporary, bundle or frames folder) and returns its
+    /// full path; an earlier folder of that name is removed first (decision D-002). It never leaves the staging folder.
+    /// </summary>
+    string StagingSubfolder(string stagingFolder, string name) =>
+        throw new NotSupportedException("This store makes no staging subfolder.");
 }
 
 /// <summary>A promoted file: its relative path, and the length and hash recomputed from the stored bytes.</summary>

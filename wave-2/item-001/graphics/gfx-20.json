@@ -1,0 +1,333 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-20",
+  "beat": 12,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-20` | Dance advantage by habitat: substantial in patchy, negligible in dense | `CL-23` |"
+  },
+  "claims": [
+    "CL-23"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The advantage conferred by the dance was not constant.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The advantage conferred by the dance was not constant.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "left",
+      "type": "panel",
+      "x": 120,
+      "y": 230,
+      "w": 800,
+      "h": 690
+    },
+    {
+      "id": "right",
+      "type": "panel",
+      "x": 1000,
+      "y": 230,
+      "w": 800,
+      "h": 690
+    },
+    {
+      "id": "patch0",
+      "type": "region",
+      "form": "ellipse",
+      "x": 300,
+      "y": 420,
+      "a": 60,
+      "b": 40,
+      "angle": 0,
+      "shading": "shade",
+      "focus": true
+    },
+    {
+      "id": "patch1",
+      "type": "region",
+      "form": "ellipse",
+      "x": 720,
+      "y": 700,
+      "a": 60,
+      "b": 40,
+      "angle": 0,
+      "shading": "shade",
+      "focus": true
+    },
+    {
+      "id": "patch2",
+      "type": "region",
+      "form": "ellipse",
+      "x": 400,
+      "y": 780,
+      "a": 60,
+      "b": 40,
+      "angle": 0,
+      "shading": "shade",
+      "focus": true
+    },
+    {
+      "id": "r0",
+      "type": "point",
+      "x": 1100,
+      "y": 380,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r1",
+      "type": "point",
+      "x": 1230,
+      "y": 380,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r2",
+      "type": "point",
+      "x": 1360,
+      "y": 380,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r3",
+      "type": "point",
+      "x": 1490,
+      "y": 380,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r4",
+      "type": "point",
+      "x": 1620,
+      "y": 380,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r5",
+      "type": "point",
+      "x": 1750,
+      "y": 380,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r6",
+      "type": "point",
+      "x": 1100,
+      "y": 510,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r7",
+      "type": "point",
+      "x": 1230,
+      "y": 510,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r8",
+      "type": "point",
+      "x": 1360,
+      "y": 510,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r9",
+      "type": "point",
+      "x": 1490,
+      "y": 510,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r10",
+      "type": "point",
+      "x": 1620,
+      "y": 510,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r11",
+      "type": "point",
+      "x": 1750,
+      "y": 510,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r12",
+      "type": "point",
+      "x": 1100,
+      "y": 640,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r13",
+      "type": "point",
+      "x": 1230,
+      "y": 640,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r14",
+      "type": "point",
+      "x": 1360,
+      "y": 640,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r15",
+      "type": "point",
+      "x": 1490,
+      "y": 640,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r16",
+      "type": "point",
+      "x": 1620,
+      "y": 640,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r17",
+      "type": "point",
+      "x": 1750,
+      "y": 640,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r18",
+      "type": "point",
+      "x": 1100,
+      "y": 770,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r19",
+      "type": "point",
+      "x": 1230,
+      "y": 770,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r20",
+      "type": "point",
+      "x": 1360,
+      "y": 770,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r21",
+      "type": "point",
+      "x": 1490,
+      "y": 770,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r22",
+      "type": "point",
+      "x": 1620,
+      "y": 770,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "r23",
+      "type": "point",
+      "x": 1750,
+      "y": 770,
+      "r": 10,
+      "filled": true
+    },
+    {
+      "id": "patchy",
+      "type": "text",
+      "role": "label",
+      "text": "patchy and hard to find",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "patchy and hard to find",
+      "x": 520,
+      "y": 290,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "substantial",
+      "type": "text",
+      "role": "label",
+      "text": "substantial",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "substantial",
+      "x": 520,
+      "y": 990,
+      "anchor": "middle",
+      "size": "label",
+      "focus": true
+    },
+    {
+      "id": "dense",
+      "type": "text",
+      "role": "label",
+      "text": "dense and evenly spread",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "dense and evenly spread",
+      "x": 1400,
+      "y": 290,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "without",
+      "type": "text",
+      "role": "label",
+      "text": "about as well without it",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "about as well without it",
+      "x": 1400,
+      "y": 990,
+      "anchor": "middle",
+      "size": "label"
+    }
+  ]
+}

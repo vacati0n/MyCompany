@@ -1,0 +1,227 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-11",
+  "beat": 7,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-11` | Optic flow: image motion accumulating along a flight path | `CL-13` |"
+  },
+  "claims": [
+    "CL-13"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The bee measures distance optically.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The bee measures distance optically.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "flow",
+      "type": "text",
+      "role": "caption",
+      "text": "Optic flow",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Optic flow",
+      "x": 120,
+      "y": 196,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "flight",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          200,
+          560
+        ],
+        [
+          1720,
+          560
+        ]
+      ],
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "forager",
+      "type": "point",
+      "x": 200,
+      "y": 560,
+      "r": 18,
+      "filled": true,
+      "focus": true
+    },
+    {
+      "id": "flightLabel",
+      "type": "text",
+      "role": "label",
+      "text": "flight path",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "flight path",
+      "x": 1720,
+      "y": 520,
+      "anchor": "end",
+      "size": "label"
+    },
+    {
+      "id": "g0",
+      "type": "point",
+      "x": 200,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g1",
+      "type": "point",
+      "x": 330,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g2",
+      "type": "point",
+      "x": 460,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g3",
+      "type": "point",
+      "x": 590,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g4",
+      "type": "point",
+      "x": 720,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g5",
+      "type": "point",
+      "x": 850,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g6",
+      "type": "point",
+      "x": 980,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g7",
+      "type": "point",
+      "x": 1110,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g8",
+      "type": "point",
+      "x": 1240,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g9",
+      "type": "point",
+      "x": 1370,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g10",
+      "type": "point",
+      "x": 1500,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "g11",
+      "type": "point",
+      "x": 1630,
+      "y": 760,
+      "r": 8,
+      "filled": false
+    },
+    {
+      "id": "accumulated",
+      "type": "bars",
+      "x": 200,
+      "y": 840,
+      "width": 1520,
+      "height": 120,
+      "extents": [
+        1
+      ],
+      "focus": true
+    },
+    {
+      "id": "accLabel",
+      "type": "text",
+      "role": "label",
+      "text": "accumulated image motion",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "accumulated image motion",
+      "x": 200,
+      "y": 1000,
+      "anchor": "start",
+      "size": "caption"
+    }
+  ],
+  "motion": [
+    {
+      "type": "follow",
+      "target": "forager",
+      "path": "flight",
+      "from": 0,
+      "to": 1
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "accumulated"
+      ],
+      "from": 0,
+      "to": 1
+    }
+  ]
+}

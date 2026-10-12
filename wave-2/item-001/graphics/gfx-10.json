@@ -1,0 +1,117 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-10",
+  "beat": 6,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-10` | Waggle duration against distance: near-linear, with a band for subspecies slope | `CL-11`, `CL-12` |"
+  },
+  "claims": [
+    "CL-11",
+    "CL-12"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The dance is calibrated, not absolute.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The dance is calibrated, not absolute.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "x",
+      "type": "axis",
+      "x1": 300,
+      "y1": 900,
+      "x2": 1660,
+      "y2": 900
+    },
+    {
+      "id": "y",
+      "type": "axis",
+      "x1": 300,
+      "y1": 900,
+      "x2": 300,
+      "y2": 250
+    },
+    {
+      "id": "band",
+      "type": "trace",
+      "form": "band",
+      "x": 300,
+      "y": 320,
+      "width": 1250,
+      "height": 580,
+      "spread": 0.24,
+      "focus": true
+    },
+    {
+      "id": "xLabel",
+      "type": "text",
+      "role": "label",
+      "text": "distance",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "distance",
+      "x": 1660,
+      "y": 960,
+      "anchor": "end",
+      "size": "label"
+    },
+    {
+      "id": "yLabel",
+      "type": "text",
+      "role": "label",
+      "text": "Waggle duration",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Waggle duration",
+      "x": 330,
+      "y": 250,
+      "anchor": "start",
+      "size": "label"
+    },
+    {
+      "id": "linear",
+      "type": "text",
+      "role": "label",
+      "text": "near-linear",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "near-linear",
+      "x": 900,
+      "y": 770,
+      "anchor": "start",
+      "size": "label",
+      "focus": true
+    },
+    {
+      "id": "bandLabel",
+      "type": "text",
+      "role": "label",
+      "text": "a band for subspecies slope",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "a band for subspecies slope",
+      "x": 1880,
+      "y": 620,
+      "anchor": "end",
+      "size": "caption"
+    }
+  ]
+}

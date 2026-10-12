@@ -1,0 +1,135 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-19",
+  "beat": 11,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-19` | Patch area set against delivery precision — the two readings of the scatter | `CL-22` |"
+  },
+  "claims": [
+    "CL-22"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "Whether that imprecision is a limitation or a feature",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "Whether that imprecision is a limitation or a feature",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "left",
+      "type": "panel",
+      "x": 120,
+      "y": 230,
+      "w": 800,
+      "h": 650
+    },
+    {
+      "id": "right",
+      "type": "panel",
+      "x": 1000,
+      "y": 230,
+      "w": 800,
+      "h": 650
+    },
+    {
+      "id": "spreadL",
+      "type": "region",
+      "form": "spread",
+      "x": 520,
+      "y": 820,
+      "a": 480,
+      "b": 16,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "pointTarget",
+      "type": "point",
+      "x": 520,
+      "y": 360,
+      "r": 12,
+      "filled": true,
+      "focus": true
+    },
+    {
+      "id": "constraint",
+      "type": "text",
+      "role": "label",
+      "text": "a constraint, not a design",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "a constraint, not a design",
+      "x": 520,
+      "y": 280,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "spreadR",
+      "type": "region",
+      "form": "spread",
+      "x": 1400,
+      "y": 820,
+      "a": 480,
+      "b": 16,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "patch",
+      "type": "region",
+      "form": "ellipse",
+      "x": 1400,
+      "y": 370,
+      "a": 140,
+      "b": 50,
+      "angle": 0,
+      "shading": "outline",
+      "focus": true
+    },
+    {
+      "id": "patchLabel",
+      "type": "text",
+      "role": "label",
+      "text": "a patch of flowers is not a point",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "a patch of flowers is not a point",
+      "x": 1400,
+      "y": 280,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "contested",
+      "type": "text",
+      "role": "label",
+      "text": "contested and unresolved in the literature",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "contested and unresolved in the literature",
+      "x": 960,
+      "y": 960,
+      "anchor": "middle",
+      "size": "label"
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-14",
+  "beat": 8,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-14` | The vector assembled: θ and t resolving to a region, not a point | `CL-16` |"
+  },
+  "claims": [
+    "CL-16"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "shared": {
+    "theta": 38
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "Together they define a vector from the nest.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "Together they define a vector from the nest.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "vertical",
+      "type": "bearing",
+      "x": 560,
+      "y": 860,
+      "angle": 0,
+      "length": 560,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "vector",
+      "type": "bearing",
+      "x": 560,
+      "y": 860,
+      "angle": {
+        "shared": "theta"
+      },
+      "length": 600,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "theta",
+      "type": "angle",
+      "x": 560,
+      "y": 860,
+      "from": 0,
+      "to": {
+        "shared": "theta"
+      },
+      "radius": 200
+    },
+    {
+      "id": "thetaLabel",
+      "type": "text",
+      "role": "label",
+      "text": "θ",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "θ",
+      "x": 610,
+      "y": 620,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "tLabel",
+      "type": "text",
+      "role": "label",
+      "text": "t",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "t",
+      "x": 719.4,
+      "y": 577.2,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "nest",
+      "type": "point",
+      "x": 560,
+      "y": 860,
+      "r": 18,
+      "filled": true
+    },
+    {
+      "id": "arrival",
+      "type": "region",
+      "form": "ellipse",
+      "x": 929.4,
+      "y": 387.2,
+      "a": 170,
+      "b": 110,
+      "angle": 38,
+      "shading": "shade",
+      "focus": true
+    },
+    {
+      "id": "regionLabel",
+      "type": "text",
+      "role": "label",
+      "text": "a region, not a point",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "a region, not a point",
+      "x": 1129.4,
+      "y": 417.2,
+      "anchor": "start",
+      "size": "label"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "vertical"
+      ],
+      "from": 0,
+      "to": 0.15
+    },
+    {
+      "type": "grow",
+      "target": "vector",
+      "property": "length",
+      "fromValue": 0,
+      "toValue": 600,
+      "from": 0.15,
+      "to": 0.55
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "theta",
+        "thetaLabel",
+        "tLabel"
+      ],
+      "from": 0.4,
+      "to": 0.6
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "arrival",
+        "regionLabel"
+      ],
+      "from": 0.65,
+      "to": 0.95
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-22",
+  "beat": 13,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-22` | End card: the source list, on screen, readable | Attribution |"
+  },
+  "claims": [],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "alsoCarries": [
+    {
+      "claim": "CL-02",
+      "source": "research/ceo-decision-record.md",
+      "quote": "**`GFX-22`** (end card) lists only the real citations recorded in the claim record"
+    }
+  ],
+  "elements": [
+    {
+      "id": "c00",
+      "type": "text",
+      "role": "citation",
+      "text": "The Nobel Foundation, Prize in Physiology or Medicine 1973",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "The Nobel Foundation, Prize in Physiology or Medicine 1973",
+      "x": 120,
+      "y": 170,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c01",
+      "type": "text",
+      "role": "citation",
+      "text": "von Frisch, The Dance Language and Orientation of Bees, Harvard University Press, 1967",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "von Frisch, The Dance Language and Orientation of Bees, Harvard University Press, 1967",
+      "x": 120,
+      "y": 244,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c02",
+      "type": "text",
+      "role": "citation",
+      "text": "Lindauer, on time-compensated sun orientation",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Lindauer, on time-compensated sun orientation",
+      "x": 120,
+      "y": 318,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c03",
+      "type": "text",
+      "role": "citation",
+      "text": "Srinivasan, Zhang, Altwein & Tautz, \"Honeybee navigation: nature and calibration of the odometer\", Science, 2000",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Srinivasan, Zhang, Altwein & Tautz, \"Honeybee navigation: nature and calibration of the odometer\", Science, 2000",
+      "x": 120,
+      "y": 392,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c04",
+      "type": "text",
+      "role": "citation",
+      "text": "Esch & Burns, on distance estimation by optic flow, 1996",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Esch & Burns, on distance estimation by optic flow, 1996",
+      "x": 120,
+      "y": 466,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c05",
+      "type": "text",
+      "role": "citation",
+      "text": "Michelsen, Andersen, Storm, Kirchner & Lindauer, \"How honeybees perceive communication dances,",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Michelsen, Andersen, Storm, Kirchner & Lindauer, \"How honeybees perceive communication dances,",
+      "x": 120,
+      "y": 540,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c06",
+      "type": "text",
+      "role": "citation",
+      "text": "studied by means of a mechanical model\", Behavioral Ecology and Sociobiology, 1992",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "studied by means of a mechanical model\", Behavioral Ecology and Sociobiology, 1992",
+      "x": 150,
+      "y": 584,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c07",
+      "type": "text",
+      "role": "citation",
+      "text": "Riley, Greggers, Smith, Reynolds & Menzel, \"The flight paths of honeybees recruited by the waggle dance\", Nature, 2005",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Riley, Greggers, Smith, Reynolds & Menzel, \"The flight paths of honeybees recruited by the waggle dance\", Nature, 2005",
+      "x": 120,
+      "y": 658,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c08",
+      "type": "text",
+      "role": "citation",
+      "text": "Tanner & Visscher, on dance precision",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Tanner & Visscher, on dance precision",
+      "x": 120,
+      "y": 732,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c09",
+      "type": "text",
+      "role": "citation",
+      "text": "Preece & Beekman, \"Honeybee waggle dance error: adaption or constraint?\", Animal Behaviour, 2014",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Preece & Beekman, \"Honeybee waggle dance error: adaption or constraint?\", Animal Behaviour, 2014",
+      "x": 120,
+      "y": 806,
+      "anchor": "start",
+      "size": "small"
+    },
+    {
+      "id": "c10",
+      "type": "text",
+      "role": "citation",
+      "text": "Dornhaus & Chittka, on the benefit of dance communication across habitats, Behavioral Ecology and Sociobiology, 2004",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "Dornhaus & Chittka, on the benefit of dance communication across habitats, Behavioral Ecology and Sociobiology, 2004",
+      "x": 120,
+      "y": 880,
+      "anchor": "start",
+      "size": "small"
+    }
+  ]
+}

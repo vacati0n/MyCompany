@@ -2122,3 +2122,216 @@ Wave 11 runs in its own session (one session per wave) as ticket `MC-12`. Decisi
 Wave 11: `CEO-D-1000`–`CEO-D-1099`, `CEO-C-1000`–`CEO-C-1099`.
 
 ---
+
+## CEO-D-1000 — Answers to the Wave 11 opening questions on the graphics
+
+**The CEO's own decision, 2026-10-11**, at the start of Wave 11 (`MC-12`), answering the
+orchestrator's opening questions.
+
+1. **The renderer.** The CEO prefers proven, effective existing libraries and tools over drawing
+   from scratch, and named Remotion (a React-based framework that renders video from code) as an
+   example. The scope phase evaluates Remotion as a primary candidate alongside the alternatives
+   (the vector drawing already inside the installed ffmpeg, a .NET drawing library, others it
+   finds), each with its licence and the licence's terms for a company, its download size and
+   run-time requirements on this machine (Windows 11, no GPU, Node.js 24.11.1 already installed),
+   and whether the same input renders the same bytes. Any download is approved by the owner by
+   name, source, size and licence before it happens; any paid licence or subscription is the
+   owner's decision and is not assumed.
+2. **Palette.** A light, paper-style background with dark line work and a single accent colour.
+   The exact colour values are for the design to propose and the owner to see.
+3. **Typeface.** An open font under the SIL Open Font License is downloaded for the graphics, on the
+   owner's approval of its name, source, size and licence; the scope phase proposes candidates.
+4. **Review before production.** The owner reviews a contact sheet of all 22 graphics, with a short
+   preview, rendered from the demonstration store, before any production against the company store.
+
+---
+
+## CEO-D-1001 — The renderer, the font and on-screen figures; installation and first-hand measurements
+
+**The CEO's own decision, 2026-10-11**, answering the Wave 11 scope phase's blocking questions, and
+the orchestrator's record of the approved installation.
+
+1. **Renderer: Remotion 4.0.534**, under its free licence. The CEO confirmed the company has at most
+   three people (the AI agents are not counted as people), so the free tier applies; no paid licence
+   is bought. Remotion is used with no licence key, so it sends no usage event
+   (`@remotion/renderer` `render-media.js` sends one only when a licence key is given).
+2. **Font: Inter 4.1** (SIL Open Font License 1.1).
+3. **On-screen figures recorded only in the shot list or narration.** Admitted, each shown with its
+   citation (the shot-list row or the narration): "~2 km" (`GFX-01`), "60°" (`GFX-08`), "nine
+   o'clock" and "noon" (`GFX-09`). **Not admitted:** "one second of waggling per kilometre"
+   (`GFX-10`), which the claim record deliberately did not make a claim; `GFX-10` shows no
+   conversion figure.
+4. **Download approved by the CEO (2026-10-11) and installed by the orchestrator** under
+   `C:/Users/vuhoangcao/MediaCompanyRun/graphics/`, outside the repository:
+   - `remotion/`: npm packages `remotion`, `@remotion/renderer`, `@remotion/bundler`,
+     `@remotion/cli` 4.0.534 and `react`, `react-dom` 19.3.0 (MIT), pinned exactly; 252 packages,
+     about 236 MB installed. `package-lock.json` 140,334 bytes, SHA-256
+     `585156039637babf4d70638b18cdc1e51df2860ee6818bcad58da1c20657814f`. The dependency tree
+     includes Remotion's own client packages for a speech vendor and a speech-recognition model
+     (pulled in by `@remotion/studio`); they are never called (no model call, `CEO-D-903`).
+   - `browser/`: Chrome Headless Shell 157.0.8080.0 win64 (the version Remotion 4.0.534 pins), from
+     `https://storage.googleapis.com/chrome-for-testing-public/157.0.8080.0/win64/chrome-headless-shell-win64.zip`,
+     125,915,690 bytes, SHA-256 `ad0fe78fbe0783035fd71f81cd876a2e81962a40ac7de6b4f7afcbeb00901c11`
+     (MD5 equal to the store's published hash); extracted `chrome-headless-shell.exe` 221,143,040
+     bytes, SHA-256 `c4d6a64a7af8db5081de3d66bd6957b8999b08064ce8254bb4f99d33d9170e3c`. Its
+     licence file is the Chromium BSD-style licence with third-party notices; its `ABOUT` file names
+     Google's Chrome terms of service. Used on this machine only, not distributed.
+   - `font/`: Inter 4.1 release archive from `https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip`,
+     33,707,794 bytes, SHA-256 `9883fdd4a49d4fb66bd8177ba6625ef9a64aa45899767dde3d36aa425756b11e`;
+     `extras/ttf/Inter-Regular.ttf` 411,640 bytes, SHA-256
+     `40d692fce188e4471e2b3cba937be967878f631ad3ebbbdcd587687c7ebe0c82`; `InterVariable.ttf`
+     879,708 bytes, SHA-256 `4989b125924991b90d05b2d16e0e388c48f7d5bb8b30539bbf9c755278d0ccaf`.
+5. **Measured first hand** (trial under `graphics/remotion/trial/`, not a record of the company): a
+   1920×1080, 30 fps, 90-frame test graphic (light paper background, a vertical, a rotating run at
+   angle θ, an arc, the θ glyph and a label in Inter), driven by a Node script through
+   `@remotion/bundler` and `@remotion/renderer` with `browserExecutable` set to the installed shell,
+   concurrency 1, on the Intel Core Ultra 7 165H (22 logical processors), no GPU: bundling 8.3 s
+   cold and 2.5 s warm; 90 PNG frames in 9.7–12.9 s; an H.264 MP4 in 8.7–9.8 s. **Rendered twice,
+   all 90 PNG frames and the MP4 were byte-identical between the runs.** The bundler writes a cache
+   of about 170 MB under `remotion/node_modules/.cache` — local state the design must account for.
+
+---
+
+## CEO-D-1002 — The visual choices the shot list leaves open
+
+**The CEO's own decision, 2026-10-11**, answering the Wave 11 scope phase's non-blocking questions.
+
+1. **`GFX-20`** uses the narration's words: "substantial" (patchy habitat) and "dense and evenly
+   spread"; "negligible" (found only in the shot-list row) is not shown. Any bars or areas carry no
+   value and are disclosed as schematic.
+2. **`GFX-17`** shows the angular scatter as a shaded spread around the true bearing, with no
+   points (no individual run drawn as data).
+3. **`GFX-18`** draws the error region with an angle that narrows with distance while the region's
+   area still widens (consistent with claims 20 and 21); schematic, with no values.
+4. **Schematic disclosure:** every graphic with a schematic element carries the small label
+   "schematic, not to scale". **`GFX-03`** is a trace with no time scale, labelled with claim 4's
+   "13–15 Hz" only.
+5. **Motion:** the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`,
+   `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still.
+   Graphics 17 to 20 show no statistic, since no claim records one.
+6. **Preview:** the owner's preview shows all 22 graphics at their production spans (about 375 s
+   with Wave 10's narration). In the company-store run, motion graphics are re-timed from that run's
+   narration and so may differ in bytes from the preview; still graphics must equal the approved
+   renders.
+7. **`GFX-01`** shows the species name *Apis mellifera* (claim 1).
+8. **`GFX-22`** (end card) lists only the real citations recorded in the claim record; the three
+   recorded sources that are not citations (claim 1's "standard taxonomic authority", claim 9's
+   "standard astronomical reference", claim 21's source being the graphic itself) are omitted.
+9. **Palette values** remain for the design to propose and the owner to approve at the
+   contact-sheet review, within the light paper-style background, dark line work and one accent
+   colour of `CEO-D-1000`.
+
+---
+
+### Orchestrator's note to CEO-D-1001 — installation manifests (2026-10-11)
+
+Not a decision of the owner; the orchestrator's record of the installation the owner approved.
+The bundler cache the trial left under `graphics/remotion/node_modules/.cache` was removed, so the
+installed folders hold only what was installed. Full SHA-256 manifests (sha256sum format, one line
+per file, paths relative to the folder named) were then written under
+`C:/Users/vuhoangcao/MediaCompanyRun/graphics/manifests/`:
+
+| Manifest | Folder | Files | SHA-256 of the manifest |
+|---|---|---|---|
+| `remotion.sha256` | `graphics/remotion/` (`node_modules/`, `package.json`, `package-lock.json`; the `trial/` folder excluded) | 14,789 | `8e83d9efe269894d47f864394818b11a776a66f223b0688e531b2f33725003ce` |
+| `browser.sha256` | `graphics/browser/` (`chrome-headless-shell-win64/`) | 288 | `251af3fd7df8317db134d654b4d46d468852ddc0af2109242e4344c1ab3a196f` |
+| `font.sha256` | `graphics/font/` (Inter 4.1 TTF files and `LICENSE.txt`) | 39 | `42c4e4303b77979e17d1d7ee43b9a26d7c54d9c705045dd3ada55fedf742c163` |
+| `node.sha256` | `C:/Program Files/nodejs/node.exe` (Node.js 24.11.1, 89,894,400 bytes, installed before this wave) | 1 | `c6a624a174f070a0e459f130429a246719f53573274b57203fc770d14a19c946` |
+
+---
+
+### Orchestrator's second note to CEO-D-1001 — Node manifest path and concurrency (2026-10-11)
+
+Not a decision of the owner. (1) `manifests/node.sha256` was rewritten with its entry relative to
+`C:/Program Files/nodejs/` (`node.exe`, SHA-256
+`f13ac3ca23248dc389507e8fe38c34489ab7edb3e6d6700eb6da6a0b7e128eaf`), like the other three
+manifests; the manifest's own SHA-256 is now
+`5f9476a3211380c12569710ccf26079b979eb6d6c4be8982e7463ce1bd637746` (replacing the value in the
+first note). (2) Measured first hand with the trial graphic (90 frames, 1080p), bundler caching
+off and the temporary directory redirected outside the installation: frames took 9.4–9.7 s at
+concurrency 1, 4.4–4.6 s at concurrency 4 and 4.4–4.5 s at concurrency 8; at each concurrency two
+runs gave byte-identical PNG frames, identical to the concurrency-1 frames, and an identical MP4.
+After these runs the installed `remotion/` folder still matched `manifests/remotion.sha256` file
+for file (no bundler cache written).
+
+---
+
+## CEO-D-1003 — The owner approves the 22 graphics, the palette and the italic species name
+
+**The CEO's own decision, 2026-10-11**, after viewing the contact sheet, the graphics preview and
+the full demonstration video rendered from the demonstration store (`mediacompany_demo`).
+
+1. **All 22 graphics are approved**, with one change: the end card (`GFX-22`) omits the recorded
+   source "comparative dialect literature" (no author), the same class as the three sources already
+   omitted by `CEO-D-1002` item 8 — **four** recorded sources are therefore omitted from the end
+   card. Ten authored citations remain, in their recorded wording.
+2. **The palette is approved**: background `#F5F1E8`, line and text `#1F2328`, secondary line
+   `#5F646B`, accent `#A8481A`, region shade `#DEDCD5` (`config/graphics-style.json`).
+3. **The species name stays in italic** (Inter Italic, the scientific-name convention).
+4. **Approved renders** (re-rendered after the change at feature-branch head `ac3a634`, every
+   graphic rendered twice with byte-identical pairs; graphics 1–21 equal to the first review):
+   contact sheet SHA-256 `51ce3f5b935201b669fb9bbd71f07fab7a4d0dc25c52cb77c7bb3c79703d0f28`, preview
+   SHA-256 `e25532133f1a669170e74f32bc142eb734cc183a5ebf2d0ba9d451af927b66c6`. Final-frame SHA-256
+   per graphic (for a still, the still itself — these must be equal in the company-store run; motion
+   graphics are re-timed from that run's narration):
+
+| Graphic | Kind | Final frame SHA-256 |
+|---|---|---|
+| `GFX-01` | still | `92d9b1eeeba32e5d52293c39fa4fd6faa28884904fd794fd970f2613e5000ecb` |
+| `GFX-02` | motion | `db50637296ec19baf93ebdb2b7bee76c6341b7f19703170c4aaaf7b629d84fb5` |
+| `GFX-03` | still | `30d19ce25f6bf733e74805b7f2376f4d042ce1d0f3157014789ce1313b316ffa` |
+| `GFX-04` | still | `3aa594f360e8c8e845c0c18f26d63a17f0f1573834ef359a6710c78bd35db092` |
+| `GFX-05` | motion | `02cd68b54e9b3085c3c4b519b9b377f82a37ba86c395c3810a6138b5291a84fa` |
+| `GFX-06` | motion | `4b03dbf65ae686c5a7f24c287c67768bde24cb515a04e830502bd20d03504316` |
+| `GFX-07` | motion | `cbf7e0f3cd9e702427fc12d7a5873e71d2ab220bfed56c017aa5586c8b118d23` |
+| `GFX-08` | motion | `8261a07c036cd20e8dfeea283ec751309b889b2d58e4d3c35ece67e176bbb368` |
+| `GFX-09` | motion | `03f947f20126020681c330e5318447891e9a531de7558899017705b4945ec253` |
+| `GFX-10` | still | `e7fbe762d35b9e40f7277147de698e66e3cf09297b83cf343c0863d5661eda23` |
+| `GFX-11` | motion | `1f109e162079bd8aaa3f1113feb9bb152f1e2d904db9d574e59106508ed4fc43` |
+| `GFX-12` | motion | `8f44cad0d0b38eaaf5f26bef9b1990312804a5b8651e3f9e1aa44a93ace86b49` |
+| `GFX-13` | still | `6fdaf44c061c3ce4fb21d8b2abdbcddede11d0d2449ce893912be8d596d7d569` |
+| `GFX-14` | motion | `02a0752863fb512451d831a477829d59f225940cdc38855bb85c29a95d1209ef` |
+| `GFX-15` | still | `2566b916c141de5fc7b9a5e84316f32a240d859bad6558923b2c2f5fd41607b4` |
+| `GFX-16` | motion | `d3b57bf876f9f7420af30841f566f2200487f72dd87f1dd76d99a2f1f4b41cae` |
+| `GFX-17` | still | `098a95bed87486d2ece61cb65ac635191d8b1030b6b907d8526a1bfc31223bab` |
+| `GFX-18` | motion | `3c34ff575e0317655d5d1ec3897c3787e52ff605b8ce1e90dfabaa5e26a01281` |
+| `GFX-19` | still | `34ebe77b92be0933df56428ec6fa54a15d1ffe3b3ba5774471348e58429119a6` |
+| `GFX-20` | still | `9b06940efc7fbb65c4bfb53e6081f523a5c3933d40d4f38431a8ae62aa843357` |
+| `GFX-21` | motion | `3ee1a8f7ffc380c5949b8abd641dc41c6add0fc56199fb43de016068c74d04d0` |
+| `GFX-22` | still | `d56fb9a1e7b72aee286bb865ae12907557157bc1e59df18fa3507f2fd74f8122` |
+
+---
+
+## CEO-D-1004 — Wave 12 makes the company's video engaging with 3D animation drawn by code
+
+**The CEO's own decision, 2026-10-11**, during Wave 11, after viewing two competitor reels with high
+engagement (a 17.6 s vertical reel built around a recurring cat character, 507K reactions; a 30.2 s
+vertical 3D-animated episodic frog series, "Episode 2", 3.1M reactions, 50K shares).
+
+1. The CEO judges the current video too dull to attract viewers: making it engaging needs a lot of
+   3D animation.
+2. **Wave 11 closes as approved** (the 22 two-dimensional graphics, the Remotion pipeline with its
+   hashes, sameness checks and provenance). **Wave 12** (its own session) adds 3D animation on that
+   foundation, replacing the 2D graphics and the 18 clip placeholders progressively.
+3. **Only free 3D tools driven by code** (for example Three.js / React Three Fiber through
+   Remotion's three-dimensional package, Blender, CC0 model libraries); **no generative AI model,
+   free tier or otherwise** — `CEO-D-903`'s bar on model calls stands. Every download remains
+   owner-approved by name, source, size and licence.
+4. **Formats: both** — the long 16:9 video for YouTube and several short vertical 9:16 cuts
+   (15–30 s) from the same 3D scenes for Reels and Shorts.
+
+---
+
+## CEO-D-1005 — No company-store production in Wave 11; Wave 12 produces item 001 with 3D
+
+**The CEO's own decision, 2026-10-12**, on resuming Wave 11.
+
+Wave 11 does **not** run `produce` against the company store `mediacompany`: item 001 stays at
+version 3 (own voice, text cards), and the eleventh schema resource is not applied to the company
+store in this wave. The approved 22 graphics, their final-frame hashes (`CEO-D-1003`) and the
+approval-file shape remain the delivered capability. **Wave 12 produces item 001 in the company
+store with 3D animation drawn by code** (`CEO-D-1004`), building on this wave's pipeline. Wave 11
+closes after its review, verification, documentation and closure, with the change merged on the
+CEO's explicit go.
+
+---

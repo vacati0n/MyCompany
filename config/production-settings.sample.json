@@ -41,5 +41,29 @@
     "partBoundSeconds": 350,
     "weightsLicence": { "value": "MIT", "source": "declared in the hub repository rhasspy/piper-voices card metadata, read by the orchestrator on 2026-10-10 at revision c10ece1aade47bb51c153c893d14e5bf8e5b7117; no per-voice licence file is installed" },
     "voiceLicence": { "value": "MIT", "source": "declared in the hub repository rhasspy/piper-voices card metadata, read by the orchestrator on 2026-10-10 at revision c10ece1aade47bb51c153c893d14e5bf8e5b7117; no per-voice licence file is installed" }
+  },
+  "graphicsAbout": "The graphics section (the graphics change, decision D-014 of its design), read by every producing mode, plan-only, verify-graphics and review-graphics; a producing mode without it is refused before any call and never falls back to text cards. Every <...> value is set by the orchestrator in the run's settings file OUTSIDE the repository: each manifest's path and folder are the installed graphics folder's manifests and folders, and each manifest's sha256 is the value the owner's decision record states for it (research/ceo-decision-record.md, the orchestrator's notes to the owner's decision of 2026-10-11 on the renderer); this sample holds no path under the company run folder and no expected hash. Every manifest entry is relative to its folder, Node's included. nodeExecutable, browserExecutable, regularFace and italicFace must be files their manifest lists. renderScript, drawingFolder and styleFile are repository-relative and hashed as read. The bounds and the concurrency are the amounts ruled at the Design Gate (installation hashing 300 s, bundling 120 s, each render 120 s plus 0.5 s a frame, per-frame readiness 30 s, concurrency 4), configured amounts with no default in code. The licence is printed as configured with its source and never read from an installed file; no licence key is ever passed. approvalFile is read in the company store only: the owner's contact-sheet approval file the orchestrator writes under the company run folder, with its sha256 from the decision record.",
+  "graphics": {
+    "manifests": {
+      "renderer": { "manifest": "<the renderer manifest, remotion.sha256, in the installed graphics folder's manifests folder>", "folder": "<the installed renderer folder>", "sha256": "<the renderer manifest's SHA-256 as the owner's decision record states it>" },
+      "browser": { "manifest": "<the browser manifest, browser.sha256>", "folder": "<the installed browser folder>", "sha256": "<the browser manifest's SHA-256 as the owner's decision record states it>" },
+      "font": { "manifest": "<the font manifest, font.sha256>", "folder": "<the installed font folder>", "sha256": "<the font manifest's SHA-256 as the owner's decision record states it>" },
+      "node": { "manifest": "<the Node manifest, node.sha256>", "folder": "<Node's installation folder, the folder its one entry is relative to>", "sha256": "<the Node manifest's SHA-256 as the owner's decision record states it>" }
+    },
+    "nodeExecutable": "<Node's executable inside its folder>",
+    "browserExecutable": "<the headless browser's executable inside the browser folder>",
+    "regularFace": "<the regular face file inside the font folder>",
+    "italicFace": "<the italic face file inside the font folder>",
+    "renderScript": "graphics/render.mjs",
+    "drawingFolder": "graphics/drawing",
+    "styleFile": "config/graphics-style.json",
+    "concurrency": 4,
+    "frameTimeoutSeconds": 30,
+    "bundleBoundSeconds": 120,
+    "renderFixedSeconds": 120,
+    "renderPerFrameSeconds": 0.5,
+    "hashBoundSeconds": 300,
+    "licence": { "value": "<the renderer's licence as the owner decided it>", "source": "<where that decision is recorded>" },
+    "approvalFile": { "path": "<company store only: the owner's approval file under the company run folder>", "sha256": "<its SHA-256 as the decision record states it>" }
   }
 }

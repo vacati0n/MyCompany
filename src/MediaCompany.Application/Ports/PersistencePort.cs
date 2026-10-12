@@ -154,6 +154,10 @@ public interface IProductionLedger
     /// <summary>Records one own-source narration file's provenance, write-once (decision D-008).</summary>
     Task<NarrationProvenance> RecordProvenanceAsync(NarrationProvenance draft, CancellationToken cancellationToken) =>
         throw new NotSupportedException("This production record holds no narration provenance; the tenth schema resource adds it.");
+
+    /// <summary>Records one graphic artifact's provenance, write-once, on the artifact's own transaction (the graphics change, decision D-006).</summary>
+    Task<GraphicProvenance> RecordGraphicProvenanceAsync(GraphicProvenance draft, CancellationToken cancellationToken) =>
+        throw new NotSupportedException("This production record holds no graphic provenance; the eleventh schema resource adds it.");
 }
 
 /// <summary>The item version a production opened, and the datastore's instant it opened at.</summary>

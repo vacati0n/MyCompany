@@ -1,0 +1,149 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-18",
+  "beat": 10,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-18` | The error cone widening with distance | `CL-21` |"
+  },
+  "claims": [
+    "CL-21"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "the size of that region grows with distance",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "the size of that region grows with distance",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "origin",
+      "type": "point",
+      "x": 180,
+      "y": 560,
+      "r": 18,
+      "filled": true
+    },
+    {
+      "id": "farCone",
+      "type": "region",
+      "form": "cone",
+      "x": 180,
+      "y": 560,
+      "a": 1400,
+      "b": 12,
+      "angle": 90,
+      "shading": "outline"
+    },
+    {
+      "id": "nearCone",
+      "type": "region",
+      "form": "cone",
+      "x": 180,
+      "y": 560,
+      "a": 520,
+      "b": 22,
+      "angle": 90,
+      "shading": "outline"
+    },
+    {
+      "id": "nearArea",
+      "type": "region",
+      "form": "ellipse",
+      "x": 700,
+      "y": 560,
+      "a": 40,
+      "b": 210,
+      "angle": 0,
+      "shading": "shade",
+      "focus": true
+    },
+    {
+      "id": "farArea",
+      "type": "region",
+      "form": "ellipse",
+      "x": 1580,
+      "y": 560,
+      "a": 60,
+      "b": 298,
+      "angle": 0,
+      "shading": "shade",
+      "focus": true
+    },
+    {
+      "id": "axisLine",
+      "type": "bearing",
+      "x": 180,
+      "y": 560,
+      "angle": 90,
+      "length": 1600,
+      "arrow": true,
+      "dashed": true
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "role": "caption",
+      "text": "The error cone widening with distance",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "The error cone widening with distance",
+      "x": 120,
+      "y": 196,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "arrive",
+      "type": "text",
+      "role": "label",
+      "text": "within a region rather than at a point",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "within a region rather than at a point",
+      "x": 1700,
+      "y": 960,
+      "anchor": "end",
+      "size": "label"
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "nearCone",
+        "nearArea"
+      ],
+      "from": 0,
+      "to": 0.45
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "farCone",
+        "farArea",
+        "arrive"
+      ],
+      "from": 0.45,
+      "to": 0.9
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-09",
+  "beat": 5,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-09` | Solar azimuth through the day, and the dance angle rotating to track it | `CL-09`, `CL-10` |"
+  },
+  "claims": [
+    "CL-09",
+    "CL-10"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The sun moves.",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The sun moves.",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "left",
+      "type": "panel",
+      "x": 120,
+      "y": 230,
+      "w": 800,
+      "h": 690
+    },
+    {
+      "id": "right",
+      "type": "panel",
+      "x": 1000,
+      "y": 230,
+      "w": 800,
+      "h": 690
+    },
+    {
+      "id": "leftCaption",
+      "type": "text",
+      "role": "label",
+      "text": "Solar azimuth through the day",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Solar azimuth through the day",
+      "x": 520,
+      "y": 290,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "rightCaption",
+      "type": "text",
+      "role": "label",
+      "text": "the dance angle rotating to track it",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "the dance angle rotating to track it",
+      "x": 1400,
+      "y": 290,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "resourceBearing",
+      "type": "bearing",
+      "x": 520,
+      "y": 840,
+      "angle": 50,
+      "length": 460,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "sun",
+      "type": "bearing",
+      "x": 520,
+      "y": 840,
+      "angle": -40,
+      "length": 440,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "arcL",
+      "type": "angle",
+      "x": 520,
+      "y": 840,
+      "from": 50,
+      "to": -40,
+      "radius": 170
+    },
+    {
+      "id": "vertical",
+      "type": "bearing",
+      "x": 1400,
+      "y": 840,
+      "angle": 0,
+      "length": 460,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "runC",
+      "type": "bearing",
+      "x": 1400,
+      "y": 840,
+      "angle": 90,
+      "length": 440,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "arcR",
+      "type": "angle",
+      "x": 1400,
+      "y": 840,
+      "from": 0,
+      "to": 90,
+      "radius": 170
+    },
+    {
+      "id": "nine",
+      "type": "text",
+      "role": "figure",
+      "text": "nine o'clock",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "nine o'clock",
+      "x": 140,
+      "y": 470,
+      "anchor": "start",
+      "size": "label",
+      "admittedBy": {
+        "source": "research/ceo-decision-record.md",
+        "quote": "\"~2 km\" (`GFX-01`), \"60°\" (`GFX-08`), \"nine o'clock\" and \"noon\" (`GFX-09`)"
+      }
+    },
+    {
+      "id": "noon",
+      "type": "text",
+      "role": "figure",
+      "text": "noon",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "noon",
+      "x": 700,
+      "y": 410,
+      "anchor": "start",
+      "size": "label",
+      "admittedBy": {
+        "source": "research/ceo-decision-record.md",
+        "quote": "\"~2 km\" (`GFX-01`), \"60°\" (`GFX-08`), \"nine o'clock\" and \"noon\" (`GFX-09`)"
+      }
+    }
+  ],
+  "motion": [
+    {
+      "type": "rotate",
+      "targets": [
+        "sun",
+        "arcL"
+      ],
+      "fromAngle": -40,
+      "toAngle": 20,
+      "from": 0.15,
+      "to": 0.85
+    },
+    {
+      "type": "rotate",
+      "targets": [
+        "runC",
+        "arcR"
+      ],
+      "fromAngle": 90,
+      "toAngle": 30,
+      "from": 0.15,
+      "to": 0.85
+    },
+    {
+      "type": "sequence",
+      "sets": [
+        [
+          "nine"
+        ],
+        [
+          "noon"
+        ]
+      ],
+      "accumulate": false,
+      "from": 0,
+      "to": 1
+    }
+  ]
+}

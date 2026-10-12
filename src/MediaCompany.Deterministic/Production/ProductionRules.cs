@@ -401,4 +401,13 @@ public static class StoreGuard
 
         return new StoreGuardVerdict(refusals.Count == 0, refusals);
     }
+
+    /// <summary>
+    /// The review verdict (the graphics change, decision D-007 of its design): the owner's contact sheet and preview are made
+    /// from a DEMONSTRATION store only; a store designated otherwise, or not designated, is refused by name before any process.
+    /// </summary>
+    public static StoreGuardVerdict JudgeReview(StoreDesignation? designation, string databaseName) =>
+        designation == StoreDesignation.Demonstration
+            ? new StoreGuardVerdict(true, [])
+            : new StoreGuardVerdict(false, [$"review-graphics runs only against a store designated demonstration, and {databaseName} is designated {(designation is { } d ? d.ToString() : "nothing")}"]);
 }

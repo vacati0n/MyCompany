@@ -1,0 +1,225 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-07",
+  "beat": 4,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-07` | The transposition: both frames side by side, θ preserved across them | `CL-07`, `CL-08` |"
+  },
+  "claims": [
+    "CL-07",
+    "CL-08"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "shared": {
+    "theta": 38
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "The transposition is not a metaphor imposed on the animal",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "The transposition is not a metaphor imposed on the animal",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "left",
+      "type": "panel",
+      "x": 120,
+      "y": 230,
+      "w": 800,
+      "h": 690
+    },
+    {
+      "id": "right",
+      "type": "panel",
+      "x": 1000,
+      "y": 230,
+      "w": 800,
+      "h": 690
+    },
+    {
+      "id": "leftCaption",
+      "type": "text",
+      "role": "label",
+      "text": "Outdoor frame, plan view",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Outdoor frame, plan view",
+      "x": 520,
+      "y": 290,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "rightCaption",
+      "type": "text",
+      "role": "label",
+      "text": "Comb frame, elevation view",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Comb frame, elevation view",
+      "x": 1400,
+      "y": 290,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "sun",
+      "type": "bearing",
+      "x": 520,
+      "y": 860,
+      "angle": 0,
+      "length": 480,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "resourceBearing",
+      "type": "bearing",
+      "x": 520,
+      "y": 860,
+      "angle": {
+        "shared": "theta"
+      },
+      "length": 500,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "thetaL",
+      "type": "angle",
+      "x": 520,
+      "y": 860,
+      "from": 0,
+      "to": {
+        "shared": "theta"
+      },
+      "radius": 180
+    },
+    {
+      "id": "thetaLabelL",
+      "type": "text",
+      "role": "label",
+      "text": "θ",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "θ",
+      "x": 560,
+      "y": 640,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "vertical",
+      "type": "bearing",
+      "x": 1400,
+      "y": 860,
+      "angle": 0,
+      "length": 480,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "runC",
+      "type": "bearing",
+      "x": 1400,
+      "y": 860,
+      "angle": {
+        "shared": "theta"
+      },
+      "length": 500,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "thetaR",
+      "type": "angle",
+      "x": 1400,
+      "y": 860,
+      "from": 0,
+      "to": {
+        "shared": "theta"
+      },
+      "radius": 180
+    },
+    {
+      "id": "thetaLabelR",
+      "type": "text",
+      "role": "label",
+      "text": "θ",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "θ",
+      "x": 1440,
+      "y": 640,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "preserved",
+      "type": "text",
+      "role": "label",
+      "text": "θ preserved across them",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "θ preserved across them",
+      "x": 960,
+      "y": 1000,
+      "anchor": "middle",
+      "size": "label",
+      "focus": true
+    }
+  ],
+  "motion": [
+    {
+      "type": "reveal",
+      "targets": [
+        "left",
+        "leftCaption",
+        "sun",
+        "resourceBearing",
+        "thetaL",
+        "thetaLabelL"
+      ],
+      "from": 0,
+      "to": 0.4
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "right",
+        "rightCaption",
+        "vertical",
+        "runC",
+        "thetaR",
+        "thetaLabelR"
+      ],
+      "from": 0.4,
+      "to": 0.8
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "preserved"
+      ],
+      "from": 0.8,
+      "to": 1
+    }
+  ]
+}

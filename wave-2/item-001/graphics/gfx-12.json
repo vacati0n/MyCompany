@@ -1,0 +1,442 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-12",
+  "beat": 7,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-12` | The tunnel experiment: narrow patterned tunnel, dance distance overestimated | `CL-14` |"
+  },
+  "claims": [
+    "CL-14"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "narrow tunnels with patterned walls",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "narrow tunnels with patterned walls",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "top0",
+      "type": "region",
+      "form": "box",
+      "x": 220,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom0",
+      "type": "region",
+      "form": "box",
+      "x": 220,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top1",
+      "type": "region",
+      "form": "box",
+      "x": 280,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom1",
+      "type": "region",
+      "form": "box",
+      "x": 280,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top2",
+      "type": "region",
+      "form": "box",
+      "x": 340,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom2",
+      "type": "region",
+      "form": "box",
+      "x": 340,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top3",
+      "type": "region",
+      "form": "box",
+      "x": 400,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom3",
+      "type": "region",
+      "form": "box",
+      "x": 400,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top4",
+      "type": "region",
+      "form": "box",
+      "x": 460,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom4",
+      "type": "region",
+      "form": "box",
+      "x": 460,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top5",
+      "type": "region",
+      "form": "box",
+      "x": 520,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom5",
+      "type": "region",
+      "form": "box",
+      "x": 520,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top6",
+      "type": "region",
+      "form": "box",
+      "x": 580,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom6",
+      "type": "region",
+      "form": "box",
+      "x": 580,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top7",
+      "type": "region",
+      "form": "box",
+      "x": 640,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom7",
+      "type": "region",
+      "form": "box",
+      "x": 640,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top8",
+      "type": "region",
+      "form": "box",
+      "x": 700,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom8",
+      "type": "region",
+      "form": "box",
+      "x": 700,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top9",
+      "type": "region",
+      "form": "box",
+      "x": 760,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom9",
+      "type": "region",
+      "form": "box",
+      "x": 760,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top10",
+      "type": "region",
+      "form": "box",
+      "x": 820,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom10",
+      "type": "region",
+      "form": "box",
+      "x": 820,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top11",
+      "type": "region",
+      "form": "box",
+      "x": 880,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom11",
+      "type": "region",
+      "form": "box",
+      "x": 880,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top12",
+      "type": "region",
+      "form": "box",
+      "x": 940,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom12",
+      "type": "region",
+      "form": "box",
+      "x": 940,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "top13",
+      "type": "region",
+      "form": "box",
+      "x": 1000,
+      "y": 360,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade",
+      "focus": false
+    },
+    {
+      "id": "bottom13",
+      "type": "region",
+      "form": "box",
+      "x": 1000,
+      "y": 560,
+      "a": 30,
+      "b": 50,
+      "angle": 0,
+      "shading": "shade"
+    },
+    {
+      "id": "inside",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          220,
+          485
+        ],
+        [
+          1060,
+          485
+        ]
+      ],
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "forager",
+      "type": "point",
+      "x": 220,
+      "y": 485,
+      "r": 16,
+      "filled": true,
+      "focus": true
+    },
+    {
+      "id": "compare",
+      "type": "bars",
+      "x": 220,
+      "y": 700,
+      "width": 1480,
+      "height": 240,
+      "extents": [
+        0.14,
+        1
+      ]
+    },
+    {
+      "id": "actual",
+      "type": "text",
+      "role": "label",
+      "text": "the few metres they had actually travelled",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "the few metres they had actually travelled",
+      "x": 220,
+      "y": 700,
+      "anchor": "start",
+      "size": "caption"
+    },
+    {
+      "id": "danced",
+      "type": "text",
+      "role": "label",
+      "text": "danced for a distance far greater",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "danced for a distance far greater",
+      "x": 220,
+      "y": 980,
+      "anchor": "start",
+      "size": "caption",
+      "focus": true
+    }
+  ],
+  "motion": [
+    {
+      "type": "follow",
+      "target": "forager",
+      "path": "inside",
+      "from": 0,
+      "to": 0.5
+    },
+    {
+      "type": "reveal",
+      "targets": [
+        "compare"
+      ],
+      "from": 0.5,
+      "to": 0.95
+    }
+  ]
+}

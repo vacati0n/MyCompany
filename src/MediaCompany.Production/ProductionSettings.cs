@@ -61,6 +61,13 @@ public sealed record ProductionSettings
     /// <summary>The in-house model's section, or null where none is configured.</summary>
     public InHouseModelSettings? InHouseModel { get; init; }
 
+    /// <summary>
+    /// The graphics section (the graphics change, decision D-014 of its design), or null where none is configured. Every
+    /// producing mode and the review command refuse by name without it; plan-only prints it as not configured. A production
+    /// never falls back to text cards.
+    /// </summary>
+    public GraphicsSettings? Graphics { get; init; }
+
     /// <summary>States the configured figures, each labelled configured; a member not configured is said so.</summary>
     public string DescribeBounds() =>
         string.Create(CultureInfo.InvariantCulture,
@@ -71,6 +78,7 @@ public sealed record ProductionSettings
             $"still {StillBound.TotalSeconds:0} s; profile {Width}x{Height} at {FramesPerSecond} frames a second; ")
         + $"narration character maximum {(NarrationCharacterMaximum is { } maximum ? maximum.ToString(CultureInfo.InvariantCulture) : "not configured")}"
         + (InHouseModel is { } model ? string.Create(CultureInfo.InvariantCulture, $"; in-house model part bound {model.PartBound.TotalSeconds:0} s") : string.Empty)
+        + (Graphics is { } graphics ? "; " + graphics.DescribeBounds() : "; graphics not configured")
         + " (all configured)";
 }
 
@@ -132,6 +140,82 @@ public sealed record InHouseModelSettings
 
     /// <summary>The interpreter's path, as configured.</summary>
     public string InterpreterPath => Interpreter.Path;
+}
+
+/// <summary>
+/// One installed folder's manifest (the graphics change, decision D-003 of its design): the manifest file, the folder its
+/// entries are relative to, and the manifest's own expected SHA-256 as the owner's decision record states it. Every value is
+/// configured outside the repository; none has a default in code.
+/// </summary>
+public sealed record InstalledManifest(string Manifest, string Folder, string Sha256);
+
+/// <summary>
+/// The graphics section (the graphics change, decisions D-002, D-003, D-008 and D-014 of its design), written by the
+/// orchestrator into the run's settings file OUTSIDE the repository. The four manifests and their expected hashes name the
+/// approved renderer, browser, face files and Node; the executables and faces named here must lie inside a verified folder
+/// and be listed by its manifest. The render script, the drawing program and the style file are repository-relative. Every
+/// bound and the concurrency are configured amounts ruled at the Design Gate (hashing 300 s, bundling 120 s, a render
+/// 120 s plus 0.5 s a frame, per-frame readiness 30 s, concurrency 4), labelled configured wherever they are printed.
+/// </summary>
+public sealed record GraphicsSettings
+{
+    public required InstalledManifest Renderer { get; init; }
+
+    public required InstalledManifest Browser { get; init; }
+
+    public required InstalledManifest Font { get; init; }
+
+    public required InstalledManifest Node { get; init; }
+
+    /// <summary>Node's executable; it must lie in the Node manifest's folder and be listed by it.</summary>
+    public required string NodeExecutable { get; init; }
+
+    /// <summary>The browser's executable, always passed to the renderer; it must lie in the browser folder and be listed.</summary>
+    public required string BrowserExecutable { get; init; }
+
+    /// <summary>The regular face file every graphic text is set in; it must lie in the font folder and be listed.</summary>
+    public required string RegularFace { get; init; }
+
+    /// <summary>The italic face file, the second declared face (the Design Gate's ruling on the scientific name's setting).</summary>
+    public required string ItalicFace { get; init; }
+
+    /// <summary>The render script, relative to the repository root.</summary>
+    public required string RenderScript { get; init; }
+
+    /// <summary>The drawing program's folder, relative to the repository root.</summary>
+    public required string DrawingFolder { get; init; }
+
+    /// <summary>The company style file (palette, strokes, type sizes, motion-end fraction), relative to the repository root.</summary>
+    public required string StyleFile { get; init; }
+
+    public required int Concurrency { get; init; }
+
+    /// <summary>The renderer's per-frame readiness timeout, passed explicitly.</summary>
+    public required TimeSpan FrameTimeout { get; init; }
+
+    public required TimeSpan BundleBound { get; init; }
+
+    /// <summary>The fixed part of each render process's bound.</summary>
+    public required TimeSpan RenderFixed { get; init; }
+
+    /// <summary>The per-frame part of each render process's bound.</summary>
+    public required TimeSpan RenderPerFrame { get; init; }
+
+    /// <summary>The bound on verifying and holding the installed files.</summary>
+    public required TimeSpan HashBound { get; init; }
+
+    /// <summary>The renderer's licence, as configured with its source; never read from an installed file.</summary>
+    public required ConfiguredLicence Licence { get; init; }
+
+    /// <summary>The owner's approval file and its expected SHA-256; read in the company store only.</summary>
+    public ExpectedFile? ApprovalFile { get; init; }
+
+    /// <summary>The bound of one render process of the frame count given, on the monotonic clock.</summary>
+    public TimeSpan RenderBound(long frames) => RenderFixed + TimeSpan.FromTicks(RenderPerFrame.Ticks * frames);
+
+    public string DescribeBounds() => string.Create(CultureInfo.InvariantCulture,
+        $"graphics: installation hashing {HashBound.TotalSeconds:0} s; bundling {BundleBound.TotalSeconds:0} s; each render {RenderFixed.TotalSeconds:0} s plus {RenderPerFrame.TotalSeconds:0.###} s a frame; "
+        + $"per-frame readiness {FrameTimeout.TotalSeconds:0} s; concurrency {Concurrency}");
 }
 
 /// <summary>A required setting is absent or names nothing; refused before any capability call, naming the setting.</summary>

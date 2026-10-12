@@ -1,0 +1,281 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-08",
+  "beat": 4,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-08` | Three worked cases: run straight up, straight down, 60° right of vertical | `CL-07` |"
+  },
+  "claims": [
+    "CL-07"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "motion",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "the run's angle from vertical",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "the run's angle from vertical",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "ref1",
+      "type": "bearing",
+      "x": 380,
+      "y": 640,
+      "angle": 0,
+      "length": 340,
+      "arrow": false,
+      "dashed": true,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "straight up"
+      }
+    },
+    {
+      "id": "run1",
+      "type": "bearing",
+      "x": 380,
+      "y": 640,
+      "angle": 0,
+      "length": 300,
+      "arrow": true,
+      "dashed": false,
+      "focus": true,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "straight up"
+      }
+    },
+    {
+      "id": "origin1",
+      "type": "point",
+      "x": 380,
+      "y": 640,
+      "r": 12,
+      "filled": true
+    },
+    {
+      "id": "head1",
+      "type": "text",
+      "role": "label",
+      "text": "straight up",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "straight up",
+      "x": 380,
+      "y": 250,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "caption1",
+      "type": "text",
+      "role": "label",
+      "text": "fly toward the sun",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "fly toward the sun",
+      "x": 380,
+      "y": 1010,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "ref2",
+      "type": "bearing",
+      "x": 960,
+      "y": 640,
+      "angle": 0,
+      "length": 340,
+      "arrow": false,
+      "dashed": true,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "straight up"
+      }
+    },
+    {
+      "id": "run2",
+      "type": "bearing",
+      "x": 960,
+      "y": 640,
+      "angle": 180,
+      "length": 300,
+      "arrow": true,
+      "dashed": false,
+      "focus": true,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "straight down"
+      }
+    },
+    {
+      "id": "origin2",
+      "type": "point",
+      "x": 960,
+      "y": 640,
+      "r": 12,
+      "filled": true
+    },
+    {
+      "id": "head2",
+      "type": "text",
+      "role": "label",
+      "text": "straight down",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "straight down",
+      "x": 960,
+      "y": 250,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "caption2",
+      "type": "text",
+      "role": "label",
+      "text": "fly directly away from it",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "fly directly away from it",
+      "x": 960,
+      "y": 1010,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "ref3",
+      "type": "bearing",
+      "x": 1540,
+      "y": 640,
+      "angle": 0,
+      "length": 340,
+      "arrow": false,
+      "dashed": true,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "straight up"
+      }
+    },
+    {
+      "id": "run3",
+      "type": "bearing",
+      "x": 1540,
+      "y": 640,
+      "angle": 60,
+      "length": 300,
+      "arrow": true,
+      "dashed": false,
+      "focus": true,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "60° right of vertical"
+      }
+    },
+    {
+      "id": "origin3",
+      "type": "point",
+      "x": 1540,
+      "y": 640,
+      "r": 12,
+      "filled": true
+    },
+    {
+      "id": "head3",
+      "type": "text",
+      "role": "label",
+      "text": "right of vertical",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "right of vertical",
+      "x": 1540,
+      "y": 250,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "caption3",
+      "type": "text",
+      "role": "label",
+      "text": "to the right of the sun's bearing",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "to the right of the sun's bearing",
+      "x": 1540,
+      "y": 1010,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "arc3",
+      "type": "angle",
+      "x": 1540,
+      "y": 640,
+      "from": 0,
+      "to": 60,
+      "radius": 150,
+      "fixedBy": {
+        "source": "wave-2/item-001/shot-list.md",
+        "quote": "60° right of vertical"
+      }
+    },
+    {
+      "id": "sixty",
+      "type": "text",
+      "role": "figure",
+      "text": "60°",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "60°",
+      "x": 1600,
+      "y": 470,
+      "anchor": "start",
+      "size": "label",
+      "focus": true,
+      "admittedBy": {
+        "source": "research/ceo-decision-record.md",
+        "quote": "\"~2 km\" (`GFX-01`), \"60°\" (`GFX-08`), \"nine o'clock\" and \"noon\" (`GFX-09`)"
+      }
+    }
+  ],
+  "motion": [
+    {
+      "type": "sequence",
+      "sets": [
+        [
+          "ref1",
+          "run1",
+          "origin1",
+          "head1",
+          "caption1"
+        ],
+        [
+          "ref2",
+          "run2",
+          "origin2",
+          "head2",
+          "caption2"
+        ],
+        [
+          "ref3",
+          "run3",
+          "origin3",
+          "head3",
+          "caption3",
+          "arc3",
+          "sixty"
+        ]
+      ],
+      "accumulate": true,
+      "from": 0,
+      "to": 0.9
+    }
+  ]
+}

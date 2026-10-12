@@ -73,6 +73,39 @@ public sealed class ArtifactWriter : IArtifactStore
         await File.WriteAllTextAsync(path, text, Utf8NoMark, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task WriteStagingBytesAsync(string stagingFolder, string name, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken)
+    {
+        var path = InStaging(Staged(stagingFolder), name);
+        await using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.WriteThrough);
+        await stream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+        stream.Flush(flushToDisk: true);
+    }
+
+    public string StagingSubfolder(string stagingFolder, string name)
+    {
+        var folder = InStaging(Staged(stagingFolder), name);
+        if (Directory.Exists(folder))
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+
+        Directory.CreateDirectory(folder);
+        return folder;
+    }
+
+    /// <summary>A staging folder this writer began, or a folder inside one; refused anywhere else.</summary>
+    private string Staged(string stagingFolder)
+    {
+        var full = Path.GetFullPath(stagingFolder);
+        var marker = Path.DirectorySeparatorChar + StagingFolderName;
+        if (!Contains(OutputRoot, full) || !(full.EndsWith(marker, PathComparison) || full.Contains(marker + Path.DirectorySeparatorChar, PathComparison)))
+        {
+            throw new ArgumentException($"{stagingFolder} is not a staging folder under the output root.", nameof(stagingFolder));
+        }
+
+        return full;
+    }
+
     public Task CopyIntoStagingAsync(string stagingFolder, string sourceFile, string name, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

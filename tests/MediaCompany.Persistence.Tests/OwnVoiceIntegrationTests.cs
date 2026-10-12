@@ -96,8 +96,11 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheTenthResourceAppliesAloneOverACompanyShapedStoreChangingNoRowAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.010-own-voice.sql", SchemaInstaller.ResourceNames[^1]);
-        Assert.Equal(10, SchemaInstaller.ResourceNames.Count);
+        // The eleventh resource (the graphics change) now installs last; the tenth is still the tenth, and applying from it
+        // applies the eleventh too, which changes no delivered row either.
+        Assert.Equal("MediaCompany.Persistence.Schema.010-own-voice.sql", SchemaInstaller.ResourceNames[^2]);
+        Assert.Equal("MediaCompany.Persistence.Schema.010-own-voice.sql", SchemaInstaller.ResourceNames[9]);
+        Assert.Equal(11, SchemaInstaller.ResourceNames.Count);
         foreach (var table in new[] { "recording_registrations", "registered_beat_files", "narration_measurements", "narration_provenance", "store_designation" })
         {
             Assert.Equal(0L, await ScalarAsync<long>($"SELECT count(*) FROM {table}"));
@@ -170,7 +173,8 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
         Assert.Contains("production_versions_source_matches_mode", refused.ConstraintName ?? refused.MessageText, StringComparison.Ordinal);
 
         var full = await Assert.ThrowsAsync<SchemaInstallRefusedException>(() => SchemaInstaller.InstallAsync(Source, CancellationToken.None));
-        Assert.Contains("install --from 10", full.Message, StringComparison.Ordinal);
+        Assert.Contains("install --from <ordinal>", full.Message, StringComparison.Ordinal);
+        Assert.Contains("install --from 11", full.Message, StringComparison.Ordinal);
         await Assert.ThrowsAsync<SchemaInstallRefusedException>(() => SchemaInstaller.InstallFromAsync(Source, 1, CancellationToken.None));
     }
 
@@ -893,8 +897,25 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>The media tool, observed before each invocation.</summary>
-    private sealed class ObservedTool(IMediaTool inner, TransactionObserver observer) : IMediaTool
+    private sealed class ObservedTool(IMediaTool inner, TransactionObserver observer) : IMediaTool, IGraphicRenderer
     {
+        public async Task<GraphicInvocation> InvokeAsync(GraphicInvocationRequest request, CancellationToken cancellationToken)
+        {
+            // Observed before the render process starts and, while it is still running, every 200 ms.
+            await observer.ObserveAsync();
+            var running = ((IGraphicRenderer)inner).InvokeAsync(request, cancellationToken);
+            while (!running.IsCompleted)
+            {
+                await Task.WhenAny(running, Task.Delay(200, CancellationToken.None));
+                if (!running.IsCompleted)
+                {
+                    await observer.ObserveAsync();
+                }
+            }
+
+            return await running;
+        }
+
         public async Task<string> VersionLineAsync(CancellationToken cancellationToken) { await observer.ObserveAsync(); return await inner.VersionLineAsync(cancellationToken); }
 
         public async Task DrawStillAsync(StillSpecification still, CancellationToken cancellationToken) { await observer.ObserveAsync(); await inner.DrawStillAsync(still, cancellationToken); }
@@ -931,12 +952,29 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
         }
     }
 
-    /// <summary>The media tool that swaps a file when the run draws its first still, after the plan verified the installation.</summary>
-    private sealed class SwapOnFirstStill(IMediaTool inner, Action swap) : IMediaTool
+    /// <summary>
+    /// The media tool that swaps a file at the run's first call after the plan verified the installation. The graphics change
+    /// moved Design after Audio, so the first call is now the tool's version line (it was the first still of the Design stage);
+    /// the swap still lands after the plan's verification and before the first part, as the test requires. It renders the
+    /// graphics through the media tool it wraps.
+    /// </summary>
+    private sealed class SwapOnFirstStill(IMediaTool inner, Action swap) : IMediaTool, IGraphicRenderer
     {
         private bool _swapped;
 
-        public Task<string> VersionLineAsync(CancellationToken cancellationToken) => inner.VersionLineAsync(cancellationToken);
+        public Task<GraphicInvocation> InvokeAsync(GraphicInvocationRequest request, CancellationToken cancellationToken) =>
+            ((IGraphicRenderer)inner).InvokeAsync(request, cancellationToken);
+
+        public Task<string> VersionLineAsync(CancellationToken cancellationToken)
+        {
+            if (!_swapped)
+            {
+                _swapped = true;
+                swap();
+            }
+
+            return inner.VersionLineAsync(cancellationToken);
+        }
 
         public Task DrawStillAsync(StillSpecification still, CancellationToken cancellationToken)
         {
@@ -980,6 +1018,11 @@ public sealed class OwnVoiceIntegrationTests : IAsyncLifetime
 
         public Task CopyIntoStagingAsync(string stagingFolder, string sourceFile, string staged, CancellationToken cancellationToken) =>
             inner.CopyIntoStagingAsync(stagingFolder, sourceFile, staged, cancellationToken);
+
+        public Task WriteStagingBytesAsync(string stagingFolder, string staged, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+            inner.WriteStagingBytesAsync(stagingFolder, staged, bytes, cancellationToken);
+
+        public string StagingSubfolder(string stagingFolder, string folder) => inner.StagingSubfolder(stagingFolder, folder);
 
         public Task<StoredFile> StoreAsync(string stagingFolder, ReadOnlyMemory<byte> bytes, string relativePath, CancellationToken cancellationToken) =>
             inner.StoreAsync(stagingFolder, bytes, relativePath, cancellationToken);

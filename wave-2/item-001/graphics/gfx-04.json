@@ -1,0 +1,170 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-04",
+  "beat": 3,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-04` | The two variables isolated from the dance: angle θ, duration t | `CL-05` |"
+  },
+  "claims": [
+    "CL-05"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "Everything the dance encodes is in that segment",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "Everything the dance encodes is in that segment",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "vertical",
+      "type": "bearing",
+      "x": 520,
+      "y": 840,
+      "angle": 0,
+      "length": 560,
+      "arrow": false,
+      "dashed": true
+    },
+    {
+      "id": "runA",
+      "type": "bearing",
+      "x": 520,
+      "y": 840,
+      "angle": 32,
+      "length": 520,
+      "arrow": true,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "theta",
+      "type": "angle",
+      "x": 520,
+      "y": 840,
+      "from": 0,
+      "to": 32,
+      "radius": 190
+    },
+    {
+      "id": "thetaLabel",
+      "type": "text",
+      "role": "label",
+      "text": "angle θ",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "angle θ",
+      "x": 490,
+      "y": 770,
+      "anchor": "end",
+      "size": "label"
+    },
+    {
+      "id": "direction",
+      "type": "text",
+      "role": "label",
+      "text": "its direction on the comb",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "its direction on the comb",
+      "x": 520,
+      "y": 940,
+      "anchor": "middle",
+      "size": "caption"
+    },
+    {
+      "id": "span",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          1150,
+          600
+        ],
+        [
+          1700,
+          600
+        ]
+      ],
+      "arrow": false,
+      "dashed": false,
+      "focus": true
+    },
+    {
+      "id": "tickA",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          1150,
+          570
+        ],
+        [
+          1150,
+          630
+        ]
+      ],
+      "arrow": false,
+      "dashed": false
+    },
+    {
+      "id": "tickB",
+      "type": "path",
+      "form": "polyline",
+      "points": [
+        [
+          1700,
+          570
+        ],
+        [
+          1700,
+          630
+        ]
+      ],
+      "arrow": false,
+      "dashed": false
+    },
+    {
+      "id": "durationLabel",
+      "type": "text",
+      "role": "label",
+      "text": "duration t",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "duration t",
+      "x": 1425,
+      "y": 560,
+      "anchor": "middle",
+      "size": "label"
+    },
+    {
+      "id": "howLong",
+      "type": "text",
+      "role": "label",
+      "text": "how long it lasts",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "how long it lasts",
+      "x": 1425,
+      "y": 700,
+      "anchor": "middle",
+      "size": "caption"
+    }
+  ]
+}

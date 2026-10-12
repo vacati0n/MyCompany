@@ -76,6 +76,12 @@ public static class SchemaInstaller
         // over sample rate. Applicable alone to a store holding the nine (install --from 10). Nothing here records a
         // registration, a measurement, a provenance, an expected hash or a setting.
         "MediaCompany.Persistence.Schema.010-own-voice.sql",
+
+        // Wave 11, graphics drawn by code. Additive: the production artifact's role admits four more values (a motion
+        // graphic's frame manifest, the contact sheet, its final-frame copies and the preview), and the graphic provenance is
+        // created empty, write-once and stamped by the datastore. Applicable alone to a store holding the ten (install --from 11).
+        // Nothing here records a graphic, an approval, an expected hash or a setting.
+        "MediaCompany.Persistence.Schema.011-graphics.sql",
     ];
 
     /// <summary>
@@ -93,7 +99,7 @@ public static class SchemaInstaller
             {
                 throw new SchemaInstallRefusedException(
                     "this store already holds the store designation table, so a full install would re-apply resources that cannot be re-applied over its rows; "
-                    + $"apply only the resources it lacks with install --from <ordinal> (the tenth resource alone: install --from {ResourceNames.Count})");
+                    + $"apply only the resources it lacks with install --from <ordinal> (the newest resource alone: install --from {ResourceNames.Count})");
             }
         }
 

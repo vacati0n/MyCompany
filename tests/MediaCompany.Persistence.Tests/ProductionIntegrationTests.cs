@@ -98,7 +98,8 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     [RequiresPostgresFact]
     public async Task TheNinthResourceRecordsNothingAnswersFiveQuestionsAndReappliesCleanly()
     {
-        Assert.Equal("MediaCompany.Persistence.Schema.009-production.sql", SchemaInstaller.ResourceNames[^2]);
+        // The eleventh resource (the graphics change) now installs after the tenth; the ninth is still the ninth.
+        Assert.Equal("MediaCompany.Persistence.Schema.009-production.sql", SchemaInstaller.ResourceNames[^3]);
         Assert.Equal("MediaCompany.Persistence.Schema.009-production.sql", SchemaInstaller.ResourceNames[8]);
         foreach (var table in new[] { "store_designation", "item_caps", "admission_reservations", "production_versions", "production_artifacts", "budgets", "configuration" })
         {
@@ -510,7 +511,11 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
             Assert.Equal(artifact.Sha256, Convert.ToHexStringLower(SHA256.HashData(await File.ReadAllBytesAsync(store.FullPath(artifact.RelativePath)))));
         }
 
-        Assert.Equal(22, artifacts.Count(a => a.Role == ArtifactRole.GraphicStill));
+        // The graphics change: the 22 graphic artifacts are now ten stills and twelve motion graphics' frame manifests (it was
+        // 22 GraphicStill text cards), each with its provenance.
+        Assert.Equal(10, artifacts.Count(a => a.Role == ArtifactRole.GraphicStill));
+        Assert.Equal(12, artifacts.Count(a => a.Role == ArtifactRole.GraphicMotion));
+        Assert.Equal(22, (await reader.GraphicProvenanceAsync(record.Item, version, CancellationToken.None)).Count);
         Assert.Equal(18, artifacts.Count(a => a.Role == ArtifactRole.ClipPlaceholder));
         Assert.Equal(5, artifacts.Count(a => a.Role == ArtifactRole.ThumbnailCandidate));
         Assert.Equal("THUMB-03", Assert.Single(artifacts, a => a.Role == ArtifactRole.ThumbnailPlaceholder).Implements);
@@ -519,7 +524,8 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         var stages = await reader.StagesAsync(record.Item, version, CancellationToken.None);
         Assert.Equal(ProductionStageSet.All, stages.Select(s => s.Stage));
         Assert.All(stages, s => Assert.InRange(s.RecordedAt, before, after));
-        var produced = new[] { ProductionStage.Design, ProductionStage.Audio, ProductionStage.Thumbnail, ProductionStage.Production }
+        // The graphics change moved Design after Audio (the Design Gate's ruling): it was Design, Audio, Thumbnail, Production.
+        var produced = new[] { ProductionStage.Audio, ProductionStage.Design, ProductionStage.Thumbnail, ProductionStage.Production }
             .Select(p => stages.Single(s => s.Stage == p).RecordedAt).ToArray();
         Assert.Equal(produced.Order(), produced);
         Assert.Equal(StageOutcome.Held, stages.Single(s => s.Stage == ProductionStage.Production).Outcome);
@@ -657,7 +663,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         var record = await PrepareAsync();
         var loaded = await ItemPackageLoader.LoadAsync(Repository(), "wave-2/item-001/item-material.json", CancellationToken.None);
         var settings = MediaToolOnPath.Settings(_output, Repository());
-        var store = new InterruptedStore(new ArtifactWriter(_output, Repository()), "gfx-05.png");
+        // The graphics change: graphic 5 is a motion graphic, so the interruption follows its first promoted frame (it was the
+        // text card gfx-05.png); the four graphics before it are recorded, three stills and one motion graphic.
+        var store = new InterruptedStore(new ArtifactWriter(_output, Repository()), "gfx-05/frame-000000.png");
         var unitOfWork = new NpgsqlUnitOfWork(Source, new FixedClock());
         var reader = new NpgsqlProductionReader(Source);
         var service = new ProduceItemService(unitOfWork, reader, new ExternalMediaTool(settings), store, settings, new StringWriter());
@@ -668,8 +676,9 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
 
         Assert.Equal(ProduceResult.StageFailed, ended.ExitCode);
         Assert.True(File.Exists(store.Interrupted));
-        Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE relative_path LIKE '%gfx-05.png'"));
-        Assert.Equal(4L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE role = 'GraphicStill'"));
+        Assert.Equal(0L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE relative_path LIKE '%gfx-05%'"));
+        Assert.Equal(3L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE role = 'GraphicStill'"));
+        Assert.Equal(1L, await ScalarAsync<long>("SELECT count(*) FROM production_artifacts WHERE role = 'GraphicMotion'"));
         var design = (await reader.StagesAsync(record.Item, ended.Version!.Value, CancellationToken.None)).Single(s => s.Stage == ProductionStage.Design);
         Assert.Equal(StageOutcome.Failed, design.Outcome);
         Assert.Contains("IOException", design.Summary, StringComparison.Ordinal);
@@ -1049,8 +1058,25 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
     }
 
     /// <summary>The media tool, observed: before each invocation, the transactions open in the store are counted.</summary>
-    private sealed class ObservedTool(IMediaTool inner, TransactionObserver observer) : IMediaTool
+    private sealed class ObservedTool(IMediaTool inner, TransactionObserver observer) : IMediaTool, IGraphicRenderer
     {
+        public async Task<GraphicInvocation> InvokeAsync(GraphicInvocationRequest request, CancellationToken cancellationToken)
+        {
+            // Observed before the render process starts and, while it is still running, every 200 ms.
+            await observer.ObserveAsync();
+            var running = ((IGraphicRenderer)inner).InvokeAsync(request, cancellationToken);
+            while (!running.IsCompleted)
+            {
+                await Task.WhenAny(running, Task.Delay(200, CancellationToken.None));
+                if (!running.IsCompleted)
+                {
+                    await observer.ObserveAsync();
+                }
+            }
+
+            return await running;
+        }
+
         public async Task<string> VersionLineAsync(CancellationToken cancellationToken)
         {
             await observer.ObserveAsync();
@@ -1132,6 +1158,11 @@ public sealed class ProductionIntegrationTests : IAsyncLifetime
         public Task CopyIntoStagingAsync(string stagingFolder, string sourceFile, string name, CancellationToken cancellationToken) =>
             inner.CopyIntoStagingAsync(stagingFolder, sourceFile, name, cancellationToken);
 
+        public Task WriteStagingBytesAsync(string stagingFolder, string name, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken) =>
+            inner.WriteStagingBytesAsync(stagingFolder, name, bytes, cancellationToken);
+
+        public string StagingSubfolder(string stagingFolder, string name) => inner.StagingSubfolder(stagingFolder, name);
+
         public Task<StoredFile> StoreAsync(string stagingFolder, ReadOnlyMemory<byte> bytes, string relativePath, CancellationToken cancellationToken) =>
             inner.StoreAsync(stagingFolder, bytes, relativePath, cancellationToken);
 
@@ -1195,6 +1226,9 @@ internal static class MediaToolOnPath
         ProviderCallBound = TimeSpan.FromSeconds(60),
         NarrationCharacterMaximum = 1_500,
         NarrationVoice = "a-demonstration-voice-the-fakes-ignore",
+
+        // The graphics change: a fixture installation made in the test, with the graphics stand-in as its Node.
+        Graphics = MediaCompany.Graphics.Fixtures.GraphicsFixture.Shared.Settings(),
     };
 
     private static string? OnPath(string name) =>

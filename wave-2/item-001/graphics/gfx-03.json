@@ -1,0 +1,96 @@
+{
+  "format": "graphic-specification/1",
+  "position": "GFX-03",
+  "beat": 3,
+  "row": {
+    "source": "wave-2/item-001/shot-list.md",
+    "quote": "| `GFX-03` | Abdominal oscillation trace, 13–15 Hz, against a time axis | `CL-04` |"
+  },
+  "claims": [
+    "CL-04"
+  ],
+  "records": {
+    "claims": "wave-2/item-001/claim-to-source.md",
+    "owner": "research/ceo-decision-record.md"
+  },
+  "kind": "still",
+  "kindSource": {
+    "source": "research/ceo-decision-record.md",
+    "quote": "the twelve motion graphics are `GFX-02`, `GFX-05`, `GFX-06`, `GFX-07`, `GFX-08`, `GFX-09`, `GFX-11`, `GFX-12`, `GFX-14`, `GFX-16`, `GFX-18` and `GFX-21`; the other ten are still."
+  },
+  "disclosure": {
+    "text": "schematic, not to scale",
+    "source": "research/ceo-decision-record.md",
+    "quote": "carries the small label \"schematic, not to scale\""
+  },
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "role": "title",
+      "text": "shaking her abdomen from side to side",
+      "source": "wave-2/item-001/narration.txt",
+      "quote": "shaking her abdomen from side to side",
+      "x": 120,
+      "y": 132,
+      "anchor": "start",
+      "size": "title"
+    },
+    {
+      "id": "trace",
+      "type": "trace",
+      "form": "oscillation",
+      "x": 200,
+      "y": 400,
+      "width": 1500,
+      "height": 280,
+      "cycles": 14,
+      "focus": true
+    },
+    {
+      "id": "time",
+      "type": "axis",
+      "x1": 200,
+      "y1": 820,
+      "x2": 1760,
+      "y2": 820
+    },
+    {
+      "id": "timeLabel",
+      "type": "text",
+      "role": "label",
+      "text": "time axis",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "time axis",
+      "x": 1760,
+      "y": 880,
+      "anchor": "end",
+      "size": "caption"
+    },
+    {
+      "id": "rate",
+      "type": "text",
+      "role": "figure",
+      "text": "13–15 Hz",
+      "source": "wave-2/item-001/claim-to-source.md",
+      "quote": "13–15 Hz",
+      "x": 200,
+      "y": 340,
+      "anchor": "start",
+      "size": "label",
+      "focus": true
+    },
+    {
+      "id": "what",
+      "type": "text",
+      "role": "caption",
+      "text": "Abdominal oscillation trace",
+      "source": "wave-2/item-001/shot-list.md",
+      "quote": "Abdominal oscillation trace",
+      "x": 120,
+      "y": 1036,
+      "anchor": "start",
+      "size": "small"
+    }
+  ]
+}

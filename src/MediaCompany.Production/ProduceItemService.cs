@@ -59,17 +59,21 @@ public sealed record ProduceResult(int ExitCode, ItemVersion? Version, StoredFil
 /// path's own tests use. Before every own-source part the source is re-derived, and a run whose source would differ from
 /// the planned one records the Audio stage failed naming both and ends with exit 3 before producing that part.
 ///
-/// THE ORDER. A production opens the next item version, records the eight carried stages citing the package's
-/// version, then runs the four producing stages in EXECUTION order — Design, Audio, Thumbnail, Production — because
-/// the assembly consumes the narration; readers list them in the closed stage order. A stage that cannot finish is
-/// recorded failed or held, naming why, and the run makes no further call.
+/// THE ORDER (the graphics change, decision D-004 of its design). A production opens the next item version, records the
+/// eight carried stages citing the package's version, then runs the four producing stages in EXECUTION order — Audio, then
+/// the beat timeline composed ONCE from the measured beat durations, then Design (the graphics, timed from that timeline),
+/// Thumbnail and Production (the assembly, reusing that same timeline) — because motion graphics are timed from the
+/// narration actually used; readers list them in the closed stage order. The Design stage remains a step of the produce
+/// service, executed after Audio, and is not an IStageHandler, because a graphic render needs the run's measured beat
+/// durations, its staging folder, the one writer and the one process starter, none of which the contract's subject-only
+/// HandleAsync carries. A stage that cannot finish is recorded failed or held, naming why, and the run makes no further call.
 ///
 /// THE HOLDS. No transaction and no record is held open while the external tool or the model runs, while a file is
 /// hashed or while a vendor is called from here: every record is one short transaction of its own, after the work it
 /// records, and the capability boundary keeps its own admission transaction to the call it makes. Every bound is the
 /// configured one.
 /// </summary>
-public sealed class ProduceItemService
+public sealed partial class ProduceItemService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IProductionReader _reader;
@@ -78,6 +82,7 @@ public sealed class ProduceItemService
     private readonly ProductionSettings _settings;
     private readonly TextWriter _output;
     private readonly IVoiceModel? _voice;
+    private readonly IGraphicRenderer? _renderer;
 
     public ProduceItemService(
         IUnitOfWork unitOfWork,
@@ -86,8 +91,10 @@ public sealed class ProduceItemService
         IArtifactStore store,
         ProductionSettings settings,
         TextWriter output,
-        IVoiceModel? voice = null)
+        IVoiceModel? voice = null,
+        IGraphicRenderer? renderer = null)
     {
+        _renderer = renderer ?? tool as IGraphicRenderer;
         _unitOfWork = unitOfWork;
         _reader = reader;
         _tool = tool;
@@ -117,7 +124,7 @@ public sealed class ProduceItemService
             case ProductionMode.Fake:
             {
                 var selection = NarrationSourceRule.Select(request.Mode, request.Designation, RegistrationReading.None, ModelReading.NotConfigured);
-                return await BoundaryPlanAsync(request, package, selection, cancellationToken).ConfigureAwait(false);
+                return await WithGraphicsAsync(await BoundaryPlanAsync(request, package, selection, cancellationToken).ConfigureAwait(false), request, cancellationToken).ConfigureAwait(false);
             }
 
             case ProductionMode.Metered:
@@ -130,10 +137,20 @@ public sealed class ProduceItemService
             default:
             {
                 var (selection, recording, installation) = await SelectOwnAsync(request, cancellationToken).ConfigureAwait(false);
-                return ProductionPlan.ComposeOwn(package, NarrationSplitter.SplitByBeat(request.Loaded.Narration, material.Beats), selection, recording, installation, request.Loaded);
+                return await WithGraphicsAsync(
+                    ProductionPlan.ComposeOwn(package, NarrationSplitter.SplitByBeat(request.Loaded.Narration, material.Beats), selection, recording, installation, request.Loaded),
+                    request, cancellationToken).ConfigureAwait(false);
             }
         }
     }
+
+    /// <summary>
+    /// The graphics plan beside the narration plan (the graphics change, decision D-014 of its design): specifications
+    /// checked, the installation verified without holding it, coverage and, in the company store, the owner's approval read.
+    /// It reads files only and starts no process.
+    /// </summary>
+    private async Task<ProductionPlan> WithGraphicsAsync(ProductionPlan plan, ProduceRequest request, CancellationToken cancellationToken) =>
+        plan with { Graphics = await GraphicsPlanner.ComposeAsync(_settings, request.Loaded, request.Designation, cancellationToken).ConfigureAwait(false) };
 
     /// <summary>
     /// The plan of a boundary source (the fake, or the vendor below the rule): the narration split under the configured
@@ -207,6 +224,16 @@ public sealed class ProduceItemService
             return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
         }
 
+        if (plan.Graphics.Refused)
+        {
+            foreach (var refusal in plan.Graphics.Findings)
+            {
+                _output.WriteLine($"Refused before any call: {refusal}");
+            }
+
+            return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+        }
+
         if (request.Mode == ProductionMode.PlanOnly)
         {
             _output.WriteLine("Plan only: no capability call was made, no process was started and no file was written.");
@@ -247,12 +274,37 @@ public sealed class ProduceItemService
             return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
         }
 
+        plan = await WithGraphicsAsync(plan, request, cancellationToken).ConfigureAwait(false);
         plan.Print(_output, request.Mode, request.Designation, _settings, request.Loaded.Material);
+        if (plan.Graphics.Refused)
+        {
+            foreach (var refusal in plan.Graphics.Findings)
+            {
+                _output.WriteLine($"Refused before any call: {refusal}");
+            }
+
+            return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+        }
+
         return await StartAsync(request, plan, source, gateway, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<ProduceResult> StartAsync(ProduceRequest request, ProductionPlan plan, NarrationSource source, ICapabilityGateway? gateway, CancellationToken cancellationToken)
     {
+        // THE GRAPHICS ARE REQUIRED (the graphics change, decision D-014 of its design): a production without the graphics
+        // section, or without a renderer composed, is refused before any call; it never falls back to text cards.
+        if (!plan.Graphics.Configured || _settings.Graphics is null)
+        {
+            _output.WriteLine("Refused before any call: no graphics section is configured (setting graphics); a production draws its graphics and never falls back to text cards.");
+            return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+        }
+
+        if (_renderer is null)
+        {
+            _output.WriteLine("Refused before any call: no graphics renderer is composed for this run.");
+            return new ProduceResult(ProduceResult.RefusedBeforeAnyCall, null, null, []);
+        }
+
         if (source is NarrationSource.Fake or NarrationSource.Vendor)
         {
             if (plan.Package.Cap is null)
@@ -286,7 +338,7 @@ public sealed class ProduceItemService
     private sealed record ProducedPart(NarrationPart Part, StoredFile File, AudioMeasurement Measured);
 
     /// <summary>One production version in progress, and every record it writes.</summary>
-    private sealed class ProductionRun
+    private sealed partial class ProductionRun
     {
         private readonly ProduceItemService _service;
         private readonly ProduceRequest _request;
@@ -361,17 +413,20 @@ public sealed class ProduceItemService
 
                 await CarryAsync(cancellationToken).ConfigureAwait(false);
 
-                var graphics = await DesignAsync(version, cancellationToken).ConfigureAwait(false);
-
                 var audio = await AudioAsync(cancellationToken).ConfigureAwait(false);
                 if (audio.Ended is { } ended)
                 {
                     return ended;
                 }
 
+                // THE ONE TIMELINE (decision D-004): composed once, from the measured beat durations and the planned paths of
+                // the graphics then the clips per beat, and reused by Design and by the assembly.
+                var timeline = ComposeTimeline(audio.BeatDurations!);
+                var graphics = await DesignAsync(timeline, cancellationToken).ConfigureAwait(false);
+
                 await ThumbnailAsync(cancellationToken).ConfigureAwait(false);
 
-                var rendered = await AssembleAsync(graphics, audio.BeatDurations!, audio.Narration!, cancellationToken).ConfigureAwait(false);
+                var rendered = await AssembleAsync(graphics, timeline, audio.Narration!, cancellationToken).ConfigureAwait(false);
                 if (rendered is null)
                 {
                     return new ProduceResult(ProduceResult.StageFailed, Version, null, _operations);
@@ -418,37 +473,6 @@ public sealed class ProduceItemService
                     $"carried from version {_plan.Package.PackageVersion} as recorded, not regenerated: {recorded.Summary}",
                     $"dossier:{_request.Item}:{_plan.Package.PackageVersion}", cancellationToken).ConfigureAwait(false);
             }
-        }
-
-        // -------------------------------------------------------------------
-        // Design: one still per specified graphic, no capability call
-        // -------------------------------------------------------------------
-
-        private async Task<IReadOnlyDictionary<string, string>> DesignAsync(string toolVersion, CancellationToken cancellationToken)
-        {
-            _stage = ProductionStage.Design;
-            var stills = new Dictionary<string, string>(StringComparer.Ordinal);
-            try
-            {
-                foreach (var graphic in Material.Graphics)
-                {
-                    var name = graphic.Id.ToLowerInvariant();
-                    var text = Wrap([graphic.Id, string.Empty, .. graphic.Lines]);
-                    var stored = await DrawAsync(name, text, StillStyle.Graphic, $"design/{name}.png", cancellationToken).ConfigureAwait(false);
-                    await RecordArtifactAsync(ProductionStage.Design, ArtifactRole.GraphicStill, graphic.Id, stored, null, cancellationToken).ConfigureAwait(false);
-                    stills[graphic.Id] = $"design/{name}.png";
-                }
-            }
-            catch (Exception failure) when (failure is MediaToolBoundExceededException or MediaToolFailedException)
-            {
-                await EndStageAsync(ProductionStage.Design, StageOutcome.Failed, $"a graphic still could not be drawn: {failure.Message}", ProduceResult.StageFailed, cancellationToken).ConfigureAwait(false);
-                throw new UnreachableException();
-            }
-
-            await RecordStageAsync(ProductionStage.Design, StageOutcome.Succeeded,
-                $"{stills.Count} graphic stills drawn from the item material, each displaying only lines quoted from its record; no capability call; {toolVersion}",
-                $"artifacts:{Folder}/design", cancellationToken).ConfigureAwait(false);
-            return stills;
         }
 
         // -------------------------------------------------------------------
@@ -991,53 +1015,48 @@ public sealed class ProduceItemService
         // -------------------------------------------------------------------
 
         private async Task<StoredFile?> AssembleAsync(
-            IReadOnlyDictionary<string, string> graphics,
-            IReadOnlyList<(int Beat, TimeSpan MeasuredDuration)> beatDurations,
+            IReadOnlyDictionary<string, DrawnGraphic> graphics,
+            IReadOnlyList<TimelineSegment> timeline,
             StoredFile narration,
             CancellationToken cancellationToken)
         {
             _stage = ProductionStage.Production;
             var settings = _service._settings;
-            var visuals = new List<(string Implements, int Beat, string Still)>();
             StoredFile rendered;
             MediaProbe probe;
             DecodeCheck decode;
-            IReadOnlyList<TimelineSegment> timeline;
+            HeldFiles? held = null;
             try
             {
-                foreach (var graphic in Material.Graphics.OrderBy(g => g.Id, StringComparer.Ordinal))
-                {
-                    visuals.Add((graphic.Id, graphic.Beat, graphics[graphic.Id]));
-                }
-
                 foreach (var clip in Material.Clips.OrderBy(c => c.Id, StringComparer.Ordinal))
                 {
-                    var name = clip.Id.ToLowerInvariant() + "-placeholder";
+                    var name = ClipName(clip.Id);
                     var unsourced = Material.UnsourcedClips.Ids.Contains(clip.Id, StringComparer.Ordinal);
                     var text = Wrap(["PLACEHOLDER", $"{clip.Id}, beat {clip.Beat}", clip.Label, string.Empty,
                         unsourced ? "specified, not sourced" : "licensed clip not included in this video"]);
                     var stored = await DrawAsync(name, text, StillStyle.Placeholder, $"production/{name}.png", cancellationToken).ConfigureAwait(false);
                     await RecordArtifactAsync(ProductionStage.Production, ArtifactRole.ClipPlaceholder, clip.Id, stored, null, cancellationToken).ConfigureAwait(false);
-                    visuals.Add((clip.Id, clip.Beat, $"production/{name}.png"));
                 }
 
-                timeline = BeatTimeline.Compose(beatDurations, visuals, settings.FramesPerSecond);
-                var total = timeline.Sum(s => s.Frames);
-                var list = new StringBuilder("ffconcat version 1.0\n");
-                foreach (var segment in timeline)
+                // Every graphic file the assembly reads is re-hashed against its record and HELD until the encode exits
+                // (decision D-005): stills, frame manifests and every frame each manifest lists.
+                var (list, total, entries, files) = await SegmentListAsync(timeline, graphics, cancellationToken).ConfigureAwait(false);
+                held = files;
+                if (list is null)
                 {
-                    list.Append(CultureInfo.InvariantCulture, $"file '../{segment.Still}'\nduration {BeatTimeline.Seconds(segment.Frames, settings.FramesPerSecond)}\n");
+                    return null;
                 }
 
-                // The last still is named once more, so the segment list's final duration is honoured.
-                list.Append(CultureInfo.InvariantCulture, $"file '../{timeline[^1].Still}'\n");
-                await _service._store.WriteStagingTextAsync(Staging, "segments.txt", list.ToString(), cancellationToken).ConfigureAwait(false);
+                await _service._store.WriteStagingTextAsync(Staging, "segments.txt", list, cancellationToken).ConfigureAwait(false);
 
-                Output.WriteLine($"Rendering {timeline.Count} segments, {total} frames, under the configured render bound of {settings.RenderBound.TotalMinutes:0} min; no transaction is open.");
+                Output.WriteLine($"Rendering {timeline.Count} segments as {entries} segment-list entries, {total} frames, under the configured render bound of {settings.RenderBound.TotalMinutes:0} min; "
+                    + $"{held.Count} graphic files held read-only; no transaction is open.");
                 var name2 = $"{Material.Item}-v{Version}.mp4";
                 await _service._tool.RenderAsync(
                     new RenderSpecification(Staging, "segments.txt", $"../audio/{Path.GetFileName(narration.RelativePath)}", name2, total),
                     cancellationToken).ConfigureAwait(false);
+                await held.DisposeAsync().ConfigureAwait(false);
+                held = null;
                 rendered = await _service._store.PromoteAsync(Staging, name2, Rel($"production/{name2}"), cancellationToken).ConfigureAwait(false);
                 probe = await _service._tool.ProbeAsync(rendered.FullPath, cancellationToken).ConfigureAwait(false);
                 decode = await _service._tool.DecodeAsync(rendered.FullPath, cancellationToken).ConfigureAwait(false);
@@ -1046,6 +1065,13 @@ public sealed class ProduceItemService
             {
                 await TryEndStageAsync(ProductionStage.Production, StageOutcome.Failed, $"the assembly did not complete: {failure.Message}", cancellationToken).ConfigureAwait(false);
                 return null;
+            }
+            finally
+            {
+                if (held is not null)
+                {
+                    await held.DisposeAsync().ConfigureAwait(false);
+                }
             }
 
             var problems = new List<string>();
@@ -1087,6 +1113,7 @@ public sealed class ProduceItemService
             Output.WriteLine(OwnSource
                 ? string.Create(CultureInfo.InvariantCulture, $"  operations: {_operations.Count}; booked metered spend {booked.Amount:0.00} {booked.Currency} (no operation is booked by an own source); {Unmeasured()}")
                 : string.Create(CultureInfo.InvariantCulture, $"  operations: {_operations.Count}; booked {booked.Amount:0.00} {booked.Currency}, {Label()}"));
+            Output.WriteLine($"  graphics: {Material.Graphics.Count} drawn by code with the approved renderer; no model call, no capability call; booked metered spend USD 0.00; local compute unmeasured");
             Output.WriteLine("  nothing was published, uploaded or configured; the item stays held short of publish-ready.");
         }
 
@@ -1111,7 +1138,7 @@ public sealed class ProduceItemService
         /// </summary>
         private async Task RecordArtifactAsync(
             ProductionStage stage, ArtifactRole role, string implements, StoredFile stored, TimeSpan? duration, CancellationToken cancellationToken,
-            NarrationMeasurement? measurement = null, NarrationProvenance? provenance = null)
+            NarrationMeasurement? measurement = null, NarrationProvenance? provenance = null, GraphicProvenance? graphic = null)
         {
             await using var transaction = await _service._unitOfWork.BeginAsync(cancellationToken).ConfigureAwait(false);
             var record = await transaction.Production.RecordArtifactAsync(
@@ -1138,8 +1165,13 @@ public sealed class ProduceItemService
                 await transaction.Production.RecordProvenanceAsync(provenance, cancellationToken).ConfigureAwait(false);
             }
 
+            if (graphic is not null)
+            {
+                await transaction.Production.RecordGraphicProvenanceAsync(graphic, cancellationToken).ConfigureAwait(false);
+            }
+
             await transaction.Audit.AppendAsync(Entry(_request.Item, Version, "production.artifact-recorded",
-                $"{role} {implements} recorded after it was written, promoted and re-read{(measurement is null ? string.Empty : ", with its decoded measurement")}{(provenance is null ? string.Empty : " and its provenance")}",
+                $"{role} {implements} recorded after it was written, promoted and re-read{(measurement is null ? string.Empty : ", with its decoded measurement")}{(provenance is null && graphic is null ? string.Empty : " and its provenance")}",
                 $"artifact:{stored.RelativePath} sha256:{stored.Sha256}"),
                 cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);

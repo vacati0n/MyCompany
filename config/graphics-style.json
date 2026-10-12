@@ -1,0 +1,18 @@
+{
+  "format": "graphic-style/1",
+  "family": "Inter",
+  "colours": {
+    "background": "#F5F1E8",
+    "line": "#1F2328",
+    "secondary": "#5F646B",
+    "accent": "#A8481A",
+    "text": "#1F2328",
+    "shade": "#DEDCD5"
+  },
+  "strokes": { "thin": 3, "line": 5, "heavy": 9 },
+  "sizes": { "title": 54, "label": 38, "caption": 30, "small": 26 },
+  "arrow": 26,
+  "dash": [18, 14],
+  "margin": 44,
+  "motionEnd": 0.8
+}
