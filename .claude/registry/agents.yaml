@@ -1,0 +1,614 @@
+apiVersion: framework.registry/v1
+kind: RegistrySpecification
+registryType: agents
+metadata:
+  displayName: Agent Registry
+  description: Discovery index specification for agent contracts.
+  version: 1.1.0
+  status: active
+  owner: Architecture
+
+recordSchema:
+  identifier:
+    type: string
+    required: true
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  displayName:
+    type: string
+    required: true
+  description:
+    type: string
+    required: true
+  version:
+    type: string
+    required: true
+    pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  status:
+    type: string
+    required: true
+    allowedValues: [draft, active, deprecated, retired]
+  specificationPath:
+    type: string
+    required: true
+    description: >-
+      Repository-relative path to the authoritative agent contract. Single-file agents
+      resolve to `agents/<identifier>.md`; runtime module sets resolve to
+      `agents/<identifier>/manifest.yaml`.
+  dependencies:
+    type: array
+    required: true
+    itemSchema:
+      identifier: string
+      versionConstraint: string
+      dependencyType: string
+  tags:
+    type: array
+    required: true
+    itemType: string
+  owner:
+    type: string
+    required: true
+  capabilities:
+    type: array
+    required: true
+    itemType: string
+
+automation:
+  uniqueKey: identifier
+  indexing:
+    - identifier
+    - status
+    - tags
+    - owner
+  compatibility:
+    compareBy: semanticVersion
+  validation:
+    failOnUnknownFields: true
+    requireAllFields: true
+    enforceDependencyResolution: true
+
+records:
+  - identifier: planner
+    displayName: Planner Agent
+    description: >-
+      Transforms business requirements, user stories, Jira-style tickets, epics, and
+      product requirements into a deterministic engineering execution plan consumable
+      by downstream agents.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/planner/manifest.yaml
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: execution-plan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - planning
+      - requirements
+      - decomposition
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - requirement-analysis
+      - task-decomposition
+      - dependency-analysis
+      - execution-sequencing
+      - complexity-estimation
+      - risk-identification
+      - execution-planning
+
+  - identifier: architect
+    displayName: Architect Agent
+    description: >-
+      Analyzes requested changes against the current architecture and defines an
+      implementable technical approach with impact analysis, reuse recommendations,
+      sequencing constraints, risks, and effort estimates, without producing code.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/architect/manifest.yaml
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: architecture-decision-record
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - architecture
+      - design
+      - impact-analysis
+      - decision-records
+    owner: Architecture
+    capabilities:
+      - architecture-analysis
+      - impact-analysis
+      - technical-approach-definition
+      - reuse-assessment
+      - option-evaluation
+      - architecture-decision-authoring
+      - sequencing-guidance
+      - structural-risk-analysis
+      - architecture-estimation
+
+  - identifier: product-owner
+    displayName: Product Owner
+    description: >-
+      Converts a supplied business intent into a bounded scope with measurable acceptance
+      criteria, explicit non-goals, and a recorded rationale for every boundary drawn, so
+      that planning, design, implementation, and validation all work against one written
+      boundary rather than separate readings of the same request.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/product-owner/manifest.yaml
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: scope-definition
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - product
+      - scope
+      - acceptance
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - scope-definition
+      - acceptance-authority
+
+  - identifier: dev-1-implement
+    displayName: Implementation Developer
+    description: >-
+      Implements an accepted change to production quality: builds feature, fix, and
+      refactor code against the accepted design, adds or updates the automated tests that
+      prove it, preserves module boundaries and coding standards, and records the change
+      set, the verification evidence, and every tradeoff taken.
+    version: 1.1.0
+    status: active
+    specificationPath: agents/dev-1-implement/manifest.yaml
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: fix-bug
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: bug-analysis
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: validation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: implementation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - implementation
+      - delivery
+      - testing
+      - change-set
+    owner: Architecture
+    capabilities:
+      - implementation-delivery
+
+  - identifier: dev-1-bug-analyst
+    displayName: Bug Analyst
+    description: >-
+      Establishes what a defect is and why it happens: classifies severity and blast radius
+      from observed impact, settles reproducibility before it diagnoses anything, traces the
+      failure from trigger to symptom with every causal step cited to registered evidence, and
+      hands the implementer a fix strategy with the regression scope that strategy puts at
+      risk. It diagnoses; it does not repair, and it does not close what it diagnosed.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/dev-1-bug-analyst/manifest.yaml
+    dependencies:
+      - identifier: fix-bug
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: bug-analysis
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: implementation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: validation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - defect
+      - diagnosis
+      - triage
+      - root-cause
+      - evidence
+    owner: Architecture
+    capabilities:
+      - defect-triage
+      - root-cause-analysis
+
+  - identifier: dev-2-reviewer
+    displayName: Reviewer
+    description: >-
+      Judges a completed change against the requirements, the accepted design, and the
+      standards in force: classifies every defect by severity against a named standard,
+      decides whether the evidence offered supports the claim it is offered for, issues
+      correction requests it does not implement, and awards or withholds the readiness
+      verdict the next gate assesses.
+    version: 1.1.0
+    status: active
+    specificationPath: agents/dev-2-reviewer/manifest.yaml
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: review-pull-request
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: code-quality-scan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: release
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: implementation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: review-package
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - review
+      - governance
+      - quality
+      - gate-authority
+    owner: Architecture
+    capabilities:
+      - code-review
+      - governance-enforcement
+      - quality-verification
+
+  - identifier: qa
+    displayName: QA
+    description: >-
+      Validates that delivered behavior meets the criteria the change was accepted against and
+      the quality thresholds a release requires: defines a risk-based validation strategy,
+      executes functional, integration, and regression checks, records each criterion result
+      against the evidence that demonstrates it, classifies every defect by severity and
+      reproducibility, and recommends readiness without ever deciding it.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/qa/manifest.yaml
+    dependencies:
+      - identifier: fix-bug
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: review-pull-request
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: release
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: implementation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: review-package
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: validation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - quality
+      - validation
+      - testing
+      - regression
+      - gate-authority
+    owner: Architecture
+    capabilities:
+      - acceptance-validation
+      - regression-assessment
+      - test-strategy-definition
+      - defect-classification
+      - release-readiness-recommendation
+
+  - identifier: business-analyst
+    displayName: Business Analyst
+    description: >-
+      Frames a supplied business intent into a complete, consistent, and testable requirement
+      set: decomposes the intent into functional and non-functional expectations, aligns every
+      requirement to a declared target outcome, states the acceptance intent each requirement
+      must later be verified against, and names every gap and unresolved assumption rather than
+      closing it by inference.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/business-analyst/manifest.yaml
+    dependencies:
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: research
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: requirement-framing
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - requirements
+      - framing
+      - analysis
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - requirement-analysis
+      - problem-framing
+      - requirement-clarification
+      - outcome-alignment
+      - acceptance-intent-definition
+
+  - identifier: context-agent
+    displayName: Context Agent
+    description: >-
+      Reconstructs the current-state product, technical, and delivery context a decision needs:
+      reads the sources rather than recalling them, records every observation against the source
+      that carried it with its confidence and its staleness, names the contradictions and the gaps
+      instead of smoothing them over, derives the courses the evidence admits, and declares how far
+      a decision may rely on what was found.
+    version: 1.1.0
+    status: active
+    specificationPath: agents/context-agent/manifest.yaml
+    dependencies:
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: research
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: requirement-framing
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: investigation-report
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - context
+      - evidence
+      - discovery
+      - current-state
+    owner: Architecture
+    capabilities:
+      - context-reconstruction
+      - evidence-consolidation
+      - confidence-assessment
+      - dependency-and-impact-mapping
+      - contradiction-and-gap-identification
+      - technical-discovery-support
+
+  - identifier: documentation
+    displayName: Documentation
+    description: >-
+      Publishes what a run actually delivered: turns implementation and validation evidence into
+      documentation and release communication a reader outside the run can act on, states the
+      compatibility consequence every declared contract change carries, keeps the trace from each
+      published statement back to the artifact supporting it, removes content the change made
+      false, and closes a run with a package stating what shipped, what did not, and what is still
+      known to be wrong.
+    version: 1.2.0
+    status: active
+    specificationPath: agents/documentation/manifest.yaml
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: research
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: review-pull-request
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: release
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: implementation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: validation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: review-package
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-recommendation
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: release-note
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - documentation
+      - communication
+      - release
+      - closure
+      - gate-authority
+    owner: Architecture
+    capabilities:
+      - documentation
+      - release-communication
+
+  - identifier: tech-lead
+    displayName: Tech Lead
+    description: >-
+      Decides which way delivery should go and at what cost: evaluates named options against
+      criteria fixed before the options are scored, states the sequencing and dependency
+      consequences of each, records the risks and blockers that bear on delivery, and
+      recommends a direction and a readiness position to the authority that decides it.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/tech-lead/manifest.yaml
+    dependencies:
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: research
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: review-pull-request
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: release
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: investigation-report
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: review-package
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: validation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-recommendation
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - delivery
+      - feasibility
+      - tradeoffs
+      - readiness
+      - gate-authority
+    owner: Architecture
+    capabilities:
+      - feasibility-assessment
+      - option-evaluation
+      - tradeoff-analysis
+      - sequencing-judgement
+      - delivery-risk-assessment
+      - readiness-recommendation
+
+  # ---------------------------------------------------------------------------
+  # Retired roles. These identifiers were referenced by framework documents but
+  # were never part of the active design: none owns a phase in any active
+  # workflow Phase Model and none has a contract on disk. They are recorded here
+  # so that a runtime attempt to load one fails with an explicit policy failure
+  # naming the retired status, rather than an unresolved-identifier failure.
+  # The retirement reason and superseding role for each are in
+  # `agents/retired-roles.md`.
+  # ---------------------------------------------------------------------------
+
+  - identifier: backend-developer
+    displayName: Backend Developer (Retired)
+    description: >-
+      Retired on 2026-08-19. The framework carries technology specialization through the
+      skill registry rather than through stack-named agents. Implementation Delivery has a
+      single Primary owner, `dev-1-implement`, which is stack-neutral and resolves
+      stack-specific skills per phase. Route implementation work to `dev-1-implement`.
+    version: 1.0.0
+    status: retired
+    specificationPath: agents/retired-roles.md
+    dependencies: []
+    tags:
+      - retired
+      - superseded-by-dev-1-implement
+    owner: Architecture
+    capabilities: []
+
+  - identifier: omn-planning-generate-clarification-questions
+    displayName: Planning Clarification Questions (Retired)
+    description: >-
+      Retired on 2026-08-19. The identifier names a task rather than an accountable role,
+      and duplicated `requirement-clarification`, a capability already held by
+      `business-analyst`. Route requirement clarification to `business-analyst` and
+      acceptance-boundary arbitration to `product-owner`.
+    version: 1.0.0
+    status: retired
+    specificationPath: agents/retired-roles.md
+    dependencies: []
+    tags:
+      - retired
+      - superseded-by-business-analyst
+    owner: Architecture
+    capabilities: []
+
+  - identifier: orchestrator
+    displayName: Orchestrator
+    description: >-
+      Coordinates end-to-end workflow execution and records what the run actually did: sequences
+      phases against their declared dependencies, holds every transition at the gate that governs
+      it, accepts or refuses each handoff on the evidence supporting it, routes what it cannot
+      unblock to the authority that can, and closes a run with a position stating what finished,
+      what did not, and what is left behind. It decides gates over evidence other roles produced,
+      and never the gates its own record is the evidence for.
+    version: 1.0.0
+    status: active
+    specificationPath: agents/orchestrator/manifest.yaml
+    dependencies:
+      - identifier: fix-bug
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: release
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: validation-report
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: orchestration-result
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - coordination
+      - progression
+      - escalation
+      - closure
+      - gate-authority
+    owner: Architecture
+    capabilities:
+      - workflow-coordination
+      - phase-progression-control
+      - handoff-management
+      - escalation-routing
+      - closure-governance
+      - release-communication-support

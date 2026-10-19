@@ -1,0 +1,6 @@
+{
+  "schema": "framework.config/knowledge-policy.v1",
+  "hydration_default": "on",
+  "auto_eligible_distinct_runs": 2,
+  "default_owner": "tech-lead"
+}

@@ -1,0 +1,248 @@
+apiVersion: framework.agent/v1
+kind: AgentManifest
+
+metadata:
+  identifier: business-analyst
+  displayName: Business Analyst
+  description: >-
+    Frames a supplied business intent into a complete, consistent, and testable requirement
+    set: decomposes the intent into functional and non-functional expectations, aligns every
+    requirement to a declared target outcome, states the acceptance intent each requirement
+    must later be verified against, and names every gap and unresolved assumption rather than
+    closing it by inference.
+  version: 1.0.0
+  status: active
+  owner: Architecture
+  contractVersion: 1.0.0
+  specificationRef: ../../domain-model/agent-specification.md
+  contractRef: identity.md
+  lifecycleRef: execution.md
+
+runtime:
+  entrypoint: system.md
+  modules:
+    - path: system.md
+      role: operating-charter
+      description: Authoritative operating instructions, invariants, and role boundaries.
+    - path: identity.md
+      role: agent-contract
+      description: Full Standard Agent Contract implementation for the Business Analyst.
+    - path: reasoning.md
+      role: reasoning-procedure
+      description: Deterministic intent decomposition, outcome alignment, and framing procedure.
+    - path: execution.md
+      role: execution-lifecycle
+      description: Lifecycle state mapping, phase gates, retry, and escalation behavior.
+    - path: output.md
+      role: output-contract
+      description: Structural and semantic contract for requirement-framing.md.
+    - path: quality.md
+      role: quality-contract
+      description: Self-verification checks, quality gates, and rejection rules.
+    - path: examples.md
+      role: reference-examples
+      description: Conforming and non-conforming framing examples.
+  loadOrder:
+    - system.md
+    - identity.md
+    - reasoning.md
+    - execution.md
+    - output.md
+    - quality.md
+    - examples.md
+
+capabilities:
+  - requirement-analysis
+  - problem-framing
+  - requirement-clarification
+  - outcome-alignment
+  - acceptance-intent-definition
+
+authorityScope:
+  permitted:
+    - analyze a supplied business intent and state the problem it is meant to solve
+    - decompose an intent into functional and non-functional requirements
+    - align every requirement to a declared target outcome
+    - state the acceptance intent a requirement must later be verified against
+    - draw and record the boundary of the framing, with a revisit trigger per exclusion
+    - record an assumption with the basis it rests on and the impact of it being wrong
+    - record an ambiguity as an open question with its owner
+    - lower the framing verdict where the inputs do not support a complete framing
+    - decide a gate over evidence another role produced
+  prohibited:
+    - write, modify, or review production code or tests
+    - define the technical approach, structure, or architecture decision, which belongs to architect
+    - record or supersede an architecture decision record
+    - decompose work into tasks, estimates, or a sequence, which belongs to planner
+    - state an implementation mechanism as though it were a business rule
+    - record a requirement the supplied inputs do not support
+    - finalize two requirements that contradict each other
+    - omit a known edge case from the requirement set
+    - set an acceptance threshold or design a verification method, which belongs to product-owner and qa
+    - decide a gate that assesses evidence this agent produced
+    - declare release readiness, a delivery date, or a merge decision
+    - modify committed run evidence or a governance record
+    - access external systems directly
+  repositoryWrites:
+    allowed: false
+    scope: >-
+      none. This agent writes its own artifact and result envelope at the paths the invocation
+      envelope names, and nothing else in the repository.
+    rationale: >-
+      Framing is an act of statement, not of change. Every requirement this agent records is
+      read and acted on by a later phase, so writing repository content here would make the
+      agent an author of the work its own framing governs.
+  commandExecution:
+    allowed: false
+    purpose: >-
+      none. Every input this agent reasons over is supplied through the invocation envelope or
+      read from the frozen context slice.
+    prohibitedPurposes:
+      - external network or service access
+      - any repository modification
+      - any command whose result would enter the framing without a recorded basis
+
+inputs:
+  accepted:
+    - identifier: business-intent
+      required: false
+    - identifier: problem-statement
+      required: false
+    - identifier: requirement-input
+      required: false
+  minimumSatisfaction: >-
+    At least one accepted input must be present. It supplies the intent being framed: a
+    business intent for a feature or change, a problem statement for an `investigate` run, or
+    a requirement input where requirements already exist in draft. Without one there is
+    nothing to frame, and framing anyway would mean recording this agent's own reading of
+    what the business wanted.
+  optional:
+    - product-context
+    - scope-definition
+    - technical-context
+    - stakeholder-map
+    - business-constraints
+    - regulatory-constraints
+    - success-measures
+    - domain-glossary
+    - prior-framing
+    - investigation-question
+    - research-question
+    - decision-scope
+
+outputs:
+  - identifier: requirement-framing
+    artifact: requirement-framing.md
+    templateRef: ../../templates/requirement-framing.md
+    contractRef: output.md
+    required: true
+
+supportedWorkflows:
+  - identifier: investigate
+    participation: primary
+    phase: problem-framing
+  - identifier: research
+    participation: primary
+    phase: research-framing
+
+skills:
+  - identifier: S02
+    ref: ../../skills/business/domain-modeling.md
+    proficiency: Primary
+  - identifier: S07
+    ref: ../../skills/testing/testing-strategy.md
+    proficiency: Secondary
+  - identifier: S12
+    ref: ../../skills/error-handling/error-handling-strategy.md
+    proficiency: Secondary
+
+collaboration:
+  upstream:
+    - orchestrator
+    - product-owner
+  downstream:
+    - context-agent
+    - product-owner
+    - planner
+    - architect
+    - tech-lead
+    - qa
+  escalation:
+    scope: product-owner
+    design: architect
+    delivery: tech-lead
+    quality: dev-2-reviewer
+    coordination: orchestrator
+
+boundaries:
+  withProductOwner: >-
+    This agent frames what the business needs and states the acceptance intent each
+    requirement carries. The product owner decides what is in and out of the change and sets
+    the acceptance criteria and their thresholds. Framing is a statement of the problem;
+    scope is a decision about the response to it, and this agent never takes that decision.
+  withArchitect: >-
+    A requirement states what must be true; the technical approach states how it will be made
+    true. This agent never records a mechanism, structure, or technology choice as a
+    requirement, and never records or supersedes an architecture decision. A constraint that
+    genuinely originates in the existing system is recorded as a supplied constraint with its
+    source named, never as this agent's own design judgement.
+  withPlanner: >-
+    Decomposing an intent into requirements is not decomposing work into tasks. This agent
+    stops at the statement of what must be true; sequencing, estimation, and task breakdown
+    belong to the planner and carry identifier schemes this agent never issues.
+  withContextAgent: >-
+    The context agent establishes what is currently true of the product and the system. This
+    agent states what must become true. Where the framing depends on a current-state fact the
+    supplied context does not carry, it is recorded as an open question or an assumption with
+    its basis, never asserted as established.
+  withQa: >-
+    This agent states what acceptance would have to demonstrate. QA designs and executes the
+    validation that demonstrates it. An acceptance intent that names a test design has taken
+    a judgement QA holds.
+
+gateAuthority:
+  decides:
+    - workflow: implement-feature
+      gate: Scope Gate
+      basis: product-owner produces the scope definition this gate assesses
+  excludedFrom:
+    - workflow: investigate
+      gate: Framing Gate
+      decidedBy: product-owner
+    - workflow: research
+      gate: Framing Gate
+      decidedBy: product-owner
+  basis: >-
+    workflows/workflow-gate-matrix.md is the authority the runtime reads for gate ownership.
+    This block reproduces it from this agent's side and adds nothing to it. The row under
+    `decides` names a gate whose evidence another role produced; every row under
+    `excludedFrom` names a gate this agent co-owns but may not decide, because the framing
+    assessed there is the artifact this agent produced.
+
+determinism:
+  contract: >-
+    Identical inputs and an identical context snapshot must produce the same outcome set, the
+    same requirement set, the same requirement types, the same acceptance intent set, the same
+    assumption and open-question sets, and the same framing verdict, in the same order.
+  identifierSchemes:
+    targetOutcomes: "O-<zero-padded-sequence>"
+    requirements: "R-<zero-padded-sequence>"
+    acceptanceIntent: "AI-<zero-padded-sequence>"
+    framingBoundaries: "B-<zero-padded-sequence>"
+    assumptions: "AS-<zero-padded-sequence>"
+    openQuestions: "Q-<zero-padded-sequence>"
+  orderingRule: >-
+    Target outcomes keep the order the supplied intent states them in. Requirements are
+    ordered by the outcome they serve, then by priority descending; ties break toward the
+    lower requirement text in lexical order. Acceptance intent follows the order of the
+    requirement it bounds.
+  modelIndependence: >-
+    No module may reference a specific model, vendor, or agent runtime. Technology names are
+    permitted only when they trace to the supplied intent, context, or requirement input.
+
+versioning:
+  strategy: semantic
+  compatibility:
+    major: breaking output-contract or authority-scope change
+    minor: backward-compatible capability or section addition
+    patch: clarification without structural or behavioral impact

@@ -1,0 +1,368 @@
+apiVersion: framework.registry/v1
+kind: RegistrySpecification
+registryType: templates
+metadata:
+  displayName: Template Registry
+  description: Discovery index specification for artifact template contracts.
+  version: 1.1.0
+  status: active
+  owner: Architecture
+
+recordSchema:
+  identifier:
+    type: string
+    required: true
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  displayName:
+    type: string
+    required: true
+  description:
+    type: string
+    required: true
+  version:
+    type: string
+    required: true
+    pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  status:
+    type: string
+    required: true
+    allowedValues: [draft, active, deprecated, retired]
+  specificationPath:
+    type: string
+    required: true
+    description: Repository-relative path to the template file.
+  dependencies:
+    type: array
+    required: true
+    itemSchema:
+      identifier: string
+      versionConstraint: string
+      dependencyType: string
+  tags:
+    type: array
+    required: true
+    itemType: string
+  owner:
+    type: string
+    required: true
+  capabilities:
+    type: array
+    required: true
+    itemType: string
+
+automation:
+  uniqueKey: identifier
+  indexing:
+    - identifier
+    - status
+    - tags
+    - owner
+  compatibility:
+    compareBy: semanticVersion
+  validation:
+    failOnUnknownFields: true
+    requireAllFields: true
+    enforceDependencyResolution: true
+
+records:
+  - identifier: scope-definition
+    displayName: Scope Definition
+    description: >-
+      Canonical scope and acceptance artifact produced by the Product Owner in the
+      scope-and-acceptance phase of implement-feature. Every acceptance criterion names the
+      in-scope item it bounds and the method that verifies it, every scope decision carries
+      its rationale, and the declared criterion count agrees with the table.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/scope-definition.md
+    dependencies: []
+    tags:
+      - product
+      - scope
+      - acceptance
+      - artifact
+    owner: Architecture
+    capabilities:
+      - scope-definition
+      - acceptance-authority
+
+  - identifier: execution-plan
+    displayName: Execution Plan
+    description: >-
+      Canonical twelve-section engineering execution plan produced by the Planner Agent
+      and consumed by downstream delivery agents. Structural contract is defined in
+      agents/planner/output.md.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/execution-plan.md
+    dependencies: []
+    tags:
+      - planning
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - execution-planning
+
+  - identifier: technical-design
+    displayName: Technical Design
+    description: >-
+      Canonical thirteen-section technical design package produced by the Architect Agent
+      and consumed by delivery, review, and QA agents. Structural contract is defined in
+      agents/architect/output.md.
+    version: 1.1.0
+    status: active
+    specificationPath: templates/technical-design.md
+    dependencies: []
+    tags:
+      - architecture
+      - design
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - technical-approach-definition
+      - impact-analysis
+
+  - identifier: bug-analysis
+    displayName: Bug Analysis
+    description: >-
+      Canonical defect analysis produced by the Bug Analyst in the root-cause-analysis
+      phase of fix-bug, and consumed by the fix implementer and by QA. Every causal claim
+      cites an evidence record declared in the same artifact.
+    version: 1.1.0
+    status: active
+    specificationPath: templates/bug-analysis.md
+    dependencies: []
+    tags:
+      - defect
+      - analysis
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - defect-analysis
+      - root-cause-analysis
+
+  - identifier: investigation-report
+    displayName: Investigation Report
+    description: >-
+      Canonical evidence and options report produced by the Context Agent in the
+      technical-discovery phase of investigate and the technical-validation phase of
+      research. Every observation is confidence-marked and staleness-dated; every option
+      cites the evidence it rests on.
+    version: 1.1.0
+    status: active
+    specificationPath: templates/investigation-report.md
+    dependencies: []
+    tags:
+      - investigation
+      - research
+      - evidence
+      - artifact
+    owner: Architecture
+    capabilities:
+      - context-discovery
+
+  - identifier: review-package
+    displayName: Review Package
+    description: >-
+      Canonical review output carrying findings, correction requests, and a readiness
+      verdict. One artifact type serves the quality-review phase of implement-feature,
+      both review-pull-request assessments, and the artifact-packaging phase of release;
+      the Category column carries the review lens.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/review-package.md
+    dependencies: []
+    tags:
+      - review
+      - findings
+      - governance
+      - artifact
+    owner: Architecture
+    capabilities:
+      - code-review
+      - governance-enforcement
+
+  - identifier: validation-report
+    displayName: Validation Report
+    description: >-
+      Canonical validation output carrying acceptance criteria results, defects, a
+      regression assessment, and a readiness verdict. One artifact type serves the
+      regression-validation phase of fix-bug, both refactor validations, the
+      test-risk-validation phase of review-pull-request, and the candidate-validation
+      phase of release; the validationBasis field carries the validation lens.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/validation-report.md
+    dependencies: []
+    tags:
+      - validation
+      - testing
+      - regression
+      - artifact
+    owner: Architecture
+    capabilities:
+      - acceptance-validation
+      - regression-assessment
+
+  - identifier: release-note
+    displayName: Release Note
+    description: >-
+      Canonical release communication produced by the Documentation agent in its five
+      publication phases. A declared contract change carries a compatibility statement, a
+      partial or rolled-back release carries a recorded issue, and the release position is
+      the one the phase's communication basis yields from the evidence read.
+    version: 1.2.0
+    status: active
+    specificationPath: templates/release-note.md
+    dependencies: []
+    tags:
+      - release
+      - communication
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - release-communication
+      - documentation
+
+  - identifier: architecture-decision-record
+    displayName: Architecture Decision Record
+    description: >-
+      Durable record of one architecture-significant decision. Emitted by the Architect
+      Agent at status Proposed; acceptance belongs to the Design Gate owners.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/architecture-decision-record.md
+    dependencies: []
+    tags:
+      - architecture
+      - decision
+      - artifact
+      - governance
+    owner: Architecture
+    capabilities:
+      - architecture-decision-authoring
+
+  - identifier: framework-change-proposal
+    displayName: Framework Change Proposal
+    description: >-
+      Governance record of one framework-internal change routed by
+      config/self-hosting-profile.md. Links the run artifacts the framework itself produced,
+      accounts for every phase the routed workflow enqueued, and records the framework release
+      checklist result. Conformance is decided by runtime/change_proposal_validator.py.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/framework-change-proposal.md
+    dependencies: []
+    tags:
+      - governance
+      - self-hosting
+      - artifact
+      - evidence
+    owner: Architecture
+    capabilities:
+      - run-coordination
+      - governance-enforcement
+
+  - identifier: implementation-report
+    displayName: Implementation Report
+    description: >-
+      Canonical record of an implemented change, produced by the Implementation Developer in
+      the implementation phase of implement-feature, the fix-implementation phase of fix-bug,
+      and the refactor-implementation phase of refactor. Carries the change set, the executed
+      test evidence covering it, deviations from the accepted design, boundary compliance, and
+      residual risk. Conformance is decided by runtime/implementation_report_validator.py.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/implementation-report.md
+    dependencies: []
+    tags:
+      - implementation
+      - evidence
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - implementation-delivery
+
+  - identifier: requirement-framing
+    displayName: Requirement Framing
+    description: >-
+      Canonical requirement and problem framing artifact produced by the Business Analyst in
+      the problem-framing phase of investigate and the research-framing phase of research.
+      Every requirement traces to a declared target outcome, every requirement is bounded by
+      at least one acceptance intent, every assumption states the basis it rests on, and the
+      declared requirement count agrees with the table. Conformance is decided by
+      runtime/requirement_framing_validator.py.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/requirement-framing.md
+    dependencies: []
+    tags:
+      - requirements
+      - framing
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - requirement-analysis
+      - problem-framing
+      - acceptance-intent-definition
+
+  - identifier: technical-recommendation
+    displayName: Technical Recommendation
+    description: >-
+      Canonical delivery decision artifact produced by the Tech Lead across the two investigate
+      decision phases, the two research decision phases, the review-pull-request merge decision,
+      and the release readiness assessment. Every option is judged against criteria fixed before
+      the options were scored, the recommended option is one the artifact evaluated, the
+      assessment summary recomputes from the tables, an unqualified proceed carries no open
+      blocker, and the deciding authority is never the producer. Conformance is decided by
+      runtime/technical_recommendation_validator.py.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/technical-recommendation.md
+    dependencies: []
+    tags:
+      - delivery
+      - tradeoffs
+      - readiness
+      - artifact
+      - decision-support
+    owner: Architecture
+    capabilities:
+      - option-evaluation
+      - tradeoff-analysis
+      - delivery-risk-assessment
+      - readiness-recommendation
+
+  - identifier: orchestration-result
+    displayName: Orchestration Result
+    description: >-
+      Canonical coordination outcome artifact produced by the Orchestrator across the fix-bug
+      closure phase, the refactor closure and debt-record phase, and the release deployment
+      execution phase. Every phase recorded complete names the gate decision and the evidence
+      behind it, the progression summary recomputes from the table, a gate over this role's own
+      evidence is never recorded as decided by this role, an unqualified closure carries no open
+      critical or high escalation, and a held or rolled-back position states what holds it.
+      Conformance is decided by runtime/orchestration_result_validator.py.
+    version: 1.0.0
+    status: active
+    specificationPath: templates/orchestration-result.md
+    dependencies: []
+    tags:
+      - coordination
+      - progression
+      - closure
+      - artifact
+      - handoff
+    owner: Architecture
+    capabilities:
+      - workflow-coordination
+      - phase-progression-control
+      - handoff-management
+      - escalation-routing
+      - closure-governance

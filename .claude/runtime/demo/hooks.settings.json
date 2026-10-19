@@ -1,0 +1,31 @@
+{
+  "_comment": [
+    "Optional host tool-hook wiring for demo mode. Merge the `hooks` block into",
+    "the host's .claude/settings.json (or settings.local.json) in the repository the",
+    "session runs in.",
+    "`<framework-dir>` in the command below is this framework directory's real name --",
+    "`.claude` in the framework's own checkout -- and must be substituted before the hook will run. To skip that step, let",
+    "the runtime resolve it: `python <framework-dir>/runtime/framework_runtime.py demo",
+    "--print-hook` prints this same block with the path already filled in.",
+    "Every tool call the host makes is posted to `framework_runtime.py demo --hook`, which",
+    "reads runs/.active-demo and appends one `tool_invocation` marker to the recording run;",
+    "when no demo run is active it exits 0 without writing anything, so the hook is inert",
+    "outside a demo. The matcher is intentionally broad: the demo shows the shape of the",
+    "work, and the recorder stores only tool names and an excerpt of each target, never",
+    "file contents. Remove the block to stop capturing tool calls; nothing else depends on it."
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python <framework-dir>/runtime/framework_runtime.py demo --hook",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
