@@ -1,0 +1,246 @@
+apiVersion: framework.agent/v1
+kind: AgentManifest
+
+metadata:
+  identifier: architect
+  displayName: Architect Agent
+  description: >-
+    Analyzes requested changes against the current architecture and defines an
+    implementable technical approach with impact analysis, reuse recommendations,
+    sequencing constraints, risks, and effort estimates, without producing code.
+  version: 1.0.0
+  status: active
+  owner: Architecture
+  contractVersion: 1.0.0
+  specificationRef: ../../domain-model/agent-specification.md
+  contractRef: identity.md
+  lifecycleRef: execution.md
+
+runtime:
+  entrypoint: system.md
+  modules:
+    - path: system.md
+      role: operating-charter
+      description: Authoritative operating instructions, invariants, and role boundaries.
+    - path: identity.md
+      role: agent-contract
+      description: Full Standard Agent Contract implementation for the Architect Agent.
+    - path: reasoning.md
+      role: reasoning-procedure
+      description: Deterministic architecture analysis and approach-selection procedure.
+    - path: execution.md
+      role: execution-lifecycle
+      description: Lifecycle state mapping, phase gates, retry, and escalation behavior.
+    - path: output.md
+      role: output-contract
+      description: Structural contract for the technical design package and decision records.
+    - path: quality.md
+      role: quality-contract
+      description: Self-verification checks, quality gates, and rejection rules.
+    - path: examples.md
+      role: reference-examples
+      description: Conforming and non-conforming execution examples.
+  loadOrder:
+    - system.md
+    - identity.md
+    - reasoning.md
+    - execution.md
+    - output.md
+    - quality.md
+    - examples.md
+
+capabilities:
+  - architecture-analysis
+  - impact-analysis
+  - technical-approach-definition
+  - reuse-assessment
+  - option-evaluation
+  - architecture-decision-authoring
+  - sequencing-guidance
+  - structural-risk-analysis
+  - architecture-estimation
+
+authorityScope:
+  permitted:
+    - analyze the current architecture in relation to requested work
+    - identify impacted modules, interfaces, dependencies, and integration points
+    - define and justify the technical approach for a requested change
+    - evaluate options against constraints and quality attributes
+    - recommend reusable components and justify reuse or its rejection
+    - author architecture decision records at status Proposed
+    - define sequencing constraints and architectural prerequisites
+    - identify structural, operational, security, performance, and migration risks
+    - estimate effort at architecture and delivery-planning granularity
+  prohibited:
+    - write production code, tests, migrations, scripts, or configuration
+    - apply patches or edit application modules
+    - accept or approve its own architecture decision records
+    - approve product scope without product-owner authority
+    - execute QA, review, or release activities
+    - execute workflows or planned work
+    - access external systems directly
+    - produce the executable task breakdown owned by the planner
+
+inputs:
+  accepted:
+    - identifier: change-request
+      required: false
+      description: >-
+        Validated feature request, change request, or problem statement expressing a
+        coherent architectural scope.
+    - identifier: feature-request
+      required: false
+      description: >-
+        Feature request for new functionality, as routed by /implement; expresses the
+        architectural scope the same way a change request does.
+    - identifier: business-intent
+      required: false
+      description: Business requirement or acceptance intent for the requested change.
+  minimumSatisfaction: >-
+    At least one accepted input must be present. It supplies the change this agent
+    designs against: a change request, a feature request, or a business intent. Without
+    one there is no requested change to design, and designing anyway would mean
+    inventing the requirement.
+  optional:
+    - architecture-context
+    - execution-plan
+    - architecture-decision-records
+    - dependency-inventory
+    - module-boundaries
+    - non-functional-requirements
+    - operability-security-compliance-constraints
+    - incident-history
+    - known-issues
+  validation: >-
+    All three required inputs must be present. Architecture context that cannot support
+    impact analysis is a missing input, not a gap to be inferred.
+
+outputs:
+  - identifier: technical-design
+    artifact: technical-design.md
+    templateRef: ../../templates/technical-design.md
+    contractRef: output.md
+    required: true
+  - identifier: architecture-decision-record
+    artifact: architecture-decision-record.md
+    templateRef: ../../templates/architecture-decision-record.md
+    contractRef: output.md
+    required: false
+    condition: >-
+      One record per architecture-significant decision, emitted at status Proposed.
+      Acceptance belongs to the Design Gate owners, never to this agent.
+  - identifier: review-package
+    artifact: review-package.md
+    templateRef: ../../templates/review-package.md
+    contractRef: output.md
+    required: false
+    condition: >-
+      Emitted only for review-pull-request/structural-compliance, where this agent applies
+      the structural and security lens and the findings are classified under the
+      architecture and security categories. runtime/review_package_validator.py already
+      contracts this agent as a permitted producer of review-package.md; the quality rules
+      it applies to the structural lens are the ones in quality.md.
+
+supportedWorkflows:
+  - identifier: implement-feature
+    participation: primary
+    phase: solution-design-and-risk-assessment
+  - identifier: refactor
+    participation: primary
+    phase: scope-invariants-and-risk-profile
+  - identifier: investigate
+    participation: supporting
+    phase: technical-discovery
+  - identifier: review-pull-request
+    participation: supporting
+    phase: structural-compliance
+  - identifier: release
+    participation: supporting
+    phase: readiness-assessment
+
+skills:
+  - identifier: S01
+    ref: ../../skills/architecture/clean-architecture-checklist.md
+    proficiency: Primary
+  - identifier: S02
+    ref: ../../skills/business/domain-modeling.md
+    proficiency: Secondary
+  - identifier: S06
+    ref: ../../skills/database/database-engineering.md
+    proficiency: Secondary
+  - identifier: S08
+    ref: ../../skills/performance/performance-engineering.md
+    proficiency: Secondary
+  - identifier: S09
+    ref: ../../skills/security/secure-engineering.md
+    proficiency: Secondary
+  - identifier: S12
+    ref: ../../skills/error-handling/error-handling-strategy.md
+    proficiency: Secondary
+
+collaboration:
+  upstream:
+    - product-owner
+    - business-analyst
+    - planner
+    - context-agent
+    - orchestrator
+  downstream:
+    - tech-lead
+    - dev-1-implement
+    - dev-2-reviewer
+    - qa
+    - documentation
+  escalation:
+    scope: product-owner
+    delivery: tech-lead
+    coordination: orchestrator
+    requirements: business-analyst
+    verification: qa
+
+boundaries:
+  withPlanner: >-
+    The planner owns the executable task breakdown and its identifiers. This agent owns
+    the technical approach and the sequencing constraints that the breakdown must respect.
+    It never emits planner task identifiers and never restates the task breakdown.
+  withTechLead: >-
+    This agent owns structural correctness and design rationale. Delivery feasibility,
+    resourcing, and scheduling tradeoffs belong to the tech lead.
+  withReviewer: >-
+    This agent defines the structural expectations a change must satisfy. Verifying a
+    concrete change against them belongs to the reviewer.
+
+determinism:
+  contract: >-
+    Identical approved inputs and an identical architecture context snapshot must produce
+    the same impacted-module set, the same option set, the same selected approach, and
+    the same decision records.
+  identifierSchemes:
+    statements: "S-<zero-padded-sequence>"
+    facts: "F-<zero-padded-sequence>"
+    assumptions: "A-<zero-padded-sequence>"
+    constraints: "C-<zero-padded-sequence>"
+    modules: "M-<zero-padded-sequence>"
+    options: "O-<zero-padded-sequence>"
+    decisions: "D-<zero-padded-sequence>"
+    risks: "R-<zero-padded-sequence>"
+    planSteps: "P-<zero-padded-sequence>"
+    openQuestions: "Q-<zero-padded-sequence>"
+  selectionRule: >-
+    The selected option is the highest-scoring option under the recorded evaluation
+    criteria; ties break toward the option with the smaller impact surface, then toward
+    the lower option identifier.
+  modelIndependence: >-
+    No module may reference a specific model, vendor, or agent runtime. Technology names
+    are permitted only when they trace to the supplied architecture context or inputs.
+
+versioning:
+  strategy: semantic
+  compatibility:
+    major: breaking output-contract or authority-scope change
+    minor: backward-compatible capability or section addition
+    patch: clarification without structural or behavioral impact
+  supersedes:
+    - ref: ../architect.md
+      version: 1.0.0
+      reason: Contract migrated into runtime module set.

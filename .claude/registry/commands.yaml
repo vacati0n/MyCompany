@@ -1,0 +1,396 @@
+apiVersion: framework.registry/v1
+kind: RegistrySpecification
+registryType: commands
+metadata:
+  displayName: Command Registry
+  description: Discovery index specification for command contracts and workflow routing.
+  version: 1.1.0
+  status: active
+  owner: Architecture
+
+recordSchema:
+  identifier:
+    type: string
+    required: true
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  displayName:
+    type: string
+    required: true
+  description:
+    type: string
+    required: true
+  version:
+    type: string
+    required: true
+    pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  status:
+    type: string
+    required: true
+    allowedValues: [draft, active, deprecated, retired]
+  specificationPath:
+    type: string
+    required: true
+    description: >-
+      Repository-relative path to the authoritative command specification. The
+      specification remains the sole source of command behavior; the record supplies only
+      discovery and routing metadata.
+  primaryWorkflow:
+    type: string
+    required: true
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    description: >-
+      Identifier of the single workflow this command routes to, per the exactly-one-primary
+      -workflow constraint in domain-model/command-specification.md. Must match an active
+      record in registry/workflows.yaml.
+  dependencies:
+    type: array
+    required: true
+    itemSchema:
+      identifier: string
+      versionConstraint: string
+      dependencyType: string
+  tags:
+    type: array
+    required: true
+    itemType: string
+  owner:
+    type: string
+    required: true
+  capabilities:
+    type: array
+    required: true
+    itemType: string
+
+automation:
+  uniqueKey: identifier
+  indexing:
+    - identifier
+    - status
+    - tags
+    - owner
+  compatibility:
+    compareBy: semanticVersion
+  resolution:
+    workflowReferenceKey: primaryWorkflow
+    description: >-
+      Command routing resolves when primaryWorkflow matches exactly one active record in
+      registry/workflows.yaml and that workflow declares the command's owning phase set.
+    failOnUnresolvedWorkflowReference: true
+  validation:
+    failOnUnknownFields: true
+    requireAllFields: true
+    enforceDependencyResolution: true
+    enforceSpecificationPathExists: true
+
+records:
+  - identifier: implement
+    displayName: Implement
+    description: >-
+      Start end-to-end feature delivery for new functionality. Routes to the Implement
+      Feature workflow, whose execution-planning phase is owned by the Planner Agent.
+      Behavior is defined by commands/implement.md; this record supplies discovery and
+      routing metadata only. 1.1.0 adds the optional --demo parameter group (additive, safe
+      default off): autonomous end-to-end demonstration capture and presentation compilation.
+    version: 1.1.0
+    status: active
+    specificationPath: commands/implement.md
+    primaryWorkflow: implement-feature
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: planner
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: execution-plan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - delivery
+      - feature
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - execution-planning
+      - technical-approach-definition
+      - implementation-delivery
+      - quality-verification
+      - release-readiness
+
+  - identifier: quality-scan
+    displayName: Quality Scan
+    description: >-
+      Run a single-pass code quality and technical-debt scan over a bounded repository
+      scope and stop with a review package held for a human tech lead. Routes to the Code
+      Quality Scan workflow, whose single `repository-quality-scan` phase is owned by
+      dev-2-reviewer. Behavior is defined by commands/quality-scan.md; this record
+      supplies discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/quality-scan.md
+    primaryWorkflow: code-quality-scan
+    dependencies:
+      - identifier: code-quality-scan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+    tags:
+      - quality
+      - review
+      - technical-debt
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - code-review
+      - quality-verification
+      - governance-enforcement
+
+  - identifier: optimize-memory
+    displayName: Optimize Memory
+    description: >-
+      Rewrite the durable memory, context, and standing instruction files to their minimum
+      token cost without changing what they instruct. Routes to the Refactor workflow, whose
+      `scope-invariants-and-risk-profile` phase is owned by architect, because the claim that
+      nothing observable changed is the invariant claim that workflow exists to hold to
+      account. Behavior is defined by commands/optimize-memory.md; this record supplies
+      discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/optimize-memory.md
+    primaryWorkflow: refactor
+    dependencies:
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+    tags:
+      - memory
+      - context
+      - token-efficiency
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - knowledge-maintenance
+      - structure-preserving-change
+      - quality-verification
+
+  - identifier: bugfix
+    displayName: Bugfix
+    description: >-
+      Resolve a defect through triage, root-cause analysis, fix, and regression verification.
+      Routes to the Fix Bug workflow, whose `triage-and-impact` phase is owned by
+      dev-1-bug-analyst. Behavior is defined by commands/bugfix.md; this record supplies
+      discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/bugfix.md
+    primaryWorkflow: fix-bug
+    dependencies:
+      - identifier: fix-bug
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+    tags:
+      - defect
+      - remediation
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - defect-analysis
+      - root-cause-analysis
+      - implementation-delivery
+      - quality-verification
+      - documentation
+
+  - identifier: refactor
+    displayName: Refactor
+    description: >-
+      Improve code maintainability while preserving observable behavior. Routes to the
+      Refactor workflow, whose `scope-invariants-and-risk-profile` phase is owned by the
+      Architect Agent. Behavior is defined by commands/refactor.md; this record supplies
+      discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/refactor.md
+    primaryWorkflow: refactor
+    dependencies:
+      - identifier: refactor
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - quality
+      - maintainability
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - technical-approach-definition
+      - structural-risk-analysis
+      - implementation-delivery
+      - quality-verification
+
+  - identifier: investigate
+    displayName: Investigate
+    description: >-
+      Run decision-support discovery against the current system before a change is planned.
+      Routes to the Investigate workflow, which the planner and architect manifests declare in
+      supportedWorkflows. Behavior is defined by commands/investigate.md; this record supplies
+      discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/investigate.md
+    primaryWorkflow: investigate
+    dependencies:
+      - identifier: investigate
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: planner
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+    tags:
+      - discovery
+      - decision-support
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - context-discovery
+      - impact-analysis
+      - option-evaluation
+      - documentation
+
+  - identifier: research
+    displayName: Research
+    description: >-
+      Produce evidence-based recommendations for uncertain product or technical decisions.
+      Routes to the Research workflow, the canonical research lifecycle. Behavior is defined
+      by commands/research.md; this record supplies discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/research.md
+    primaryWorkflow: research
+    dependencies:
+      - identifier: research
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+    tags:
+      - research
+      - decision-support
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - context-discovery
+      - requirement-analysis
+      - option-evaluation
+      - documentation
+
+  - identifier: review
+    displayName: Review
+    description: >-
+      Run structured review of proposed changes before merge or release progression. Routes to
+      the Review Pull Request workflow, whose `structural-compliance` phase is owned by the
+      Architect Agent. Behavior is defined by commands/review.md; this record supplies
+      discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/review.md
+    primaryWorkflow: review-pull-request
+    dependencies:
+      - identifier: review-pull-request
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+    tags:
+      - review
+      - governance
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - code-review
+      - governance-enforcement
+      - structural-risk-analysis
+      - quality-verification
+
+  - identifier: release
+    displayName: Release
+    description: >-
+      Prepare and execute a safe production release with controlled risk. Routes to the
+      Release workflow, whose `readiness-assessment` phase is owned by tech-lead with
+      architect support. Behavior is defined by commands/release.md; this record supplies
+      discovery and routing metadata only.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/release.md
+    primaryWorkflow: release
+    dependencies:
+      - identifier: release
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+    tags:
+      - release
+      - operations
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - release-readiness
+      - quality-verification
+      - release-communication
+      - run-coordination
+
+  - identifier: document
+    displayName: Document
+    description: >-
+      Create or update technical and release documentation aligned with delivered behavior.
+      Routes to the Implement Feature workflow and owns its
+      `documentation-and-release-handoff` phase. commands/document.md records where
+      documentation work appears in the other lifecycles and which command reaches it, per the
+      exactly-one-primary-workflow constraint.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/document.md
+    primaryWorkflow: implement-feature
+    dependencies:
+      - identifier: implement-feature
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+    tags:
+      - documentation
+      - communication
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - documentation
+      - release-communication
+
+  - identifier: test
+    displayName: Test
+    description: >-
+      Execute targeted quality verification for active changes or release candidates. Routes
+      to the Review Pull Request workflow and owns its `test-risk-validation` phase.
+      commands/test.md records where verification appears in the other lifecycles and which
+      command reaches it, per the exactly-one-primary-workflow constraint.
+    version: 1.0.0
+    status: active
+    specificationPath: commands/test.md
+    primaryWorkflow: review-pull-request
+    dependencies:
+      - identifier: review-pull-request
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+    tags:
+      - testing
+      - verification
+      - entry-point
+    owner: Architecture
+    capabilities:
+      - quality-verification
+      - validation-design

@@ -1,0 +1,295 @@
+apiVersion: framework.registry/v1
+kind: RegistrySpecification
+registryType: workflows
+metadata:
+  displayName: Workflow Registry
+  description: Discovery index specification for workflow lifecycle contracts.
+  version: 1.1.0
+  status: active
+  owner: Architecture
+
+recordSchema:
+  identifier:
+    type: string
+    required: true
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  displayName:
+    type: string
+    required: true
+  description:
+    type: string
+    required: true
+  version:
+    type: string
+    required: true
+    pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  status:
+    type: string
+    required: true
+    allowedValues: [draft, active, deprecated, retired]
+  specificationPath:
+    type: string
+    required: true
+    description: Repository-relative path to the workflow specification.
+  dependencies:
+    type: array
+    required: true
+    itemSchema:
+      identifier: string
+      versionConstraint: string
+      dependencyType: string
+  tags:
+    type: array
+    required: true
+    itemType: string
+  owner:
+    type: string
+    required: true
+  capabilities:
+    type: array
+    required: true
+    itemType: string
+
+automation:
+  uniqueKey: identifier
+  indexing:
+    - identifier
+    - status
+    - tags
+    - owner
+  compatibility:
+    compareBy: semanticVersion
+  resolution:
+    phaseModelSection: "## Phase Model"
+    description: >-
+      An active workflow record resolves for routing when the specification it names publishes
+      a machine-resolvable Phase Model table under the section heading above. The Task Router
+      reads that table for phase identifiers, owner agents, artifacts, gates, and required
+      skills; a workflow without it can be described but not routed.
+    failOnMissingPhaseModel: true
+  validation:
+    failOnUnknownFields: true
+    requireAllFields: true
+    enforceDependencyResolution: true
+
+records:
+  - identifier: implement-feature
+    displayName: Implement Feature
+    description: >-
+      Deliver new functionality that satisfies business scope, architectural standards,
+      and quality gates. The Planner Agent owns the execution-planning phase and the Architect
+      Agent owns solution design and risk assessment.
+    version: 1.0.0
+    status: active
+    specificationPath: workflows/implement-feature.md
+    dependencies:
+      - identifier: planner
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: execution-plan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - delivery
+      - feature
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - execution-planning
+      - technical-approach-definition
+      - implementation-delivery
+      - quality-verification
+      - release-readiness
+
+  - identifier: refactor
+    displayName: Refactor
+    description: >-
+      Improve internal code quality and maintainability while preserving externally
+      observable behavior. The Architect Agent owns scope, invariants, and risk profile; the
+      Planner Agent supports task decomposition.
+    version: 1.0.0
+    status: active
+    specificationPath: workflows/refactor.md
+    dependencies:
+      - identifier: planner
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: control
+      - identifier: execution-plan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+      - identifier: technical-design
+        versionConstraint: ">=1.1.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - quality
+      - maintainability
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - execution-planning
+      - technical-approach-definition
+      - implementation-delivery
+      - quality-verification
+
+  - identifier: investigate
+    displayName: Investigate
+    description: >-
+      Research-oriented discovery and decision support. The Planner Agent supports
+      problem framing; the Architect Agent supports technical discovery and option
+      analysis. 1.1.0 adds investigation-report.md to the recommendation phase's Input
+      column (additive), so the phase is routed the evidence base its owner accepts.
+    version: 1.1.0
+    status: active
+    specificationPath: workflows/investigate.md
+    dependencies:
+      - identifier: planner
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+      - identifier: execution-plan
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: data
+    tags:
+      - research
+      - discovery
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - requirement-analysis
+      - execution-planning
+      - impact-analysis
+      - context-discovery
+
+  - identifier: code-quality-scan
+    displayName: Code Quality Scan
+    description: >-
+      Single-pass, evidence-based review of a bounded repository scope for junk, redundant
+      logic, dead code, duplicated patterns, generated low-value noise, and over-engineered
+      abstractions. dev-2-reviewer owns the one `repository-quality-scan` phase; the
+      run terminates at the Quality Handoff Gate, decided by tech-lead, because the
+      keep-or-clean-up judgement is a human delivery tradeoff. The workflow reviews and
+      stops: no source change, no fix, no merge decision.
+    version: 1.0.0
+    status: active
+    specificationPath: workflows/code-quality-scan.md
+    dependencies: []
+    tags:
+      - quality
+      - technical-debt
+      - review
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - code-review
+      - quality-verification
+      - governance-enforcement
+
+  - identifier: fix-bug
+    displayName: Fix Bug
+    description: >-
+      Restore intended behavior through evidence-based diagnosis, targeted remediation, and
+      regression prevention. Every phase owner is host-invocable through an
+      `agents/<agent-id>.agent.md` entrypoint; none holds an agent registry record yet, so
+      each phase blocks at capability resolution with a recorded reason rather than being
+      skipped.
+    version: 1.0.0
+    status: active
+    specificationPath: workflows/fix-bug.md
+    dependencies: []
+    tags:
+      - defect
+      - remediation
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - defect-analysis
+      - root-cause-analysis
+      - implementation-delivery
+      - quality-verification
+      - documentation
+
+  - identifier: research
+    displayName: Research
+    description: >-
+      Reduce decision uncertainty by producing validated findings, evaluated options, and a
+      recommendation. This is the canonical research lifecycle; `investigate` remains the
+      compatibility entry point that the planner and architect manifests declare. 1.1.0
+      adds investigation-report.md to the recommendation-draft phase's Input column
+      (additive), so the phase is routed the evidence base its owner accepts.
+    version: 1.1.0
+    status: active
+    specificationPath: workflows/research.md
+    dependencies: []
+    tags:
+      - research
+      - decision-support
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - context-discovery
+      - requirement-analysis
+      - option-evaluation
+      - impact-analysis
+      - documentation
+
+  - identifier: review-pull-request
+    displayName: Review Pull Request
+    description: >-
+      Provide structured multi-agent validation of proposed changes before merge or release
+      promotion. The Architect Agent owns the `structural-compliance` phase as declared by
+      its manifest; the remaining phase owners hold no agent registry record yet.
+    version: 1.0.0
+    status: active
+    specificationPath: workflows/review-pull-request.md
+    dependencies:
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+    tags:
+      - review
+      - governance
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - code-review
+      - governance-enforcement
+      - structural-risk-analysis
+      - quality-verification
+      - documentation
+
+  - identifier: release
+    displayName: Release
+    description: >-
+      Promote approved changes to target environments safely with clear ownership,
+      observability, and rollback control. The Architect Agent supports readiness assessment
+      as declared by its manifest; deployment execution additionally depends on operational
+      access that no framework agent holds.
+    version: 1.0.0
+    status: active
+    specificationPath: workflows/release.md
+    dependencies:
+      - identifier: architect
+        versionConstraint: ">=1.0.0 <2.0.0"
+        dependencyType: capability
+    tags:
+      - release
+      - operations
+      - lifecycle
+    owner: Architecture
+    capabilities:
+      - release-readiness
+      - quality-verification
+      - code-review
+      - release-communication
+      - run-coordination

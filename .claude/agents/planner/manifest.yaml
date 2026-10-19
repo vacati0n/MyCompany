@@ -1,0 +1,170 @@
+apiVersion: framework.agent/v1
+kind: AgentManifest
+
+metadata:
+  identifier: planner
+  displayName: Planner Agent
+  description: >-
+    Transforms business requirements, user stories, Jira-style tickets, epics, and
+    product requirements into a deterministic engineering execution plan consumable
+    by downstream agents.
+  version: 1.0.0
+  status: active
+  owner: Architecture
+  contractVersion: 1.0.0
+  specificationRef: ../../domain-model/agent-specification.md
+  contractRef: identity.md
+  lifecycleRef: execution.md
+
+runtime:
+  entrypoint: system.md
+  modules:
+    - path: system.md
+      role: operating-charter
+      description: Authoritative operating instructions and invariants for the agent runtime.
+    - path: identity.md
+      role: agent-contract
+      description: Full Standard Agent Contract implementation for the Planner Agent.
+    - path: reasoning.md
+      role: reasoning-procedure
+      description: Deterministic analysis and decomposition procedure.
+    - path: execution.md
+      role: execution-lifecycle
+      description: Lifecycle state mapping, phase gates, retry, and escalation behavior.
+    - path: output.md
+      role: output-contract
+      description: Structural and semantic contract for execution-plan.md.
+    - path: quality.md
+      role: quality-contract
+      description: Self-verification checks, quality gates, and rejection rules.
+    - path: examples.md
+      role: reference-examples
+      description: Conforming and non-conforming execution examples.
+  loadOrder:
+    - system.md
+    - identity.md
+    - reasoning.md
+    - execution.md
+    - output.md
+    - quality.md
+    - examples.md
+
+capabilities:
+  - requirement-analysis
+  - task-decomposition
+  - dependency-analysis
+  - execution-sequencing
+  - complexity-estimation
+  - risk-identification
+  - execution-planning
+
+authorityScope:
+  permitted:
+    - analyze business and technical requirements
+    - decompose scope into executable engineering tasks
+    - derive dependencies and implementation order
+    - estimate complexity at planning granularity
+    - record assumptions, risks, and open questions
+    - produce execution-plan.md
+  prohibited:
+    - write production code
+    - review code
+    - modify architecture
+    - generate tests
+    - execute workflows
+    - access external systems directly
+
+inputs:
+  accepted:
+    - identifier: feature-request
+      required: false
+    - identifier: user-story
+      required: false
+    - identifier: jira-ticket
+      required: false
+    - identifier: epic
+      required: false
+    - identifier: product-requirement
+      required: false
+  minimumSatisfaction: >-
+    At least one accepted input must be present and must express an identifiable
+    business or user outcome.
+  optional:
+    - product-context
+    - technical-context
+    - release-context
+    - architecture-decision-records
+    - known-issues
+
+outputs:
+  - identifier: execution-plan
+    artifact: execution-plan.md
+    templateRef: ../../templates/execution-plan.md
+    contractRef: output.md
+    required: true
+
+supportedWorkflows:
+  - identifier: implement-feature
+    participation: primary
+    phase: execution-planning
+  - identifier: refactor
+    participation: supporting
+    phase: scope-invariants-and-risk-profile
+  - identifier: investigate
+    participation: supporting
+    phase: problem-framing
+
+skills:
+  - identifier: S02
+    ref: ../../skills/business/domain-modeling.md
+    proficiency: Primary
+  - identifier: S01
+    ref: ../../skills/architecture/clean-architecture-checklist.md
+    proficiency: Advisory
+  - identifier: S07
+    ref: ../../skills/testing/testing-strategy.md
+    proficiency: Secondary
+  - identifier: S09
+    ref: ../../skills/security/secure-engineering.md
+    proficiency: Advisory
+
+collaboration:
+  upstream:
+    - product-owner
+    - business-analyst
+    - context-agent
+  downstream:
+    - orchestrator
+    - architect
+    - tech-lead
+    - dev-1-implement
+    - qa
+  escalation:
+    primary: product-owner
+    secondary: business-analyst
+    architecture: architect
+    delivery: tech-lead
+    coordination: orchestrator
+determinism:
+  contract: >-
+    Identical approved inputs and identical context snapshot must produce an
+    execution plan with identical section set, identical task identifiers, and
+    identical dependency and ordering relationships.
+  taskIdentifierScheme: "T-<zero-padded-sequence>"
+  orderingRule: >-
+    Topological order over declared dependencies; ties broken by ascending task
+    identifier.
+  modelIndependence: >-
+    No module may reference a specific model, vendor, tool, runtime, or
+    implementation technology.
+
+versioning:
+  strategy: semantic
+  compatibility:
+    major: breaking output-contract or authority-scope change
+    minor: backward-compatible capability or section addition
+    patch: clarification without structural or behavioral impact
+  supersedes:
+    - ref: ../planner.md
+      version: 1.0.0
+      reason: Contract migrated into runtime module set.

@@ -1,0 +1,499 @@
+apiVersion: framework.registry/v1
+kind: RegistrySpecification
+registryType: skills
+metadata:
+  displayName: Skill Registry
+  description: >-
+    Discovery index specification for reusable skill definitions. Records supply the
+    identity metadata that skill files do not carry (skill code, category, version,
+    status); the skill file referenced by specificationPath remains the sole source of
+    skill behavior. `records` is the runtime-resolvable surface and carries active skills
+    only; `retiredAssets` is the governance record of skill files that exist on disk and
+    are excluded from resolution.
+  version: 1.3.0
+  status: active
+  owner: Architecture
+
+recordSchema:
+  identifier:
+    type: string
+    required: true
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    description: >-
+      Registry key. Derived mechanically from the specificationPath basename without its
+      extension, so the key is verifiable against the skill file it indexes.
+  skillCode:
+    type: string
+    required: true
+    pattern: "^S[0-9]{2}$"
+    description: >-
+      Canonical skill identifier as published in the Skill Catalog of
+      skills/agent-skill-matrix.md and referenced by agent manifests. Preserved across
+      non-breaking updates per domain-model/skill-specification.md.
+  displayName:
+    type: string
+    required: true
+    description: Skill name exactly as declared by the skill file heading.
+  category:
+    type: string
+    required: true
+    allowedValues:
+      - Architecture
+      - Business
+      - .NET
+      - Avalonia
+      - React
+      - Database
+      - Testing
+      - Performance
+      - Security
+      - Git
+      - Logging
+      - Error Handling
+    description: >-
+      Approved skill taxonomy as published in the Skill Catalog of
+      skills/agent-skill-matrix.md. Extending the taxonomy is a registry schema change.
+  description:
+    type: string
+    required: true
+  version:
+    type: string
+    required: true
+    pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  status:
+    type: string
+    required: true
+    allowedValues: [draft, active, deprecated, retired]
+  specificationPath:
+    type: string
+    required: true
+    description: >-
+      Repository-relative path to the authoritative skill definition file. Agent
+      manifest skill references resolve through this field.
+  dependencies:
+    type: array
+    required: true
+    itemSchema:
+      identifier: string
+      versionConstraint: string
+      dependencyType: string
+  tags:
+    type: array
+    required: true
+    itemType: string
+  owner:
+    type: string
+    required: true
+  capabilities:
+    type: array
+    required: true
+    itemType: string
+
+retirementSchema:
+  description: >-
+    Field set for `retiredAssets`. A retirement record indexes a skill file that exists on
+    disk and is excluded from active mapping per the Retired lifecycle state in
+    domain-model/skill-specification.md. It carries no skillCode, because a retired asset
+    holds no canonical skill identifier that an agent manifest or a workflow phase may cite.
+  assetPath:
+    type: string
+    required: true
+    description: Repository-relative path to the retired skill file.
+  displayName:
+    type: string
+    required: true
+    description: Skill name exactly as declared by the retired skill file heading.
+  status:
+    type: string
+    required: true
+    allowedValues: [deprecated, retired]
+  retiredInRegistryVersion:
+    type: string
+    required: true
+    pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+  retirementDate:
+    type: string
+    required: true
+    pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+  reason:
+    type: string
+    required: true
+    description: Why the asset is excluded from the runtime-resolvable surface.
+  replacement:
+    type: array
+    required: true
+    itemType: string
+    description: >-
+      Skill codes that carry the retired guidance forward. Required and non-empty: skill
+      governance in skills/skill-governance.md admits no deprecation without a replacement
+      reference.
+  runtimeResolvable:
+    type: boolean
+    required: true
+    allowedValues: [false]
+
+automation:
+  uniqueKey: identifier
+  alternateKey: skillCode
+  indexing:
+    - identifier
+    - skillCode
+    - category
+    - status
+    - tags
+    - owner
+  compatibility:
+    compareBy: semanticVersion
+  resolution:
+    agentReferenceKey: skillCode
+    description: >-
+      Agent manifests declare skill dependencies by skillCode with a relative ref to the
+      skill file. A reference resolves when exactly one record matches the skillCode and
+      that record's specificationPath denotes the same file as the declared ref.
+    failOnUnresolvedAgentReference: true
+  retirement:
+    resolvable: false
+    description: >-
+      `retiredAssets` is governance history, not a resolution surface. The resolver reads
+      `records` only, so a retired asset can never enter a resolved skill bundle. A retired
+      asset re-enters the resolvable surface only as a new `records` entry, which requires the
+      asset to satisfy the skill contract in skills/skill-governance.md and its category to
+      exist in the approved taxonomy above.
+  validation:
+    failOnUnknownFields: true
+    requireAllFields: true
+    enforceDependencyResolution: true
+    enforceUniqueAlternateKey: true
+    enforceSpecificationPathExists: true
+    enforceRetiredAssetsAbsentFromRecords: true
+    enforceRetirementReplacementResolves: true
+
+records:
+  - identifier: clean-architecture-checklist
+    skillCode: S01
+    displayName: Architecture Foundations
+    category: Architecture
+    description: >-
+      Reusable architecture guidance for designing maintainable, modular, and scalable
+      systems, covering dependency direction, explicit boundaries, adapter isolation,
+      and the threshold for recording an architecture decision.
+    version: 1.1.0
+    status: active
+    specificationPath: skills/architecture/clean-architecture-checklist.md
+    dependencies: []
+    tags:
+      - architecture
+      - boundaries
+      - modularity
+      - decision-records
+    owner: Architecture
+    capabilities:
+      - layer-boundary-assessment
+      - dependency-direction-analysis
+      - adapter-isolation-guidance
+      - architecture-decision-triggers
+
+  - identifier: domain-modeling
+    skillCode: S02
+    displayName: Business Analysis and Domain Modeling
+    category: Business
+    description: >-
+      Practices for building shared business understanding and robust domain models,
+      covering bounded contexts, enforceable invariants, explicit state transitions, and
+      requirement-to-validation traceability.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/business/domain-modeling.md
+    dependencies: []
+    tags:
+      - business
+      - requirements
+      - domain-model
+      - acceptance-criteria
+    owner: Architecture
+    capabilities:
+      - bounded-context-definition
+      - invariant-identification
+      - state-transition-modeling
+      - requirement-traceability
+
+  - identifier: engineering-playbook
+    skillCode: S03
+    displayName: .NET Engineering
+    category: .NET
+    description: >-
+      Reusable .NET implementation patterns for reliability, maintainability, and
+      operational clarity, covering explicit dependencies and object lifetimes,
+      cancellation-aware asynchronous flows, versioned contracts, and boundary validation
+      that fails fast with context.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/dotnet/engineering-playbook.md
+    dependencies: []
+    tags:
+      - dotnet
+      - dependency-injection
+      - async
+      - contracts
+    owner: Architecture
+    capabilities:
+      - dependency-composition-guidance
+      - cancellation-propagation-assessment
+      - contract-versioning-guidance
+      - boundary-validation-design
+
+  - identifier: desktop-ux-guidelines
+    skillCode: S04
+    displayName: Avalonia UI Engineering
+    category: Avalonia
+    description: >-
+      Reusable Avalonia desktop guidance for maintainable, accessible, and predictable
+      interfaces, covering the view-model boundary that keeps UI logic out of code-behind,
+      explicit and observable state transitions, keyboard and accessibility support as a
+      baseline, and reusable styles and controls in place of repeated visual constants.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/avalonia/desktop-ux-guidelines.md
+    dependencies: []
+    tags:
+      - avalonia
+      - desktop
+      - mvvm
+      - accessibility
+    owner: Architecture
+    capabilities:
+      - view-model-boundary-assessment
+      - ui-state-transition-modeling
+      - accessibility-baseline-review
+      - reusable-control-extraction-guidance
+
+  - identifier: react-engineering
+    skillCode: S05
+    displayName: React Engineering
+    category: React
+    description: >-
+      Reusable frontend guidance for maintainable, testable, and performant React
+      applications, covering single-responsibility components, explicit and minimal state
+      ownership, hook and effect discipline that keeps side effects out of render, and
+      loading, empty, and error states designed rather than implied.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/react/react-engineering.md
+    dependencies: []
+    tags:
+      - react
+      - frontend
+      - components
+      - hooks
+    owner: Architecture
+    capabilities:
+      - component-responsibility-partitioning
+      - state-ownership-scoping
+      - hook-and-effect-discipline-review
+      - render-state-coverage-design
+
+  - identifier: database-engineering
+    skillCode: S06
+    displayName: Database Engineering
+    category: Database
+    description: >-
+      Data modeling and persistence practices for correctness, scalability, and
+      operational safety, covering data integrity, backward-compatible schema change,
+      designed query performance, and transaction boundaries.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/database/database-engineering.md
+    dependencies: []
+    tags:
+      - database
+      - data-modeling
+      - migrations
+      - transactions
+    owner: Architecture
+    capabilities:
+      - data-model-design
+      - migration-safety-assessment
+      - query-performance-design
+      - transaction-boundary-definition
+
+  - identifier: testing-strategy
+    skillCode: S07
+    displayName: Testing Strategy
+    category: Testing
+    description: >-
+      Testing practices that provide fast feedback and confidence proportional to risk,
+      covering test-depth selection, determinism and isolation, acceptance-criteria
+      mapping, and mandatory regression prevention for fixes.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/testing/testing-strategy.md
+    dependencies: []
+    tags:
+      - testing
+      - quality
+      - regression
+      - acceptance-criteria
+    owner: Architecture
+    capabilities:
+      - test-depth-selection
+      - risk-based-test-scoping
+      - acceptance-criteria-mapping
+      - regression-coverage-assessment
+
+  - identifier: performance-engineering
+    skillCode: S08
+    displayName: Performance Engineering
+    category: Performance
+    description: >-
+      Methods to design, measure, and improve runtime performance under representative
+      workload, covering explicit performance objectives, baseline capture,
+      critical-path profiling, and re-measurement after each change.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/performance/performance-engineering.md
+    dependencies: []
+    tags:
+      - performance
+      - latency
+      - throughput
+      - measurement
+    owner: Architecture
+    capabilities:
+      - performance-objective-definition
+      - baseline-measurement
+      - bottleneck-identification
+      - load-representativeness-assessment
+
+  - identifier: secure-engineering
+    skillCode: S09
+    displayName: Security Engineering
+    category: Security
+    description: >-
+      Secure engineering practices that reduce exploitability and protect
+      confidentiality, integrity, and availability, covering secure defaults, least
+      privilege, defense in depth, and controls that remain testable and observable.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/security/secure-engineering.md
+    dependencies: []
+    tags:
+      - security
+      - least-privilege
+      - input-validation
+      - secrets
+    owner: Architecture
+    capabilities:
+      - threat-surface-assessment
+      - authorization-boundary-review
+      - secret-handling-guidance
+      - security-control-verifiability
+
+  - identifier: git-collaboration
+    skillCode: S10
+    displayName: Git Collaboration
+    category: Git
+    description: >-
+      Reusable source-control practices for safe collaboration, traceability, and change
+      isolation, covering small reversible commits, branch scope, reviewable change sets,
+      intent-carrying history, and consistent release tagging.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/git/git-collaboration.md
+    dependencies: []
+    tags:
+      - git
+      - collaboration
+      - traceability
+      - change-isolation
+    owner: Architecture
+    capabilities:
+      - commit-scope-assessment
+      - branch-strategy-selection
+      - review-scope-partitioning
+      - release-tagging-discipline
+
+  - identifier: observability-logging
+    skillCode: S11
+    displayName: Logging and Observability
+    category: Logging
+    description: >-
+      Reusable logging practices that accelerate diagnosis, auditing, and operational
+      decision-making, covering structured and contextual events, mandatory correlation
+      across service boundaries, signal quality over volume, and protection of sensitive
+      data.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/logging/observability-logging.md
+    dependencies: []
+    tags:
+      - logging
+      - observability
+      - correlation
+      - diagnostics
+    owner: Architecture
+    capabilities:
+      - structured-event-design
+      - correlation-propagation-assessment
+      - log-level-selection
+      - sensitive-data-protection-in-logs
+
+  - identifier: error-handling-strategy
+    skillCode: S12
+    displayName: Error Handling
+    category: Error Handling
+    description: >-
+      Error handling patterns that improve reliability, debuggability, and user trust,
+      covering failure classification, stable error contracts at public boundaries,
+      context preservation on rethrow, and bounded retry for transient failures.
+    version: 1.0.0
+    status: active
+    specificationPath: skills/error-handling/error-handling-strategy.md
+    dependencies: []
+    tags:
+      - error-handling
+      - reliability
+      - resilience
+      - diagnostics
+    owner: Architecture
+    capabilities:
+      - failure-classification
+      - error-contract-definition
+      - recovery-policy-selection
+      - diagnostic-context-preservation
+
+retiredAssets:
+  - assetPath: skills/cicd/release-automation.md
+    displayName: Release Automation
+    status: retired
+    retiredInRegistryVersion: 1.3.0
+    retirementDate: "2026-08-19"
+    reason: >-
+      Holds no canonical skill identifier and satisfies neither the skill contract in
+      skills/skill-governance.md, which requires Principles, Anti-patterns, Decision Rules,
+      and Common Mistakes, nor the approved category taxonomy, which has no CI/CD value. Its
+      guidance is already carried by the resolvable surface: release tagging discipline by
+      S10, test-pass thresholds and reporting by S07, and the pipeline gates themselves by
+      quality-gates.md, which is gate authority rather than skill guidance. No agent manifest
+      and no phase of any active workflow references it, so retirement removes no capability
+      from any resolved skill bundle.
+    replacement:
+      - S10
+      - S07
+    runtimeResolvable: false
+
+  - assetPath: skills/coding-style/dotnet-coding-style.md
+    displayName: .NET Coding Style
+    status: retired
+    retiredInRegistryVersion: 1.3.0
+    retirementDate: "2026-08-19"
+    reason: >-
+      Holds no canonical skill identifier and satisfies neither the skill contract in
+      skills/skill-governance.md nor the approved category taxonomy, which has no Coding Style
+      value. Its standards restate S03 .NET Engineering -- intent-carrying names, explicit
+      side effects, cancellation tokens through async flows, and logging with context -- which
+      is the duplicate-skill-intent conflict named in skills/skill-resolver.md, resolved here
+      in favour of the registered skill. No agent manifest and no phase of any active workflow
+      references it, so retirement removes no capability from any resolved skill bundle.
+    replacement:
+      - S03
+    runtimeResolvable: false

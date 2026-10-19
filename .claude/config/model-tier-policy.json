@@ -1,0 +1,64 @@
+{
+  "schema": "framework.config/model-tier-policy.v1",
+  "description": "Per-phase model tier declaration. Read by runtime/framework_runtime.py at dispatch; see config/runtime.md, section Model Tiers. Hints are opaque host aliases the runtime copies verbatim; 'inherit' means pass no override.",
+  "hints": {
+    "light": "haiku",
+    "standard": "inherit",
+    "deep": "opus"
+  },
+  "phases": {
+    "code-quality-scan": {
+      "repository-quality-scan": "light"
+    },
+    "fix-bug": {
+      "triage-and-impact": "standard",
+      "root-cause-analysis": "deep",
+      "fix-implementation": "deep",
+      "regression-validation": "standard",
+      "closure-and-communication": "light"
+    },
+    "implement-feature": {
+      "scope-and-acceptance": "light",
+      "execution-planning": "standard",
+      "solution-design-and-risk-assessment": "deep",
+      "implementation": "deep",
+      "quality-review": "deep",
+      "documentation-and-release-handoff": "light"
+    },
+    "investigate": {
+      "problem-framing": "light",
+      "technical-discovery": "light",
+      "option-analysis": "standard",
+      "recommendation": "standard",
+      "publication": "light"
+    },
+    "refactor": {
+      "scope-invariants-and-risk-profile": "deep",
+      "safety-net-establishment": "standard",
+      "refactor-implementation": "deep",
+      "behavioral-validation": "standard",
+      "closure-and-debt-record": "light"
+    },
+    "release": {
+      "readiness-assessment": "standard",
+      "artifact-packaging": "light",
+      "candidate-validation": "standard",
+      "deployment-execution": "standard",
+      "communication-and-post-release": "light"
+    },
+    "research": {
+      "research-framing": "light",
+      "technical-validation": "light",
+      "option-synthesis": "standard",
+      "recommendation-draft": "standard",
+      "findings-publication": "light"
+    },
+    "review-pull-request": {
+      "code-quality-review": "deep",
+      "structural-compliance": "deep",
+      "test-risk-validation": "standard",
+      "documentation-impact": "light",
+      "merge-decision": "standard"
+    }
+  }
+}
