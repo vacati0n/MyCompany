@@ -1,0 +1,119 @@
+{
+  "invocation_id": "inv-535f3f938f32-04-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-535f3f938f32/states/implementation/artifacts/attempt-2/implementation-report.md"
+  ],
+  "structured_output": {
+    "report_id": "IR-2026-0033",
+    "report_status": "complete",
+    "verification_status": "verified",
+    "workflow_phase": "implementation",
+    "review_status": "pending-review",
+    "attempt": 2,
+    "prior_report": "runs/run-535f3f938f32/states/implementation/artifacts/implementation-report.md",
+    "correction_requests_closed": ["CR-001", "CR-002", "CR-003", "CR-004", "CR-005", "CR-006", "CR-007", "CR-008", "CR-009", "CR-010", "CR-011", "CR-012"],
+    "counts": {
+      "change_set_entries": 19,
+      "test_evidence_entries": 23,
+      "deviations": 4,
+      "residual_risks": 7,
+      "open_questions": 4,
+      "blocking_open_questions": 0,
+      "escalated_deviations": 3
+    },
+    "executed_results": {
+      "build": "0 warnings, 0 errors",
+      "pilot_unit": "216/216",
+      "pilot_integration": "35/35",
+      "architecture": "101/101",
+      "capability": "90/90",
+      "deterministic": "453/453",
+      "domain": "48/48",
+      "production": "132 passed, 1 skipped of 133 (baseline unchanged)"
+    },
+    "sample": {
+      "folder": "C:/Users/vuhoangcao/MediaCompanyRun/pilot-sample",
+      "video": "C:/Users/vuhoangcao/MediaCompanyRun/pilot-sample/pilot/runs/V-01-20261026T175930707Z/video.mp4",
+      "video_sha256": "c13e81d43bc6cbf0ba5d94712b5cf90e2e467312b829d04cb02801b75abd3c29",
+      "ffprobe": "h264,1080,1920,yuv420p; duration 17.400000",
+      "caption_pages_min_seconds": 1.403,
+      "network_guard": "static closure passed; 0 socket-table rows owned by a job member in 1095 samples; 73 job members (MediaCompany.Pilot x14, conhost x37, ffmpeg x12, ffprobe x10)",
+      "refusals_demonstrated": [
+        "banned-term",
+        "recording-too-long",
+        "recording-reused",
+        "clip-not-portrait",
+        "clip-length-mismatch",
+        "caption-page-too-short",
+        "package-file-not-plain",
+        "approval-void",
+        "approval-hash-mismatch"
+      ],
+      "frame_png": "pilot/runs/V-01-20261026T175930707Z/frame.png (0.798 s, disclosure first page)",
+      "proof_frame_png": "proof-frame.png",
+      "transcript": "sample-transcript.txt",
+      "checklist": "B8 ticked; B3 and B5 unticked with the tool's note"
+    },
+    "quality_check_set_version": "1.0.0",
+    "quality_checks": {
+      "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+      "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass",
+      "M1": "pass", "M5": "pass", "M7": "pass",
+      "E1": "pass", "E2": "pass", "E3": "pass", "E4": "pass",
+      "M3": "pass", "M2": "pass", "K1": "pass", "K2": "pass", "M4": "pass",
+      "V1": "pass", "V2": "pass", "V3": "pass",
+      "B1": "pass", "B2": "pass", "B3": "pass", "B4": "pass", "B5": "pass", "B6": "pass", "B7": "pass",
+      "M6": "pass",
+      "A1": "pass", "A2": "pass", "A3": "pass",
+      "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass"
+    },
+    "quality_checks_run": 45,
+    "quality_checks_passed": 45,
+    "validator": {
+      "tool": "runtime/implementation_report_validator.py",
+      "result": "PASS",
+      "checks": "32/32"
+    },
+    "not_machine_checkable": {
+      "N1": "discharged: each change-set row was written from the diff of that path against fc21199 and the one added test file",
+      "N2": "discharged: each test-evidence row names test classes or methods whose assertions were checked against the test source (inline data counts included)",
+      "N3": "discharged: no hidden side effect; the tool still writes only to the configured pilot folder outside the repository (now also the package inputs folder) and starts only the digest-checked media tools; the harness job object exists only in the test project",
+      "N4": "discharged: no new project, component or package dependency; each correction changes an existing attempt-1 component; held-data values keep the CEO limits in one versioned place"
+    }
+  },
+  "evidence_refs": [
+    "agents/dev-1-implement/system.md",
+    "agents/dev-1-implement/identity.md",
+    "agents/dev-1-implement/reasoning.md",
+    "agents/dev-1-implement/output.md",
+    "agents/dev-1-implement/quality.md",
+    "runs/run-535f3f938f32/states/implementation/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    "src/MediaCompany.Pilot/HeldData/held-data.json",
+    "src/MediaCompany.Pilot/HeldData.cs",
+    "src/MediaCompany.Pilot/PilotSettings.cs",
+    "src/MediaCompany.Pilot/CaptionLayout.cs",
+    "src/MediaCompany.Pilot/Admission.cs",
+    "src/MediaCompany.Pilot/BannedTermCheck.cs",
+    "src/MediaCompany.Pilot/FactSheet.cs",
+    "src/MediaCompany.Pilot/Face.cs",
+    "src/MediaCompany.Pilot/Producer.cs",
+    "src/MediaCompany.Pilot/Ledger.cs",
+    "src/MediaCompany.Pilot/Package.cs",
+    "pilot-affiliate-vn/mc-16/vi-du-cai-dat.json",
+    "pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md",
+    "tests/MediaCompany.Pilot.Tests/PilotTestEnvironment.cs",
+    "tests/MediaCompany.Pilot.Tests/LayoutLedgerAndKitTests.cs",
+    "tests/MediaCompany.Pilot.Tests/IntegrationTests.cs",
+    "tests/MediaCompany.Pilot.Tests/SampleRunTests.cs",
+    "tests/MediaCompany.Pilot.Tests/SocketTableHarness.cs",
+    "tests/MediaCompany.Pilot.Tests/CorrectionTests.cs",
+    ".claude/runs/run-535f3f938f32/states/implementation/artifacts/attempt-2/implementation-report.md",
+    ".claude/runs/run-535f3f938f32/states/implementation/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

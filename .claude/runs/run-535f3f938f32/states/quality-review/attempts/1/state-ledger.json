@@ -1,0 +1,87 @@
+{
+  "run_id": "run-535f3f938f32",
+  "slice": "vertical-slice-5-reviewer-execution",
+  "runtime_version": "0.11.1",
+  "status": "completed",
+  "queue_status": "Executing",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "state_id": "quality-review",
+  "work_item_id": "run-535f3f938f32::quality-review",
+  "idempotency_key": "sha256:541462dda1267f855fe6658b58e17bbf",
+  "attempt": 1,
+  "agent_id": "dev-2-reviewer",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "invocation_id": "inv-535f3f938f32-05-001",
+  "input_digest": "sha256:bb88e8cd79d281afd004d8892d7da5a4",
+  "context_digest": "sha256:75bb3dd26a2c83c8267d5f109eb9d6fe",
+  "module_load_order": [
+    "agents/dev-2-reviewer/system.md",
+    "agents/dev-2-reviewer/identity.md",
+    "agents/dev-2-reviewer/reasoning.md",
+    "agents/dev-2-reviewer/execution.md",
+    "agents/dev-2-reviewer/output.md",
+    "agents/dev-2-reviewer/quality.md",
+    "agents/dev-2-reviewer/examples.md"
+  ],
+  "artifact_path": "runs/run-535f3f938f32/states/quality-review/artifacts/review-package.md",
+  "conditional_artifact_globs": [],
+  "result_envelope_path": "runs/run-535f3f938f32/states/quality-review/result-envelope.json",
+  "validator": "review_package_validator",
+  "load_profile_mode": "progressive",
+  "context_budget": {
+    "modules_full_bytes": 74164,
+    "modules_core_bytes": 37865,
+    "slice_all_bytes": 189650,
+    "slice_required_bytes": 27815,
+    "inputs_bytes": 18422,
+    "upstream_full_bytes": 27429,
+    "upstream_read_first_bytes": 22310,
+    "task_context_bytes": 71845,
+    "fixed_bytes": 13375,
+    "legacy_estimate_bytes": 323040,
+    "progressive_estimate_bytes": 191632,
+    "legacy_estimate_tokens": 80760,
+    "progressive_estimate_tokens": 47908,
+    "savings_pct": 40.7
+  },
+  "execution_started_at": "2026-10-26T17:23:55Z",
+  "execution_completed_at": "2026-10-26T17:36:51Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 31,
+    "checksPassed": 31,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 3,
+    "counts": {
+      "sections": 10,
+      "status": "complete",
+      "identifiers": {
+        "F": 12,
+        "CR": 12,
+        "Q": 3
+      },
+      "tableRows": {
+        "Findings": 12,
+        "Correction Requests": 12
+      },
+      "findings": 12,
+      "verdict": "approve-with-corrections",
+      "correctionRequests": 12,
+      "severity": {
+        "critical": 0,
+        "high": 4,
+        "medium": 4,
+        "low": 4
+      }
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:c0f91c8aaae8570851fb5a1f0bb0fac1",
+  "recovery": null
+}

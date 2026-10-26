@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The MC-16 pilot toolchain (design decision D-001): a console tool that references MediaCompany.Deterministic only, and
+    through it MediaCompany.Application and MediaCompany.Domain. It references no package, no networking assembly, and none
+    of Production, Persistence, Capability, Credentials or Host. MediaCompany.Pilot.Tests holds the closure check.
+  -->
+  <PropertyGroup>
+    <!-- Unicode NFC normalization is a no-op under invariant globalization (measured: "a" + U+0302 + U+0301 stays three
+         characters and reports itself normalized), and every banned-term, coverage and override check depends on NFC. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>MediaCompany.Pilot</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Deterministic\MediaCompany.Deterministic.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="HeldData\held-data.json" LogicalName="MediaCompany.Pilot.held-data.json" />
+  </ItemGroup>
+</Project>

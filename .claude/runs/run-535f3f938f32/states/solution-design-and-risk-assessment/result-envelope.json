@@ -1,0 +1,90 @@
+{
+  "invocation_id": "inv-535f3f938f32-03-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md"
+  ],
+  "structured_output": {
+    "package_status": "complete",
+    "counts": {
+      "statements": 27,
+      "facts": 28,
+      "assumptions": 11,
+      "constraints": 27,
+      "impacted_modules": 16,
+      "options": 5,
+      "decisions": 13,
+      "architecture_significant_decisions": 4,
+      "risks": 17,
+      "sequencing_constraints": 12,
+      "open_questions": 8,
+      "reuse_rows": 28
+    },
+    "selected_option": "O-002",
+    "recomputed_option_ranking": ["O-002", "O-004", "O-003", "O-001", "O-005"],
+    "ranking_basis": "O-002 is the only option meeting every hard constraint; eliminated options ordered by impact surface, then reuse leverage, then quality attributes, then id: O-004 (surface 1, reuse 12), O-003 (surface 2, reuse 14, operability medium), O-001 (surface 2, reuse 14, operability low), O-005 (surface 3)",
+    "selection_follows_from_evaluation": true,
+    "eleven_items_decided": {
+      "1_fact_sheet_form": "D-006",
+      "2_sentence_frames": "D-007",
+      "3_call_to_action_list": "D-007",
+      "4_banned_classes_held": "D-004",
+      "5_vertical_render_route": "D-002",
+      "6_character_coverage": "D-010",
+      "7_pause_method_and_threshold": "D-008",
+      "8_image_motion": "D-009",
+      "9_ledger_location": "D-003",
+      "10_network_guard": "D-005",
+      "11_test_project_placement": "D-011"
+    },
+    "components_outside_installed_set": [],
+    "escalations": ["Q-001", "Q-002", "Q-003", "Q-005", "Q-007"],
+    "implementation_performed": false,
+    "quality_checks": {
+      "run": 98,
+      "passed": 98,
+      "results": {
+        "A1": {"run": 8, "passed": 8},
+        "A2": {"run": 10, "passed": 10},
+        "A3": {"run": 6, "passed": 6},
+        "A4": {"run": 4, "passed": 4},
+        "A5": {"run": 4, "passed": 4},
+        "A6": {"run": 6, "passed": 6},
+        "A7": {"run": 5, "passed": 5},
+        "A8": {"run": 7, "passed": 7},
+        "A9": {"run": 6, "passed": 6},
+        "A10": {"run": 7, "passed": 7},
+        "A11": {"run": 5, "passed": 5},
+        "A12": {"run": 5, "passed": 5},
+        "A13": {"run": 7, "passed": 7},
+        "A14": {"run": 8, "passed": 8},
+        "A15": {"run": 5, "passed": 5},
+        "A16": {"run": 5, "passed": 5}
+      }
+    }
+  },
+  "evidence_refs": [
+    ".claude/agents/architect/manifest.yaml",
+    ".claude/agents/architect/system.md",
+    ".claude/agents/architect/reasoning.md",
+    ".claude/agents/architect/output.md",
+    ".claude/agents/architect/quality.md",
+    ".claude/agents/architect/identity.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+    ".claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

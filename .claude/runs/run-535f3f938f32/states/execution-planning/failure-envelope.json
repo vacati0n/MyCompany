@@ -1,0 +1,81 @@
+{
+  "schema": "framework.runtime/failure-envelope.v1",
+  "envelope_id": "FE-run-535f3f938f32-execution-planning-01",
+  "escalation_id": "ESC-run-535f3f938f32-execution-planning-01",
+  "run_id": "run-535f3f938f32",
+  "work_item_id": "run-535f3f938f32::execution-planning",
+  "state_id": "execution-planning",
+  "work_type": "state",
+  "owner_agent_id": "planner",
+  "phase_index": 2,
+  "detected_at": "2026-10-26T15:26:06Z",
+  "detected_by": "runtime:validation-engine",
+  "detection_point": "validation",
+  "occurrence": 1,
+  "failure_class": "output-schema-failure",
+  "reason_code": "validation_failed",
+  "guard": null,
+  "detail": "validation rejected the artifact: 3 blocking and 0 correctable failure(s) ['V4.1', 'V4.8', 'V5.1']",
+  "classification": {
+    "failure_class": "output-schema-failure",
+    "detection_point": "validation",
+    "retryable": true,
+    "action": "retry",
+    "default_action": "retry",
+    "escalation_trigger": "repeated malformed output",
+    "blocked_reason": "awaiting_recovery_task",
+    "required_decision_type": "recovery-authorisation",
+    "basis": "config/execution-engine.md#failure-classification-matrix",
+    "attempt": 1,
+    "attempts_charged": 1,
+    "attempts_lost": 0,
+    "max_attempts": 3,
+    "attempts_remaining": 2,
+    "budget_exhausted": false,
+    "breaker_open": false,
+    "charged": true,
+    "next_delay_seconds": 1.735,
+    "available_at": "2026-10-26T15:26:08Z",
+    "reason": "class 'output-schema-failure' is retryable and 2 of 3 charged attempt(s) remain, so one further attempt is scheduled after 1.735s of exponential backoff"
+  },
+  "retry": {
+    "attempt": 1,
+    "attempts_lost": 0,
+    "attempts_charged": 1,
+    "max_attempts": 3,
+    "attempts_remaining": 2,
+    "budget_exhausted": false,
+    "breaker_open": false,
+    "next_delay_seconds": 1.735,
+    "available_at": "2026-10-26T15:26:08Z",
+    "idempotency_key": "sha256:8802b524bd832f7f79094b7e6f84d591",
+    "profile_ref": "config/runtime.md#retry-policy"
+  },
+  "resulting_status": "retrying",
+  "blocked_reason": "awaiting_recovery_task",
+  "required_decision_type": "recovery-authorisation",
+  "owner_roles": [],
+  "impacted_artifacts": [
+    "runs/run-535f3f938f32/states/execution-planning/artifacts/execution-plan.md"
+  ],
+  "evidence_bundle_ref": {
+    "validation_report": "runs/run-535f3f938f32/states/execution-planning/validation-report.json",
+    "failed_checks": [
+      "V4.1",
+      "V4.8",
+      "V5.1"
+    ],
+    "undeclared_side_effects": []
+  },
+  "proposed_options": [
+    "await the scheduled attempt (available at 2026-10-26T15:26:08Z)",
+    "reclaim the work item now and re-dispatch",
+    "abort the run"
+  ],
+  "default_fallback_action": "schedule one further attempt under the retry profile",
+  "clearing_action": "none required; the work item becomes dispatchable at 2026-10-26T15:26:08Z, and `next` routes it then. To reclaim it sooner: python .claude/runtime/framework_runtime.py release --run-id run-535f3f938f32 --phase execution-planning --reason tool_failure --detail \"operator cleared the block with the prescribed release action\"",
+  "status": "resolved",
+  "resolved_at": "2026-10-26T15:29:31Z",
+  "resolution": "the artifact was accepted on a later attempt",
+  "resolved_by": "runtime:validation-engine"
+}

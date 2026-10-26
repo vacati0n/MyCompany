@@ -1,0 +1,96 @@
+{
+  "invocation_id": "inv-535f3f938f32-06-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-535f3f938f32/states/documentation-and-release-handoff/artifacts/release-note.md"
+  ],
+  "structured_output": {
+    "artifact_status": "complete",
+    "release_verdict": "handed-off",
+    "communication_basis": "release-handoff",
+    "audience_source": "partly inferred from the phase: the CEO and the employee operator are named by decision record entries 1304 to 1309; the orchestrator is implied by the phase as Closure Gate owner",
+    "input_mapping": {
+      "runs/run-535f3f938f32/states/quality-review/artifacts/attempt-2/review-package.md": "verification-report (supplied as review-package)",
+      "runs/run-535f3f938f32/state.json": "verification-report (Review Gate and Verification Gate rationales)",
+      "runs/run-535f3f938f32/states/implementation/artifacts/attempt-2/implementation-report.md": "final-change-summary",
+      "runs/run-535f3f938f32/states/implementation/artifacts/implementation-report.md": "final-change-summary",
+      "research/ceo-decision-record.md": "stakeholder-list (nearest declared type; entries 1304 to 1309)",
+      "runs/run-535f3f938f32/task-context.yaml": "architecture-context",
+      "pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md": "architecture-context",
+      "pilot-affiliate-vn/pilot-kit/04-danh-sach-duyet-dang-bai.md": "architecture-context"
+    },
+    "known_issue_count": 16,
+    "published_statement_count": 40,
+    "statement_sources": [
+      "runs/run-535f3f938f32/states/quality-review/artifacts/attempt-2/review-package.md",
+      "runs/run-535f3f938f32/state.json",
+      "runs/run-535f3f938f32/states/implementation/artifacts/attempt-2/implementation-report.md",
+      "runs/run-535f3f938f32/states/implementation/artifacts/implementation-report.md",
+      "research/ceo-decision-record.md",
+      "runs/run-535f3f938f32/task-context.yaml",
+      "pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md",
+      "pilot-affiliate-vn/pilot-kit/04-danh-sach-duyet-dang-bai.md"
+    ],
+    "changes_by_class": {
+      "feature-addition": 1,
+      "bug-fix": 0,
+      "improvement": 1,
+      "contract-change": 1,
+      "migration": 0,
+      "configuration-change": 1,
+      "breaking-change": 1
+    },
+    "breaking_change_note": "A settings file made from the example in commit fc21199 lacks the settings member for the minimum caption page time and is refused until it is added; stated under Backward compatibility notes",
+    "repair_note": "Attempt 2 repairs check C3.2: the settings member identifier contained a vendor substring and was replaced by a descriptive phrase in the two places the coordinator named; the Configuration changes list item that read caption page then minimum was also reworded to 'minimum caption page time', because it spells the same substring once spaces are ignored; no other content changed",
+    "quality_checks": {
+      "run": 62,
+      "passed": 62,
+      "failed": 0,
+      "results": {
+        "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+        "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass", "D7": "pass",
+        "P1": "pass", "P2": "pass", "P3": "pass", "P4": "pass", "P5": "pass", "P6": "pass",
+        "R3": "pass",
+        "X1": "pass", "X2": "pass", "X3": "pass", "X4": "pass",
+        "R1": "pass", "R2": "pass", "R4": "pass", "R5": "pass", "R7": "pass", "R8": "pass", "R9": "pass",
+        "V1": "pass", "V2": "pass", "V3": "pass",
+        "K1": "pass", "K2": "pass", "K3": "pass", "K4": "pass", "K5": "pass", "K6": "pass",
+        "R6": "pass",
+        "A1": "pass", "A2": "pass", "A3": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass", "A8": "pass", "A9": "pass", "A10": "pass", "A11": "pass", "A12": "pass", "A13": "pass",
+        "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass", "C6": "pass"
+      }
+    },
+    "judgements": {
+      "N1": "Each statement is written for the CEO and the operator; the Vietnamese summary repeats only facts stated in the English body",
+      "N2": "Untested surfaces (real presenter clip, real voice recording, the reviewer's unconfirmed regression suites) are stated as not validated, not softened",
+      "N3": "Every 'all'/'every' claim lists its members: the CEO's settings values, the nine demonstrated refusals, the seven new refusal codes, the five commands, the four exit states"
+    },
+    "open_questions": [
+      { "question": "Who re-sets the pause threshold (-35 dB, 0.35 s) from the first real recording, and where is it tracked (K-012)?", "owner_role": "orchestrator" },
+      { "question": "Should kit 04 item B7 be reworded to the operator wording that B13 uses (K-014)?", "owner_role": "product-owner" },
+      { "question": "What version should MediaCompany.Pilot declare; this note uses 0.0.0+e264a7a (K-016)?", "owner_role": "tech-lead" },
+      { "question": "Is refusing 'em', 'anh' and 'chi' used as common nouns in overrides accepted (K-001)?", "owner_role": "product-owner" },
+      { "question": "Should approval refuse a ready package whose ledger entry was superseded (K-003)?", "owner_role": "architect" },
+      { "question": "Are the old-style 'suc khoe' spellings to stay refused (K-009)?", "owner_role": "product-owner" },
+      { "question": "Is keeping held packages out of the ledger accepted (K-010)?", "owner_role": "architect" },
+      { "question": "Are the extra kit 03 edits accepted (K-011)?", "owner_role": "product-owner" },
+      { "question": "Is the undetectable pilot-folder deletion residual accepted (K-005)?", "owner_role": "architect" }
+    ]
+  },
+  "evidence_refs": [
+    ".claude/agents/documentation/manifest.yaml",
+    ".claude/agents/documentation/system.md",
+    ".claude/agents/documentation/reasoning.md",
+    ".claude/agents/documentation/output.md",
+    ".claude/agents/documentation/quality.md",
+    ".claude/agents/documentation/identity.md",
+    ".claude/runs/run-535f3f938f32/states/documentation-and-release-handoff/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    ".claude/runs/run-535f3f938f32/states/documentation-and-release-handoff/artifacts/release-note.md",
+    ".claude/runs/run-535f3f938f32/states/documentation-and-release-handoff/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

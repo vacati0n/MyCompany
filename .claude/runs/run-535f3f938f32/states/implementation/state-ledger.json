@@ -1,0 +1,82 @@
+{
+  "run_id": "run-535f3f938f32",
+  "slice": "vertical-slice-3-implement-execution",
+  "runtime_version": "0.11.1",
+  "status": "completed",
+  "queue_status": "Executing",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "state_id": "implementation",
+  "work_item_id": "run-535f3f938f32::implementation",
+  "idempotency_key": "sha256:30b5aa875963d1b6f907dd8233f55a44",
+  "attempt": 2,
+  "agent_id": "dev-1-implement",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "invocation_id": "inv-535f3f938f32-04-002",
+  "input_digest": "sha256:81957731f6a1000c6b2dee1ab15ee115",
+  "context_digest": "sha256:f19a60b2df50db05b4d00e11d9687b71",
+  "module_load_order": [
+    "agents/dev-1-implement/system.md",
+    "agents/dev-1-implement/identity.md",
+    "agents/dev-1-implement/reasoning.md",
+    "agents/dev-1-implement/execution.md",
+    "agents/dev-1-implement/output.md",
+    "agents/dev-1-implement/quality.md",
+    "agents/dev-1-implement/examples.md"
+  ],
+  "artifact_path": "runs/run-535f3f938f32/states/implementation/artifacts/attempt-2/implementation-report.md",
+  "conditional_artifact_globs": [],
+  "result_envelope_path": "runs/run-535f3f938f32/states/implementation/result-envelope.json",
+  "validator": "implementation_report_validator",
+  "load_profile_mode": "progressive",
+  "context_budget": {
+    "modules_full_bytes": 68729,
+    "modules_core_bytes": 32672,
+    "slice_all_bytes": 184720,
+    "slice_required_bytes": 22885,
+    "inputs_bytes": 18422,
+    "upstream_full_bytes": 62214,
+    "upstream_read_first_bytes": 27575,
+    "task_context_bytes": 59744,
+    "fixed_bytes": 133870,
+    "legacy_estimate_bytes": 467955,
+    "progressive_estimate_bytes": 295168,
+    "legacy_estimate_tokens": 116988,
+    "progressive_estimate_tokens": 73792,
+    "savings_pct": 36.9
+  },
+  "execution_started_at": "2026-10-26T16:05:14Z",
+  "execution_completed_at": "2026-10-26T18:11:46Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 32,
+    "checksPassed": 32,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 3,
+    "counts": {
+      "sections": 10,
+      "status": "complete",
+      "identifiers": {
+        "C": 19,
+        "T": 23,
+        "V": 4,
+        "R": 7,
+        "Q": 4
+      },
+      "tableRows": {
+        "Change Set": 19,
+        "Test Evidence": 23,
+        "Deviations and Tradeoffs": 4,
+        "Residual Risk": 7
+      }
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:929e0b445bdc706bb120c39959728c3d",
+  "recovery": null
+}

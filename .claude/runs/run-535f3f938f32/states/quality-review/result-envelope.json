@@ -1,0 +1,54 @@
+{
+  "invocation_id": "inv-535f3f938f32-05-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-535f3f938f32/states/quality-review/artifacts/attempt-2/review-package.md"
+  ],
+  "structured_output": {
+    "package_status": "complete",
+    "verdict": "approve-with-corrections",
+    "findings_by_severity": {"critical": 0, "high": 4, "medium": 4, "low": 6},
+    "open_findings_by_severity": {"critical": 0, "high": 0, "medium": 0, "low": 2},
+    "correction_requests": 2,
+    "open_questions": 2,
+    "blocking_findings_outstanding": [],
+    "commands_executed": [
+      {"command": "dotnet build MediaCompany.slnx --no-restore", "result": "succeeded, 0 warnings, 0 errors; Architecture.Tests 101 passed"},
+      {"command": "dotnet test tests/MediaCompany.Pilot.Tests --no-build", "result": "251 passed, 0 failed, 0 skipped"}
+    ],
+    "checks": {
+      "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+      "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass",
+      "P1": "pass", "P2": "pass", "P3": "pass", "P4": "pass", "P5": "pass", "P6": "pass", "P7": "pass",
+      "F1": "pass", "F2": "pass", "F3": "pass", "F4": "pass", "F5": "pass",
+      "R1": "pass", "R2": "pass", "R3": "pass",
+      "E1": "pass", "E2": "pass", "E3": "pass", "E4": "pass", "E5": "pass",
+      "A1": "pass", "A2": "pass", "A3": "pass", "A4": "pass", "A5": "pass", "A6": "pass",
+      "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass", "C6": "pass"
+    },
+    "checks_run": 46,
+    "checks_passed": 46,
+    "not_machine_checkable": {
+      "N1": "discharged: each of the twelve attempt-1 correction requests was verified against code and tests, the correction diff was read in full for regressions, and the files attempt 1 read in part were read in full",
+      "N2": "discharged: every finding names a decision record entry, scope criterion, design decision, orchestrator decision, or loaded skill standard",
+      "N3": "discharged: no severity was lowered; attempt-1 findings keep their severities and are marked resolved on code and test evidence"
+    }
+  },
+  "evidence_refs": [
+    ".claude/agents/dev-2-reviewer/manifest.yaml",
+    ".claude/agents/dev-2-reviewer/system.md",
+    ".claude/agents/dev-2-reviewer/identity.md",
+    ".claude/agents/dev-2-reviewer/reasoning.md",
+    ".claude/agents/dev-2-reviewer/execution.md",
+    ".claude/agents/dev-2-reviewer/output.md",
+    ".claude/agents/dev-2-reviewer/quality.md",
+    ".claude/runs/run-535f3f938f32/states/quality-review/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    ".claude/runs/run-535f3f938f32/states/quality-review/artifacts/attempt-2/review-package.md",
+    ".claude/runs/run-535f3f938f32/states/quality-review/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

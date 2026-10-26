@@ -1,0 +1,53 @@
+{
+  "invocation_id": "inv-535f3f938f32-05-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-535f3f938f32/states/quality-review/artifacts/review-package.md"
+  ],
+  "structured_output": {
+    "package_status": "complete",
+    "verdict": "approve-with-corrections",
+    "findings_by_severity": {"critical": 0, "high": 4, "medium": 4, "low": 4},
+    "correction_requests": 12,
+    "open_questions": 3,
+    "blocking_findings_outstanding": ["F-001", "F-002", "F-003", "F-004"],
+    "commands_executed": [
+      {"command": "dotnet build MediaCompany.slnx --no-restore", "result": "succeeded, 0 warnings, 0 errors"},
+      {"command": "dotnet test tests/MediaCompany.Pilot.Tests --no-build", "result": "156 passed, 0 failed, 0 skipped"}
+    ],
+    "checks": {
+      "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+      "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass",
+      "P1": "pass", "P2": "pass", "P3": "pass", "P4": "pass", "P5": "pass", "P6": "pass", "P7": "pass",
+      "F1": "pass", "F2": "pass", "F3": "pass", "F4": "pass", "F5": "pass",
+      "R1": "pass", "R2": "pass", "R3": "pass",
+      "E1": "pass", "E2": "pass", "E3": "pass", "E4": "pass", "E5": "pass",
+      "A1": "pass", "A2": "pass", "A3": "pass", "A4": "pass", "A5": "pass", "A6": "pass",
+      "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass", "C6": "pass"
+    },
+    "checks_run": 46,
+    "checks_passed": 46,
+    "not_machine_checkable": {
+      "N1": "discharged: every focus area named for this review was examined; high-risk issues found are F-001 to F-004; parts read only in part are recorded in Out of scope",
+      "N2": "discharged: every finding names a decision record entry, scope criterion, design decision, or loaded skill standard",
+      "N3": "discharged: no severity was lowered; F-005 was held at medium because it refuses a legitimate fact rather than letting a banned one through"
+    }
+  },
+  "evidence_refs": [
+    ".claude/agents/dev-2-reviewer/manifest.yaml",
+    ".claude/agents/dev-2-reviewer/system.md",
+    ".claude/agents/dev-2-reviewer/identity.md",
+    ".claude/agents/dev-2-reviewer/reasoning.md",
+    ".claude/agents/dev-2-reviewer/execution.md",
+    ".claude/agents/dev-2-reviewer/output.md",
+    ".claude/agents/dev-2-reviewer/quality.md",
+    ".claude/runs/run-535f3f938f32/states/quality-review/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    ".claude/runs/run-535f3f938f32/states/quality-review/artifacts/review-package.md",
+    ".claude/runs/run-535f3f938f32/states/quality-review/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

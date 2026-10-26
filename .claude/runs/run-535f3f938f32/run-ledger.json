@@ -1,0 +1,417 @@
+{
+  "run_id": "run-535f3f938f32",
+  "runtime_version": "0.11.1",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "status": "Completed",
+  "input_digest": "sha256:446233dc83e3c0429ca07c225d46fbae",
+  "created_at": "2026-10-26T14:58:03Z",
+  "updated_at": "2026-10-26T18:28:59Z",
+  "states": {
+    "scope-and-acceptance": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "product-owner",
+      "attempt": 3,
+      "attempts_lost": 0,
+      "attempts_charged": 3,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:036548299309afeea346bda4c11e49b2",
+      "artifact_path": "runs/run-535f3f938f32/states/scope-and-acceptance/artifacts/scope-definition.md",
+      "blocked_reason": null,
+      "failure_class": "output-schema-failure",
+      "state_ledger": "runs/run-535f3f938f32/states/scope-and-acceptance/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 33,
+        "checksPassed": 33,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 9,
+          "status": "complete",
+          "identifiers": {
+            "S": 14,
+            "X": 10,
+            "A": 40,
+            "D": 17,
+            "Q": 1
+          },
+          "tableRows": {
+            "In Scope": 14,
+            "Out of Scope": 10,
+            "Acceptance Criteria": 40,
+            "Scope Decisions": 17,
+            "Open Questions": 1
+          },
+          "scopeVerdict": "bounded",
+          "scopeItems": 14,
+          "exclusions": 10,
+          "acceptanceCriteria": 40,
+          "scopeDecisions": 17,
+          "openQuestions": 1,
+          "blockingOpenQuestions": 0
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "execution-planning": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "planner",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:8802b524bd832f7f79094b7e6f84d591",
+      "artifact_path": "runs/run-535f3f938f32/states/execution-planning/artifacts/execution-plan.md",
+      "blocked_reason": null,
+      "failure_class": "output-schema-failure",
+      "state_ledger": "runs/run-535f3f938f32/states/execution-planning/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 45,
+        "checksPassed": 45,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 5,
+        "counts": {
+          "sections": 14,
+          "tasks": 23,
+          "assumptions": 9,
+          "risks": 14,
+          "edges": 38,
+          "waves": 13,
+          "openQuestions": 2,
+          "planStatus": "complete"
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "solution-design-and-risk-assessment": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "architect",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:1e19620811b36678e400ad14491d3179",
+      "artifact_path": "runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+      "blocked_reason": null,
+      "failure_class": "output-schema-failure",
+      "state_ledger": "runs/run-535f3f938f32/states/solution-design-and-risk-assessment/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 78,
+        "checksPassed": 78,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 10,
+        "counts": {
+          "sections": 14,
+          "facts": 28,
+          "assumptions": 11,
+          "constraints": 27,
+          "modules": 16,
+          "options": 5,
+          "decisions": 13,
+          "reuseRows": 28,
+          "planSteps": 12,
+          "risks": 17,
+          "openDecisions": 8,
+          "decisionRecords": 4,
+          "designStatus": "complete"
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "implementation": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "dev-1-implement",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:30b5aa875963d1b6f907dd8233f55a44",
+      "artifact_path": "runs/run-535f3f938f32/states/implementation/artifacts/attempt-2/implementation-report.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-535f3f938f32/states/implementation/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 32,
+        "checksPassed": 32,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 10,
+          "status": "complete",
+          "identifiers": {
+            "C": 19,
+            "T": 23,
+            "V": 4,
+            "R": 7,
+            "Q": 4
+          },
+          "tableRows": {
+            "Change Set": 19,
+            "Test Evidence": 23,
+            "Deviations and Tradeoffs": 4,
+            "Residual Risk": 7
+          }
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 1
+    },
+    "quality-review": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "dev-2-reviewer",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:6d916a85224c6182b88c3059814f36e8",
+      "artifact_path": "runs/run-535f3f938f32/states/quality-review/artifacts/attempt-2/review-package.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-535f3f938f32/states/quality-review/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 31,
+        "checksPassed": 31,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 10,
+          "status": "complete",
+          "identifiers": {
+            "F": 14,
+            "CR": 2,
+            "Q": 2
+          },
+          "tableRows": {
+            "Findings": 14,
+            "Correction Requests": 2
+          },
+          "findings": 14,
+          "verdict": "approve-with-corrections",
+          "correctionRequests": 2,
+          "severity": {
+            "critical": 0,
+            "high": 4,
+            "medium": 4,
+            "low": 6
+          }
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 1
+    },
+    "documentation-and-release-handoff": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "documentation",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:2c16195149c840fe30db1ca62f86269d",
+      "artifact_path": "runs/run-535f3f938f32/states/documentation-and-release-handoff/artifacts/release-note.md",
+      "blocked_reason": null,
+      "failure_class": "output-schema-failure",
+      "state_ledger": "runs/run-535f3f938f32/states/documentation-and-release-handoff/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 34,
+        "checksPassed": 34,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 7,
+          "status": "complete",
+          "identifiers": {
+            "K": 16
+          },
+          "tableRows": {
+            "Known Issues": 16
+          },
+          "releaseVerdict": "handed-off",
+          "communicationBasis": "release-handoff",
+          "knownIssues": 16,
+          "version": "0.0.0+e264a7a"
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    }
+  },
+  "gates": {
+    "Scope Gate": {
+      "gate": "Scope Gate",
+      "closes_state": "scope-and-acceptance",
+      "owner_roles": [
+        "product-owner",
+        "business-analyst"
+      ],
+      "producer_agent": "product-owner",
+      "decision": "approved",
+      "owner_role": "business-analyst",
+      "decided_by": "CEO vuhoangcao (recorded by the orchestrator session)",
+      "rationale": "CEO approved the scope (attempt 3: S-001..S-014, A-001..A-040) with its defaults in chat on 2026-10-26, recorded as CEO-D-1307; CEO-D-1306 answers the four former blocking questions; Q-001 answered by CEO-D-1307 item 2 (an employee operator may record in their own real voice).",
+      "evidence_ref": "runs/run-535f3f938f32/states/scope-and-acceptance",
+      "decided_at": "2026-10-26T15:15:01Z",
+      "decision_history": []
+    },
+    "Planning Gate": {
+      "gate": "Planning Gate",
+      "closes_state": "execution-planning",
+      "owner_roles": [
+        "tech-lead",
+        "orchestrator"
+      ],
+      "producer_agent": "planner",
+      "decision": "approved",
+      "owner_role": "orchestrator",
+      "decided_by": "orchestrator (MC-16 session, on the CEO's Scope Gate approval, CEO-D-1307)",
+      "rationale": "The plan (23 tasks in 13 waves, risks R-001 to R-014) covers every approved scope item S-001 to S-014 with traceability, puts the RK-016 vertical-render proof (T-006) before the composition work, keeps all tests offline with code-generated fixtures, adds no download and touches neither the frozen waves nor the company store. Q-001 is answered: qa-owned checks run inside quality-review. Q-002 stays conditional on T-006.",
+      "evidence_ref": "runs/run-535f3f938f32/states/execution-planning",
+      "decided_at": "2026-10-26T15:31:01Z",
+      "decision_history": []
+    },
+    "Design Gate": {
+      "gate": "Design Gate",
+      "closes_state": "solution-design-and-risk-assessment",
+      "owner_roles": [
+        "architect",
+        "tech-lead"
+      ],
+      "producer_agent": "architect",
+      "decision": "approved",
+      "owner_role": "tech-lead",
+      "decided_by": "CEO (owner), recorded by the orchestrator: decision record entry 1308",
+      "rationale": "The CEO approved the design with safe areas: ffmpeg-only 1080x1920 composition with no browser and no socket, a separate .NET tool outside the company store, a hash-chained ledger file outside the repository. Additions: captions and the AI-and-affiliate overlay sit inside a phone-screen safe area clear of the right-hand action buttons and the bottom description, at a size readable on a phone; the browser-drawn caption plate fallback with loopback sockets only is allowed ahead of time if the proof frame fails; clip and recording lengths may differ by at most 0.5 s. Design questions: Q-001 yes (the installed media tool is the delivered render tool), Q-002 no exemption beyond the held one (override sentence path), Q-004 configured digests stand, Q-006 yes (an unimplemented port interface is not a speech component), Q-007 yes (CEO Part E review).",
+      "evidence_ref": "runs/run-535f3f938f32/states/solution-design-and-risk-assessment",
+      "decided_at": "2026-10-26T16:04:58Z",
+      "decision_history": []
+    },
+    "Review Gate": {
+      "gate": "Review Gate",
+      "closes_state": "quality-review",
+      "owner_roles": [
+        "dev-2-reviewer",
+        "qa"
+      ],
+      "producer_agent": "dev-2-reviewer",
+      "decision": "approved",
+      "owner_role": "qa",
+      "decided_by": "orchestrator for qa (the reviewer produced the findings; producer exclusion)",
+      "rationale": "Second review: all twelve first-round correction requests verified closed against code and tests, no critical or high finding open, build 0 warnings and 251 of 251 pilot tests re-run and confirmed by the reviewer. Two low findings stay open and non-blocking, carried to the release note as known limitations: the first-person list refuses overrides containing 'em' or 'anh' (for example 'em b\u00e9', 'ti\u1ebfng Anh'), and the package's ledger-entry copy is written non-atomically.",
+      "evidence_ref": "runs/run-535f3f938f32/states/quality-review",
+      "decided_at": "2026-10-26T18:18:21Z",
+      "decision_history": [
+        {
+          "decision": "rejected",
+          "owner_role": "qa",
+          "decided_by": "orchestrator for qa, with the CEO (decision record entry 1309)",
+          "rationale": "Review verdict approve-with-corrections with four open high findings (caption paging, use-claim overrides, price spellings, settings not enforcing decision record entry 1308) and eight medium or low ones; no approval while a high finding is open. The CEO accepted paging with a 1.2 s minimum per page and moved B3 and B5 to the CEO (decision record entry 1309). Implementation reruns to close CR-001 to CR-012, then quality-review reruns.",
+          "evidence_ref": "runs/run-535f3f938f32/states/quality-review",
+          "decided_at": "2026-10-26T17:38:41Z",
+          "superseded_by": "RB-run-535f3f938f32-review-gate-01",
+          "target": "implementation",
+          "superseded_phases": [
+            "quality-review",
+            "implementation"
+          ],
+          "authorised_by": "qa",
+          "authorisation_decided_by": "orchestrator for qa",
+          "authorisation_rationale": "Review verdict approve-with-corrections with four open high findings (caption paging, use-claim overrides, price spellings, settings not enforcing decision record entry 1308) and eight medium or low ones; no approval while a high finding is open. The CEO accepted paging with a 1.2 s minimum per page and moved B3 and B5 to the CEO (decision record entry 1309). Implementation reruns to close CR-001 to CR-012, then quality-review reruns.",
+          "re_armed_at": "2026-10-26T17:38:43Z"
+        }
+      ]
+    },
+    "Verification Gate": {
+      "gate": "Verification Gate",
+      "closes_state": "quality-review",
+      "owner_roles": [
+        "qa"
+      ],
+      "producer_agent": "dev-2-reviewer",
+      "decision": "approved",
+      "owner_role": "qa",
+      "decided_by": "orchestrator for qa",
+      "rationale": "Executed evidence: pilot unit 216/216 and integration 35/35 (reviewer re-ran 251/251), the existing non-Docker suites at baseline, and an end-to-end sample from generated fixtures only. The orchestrator independently re-measured the sample video: SHA-256 c13e81d43bc6cbf0ba5d94712b5cf90e2e467312b829d04cb02801b75abd3c29, h264 1080x1920 with aac audio, 17.4 s; frame at 0.8 s shows the overlay and a disclosure caption page inside the safe area; checklist pre-ticks only B8, with B3 and B5 left for the CEO per decision record entry 1309. Refusals demonstrated: banned term, recording over 60 s, reused recording, landscape clip, clip length mismatch, caption page too short, non-plain package file, void approval, hash mismatch. Zero sockets owned by job processes. No media file added to the repository.",
+      "evidence_ref": "runs/run-535f3f938f32/states/quality-review",
+      "decided_at": "2026-10-26T18:18:23Z",
+      "decision_history": []
+    },
+    "Closure Gate": {
+      "gate": "Closure Gate",
+      "closes_state": "documentation-and-release-handoff",
+      "owner_roles": [
+        "orchestrator",
+        "documentation"
+      ],
+      "producer_agent": "documentation",
+      "decision": "approved",
+      "owner_role": "orchestrator",
+      "decided_by": "orchestrator (MC-16 session)",
+      "rationale": "Every phase completed and every gate decided: Scope, Planning, Design (CEO, decision record entries 1307 and 1308), Review (rejected once, corrected under entry 1309, then approved), Verification. The release note passed validation on attempt 2 and records 16 known issues and 9 open questions with owners. Code is committed in fc21199 and e264a7a; the branch push and the compare link to the CEO follow as the closing action. Nothing publishes; the CEO approves each video by hash.",
+      "evidence_ref": "runs/run-535f3f938f32/states/documentation-and-release-handoff",
+      "decided_at": "2026-10-26T18:28:59Z",
+      "decision_history": []
+    }
+  },
+  "summary": {
+    "run_id": "run-535f3f938f32",
+    "run_status": "Completed",
+    "phases": 6,
+    "completed": 6,
+    "blocked": 0,
+    "failed": 0,
+    "pending": 0,
+    "retrying": 0,
+    "active": 0,
+    "transitions": 71,
+    "replays_suppressed": 0
+  },
+  "recovery": {
+    "ledger": "runs/run-535f3f938f32/recovery-ledger.json",
+    "classifications": 19,
+    "open": 0,
+    "resolved": 19,
+    "retries_scheduled": 5,
+    "by_failure_class": {
+      "output-schema-failure": 5,
+      "gate-approval-required": 12,
+      "gate-rejection": 2
+    },
+    "retry_profile": {
+      "max_attempts": 3,
+      "backoff_strategy": "exponential",
+      "base_delay_seconds": 2,
+      "multiplier": 2,
+      "max_delay_seconds": 60,
+      "jitter_ratio": 0.2,
+      "circuit_breaker_threshold": 3,
+      "policy_ref": "config/runtime.md#retry-policy"
+    }
+  }
+}

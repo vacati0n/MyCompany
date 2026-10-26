@@ -1,0 +1,698 @@
+{
+  "invocation_id": "inv-535f3f938f32-04-001",
+  "run_id": "run-535f3f938f32",
+  "work_item_id": "run-535f3f938f32::implementation",
+  "idempotency_key": "sha256:30b5aa875963d1b6f907dd8233f55a44",
+  "state_id": "implementation",
+  "phase_index": 4,
+  "agent_id": "dev-1-implement",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/dev-1-implement.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/dev-1-implement/manifest.yaml",
+    "load_order": [
+      "agents/dev-1-implement/system.md",
+      "agents/dev-1-implement/identity.md",
+      "agents/dev-1-implement/reasoning.md",
+      "agents/dev-1-implement/execution.md",
+      "agents/dev-1-implement/output.md",
+      "agents/dev-1-implement/quality.md",
+      "agents/dev-1-implement/examples.md"
+    ],
+    "module_digests": {
+      "agents/dev-1-implement/system.md": "sha256:f66f6548976bd074845dace1bc0041a1",
+      "agents/dev-1-implement/identity.md": "sha256:73c350ff8bbf8c3a81a3323ec008761a",
+      "agents/dev-1-implement/reasoning.md": "sha256:9ab46034da6f7a6b47418fa3a1faa36f",
+      "agents/dev-1-implement/execution.md": "sha256:85bc55c80ca4120571e93a9cb8148784",
+      "agents/dev-1-implement/output.md": "sha256:c6eb01fed0ad992e1bb58c87cc222270",
+      "agents/dev-1-implement/quality.md": "sha256:e83df9473b02f5d1c04ad87bcced61b3",
+      "agents/dev-1-implement/examples.md": "sha256:2bb1fc5f8b0485701e2228ed99d91ee0"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/dev-1-implement/system.md",
+        "agents/dev-1-implement/reasoning.md",
+        "agents/dev-1-implement/output.md",
+        "agents/dev-1-implement/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/dev-1-implement/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/dev-1-implement/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/dev-1-implement/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 32672,
+      "full_bytes": 68729
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "implementation-delivery"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S03",
+        "proficiency": "Primary",
+        "registryIdentifier": "engineering-playbook",
+        "specificationPath": "skills/dotnet/engineering-playbook.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Primary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S06",
+        "proficiency": "Secondary",
+        "registryIdentifier": "database-engineering",
+        "specificationPath": "skills/database/database-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S07",
+        "proficiency": "Secondary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S10",
+        "proficiency": "Secondary",
+        "registryIdentifier": "git-collaboration",
+        "specificationPath": "skills/git/git-collaboration.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S11",
+        "proficiency": "Secondary",
+        "registryIdentifier": "observability-logging",
+        "specificationPath": "skills/logging/observability-logging.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S01",
+        "proficiency": "Advisory",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Advisory",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S03",
+        "registryIdentifier": "engineering-playbook",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S06",
+        "registryIdentifier": "database-engineering",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S10",
+        "registryIdentifier": "git-collaboration",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S11",
+        "registryIdentifier": "observability-logging",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S12",
+        "registryIdentifier": "error-handling-strategy",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S06",
+      "displayName": "Database Engineering",
+      "specificationPath": "skills/database/database-engineering.md",
+      "status": "required",
+      "area": "database",
+      "basis": "area database triggered by 'database' in input:feature-request",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S10",
+      "displayName": "Git Collaboration",
+      "specificationPath": "skills/git/git-collaboration.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S11",
+      "displayName": "Logging and Observability",
+      "specificationPath": "skills/logging/observability-logging.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Advisory)"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "area security triggered by 'permission' in input:business-intent",
+      "source": "agent-manifest (Advisory)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "technical-design",
+      "bug-analysis",
+      "validation-report",
+      "execution-plan",
+      "coding-standards",
+      "architecture-decision-record",
+      "feature-request",
+      "change-request",
+      "business-intent",
+      "architecture-context",
+      "regression-targets",
+      "parity-checklist",
+      "known-issues"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-16-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-16-feature-request.md",
+        "text": "# MC-16: Production toolchain for the Shopee Video affiliate pilot - one product to one ready-to-review vertical video\n\n- Source: local://research/ceo-decision-record.md#ceo-d-1301 to #ceo-d-1305\n- Issue type: Feature   Priority: Highest\n- Labels: affiliate, shopee-video, pilot, toolchain, vertical-video, vietnamese\n- Routed as: /implement (implement-feature)\n\n## Description\n\n### WHY\n\nThe CEO approved the MC-15 recommendation (`CEO-D-1301`, run `run-8d7e366341bf`) and its addendum (`CEO-D-1302`): a\nShopee Affiliate pilot as an individual KOC on Shopee Video, home and kitchen niche, real product images, an AI\npresenter labelled \"Video t\u1ea1o b\u1edfi AI\" that introduces products from sourced facts and never claims use. `CEO-D-1303`\nrules that sellers consented to product-image use. `CEO-D-1304` makes the presenter lip-sync to the CEO's own recorded\nVietnamese voice (no text-to-speech). `CEO-D-1305` confirms no voice cloning: each video uses a fresh real recording.\n\nThe pilot kit (`pilot-affiliate-vn/pilot-kit/00-07`) is paper: a script template, an approval checklist, a\nmeasurement sheet. Today the CEO would assemble every video by hand. MC-16 builds the tooling that turns one product\ninto one ready-to-review 9:16 video, reusing the delivered deterministic pipeline on `main`.\n\n### INPUTS, PER VIDEO (all supplied by the CEO)\n\n1. A **product fact sheet**: Part A of `pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md` in a machine-readable form; every\n   fact carries its source (which section of the product page, the CEO's screenshot file).\n2. The **product images** the CEO supplies (files on disk).\n3. The **CEO's own Vietnamese voice recording** of the approved script (MP3 or WAV, under 5 minutes, fresh for this\n   video).\n4. The **AI-presenter clip** the CEO generates in the presenter tool (HeyGen or D-ID) from that recording.\n\n### LIKELY SCOPE (the scope phase bounds it, with acceptance criteria)\n\n1. **Product fact sheet format and check.** Facts with sources only. A fact or field carrying content the template\n   bans (Part A \"Kh\u00f4ng \u0111\u01b0a v\u00e0o b\u1ea3ng\" and Part C \"Kh\u00f4ng bao gi\u1edd n\u00f3i\": price, discount, sold count, stars; absolutes\n   such as \"nh\u1ea5t\", \"duy nh\u1ea5t\", \"t\u1ed1t nh\u1ea5t\", \"s\u1ed1 m\u1ed9t\"; health, skin, hair, body, food-safety, antibacterial, weight-loss;\n   use or review wording; other platforms' names) is rejected, naming the row and the banned term.\n2. **Script generator.** Fills Part B of the template in Vietnamese from the fact sheet, deterministically (no\n   language model). Disclosure sentence at the start and at the end, verbatim from the template. Never claims use; no\n   health, skin or body claims. Emits Part E (the source line for each sentence) for the CEO to tick. The CEO then reads\n   the approved script aloud.\n3. **9:16 composition.** Product images with motion, the presenter clip, burned-in Vietnamese captions from the script\n   actually recorded, and the disclosure overlay \"Video t\u1ea1o b\u1edfi AI \u00b7 C\u00f3 li\u00ean k\u1ebft ti\u1ebfp th\u1ecb\" on screen for the whole\n   video (R11). **First, the RK-016 check:** that the delivered renderer does vertical output and that the installed\n   face covers every Vietnamese glyph the captions and overlay draw (`FontCoverage`). The research left this check to\n   the architect.\n4. **Output package.** The video file with its SHA-256, the provenance list (every on-screen and spoken sentence to\n   its fact row and source), the input digests, and the per-publication checklist of `pilot-kit/04` pre-filled where\n   the tool can decide an item, for the CEO's approval by hash under `D-002`. Nothing publishes.\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 REUSE IT\n\n- The deterministic pipeline on `main` (Waves 1-11): Remotion and a headless Chrome driven from .NET under `src/`\n  (`MediaCompany.Production`, `ExternalMediaTool*`, `RendererInstallationVerifier`, `GraphicsPlan`), the drawing\n  program under `graphics/`, `FontCoverage` in `src/MediaCompany.Deterministic/Production/FontCoverage.cs`, the\n  provenance of every on-screen fact, owner approval by hash, the held-stage refusal.\n- Installed on this machine, verified by manifest, approved in Waves 10-11 (`CEO-D-1001`):\n  `C:/Users/vuhoangcao/MediaCompanyRun/graphics/` (Remotion `node_modules`, `chrome-headless-shell-win64`, Inter 4.1\n  with manifests), ffmpeg and ffprobe through WinGet, Node 24, .NET 10.\n\n### HARD CONSTRAINTS\n\n1. Agents never create accounts, sign in (Shopee, HeyGen, D-ID or any other), contact sellers, buy anything or publish\n   anything.\n2. No download of any asset, package or tool without the CEO's explicit approval, each one named.\n3. The only generative element in a video is the presenter clip, which the CEO makes. The toolchain itself calls no\n   generative model (no language model, no speech recognition model, no image model), so `CEO-D-903` and `CEO-D-1004`\n   still hold for the studio and frozen Waves 12/13 keep their rules.\n4. No text-to-speech anywhere (`CEO-D-1304`). No voice cloning; a recording already used for another video is refused\n   (`CEO-D-1305`).\n5. Budget USD 77.41/month, metered ceiling USD 34.42; the toolchain costs nothing to run (no metered call).\n6. Frozen Wave 12 (MC-13) and Wave 13 (MC-14) are not touched. The company store (`mediacompany` database) is not\n   touched.\n7. Every publication is approved by the CEO individually (`D-002`); the CEO carries the legal position (`D-018`).\n\n### DONE MEANS\n\n- MC-16 runs through `implement-feature` with its gates; the CEO decides where a gate needs the owner.\n- The tooling works and is tested on a sample made only from fixtures already in the repository or generated by\n  repository code (no download).\n- Committed and pushed on the session branch; the CEO gets the compare link.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no\nrepository file; an agent claiming a finding covers \"every\" case lists the cases.\n\n## Acceptance criteria\n\n_To be defined by the scope phase and approved at the Scope Gate._",
+        "digest": "sha256:04f86d51a3d9db84789afc446e0fec4b"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-16-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-16-business-intent.md",
+        "text": "# Business intent for MC-16 (the owner's decisions, verbatim from research/ceo-decision-record.md)\n\n## CEO-D-1301 \u2014 MC-15 recommendation approved: Shopee Video as a KOC, an AI presenter on real product images, start now\n\n**The CEO's own decision, 2026-10-26**, at the Recommendation Gate of run `run-8d7e366341bf` (MC-15).\n\n1. **Path:** Shopee Affiliate as an individual KOC, on Shopee Video. Niche: home and kitchen gadgets first, phone\n   accessories second; cosmetics and supplements excluded. TikTok Shop is the fallback only, started after the Shopee\n   activity ends or after a written narrow reading of Shopee's competing-platform clause; both at once is excluded.\n2. **30-day target:** tier 2, at least one valid commission credited by day 30, with the pilot's measurements recorded.\n3. **Start now.** The questions for local counsel (competing-platform clause reach, Advertising Law Art. 15a(3) scope,\n   personal income tax, AI-label reach, reuse of seller media) are sent in parallel.\n4. **Content form, amending the research:** no sample purchases in the first 30 days. Real product images, used only\n   with the seller's permission, presented by an **AI presenter** carrying the label \"Video t\u1ea1o b\u1edfi AI\". The presenter\n   reads only recorded, sourced product facts and **never claims to have used the product**; it introduces, it does\n   not review. One presenter on one account; no AI doctors, celebrities or officials; no skin, hair or body claims.\n5. **This supersedes `CEO-D-903` and `CEO-D-1004` (no generative model for visuals) for the affiliate pilot only.** The\n   frozen Waves 12 and 13 keep them. The presenter tool is priced and approved by the CEO before first use; the metered\n   ceiling of USD 34.42 stands unless the CEO rules otherwise.\n6. **Stop condition:** if counsel finds that an affiliate creator is an influencer under Art. 15a(3), the AI-presenter\n   form stops until the product has been used.\n7. **Standing decisions:** `D-005`, `D-007`, `D-008` amended as the recommendation proposes (affiliate leads; Shopee\n   Affiliate VN with the CEO as payee; one Vietnamese Shopee Video pilot channel); `D-021` part 2 (always disclose) kept,\n   part 1 sent to counsel; `D-022` kept for the frozen YouTube item only. Register as an individual; decline Shopee\n   \"KOL Booking\" campaigns during the pilot.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018` (the CEO is the individual creator); agents create\nno account, handle no credential, contact no seller and publish nothing.\n\n---\n\n## CEO-D-1302 \u2014 MC-15 Addendum 1 approved: AI-presenter tool, budget line, stop rule and publishing start\n\n**The CEO's own decision, 2026-10-26**, on `pilot-affiliate-vn/mc-15-addendum-1-ai-presenter.md`, approving owner\ndecisions OD12 to OD18 as proposed.\n\n1. **OD12, tool:** HeyGen Creator, billed monthly (USD 29), bought only after the CEO personally passes the free-tier\n   Vietnamese lip-sync test; fallback D-ID Pro with a Vbee Vietnamese voice, billed monthly (about USD 35.43, ESTIMATE).\n2. **OD13, budget line:** the subscription is paid from the USD 42.99 fixed line; the USD 34.42 metered ceiling is\n   untouched; the total stays USD 77.41 per month.\n3. **OD14, adverse counsel ruling:** if counsel finds an affiliate creator is an influencer under Art. 15a(3), the CEO\n   stops publishing that day and takes down every AI-presenter video within 24 hours; videos are not edited instead.\n4. **OD15, fallback form:** real footage (O-007) is kept as the fallback; sample spend is limited to USD 13.99 in a\n   month the tool is paid, unless the CEO raises the budget.\n5. **OD16, publishing start:** no publication before day 10; if Shopee or counsel has not answered by then, the CEO\n   explicitly accepts or refuses the risk before the first video. This replaces the start-now rationale of `CEO-D-1301`\n   item 3; the 30-day plan of the addendum otherwise starts now.\n6. **OD17, reading target tier 2:** on day 30, pending and credited commissions are recorded separately; if only\n   pending ones exist, the result is read again on day 45.\n7. **OD18, one presenter:** one presenter generated from a prompt (no stock avatar), used on the one Shopee account only,\n   including no reuse on a later TikTok fallback until Shopee answers on unoriginal content.\n\nPre-publication conditions P1 to P8 of the addendum bind. **Unchanged:** `D-002`, `D-018`; agents create no account,\nsign in nowhere, contact no seller, buy nothing and publish nothing.\n\n---\n\n## CEO-D-1303 \u2014 Seller consent for product images: the CEO's ruling replaces condition P3\n\n**The CEO's own decision, 2026-10-26**, on condition P3 of `pilot-affiliate-vn/mc-15-addendum-1-ai-presenter.md`.\n\nThe CEO's words: \"t\u1ea5t c\u1ea3 s\u1ea3n ph\u1ea9m tr\u00ean shopee l\u00e0 \u0111\u01b0\u1ee3c \u0111\u1ed3ng \u00fd t\u1eeb ng b\u00e1n r\u1ed3i. y\u00ean t\u00e2m\" (every product on Shopee already\nhas the seller's consent; don't worry).\n\n1. **P3 is replaced by this ruling.** No written permission is sought from each seller for each image, and no seller is\n   contacted. The seller-permission parts of rules R2 and R7 of the addendum, and the seller outreach of days 5 to 9 of\n   its 30-day plan, fall with it. The words \"used only with the seller's permission\" in `CEO-D-1301` item 4 are read\n   as satisfied by this ruling. Because the images now come from the product page and not from the seller, two further\n   clauses are read as falling with P3: R7's \"Kh\u00f4ng t\u1ea3i h\u00ecnh hay thu th\u1eadp th\u00f4ng tin t\u1eeb trang s\u1ea3n ph\u1ea9m tr\u00ean s\u00e0n\", and\n   R8's tie of each fact to \"b\u1ea3ng th\u00f4ng tin c\u1ee7a ng\u01b0\u1eddi b\u00e1n\", whose source becomes the product page as the CEO reads it.\n   This reading is an inference from the ruling, not the CEO's words; the CEO confirms or corrects it. Every other\n   condition (P1, P2, P4 to P8) and every other rule (R1, R3 to R6, the rest of R8, R9 to R12) stands.\n2. **The CEO carries this risk** as the individual creator (`D-018`).\n3. **What the evidence says, recorded beside the ruling and not against it:**\n   - No first-party quote in `pilot-affiliate-vn/evidence/` says that an affiliate may reuse a seller's listing images\n     (`shopee-vn-and-market.md` 3.9 and gap 5).\n   - Shopee's terms (E-105, re-captured verbatim in `pilot-affiliate-vn/evidence/recapture-2026-10-26.md`) ban copying\n     Shopee's images or presence (\"kh\u00f4ng \u0111\u01b0\u1ee3c sao ch\u00e9p t\u00ean th\u01b0\u01a1ng hi\u1ec7u, logo, h\u00ecnh \u1ea3nh ho\u1eb7c hi\u1ec7n di\u1ec7n c\u1ee7a Shopee\") and\n     collecting information on the platform (\"Shopee nghi\u00eam c\u1ea5m vi\u1ec7c \u0110\u1ed1i T\u00e1c TTLK thu th\u1eadp b\u1ea5t k\u1ef3 th\u00f4ng tin n\u00e0o tr\u00ean\n     S\u00e0n TM\u0110T\").\n   - E-107 (article 199468, not re-captured) lists stealing or using others' content without permission as a banned\n     act, item (n), with fines up to VND 10 million per act.\n4. **Q-014 stays open but no longer blocks.** The CEO asks Shopee in writing whether listing images may be used in\n   Shopee Video affiliate content and whether the collection ban reaches them (`pilot-affiliate-vn/pilot-kit/\n   02-cau-hoi-shopee.md`). An adverse answer is a stop event under section 3.2 of the addendum for the videos it\n   covers. Q-006 and Q-019 (seller rights in the images) stay with counsel on the same terms.\n5. **Residual risk kept visible:** RK-010 stays open (medium, possible), now with no seller-permission mitigation;\n   its remaining mitigations are the written question to Shopee, the stop rule, and R12 (the image shows the tagged\n   product). RK-023 (sellers not answering) is closed, since no seller is asked. EC-001 for branch B still needs P4.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1304 \u2014 The AI presenter lip-syncs to the CEO's own recorded voice\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the orchestrator session, on the presenter form of\n`CEO-D-1301` item 4 and the tool choice `OD12` of `CEO-D-1302`.\n\nThe CEO's words: \"anh m\u1edf t\u00e0i kho\u1ea3n shopee r\u1ed3i . v\u1ec1 ti\u1ebfng vi\u1ec7t l\u00e0 ti\u1ebfng m\u1eb9 \u0111\u1ebb c\u00f3 th\u1ec3 d\u00f9ng b\u1ea3n ghi \u00e2m c\u1ee7a anh \u0111\u01b0\u1ee3c\" (I\nhave opened the Shopee account. As for Vietnamese, it is my native language, so my own recordings can be used). Asked\nwhether an AI face is still needed with a real voice, the CEO chose \"M\u1eb7t AI + gi\u1ecdng anh\" (AI face plus my voice) over\ndropping the avatar.\n\n1. **Voice.** The narration of every video is the CEO's own recorded voice, in Vietnamese. The AI face lip-syncs to\n   that recording. No text-to-speech is used in the pilot, and Vbee is dropped.\n2. **Proposed default, not the CEO's words: no voice cloning.** Each video uses a fresh real recording of its own\n   approved script; no tool is given the CEO's voice to clone. This is the orchestrator's proposed default and stands\n   only when the CEO confirms it.\n3. **Tool (`OD12` revised, a proposal for the CEO).** Whichever of HeyGen and D-ID passes the lip-sync test (file\n   `pilot-affiliate-vn/pilot-kit/07-kich-ban-thu-va-mo-ta-nguoi-dan.md`) driven by the CEO's own uploaded recording is\n   bought, billed monthly at USD 29 (HeyGen Creator or D-ID Pro), from the USD 42.99 fixed line of `OD13`. The D-ID\n   Pro plus Vbee path (about USD 35.43, ESTIMATE) falls away. What the evidence says\n   (`pilot-affiliate-vn/evidence/ai-presenter-pricing-2026-10-26.md`):\n   - D-ID Studio accepts uploaded audio, MP3 or WAV up to 5 minutes. The quote (\"upload an audio file for your avatar to\n     speak\") comes from a D-ID help search result, not a fetched page. D-ID Pro keeps a visible generic \"AI\" mark in\n     the bottom left corner (D3).\n   - HeyGen's acceptance of uploaded audio is not quoted anywhere in the evidence: **UNVERIFIED**, settled by the test.\n   - Whether either free tier or trial accepts uploaded audio is **UNVERIFIED**, settled by the test.\n4. **Everything else stands.** The \"Video t\u1ea1o b\u1edfi AI\" label is still turned on for every video, because the face is AI.\n   Scripts use only sourced facts and never claim use of the product. The disclosure is spoken at the start and the\n   end. The Article 15a(3) stop rule (`OD14`), `D-002`, and one presenter on one account (`OD18`) are unchanged.\n5. **Fact reported, not verified:** the CEO reports opening \"the Shopee account\" on 2026-10-26. No agent has seen it;\n   agents never sign in. Whether it is the Shopee Affiliate registration as an individual KOC, and so whether day 1 of\n   the plan is 2026-10-26, is for the CEO to state in the measurement sheet. If it is, the \"before day 1\" steps\n   (counsel pack sent, eligibility checked) are already due.\n6. **Effect on the open questions, an inference for counsel and not a finding:** the presenter now speaks in the\n   CEO's real voice, which may bear on whether the CEO is presenting the product personally under Article 15a(3)\n   (`Q-002`, `Q-016`). The counsel pack asks this.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1305 \u2014 No voice cloning: every video uses a fresh real recording\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session, on the proposed default of\n`CEO-D-1304` item 2.\n\nAsked \"Kh\u00f4ng nh\u00e2n b\u1ea3n gi\u1ecdng: m\u1ed7i video d\u00f9ng m\u1ed9t b\u1ea3n ghi \u00e2m th\u1eadt, ghi m\u1edbi. CEO x\u00e1c nh\u1eadn hay b\u00e1c b\u1ecf?\", the CEO chose\n\"X\u00e1c nh\u1eadn\".\n\n1. **Confirmed.** No tool is given the CEO's voice to clone, and no voice-generation or \"voice clone\" feature is turned\n   on in the presenter tool. Each video uses a fresh real recording of its own approved script, made after that script\n   is approved; sentences are never spliced from another video's recording. `CEO-D-1304` item 2 stands as a decision,\n   no longer as a proposal.\n2. **Effect on the kit and on MC-16.** Part F of `pilot-affiliate-vn/pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md` drops\n   its \"awaiting confirmation\" note. The MC-16 toolchain refuses to package a video whose recording is not new for that\n   video: a recording whose digest was already used by another video is rejected.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` item 1 (no text-to-speech); agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---",
+        "digest": "sha256:d15aab6f3b7c6050e636a398b6fb6ead"
+      },
+      {
+        "type": "technical-design",
+        "reference": "runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-16-pilot-pipeline-a4df61/.claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+        "text": "```yaml\ndesign:\n  designId: TD-MC16-PILOT-TOOLCHAIN\n  changeReference: runs/inputs/mc-16-feature-request.md\n  sourceInputs:\n    - type: feature-request\n      reference: runs/inputs/mc-16-feature-request.md\n    - type: business-intent\n      reference: runs/inputs/mc-16-business-intent.md\n    - type: execution-plan\n      reference: runs/run-535f3f938f32/states/execution-planning/artifacts/execution-plan.md\n  producedBy: architect\n  agentVersion: 1.0.0\n  schemaVersion: 1.0.0\n  status: complete\n  decisionRecords: [D-001, D-002, D-003, D-005]\n  consumesPlan: runs/run-535f3f938f32/states/execution-planning/artifacts/execution-plan.md\n  inputDigest: sha256:ec93d4b98dcd02f082904536fdeefdd7\n  contextDigest: sha256:11b68469cf9e593c79e0dc76de8cb64f\n```\n\n## Metadata\n\n- Feature or Change ID: MC-16, run run-535f3f938f32, invocation inv-535f3f938f32-03-001, phase solution-design-and-risk-assessment; this package is the design planner task T-001 asks for.\n- Author: architect\n- Reviewers: tech-lead (accepting Design Gate owner), qa, product-owner, dev-1-implement\n- Last Updated: 2026-10-26\n- Upstream evidence cited by identifier and digest: the scope definition (sha256:30a501cb157980ab7ad14e038c3834d6), cited as \"scope item n\", \"scope criterion n\", \"scope decision n\" and \"scope exclusion n\"; the execution plan as supplied (envelope input), cited by planner task T-nnn only.\n- Repository rescan: the task context listed no relevant modules or files, so the code under src/, tests/, graphics/ and the kit files under pilot-affiliate-vn/pilot-kit/ were scanned to establish the facts in 4.1. Reason: the context named no module, and the design needs the dependency closure of every reuse candidate.\n- Skills applied: S01, S03, S06, S09, S02, S08, S12. The database area is lexical: this design changes no schema and leaves the company store untouched (C-018). The performance area is lexical: no performance target is stated (Operational Considerations). The security area is real (Operational Considerations, R-006 to R-009, R-016).\n- No implementation work was performed and no external system was accessed.\n\n## Objective\n\n- Desired outcome: one product becomes one ready-to-review 1080x1920 video package through a toolchain that runs offline, carries no generative or speech component, and binds the CEO's approval to the video's hash (S-001).\n- Architectural objectives:\n  - A standalone toolchain boundary whose dependency closure excludes the company store, the assembly that implements the in-house speech model, and every networking assembly (S-012, S-013, S-015).\n  - A single composition route through the installed media tool that opens no socket and starts no script runtime or browser (S-006, S-007, S-009, S-024).\n  - Content addressing at the package boundary, where every input and the output video are digested and an approval is valid only against the video's recomputed hash (S-008, S-016, S-020).\n  - A deterministic text path from fact sheet to script whose term classes, exemptions, sentence frames and call-to-action list are held as versioned data inside the toolchain (S-004, S-005, S-018, S-021).\n  - A pilot ledger held as a file outside the repository and outside the company store (S-020, S-025).\n  - Test placement that separates pure unit tests from integration tests needing the installed media tool, with every media fixture generated at test time (S-017, S-023).\n- In scope: the new toolchain project and its test project, the solution entries for both, kit file 03 Part B row 6 and Part F, kit file 04 item B13, and the use of the installed media tool, the installed face and FontCoverage unchanged.\n- Out of scope:\n  - Any change to MediaCompany.Production, MediaCompany.Persistence, MediaCompany.Host, MediaCompany.Capability, MediaCompany.Credentials, graphics/render.mjs or graphics/drawing (S-009, S-015).\n  - The company store, frozen Wave 12 and Wave 13 material (S-015).\n  - Generating the presenter clip, the presenter tool, presenter account management, and enforcing one presenter on one account (S-019).\n  - Recording, recognising or checking who narrated a recording; the operator may be an employee reading in their own voice (S-027).\n  - Publishing, sign-in, upload, seller contact and purchase (S-010).\n  - Any newly downloaded component (S-011).\n\n## Requirements Summary\n\n- Functional requirements:\n  - Accept a fact sheet only with the eleven header fields, complete fact rows and present screenshot files, and refuse banned content naming the row and the term (S-002, S-004).\n  - Refuse banned classes (a) to (g) by whole-word, case-insensitive matching after NFC normalization in fact rows, overrides, script sentences and the call to action (S-004, S-018).\n  - Generate the script deterministically in kit Part B order with byte-exact disclosures, one to three fact sentences, a call to action from the fixed list, and one Part E line per sentence (S-005, S-026).\n  - Admit exactly one recording file per video, refuse it above 60.0 seconds or when its digest was recorded for another video (S-003, S-013, S-020).\n  - Run the vertical-output and character-coverage checks before composition and stop on failure (S-007, S-024).\n  - Compose 1080x1920 output with image motion, the presenter clip in every sampled frame, captions inside their windows, and the disclosure overlay in every frame (S-006).\n  - Assemble a package with the video's SHA-256, the provenance list, six input digests and the kit 04 pre-fill (S-008).\n  - Bind the approval to the video's hash, voided by any byte change, and publish nothing (S-008, S-010, S-016).\n  - Refuse packages that break the pilot ledger limits (S-025).\n- Non-functional requirements:\n  - Zero network connection attempts in the sample run, and zero running cost (S-010, S-011, S-014).\n  - No language-model, speech-recognition or text-to-speech component in the dependency list or the invoked-tool log (S-012, S-013).\n  - No media file added to the repository (S-017).\n  - The .NET test run needs neither the company store database nor a container service (S-023).\n  - Only components already installed are used, each integrity-checked before use (S-009, S-011, S-022).\n- Acceptance criteria:\n  - Scope criteria 1 to 14 for the fact sheet, banned terms, script and Part E, as set by product-owner (S-002, S-004, S-005).\n  - Scope criteria 15 to 18 and 38 to 40 for recording admission and the ledger (S-003, S-020, S-025).\n  - Scope criteria 19 to 27 and 37 for pre-checks, composition, captions, timing and overlay (S-006, S-007).\n  - Scope criteria 28 to 33 for the package, checklist and approval (S-008, S-016).\n  - Scope criteria 34 to 36 for the network, component and media-file evidence (S-012, S-014, S-017).\n\n## Current-State Assumptions and Constraints\n\n### 4.1 Facts\n\n| ID | Fact | Established by |\n|---|---|---|\n| F-001 | The solution holds src projects Application, Capability, Credentials, Deterministic, Domain, Host, Persistence, Production and test projects Architecture.Tests, Capability.Tests, Deterministic.Tests, Domain.Tests, GraphicsStandIn, Persistence.Tests, Production.Tests, VoiceStandIn | MediaCompany.slnx |\n| F-002 | MediaCompany.Deterministic references only MediaCompany.Domain and MediaCompany.Application and no package | src/MediaCompany.Deterministic/MediaCompany.Deterministic.csproj |\n| F-003 | FontCoverage reads a face's character map (formats 4 and 12) and name table from bytes and lists the uncovered characters of labelled texts, using only the standard library | src/MediaCompany.Deterministic/Production/FontCoverage.cs |\n| F-004 | MediaCompany.Production's ExternalMediaTool implements the voice-model port by running the in-house text-to-speech model, and the same assembly holds that model's installation verifier | src/MediaCompany.Production/ExternalMediaTool.cs, InstallationVerifier.cs |\n| F-005 | ExternalMediaTool is the one process starter: argument lists, a cleared environment, a job that ends every member when closed, configured bounds; it draws text through the media tool's text filter from a text file with expansion off and a staged face file | src/MediaCompany.Production/ExternalMediaTool.cs, ExternalMediaTool.Graphics.cs |\n| F-006 | ProductionSettings names RendererPath \"the renderer executable (the external media tool)\" and ProbePath, refuses an output root inside the repository, gives no member a default in code, holds no manifest for the media tool, and the tool's version line is read by VersionLineAsync | src/MediaCompany.Production/ProductionSettings.cs, ExternalMediaTool.cs |\n| F-007 | The delivered preview encodes at the configured frame rate and width by height, in the yuv420p pixel format with the fast-start flag, through RendererPath | src/MediaCompany.Production/ExternalMediaTool.Graphics.cs (RenderPreviewAsync) |\n| F-008 | GraphicsSettings holds installed manifests for the renderer, browser, font and Node sets, which RendererInstallationVerifier checks file by file inside MediaCompany.Production | src/MediaCompany.Production/ProductionSettings.cs, RendererInstallationVerifier.cs |\n| F-009 | graphics/render.mjs has a bundle mode and a render mode, confines module resolution to the installed renderer folder, writes the bundle's module list, selects one composition by a fixed identifier, renders frames to image files and refuses downloads | graphics/render.mjs |\n| F-010 | The graphic provenance record hashes the bundle \"as served\" and is keyed to the company item and item version | src/MediaCompany.Domain/Production/Graphics.cs |\n| F-011 | The installed Remotion 4.0.534 set holds the compositor package that OffthreadVideo needs, listed in the renderer manifest; a render with OffthreadVideo under render.mjs is not measured | pilot-affiliate-vn/mc-16/02-orchestrator-measurements.md, M2 |\n| F-012 | The installed renderer folder holds the speech-recognition integration package and the speech-synthesis integration package, never loaded by the delivered drawing program | pilot-affiliate-vn/mc-16/02-orchestrator-measurements.md, M3 |\n| F-013 | The installed media tool's silence detection at a -35 dB noise floor and 0.35 s minimum found a 0.6 s gap in a generated file (start 1.499909 s, end 2.100091 s) | pilot-affiliate-vn/mc-16/02-orchestrator-measurements.md, M4 |\n| F-014 | The installed media tool holds zoom-pan, text-drawing, subtitle and styled-subtitle filters | pilot-affiliate-vn/mc-16/02-orchestrator-measurements.md, M5 |\n| F-015 | Inter 4.1 Regular, Italic, SemiBold and Bold miss 0 of 204 Vietnamese code points; correct mark stacking needs a rendered frame | pilot-affiliate-vn/mc-16/01-rk-016-glyph-measurement.md |\n| F-016 | BarredTermScreen holds a closed child-directed term set over title, description and tags, matched whole-word and case-insensitive under a timeout, with no exemption list | src/MediaCompany.Deterministic/BarredTermScreen.cs |\n| F-017 | The delivered publication approval is bound to a company item version, and the graphics approval file is hashed against its configured value, parsed from the same buffer and read in the company store only | src/MediaCompany.Domain/Publication/Approval.cs, src/MediaCompany.Production/GraphicsPlan.cs |\n| F-018 | PublishReadyPredicate refuses a stage recorded held, naming the stage and its summary, over company production records | src/MediaCompany.Deterministic/Production/PublishReadyPredicate.cs |\n| F-019 | AuditChain hashes each company audit entry (actor, action, subject, cost reference, retention class) with the previous entry's hash | src/MediaCompany.Deterministic/Record/AuditChain.cs |\n| F-020 | MediaCompany.Architecture.Tests references MediaCompany.Host and checks networking-assembly references by name | tests/MediaCompany.Architecture.Tests/BoundaryTests.cs and its project file |\n| F-021 | MediaCompany.Persistence.Tests runs against the company store; MediaCompany.Deterministic.Tests references only Deterministic and Domain | tests/ project files and DatastoreCollection.cs |\n| F-022 | Central package versions are Npgsql, the Microsoft extensions, the test SDK 17.10.0, xunit 2.9.0 and its runner 2.8.2 | Directory.Packages.props |\n| F-023 | MediaCompany.Application declares the voice-model port as an interface | src/MediaCompany.Application/Ports/ProductionPorts.cs |\n| F-024 | Kit 03 Part A holds the header fields and rows F1 to F3 with source section and screenshot file; Part B row 2 reads \"\u0110\u00e2y l\u00e0 [t\u00ean s\u1ea3n ph\u1ea9m], [ph\u00e2n lo\u1ea1i].\"; row 6 is a guidance sentence naming price | pilot-affiliate-vn/pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md |\n| F-025 | Kit 04 holds items A1 to A8, B1 to B13, C1 to C4 and D1 to D2; B3 covers use and absolute words, B5 price and other platforms, B8 the overlay throughout | pilot-affiliate-vn/pilot-kit/04-danh-sach-duyet-dang-bai.md |\n| F-026 | The installed, manifest-verified set is Remotion with a headless Chrome shell, Inter 4.1 with manifests, ffmpeg and ffprobe through WinGet, Node 24 and .NET 10 | feature request, \"What the company already holds\" (S-009) |\n| F-027 | HeldFiles keeps read-share handles so the hashed bytes are the bytes read, inside MediaCompany.Production | src/MediaCompany.Production/HeldFiles.cs |\n| F-028 | MediaCompany.Host references Domain, Application, Deterministic, Credentials, Capability, Persistence and Production, and Capability builds an HTTP client | src/MediaCompany.Host/MediaCompany.Host.csproj, src/MediaCompany.Capability/CapabilityGatewayFactory.cs |\n\n### 4.2 Assumptions\n\n| ID | Assumption | Why needed | Impact if false | Confirmed by |\n|---|---|---|---|---|\n| A-001 | Serving the render bundle and driving the browser (F-009, F-010) open loopback sockets that a harness failing on any socket opening counts | Decides whether O-001 and O-003 meet C-014 | They are not eliminated by C-014, yet still rank below O-002 on impact surface | qa |\n| A-002 | \"The delivered renderer\" of scope decision 1 includes the installed media tool the production path configures as its renderer (F-005, F-006) | O-002 meets C-017 only under it | O-002 is eliminated and no option remains (R-001) | product-owner |\n| A-003 | After NFC every Vietnamese letter drawn is one precomposed code point, so the media tool's text filter draws it from the character map with no mark positioning | C-025 for O-002 rests on it | Marks mis-stack; the fallback of Q-005 applies (R-003) | qa |\n| A-004 | The media tool opens no socket when every input and output is a local file and its protocol allow-list holds only the file protocol | C-014 for O-002 rests on it | No option meets C-014 (R-002) | qa |\n| A-005 | The silence threshold of F-013 separates sentence pauses in the operator's real room | Default pause parameters of D-008 | More runs need manual timing (R-011) | qa |\n| A-006 | The voice-model port interface (F-023), with no implementation in the toolchain's closure, is not a text-to-speech component under C-015 | Lets M-001 reference MediaCompany.Deterministic for FontCoverage | FontCoverage cannot be reused as-is (R-005) | qa |\n| A-007 | The presenter clip is made from the whole recording, starts with it and differs in length by at most the configured tolerance | The clip is placed from time zero | Lip movement and captions drift (R-014) | product-owner |\n| A-008 | Kit 03 Part B row 6's guidance sentence was used in no published video | No coexistence period for M-004 | A coexistence note is added to M-004 | product-owner |\n| A-009 | Lexical class (f) detection covers only \"so v\u1edbi\" and \"h\u01a1n h\u1eb3n\"; naming another shop or brand as better stays with the CEO's Part E review | Bounds D-004 | A held brand list is needed (R-017) | product-owner |\n| A-010 | A configured per-line character maximum, measured on the P-003 frame, keeps each caption sentence within two lines | Caption rule of D-007 | Sentences are refused or overflow (R-015) | qa |\n| A-011 | The operator runs the toolchain on the machine holding the installed set, with a pilot folder outside the repository | Ledger and package location of D-003 | The location setting changes | orchestrator |\n\n### 4.3 Constraints\n\n| ID | Class | Constraint | Hard or negotiable | Source |\n|---|---|---|---|---|\n| C-001 | functional | A fact sheet is accepted only with the eleven header fields, rows carrying subject noun, attribute, value as written, source section and screenshot name, and each screenshot present in the input set | hard | Scope item 1, criteria 1 to 4 (S-002) |\n| C-002 | functional | Classes (a) to (g) are refused whole-word, case-insensitive, after NFC, naming row and term; \"nh\u1ea5t \u0111\u1ecbnh\", \"gi\u00e1 \u0111\u1ee1 \u0111i\u1ec7n tho\u1ea1i\", \"h\u01a1n\" and \"1,5 l\u00edt\" pass and \"nh\u1ea5t\" is refused | hard | Scope item 2, criteria 5 to 7, decisions 2 and 16 (S-004, S-018) |\n| C-003 | functional | The script is deterministic, in Part B order, with byte-exact disclosures, one to three fact sentences from fixed frames with the value unchanged, and one Part E line per sentence | hard | Scope items 3 and 4, criteria 8 to 12 and 14 (S-005) |\n| C-004 | functional | The call to action comes from a fixed no-price list held in kit 03 Part B row 6, each entry passing the banned-term check | hard | Scope criterion 13, decision 8 (S-005, S-026) |\n| C-005 | functional | One recording file per video, at most 60.0 s, refused at 300 s or more, refused when its SHA-256 equals another video's | hard | Scope item 5, criteria 15 to 18, decisions 4, 7 and 9 (S-003, S-013, S-020) |\n| C-006 | functional | Composition starts only after the vertical-output and character-coverage checks pass, and the run record lists each drawn character with its result | hard | Scope item 6, criteria 19 and 20, decision 6 (S-007) |\n| C-007 | functional | Output is 1080x1920 at 9:16; each image moves by a slow linear pan or zoom; the presenter is in every 0.5 s sample; a non-portrait clip is refused | hard | Scope item 7, criteria 21 to 24, decisions 14 and 15 (S-006) |\n| C-008 | functional | Captions equal the approved script's sentences, one per sentence, in windows from pause detection or a valid manual timing file; white on a dark band in the lower third, at most two lines, installed face | hard | Scope item 8, criteria 25, 26 and 37, decisions 10, 11 and 13 (S-006) |\n| C-009 | functional | The overlay \"Video t\u1ea1o b\u1edfi AI \u00b7 C\u00f3 li\u00ean k\u1ebft ti\u1ebfp th\u1ecb\" is in every frame | hard | Scope item 9, criterion 27 (S-006) |\n| C-010 | functional | The package holds the video, its SHA-256, a provenance entry for every sentence and digests of the six inputs | hard | Scope item 10, criteria 28 to 30 (S-008) |\n| C-011 | functional | The checklist pre-fill ticks exactly B3, B5 and B8 with results and leaves the other 24 items unticked | hard | Scope item 11, criteria 31 and 32, decision 5 (S-008) |\n| C-012 | security | An approval holds only when its SHA-256 equals the video's recomputed hash and is void after a one-byte change; nothing publishes | hard | Scope item 12, criterion 33 (S-008, S-016) |\n| C-013 | functional | The ledger refuses a thirteenth video, a third video of one product, and a second video repeating the first one's focus | hard | Scope item 14, criteria 38 to 40, decision 12 (S-025) |\n| C-014 | security | The sample run makes zero network connection attempts under a harness that fails on any socket opening | hard | Scope criterion 34 (S-010, S-011, S-014) |\n| C-015 | compliance | The dependency list and the invoked-tool log hold no language-model, speech-recognition or text-to-speech component | hard | Scope criterion 35, exclusions 4 and 5 (S-012, S-013) |\n| C-016 | compliance | No media file is added to the repository; the sample is generated at test time | hard | Scope criterion 36 (S-017) |\n| C-017 | structural | The delivered renderer, coverage check, approval by hash and held-stage refusal are reused; no second renderer or approval path | hard | Scope decision 1 (S-009) |\n| C-018 | structural | The company store and frozen Wave 12 and Wave 13 material are untouched | hard | Scope exclusion 7 (S-015, S-025) |\n| C-019 | operability | Only already-installed components are used; nothing is downloaded and no package is added | hard | Feature request hard constraint 2 and T-001 acceptance (S-011, S-022) |\n| C-020 | operability | The toolchain costs nothing to run and makes no metered call | hard | Feature request hard constraint 5 (S-014) |\n| C-021 | operability | The .NET test run needs neither the company store database nor a container service | hard | Execution plan (S-023) |\n| C-022 | security | Operator-named files resolve only inside the supplied input set | hard | Scope criterion 2 (S-002) |\n| C-023 | quality-attribute | Every installed executable and face the toolchain runs or reads is integrity-checked before use | negotiable | Feature request reuse statement (S-009) |\n| C-024 | quality-attribute | The RK-016 part 2 proof costs one rendered vertical frame with stacked marks | negotiable | Execution plan T-006 (S-024) |\n| C-025 | quality-attribute | Stacked Vietnamese marks draw correctly in captions and overlay | negotiable | Feature request scope 3 (S-007, S-024) |\n| C-026 | functional | The toolchain performs no account, sign-in, contact, upload or publication action | hard | Feature request hard constraints 1 and 7 (S-010, S-016) |\n| C-027 | functional | The design records one decision for each of the eleven deferred items | hard | Execution plan T-001 (S-021) |\n\n## Architecture and Component Design\n\n### 5.1 Impacted Modules\n\n| ID | Module | Impact type | Basis | Interfaces affected | Confidence |\n|---|---|---|---|---|---|\n| M-001 | MediaCompany.Pilot (new console project under src/) | extension | F-001, F-002, F-003, F-005 | Five operator verbs; fact sheet, timing file, script, package, approval record and ledger forms; settings file | confirmed |\n| M-002 | MediaCompany.Pilot.Tests (new test project under tests/) | extension | F-021, F-022 | Unit and Integration test categories | confirmed |\n| M-003 | MediaCompany.slnx | extension | F-001 | Solution project list gains M-001 and M-002 | confirmed |\n| M-004 | Kit file 03, pilot-affiliate-vn/pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md | contract-change | F-024 | Part B row 6 becomes the fixed call-to-action list; Part F voice wording | confirmed |\n| M-005 | Kit file 04, pilot-affiliate-vn/pilot-kit/04-danh-sach-duyet-dang-bai.md | behavior-change | F-025 | Item B13 wording; item identifier column read by an M-002 consistency test | confirmed |\n| M-006 | MediaCompany.Deterministic | no-change-verified | F-002, F-003 | FontCoverage consumed unchanged | confirmed |\n| M-007 | MediaCompany.Production | no-change-verified | F-004, F-005 | None; not referenced by M-001 | confirmed |\n| M-008 | MediaCompany.Persistence and the company store | no-change-verified | F-017, F-021 | None | confirmed |\n| M-009 | graphics/render.mjs | no-change-verified | F-009 | None; not started by M-001 | confirmed |\n| M-010 | graphics/drawing | no-change-verified | F-009 | None | confirmed |\n| M-011 | MediaCompany.Architecture.Tests | no-change-verified | F-020 | None; the toolchain's boundary checks live in M-002 | confirmed |\n| M-012 | Directory.Packages.props | no-change-verified | F-022 | None; no package added | confirmed |\n| M-013 | Installed media tool (ffmpeg and ffprobe through WinGet) | no-change-verified | F-005, F-013, F-014 | Invoked unchanged by M-001 and M-002 | confirmed |\n| M-014 | Installed renderer folder (Remotion set, headless Chrome shell, Node 24) | no-change-verified | F-011, F-012 | None; never started | confirmed |\n| M-015 | MediaCompany.Application | no-change-verified | F-023, A-006 | None; in M-001's closure through M-006 | confirmed |\n| M-016 | MediaCompany.Host | no-change-verified | F-028 | None; M-001 is a separate entry point | confirmed |\n\nBoundary crossings in the selected approach: M-001 to M-013 (process start, file-only protocol); M-001 to the operator's input folder (read, contained); M-001 to the pilot folder outside the repository (package and ledger writes); M-002 to the repository's kit files M-004 and M-005 (read only).\n\n### 5.2 Options Considered\n\n| Option | Structural change | Hard constraints (C-014, C-015, C-017, C-018, C-019) | Impact surface | Reuse leverage | Quality attributes (C-023, C-024, C-025) | Migration burden | Operability | Outcome |\n|---|---|---|---|---|---|---|---|---|\n| O-001 | New M-001; new 9:16 composition beside graphics/drawing; render.mjs gains a composition choice and media inputs; presenter by OffthreadVideo; media tool encodes frames and adds the recording | C-014 violated (A-001); others met | 2 (M-004, M-009) | 14 | 2 of 3: C-024 unmet, the proof needs a full composition render with OffthreadVideo unmeasured (F-011) | 2 | low: Node, browser and media tool per run, about 1,800 browser frames per video | eliminated (C-014) |\n| O-002 | New M-001; the installed media tool composes images with linear zoom or pan, the presenter overlay, drawn captions and overlay, and the recording as audio; no Node or browser | all met (C-017 under A-002, C-014 under A-004) | 1 (M-004) | 14 | 3 of 3: C-023 by configured digests, C-024 one drawn frame, C-025 under A-003 | 1 | high: one .NET process and media tool children, no socket | selected |\n| O-003 | New M-001; render.mjs and a new composition draw caption and overlay plates as transparent images; the media tool composes images, presenter, plates and audio | C-014 violated (A-001); others met | 2 (M-004, M-009) | 14 | 2 of 3: C-024 unmet, the proof needs a browser render | 2 | medium: Node and browser run once per caption set | eliminated (C-014) |\n| O-004 | Python tool under tools/ that starts the media tool and reads the face with its own reader | C-017 violated: the .NET coverage check FontCoverage cannot be reused; others met | 1 (M-004) | 12 | 2 of 3: C-023 unmet, the interpreter is under no manifest | 1 | medium: a second runtime to operate | eliminated (C-017) |\n| O-005 | Pilot mode inside MediaCompany.Production with a Host command, reusing ExternalMediaTool and the delivered approval and provenance types | C-015 violated (F-004) and C-018 violated (F-017); others met | 3 (M-004, M-007, M-016) | 18 | 3 of 3 | 3 | low: company host configuration and store connection required | eliminated (C-015) |\n\nEvaluation order (reasoning stage A8): hard constraints, then smaller impact surface, then higher reuse leverage, then more quality attributes met, then smaller migration burden, then operability. Reuse leverage counts the capabilities of section 7 met by reuse-as-is or reuse-extended under each option.\n\n### 5.3 Selected Approach\n\n- Selected: O-002, the only option meeting every hard constraint (C-014, C-015, C-017, C-018).\n- Structural change: a new console project M-001 referencing only M-006, a new test project M-002, two solution entries in M-003, and the call-to-action list in M-004. M-001 holds these components: fact sheet reader and checker; banned-term check over held data; script generator with Part E; recording admission; pause detector with manual timing reader; pre-composition checks; composition plan; media tool invoker; package assembler with checklist pre-fill; approval by hash; pilot ledger; run guard. No existing module changes contract or dependencies.\n- Rationale: O-002 opens no socket and starts no script runtime, so C-014 and C-015 are met by construction rather than by inspecting a bundle's module list; it reuses the media tool the delivered path already configures as its renderer (F-005, F-006, F-007), FontCoverage (F-003) and the staged-face text drawing (F-005); and its RK-016 part 2 proof is one drawn frame (C-024).\n- Highest-scoring rejected alternative and why it lost: O-004 ranks second on the remaining criteria (impact surface 1, reuse 12) but is eliminated by C-017, because a Python tool cannot reuse the .NET coverage check. O-003 is the named fallback if the P-003 frame fails A-003: browser-drawn text plates composed by the media tool; it needs the CEO to accept loopback sockets under C-014 (Q-005).\n- Tradeoffs accepted:\n  - Text is drawn by the media tool's text filter without browser text shaping; correctness rests on NFC precomposed letters (A-003) and is proved by one frame (P-003).\n  - The media tool has no installed manifest (F-006); integrity rests on configured executable digests and a recorded version line (D-013, Q-004).\n  - The delivered approval, provenance, held-stage and process-start types are not referenced; their rules are carried into M-001 (section 7).\n  - Module-list confinement of render.mjs is not exercised; the closure check and the invoked-tool log replace it as the proof for C-015.\n\n### 5.4 Decisions\n\n| ID | Decision | Architecture-significant | Record |\n|---|---|---|---|\n| D-001 | M-001 MediaCompany.Pilot is a new console project referencing only MediaCompany.Deterministic; it may not reference Production, Persistence, Capability, Credentials, Host or a networking assembly; tests live in M-002 (O-002) | yes | architecture-decision-record-D-001.md |\n| D-002 | Vertical render route (item 5): the installed media tool composes the 1080x1920 video at the configured frame rate with the delivered encoder settings (F-007); layout, top to bottom: overlay band, image panel with a portrait presenter inset, caption band in the lower third; recording as the audio track; video length equals recording length; OffthreadVideo is not used; fallback O-003 under Q-005 (O-002) | yes | architecture-decision-record-D-002.md |\n| D-003 | Ledger location (item 9): one append-only ledger file in the configured pilot folder outside the repository and the company store; entries chained by SHA-256, previous generation kept, atomic replace; each package holds a copy of its entry (O-002) | yes | architecture-decision-record-D-003.md |\n| D-004 | Banned classes held (item 4): one versioned data resource in M-001 holds classes (a) to (g) exactly as scope criterion 5 lists them, the exemption list (first entry \"nh\u1ea5t \u0111\u1ecbnh\") and the money pattern (a number followed by \"\u0111\", \"\u0111\u1ed3ng\", \"VND\" or a \"k\" suffix); matching runs on syllable sequences after NFC and invariant lower-casing; one check serves rows, overrides, sentences and the call to action (O-002) | no | inline |\n| D-005 | Network guard (item 10) and no-generative proof: static closure check in M-002, in-process socket telemetry listener in M-001, file-only protocol allow-list on every media tool start, job-scoped socket-table sampling in the harness, dependency-list and invoked-tool-log checks (O-002) | yes | architecture-decision-record-D-005.md |\n| D-006 | Fact sheet form (item 1): one UTF-8 JSON document per video holding the eleven header fields of scope criterion 3, one to three rows (label F1 to F3, subject noun, attribute, value as written, source section, screenshot file name, optional override sentence) and an optional call-to-action choice; unknown members are refused (O-002) | no | inline |\n| D-007 | Frames (item 2): introduction \"\u0110\u00e2y l\u00e0 [subject noun], [classification].\"; fact \"[Subject noun] c\u00f3 [attribute] [value].\" or the row's override, which must contain the value unchanged and pass the check; disclosures verbatim. Call-to-action list (item 3): entry 1 \"B\u1ea5m v\u00e0o gi\u1ecf h\u00e0ng ho\u1eb7c link s\u1ea3n ph\u1ea9m \u0111\u1ec3 xem chi ti\u1ebft.\", entry 2 \"Th\u00f4ng tin chi ti\u1ebft, b\u1ea1n xem trong th\u1ebb s\u1ea3n ph\u1ea9m c\u1ee7a video.\"; entry 1 by default (O-002) | no | inline |\n| D-008 | Pause method and threshold (item 7): media tool silence detection at a -35 dB noise floor and 0.35 s minimum, both configured (F-013); silences touching the start or end are ignored; the interior count must equal sentences minus one, else the run stops and asks for a manual timing file (O-002) | no | inline |\n| D-009 | Image motion (item 8): images in header order, each for an equal consecutive share of the duration, fitted inside the image panel, slow linear zoom-in to a configured maximum (proposed 108 percent) with linear pan as the configured alternative, hard cuts, no other transition (O-002) | no | inline |\n| D-010 | Coverage mechanism (item 6): FontCoverage runs over every distinct code point of the NFC caption sentences and the overlay against the configured face, whose SHA-256 must equal its line in the installed font manifest; an uncovered or combining character stops the run before composition (O-002) | no | inline |\n| D-011 | Test placement (item 11): M-002 holds a Unit category that starts no process and an Integration category that needs the installed media tool, located by settings, with fixtures generated at test time in a temporary folder outside the repository (O-002) | no | inline |\n| D-012 | Approval and held status: the approval record names the video code and the SHA-256 the CEO reviewed; approval is refused for a held package or a hash mismatch; verification recomputes the hash and reports void on any difference (O-002) | no | inline |\n| D-013 | Tool and face identity: configured SHA-256 values of the media tool, the probe and the face are checked before each run, and the media tool's version line is recorded in the run record (O-002) | no | inline |\n\n## API and Data Model Impact\n\n- API changes: M-001 adds five operator verbs: check a fact sheet, write the script, produce the package, record an approval, verify an approval. Each verb exits with a distinct status for refused input and for tool failure, and every refusal names the row, field, term, sentence or check. No existing API changes.\n- Contract compatibility notes:\n  - M-004 transition strategy. Current shape: Part B row 6 holds one guidance sentence naming price. Target shape: row 6 holds the two-entry call-to-action list of D-007, marked as the list the tool uses. Compatibility approach: the same change updates M-004 and M-001's held list, and an M-002 unit test fails when they differ; a script carrying the former sentence is refused as unmapped (scope criterion 6). Coexistence period: none (A-008). Retirement condition: the former sentence leaves row 6 when the list lands. Rollback position: revert M-004 and M-001's held list together; the test keeps them equal in either direction.\n  - M-005: item B13 wording changes; the identifier column stays the same and is read only by the M-002 consistency test, so no consumer breaks.\n  - New forms in M-001 (fact sheet, timing file, package manifest, approval record, ledger entry) each carry a form version member, so a later change is detected rather than misread.\n- Schema or migration changes:\n  - None in the company store (C-018), and no data migration.\n  - The new file forms have no prior data. Migration direction is not applicable, and reversibility is total: removing M-001 leaves no reader or writer behind. The ledger file is created on first use. During any later form change, a reader refuses a form version it does not know.\n- Data model of the new forms (description, not a schema):\n  - Timing file: UTF-8, one line per script sentence giving sentence number, start seconds and end seconds; accepted only with one line per sentence, in order, ascending, not overlapping, inside the recording's duration (scope criterion 37).\n  - Package: one folder per video code under the pilot folder, holding the video; a manifest with the video SHA-256, the six input digest groups, tool and face identity, every check result and status ready or held; the provenance list; the script and Part E; caption windows; the run record (drawn characters with coverage results, invoked-tool log, socket count); the checklist pre-fill; and a copy of the ledger entry.\n  - Ledger entry: video code, product page path, product video number, focus text after NFC, recording SHA-256, video SHA-256, package folder, time written, previous entry hash, entry hash. A re-run for the same video code appends a superseding entry; the freshness check compares only against other video codes.\n  - Approval record: video code, the SHA-256 the CEO reviewed, the approver's name as typed, and the date.\n\n## Reusable Components and Reuse Rationale\n\n| Capability | Candidate | Outcome | Rationale |\n|---|---|---|---|\n| Parse and write the fact sheet, timing file, manifest, ledger and approval forms | .NET standard library JSON reader and writer | reuse-as-is | Native platform capability; no package added (C-019) |\n| NFC normalization and case folding | .NET standard library normalization and invariant lower-casing | reuse-as-is | Native platform capability, deterministic across runs |\n| Banned-term check | BarredTermScreen (F-016) | rejected | Closed child-directed set over title, description and tags with no exemption list; cannot give the results C-002 requires; its whole-word, case-insensitive, time-bounded rule is carried |\n| Script from fixed frames with Part E lines | none | none-found | Searched existing components (Deterministic, Domain, Production), the .NET standard library, platform capability and installed dependencies; no sentence-frame generator exists |\n| Probe duration, stream size and orientation | Installed probe executable (F-005, F-026) | reuse-as-is | Already used by the delivered path; unchanged |\n| Content digests | .NET standard library SHA-256 | reuse-as-is | Native platform capability |\n| Pause detection | Installed media tool silence detection (F-013) | reuse-as-is | Measured on this machine; signal level only, no recognition |\n| Manual timing file validation | none | none-found | Searched existing components, the .NET standard library, platform capability and installed dependencies; no timing-file reader exists |\n| Character coverage | FontCoverage (F-003) | reuse-as-is | Pure function in MediaCompany.Deterministic; scope decision 1 names it |\n| Installed face integrity | RendererInstallationVerifier (F-008) | rejected | Lives in the assembly that implements the in-house speech model (F-004) and verifies the renderer, browser and Node sets O-002 never runs; the face's digest is compared with its font-manifest line instead |\n| Process start with argument list, bound and tree kill | ExternalMediaTool process starter (F-005) | rejected | Same assembly as the in-house speech model (F-004), so referencing it breaks C-015; its rules (argument list, cleared environment, job ending every member, bound) are carried |\n| Process start | .NET standard library process API and the platform job object (F-005) | reuse-as-is | The primitives the delivered starter is built on |\n| Vertical composition and encoding | Installed media tool configured as the delivered renderer, with the delivered encoder settings (F-006, F-007) | reuse-as-is | The delivered path already renders through it; only the frame size and inputs differ |\n| Image motion | Installed media tool zoom-pan and scale-crop filters (F-014) | reuse-as-is | Present in the installed build |\n| Caption and overlay drawing | Installed media tool text filter with text from file, expansion off, staged face (F-005, F-014) | reuse-as-is | The delivered drawing pattern; operator text never enters a filter description |\n| Browser-rendered composition | graphics/render.mjs and graphics/drawing (F-009, F-010) | rejected | Serving the bundle and driving the browser open loopback sockets (A-001), breaking C-014; a second composition would also change render.mjs's contract |\n| Approval by hash | Delivered publication approval and graphics approval file (F-017) | rejected | Both are read in the company store (C-018), and the graphics one lives in the speech-model assembly (F-004); the rule (named SHA-256, recomputed at check, void on any byte change, parsed from the hashed bytes) is carried |\n| Held-stage refusal | PublishReadyPredicate held-stage outcome (F-018) | rejected | Evaluates company production records; the rule (a held package is never ready and its approval is refused naming the failing check) is carried |\n| On-screen provenance | Graphic and narration provenance records (F-010) | rejected | Keyed to the company item and version in the company store (C-018); the pilot list keys each sentence to fact row, source section and screenshot |\n| Ledger storage | Company store through MediaCompany.Persistence (F-021) | rejected | Why rejected: the company store is frozen and must not be touched (C-018), and the pilot ledger is not part of the company's audited production records, so writing to the store would mix pilot entries into them. What replaces it: the file-based, SHA-256-chained, append-only ledger of D-003, held in the configured pilot folder outside the repository and the store, with the previous generation kept and a copy of each entry in its package. What it costs: no database, schema or container, so the ledger works offline and the test run stays free of the store (C-021) |\n| Ledger tamper evidence | AuditChain (F-019) | rejected | Its entry shape is the company audit record (actor, cost reference, retention class), while the ledger needs typed product, focus and digest fields; the chaining rule is carried with standard SHA-256 |\n| Hashed bytes equal the bytes used | HeldFiles (F-027) | rejected | Lives in the speech-model assembly (F-004); M-001 reads each input once and hashes and uses that one buffer |\n| Static networking-reference check | Architecture.Tests networking check (F-020) | rejected | Private to a test class whose project carries the company host closure (F-028); the same assembly list is applied in M-002 to M-001's closure |\n| Runtime socket detection | .NET platform socket and name-resolution telemetry event sources, and the platform TCP and UDP tables | reuse-as-is | Native platform capability; no package added |\n| Test framework | xunit and the test SDK at central versions (F-022) | reuse-as-is | Already pinned centrally |\n| Generated fixtures | Installed media tool synthetic tone, silence and colour sources with text drawing (F-013, F-014) | reuse-as-is | The measurement of F-013 used a generated file; nothing is downloaded (C-019) |\n| Path containment of operator names and output folders | .NET standard library path API, following the delivered output-root rule (F-006) | reuse-as-is | Native platform capability |\n| Call-to-action list and checklist identifiers kept equal to the kit | none | none-found | Searched existing components, the .NET standard library, platform capability and installed dependencies; the kit files are prose tables with no reader |\n\n## Operational Considerations\n\n- Logging and observability updates: every produce run writes a run record into its package (M-001): each media tool invocation with executable path, SHA-256 and arguments; the media tool's version line (D-013); every drawn character with its coverage result (C-006); detected pauses and caption windows; the socket telemetry count (D-005); and every check result. Nothing is written to the company store (C-018).\n- Error handling strategy: each refusal names the row, field, term, sentence, file or check (C-001, C-002, C-005); a failed pre-check stops before any composition output exists (C-006); a package with a failed check is marked held and cannot take an approval (D-012); a media tool failure or bound overrun ends the job and every member, following the delivered rule (F-005). Exit statuses separate refused input from tool failure.\n- Security considerations:\n  - Operator-named images, screenshots, recording, clip and timing file must be plain file names resolved inside the input folder; rooted or climbing names are refused (C-022, R-006).\n  - Operator text reaches the media tool only through UTF-8 text files drawn with expansion off; filter descriptions are built from configured numbers and staged file names only, and control characters are refused (R-007).\n  - Approval binds to the recomputed SHA-256 (C-012, R-008); the ledger is chained and verified before each read (D-003, R-012).\n  - No network (C-014, D-005); no account, sign-in or publication action (C-026); configured digests guard the executables and face (C-023, D-013).\n  - Compliance: no recognition or synthesis component is in M-001's closure or started by it, and the installed renderer folder holding such packages (F-012) is never named in M-001's settings (C-015).\n- Performance considerations: no performance target is stated (S-014 sets only cost). Each run is bounded by configured process bounds following the delivered pattern (F-006), and the frame count follows the recording length, at most 60.0 s (C-005).\n- Deployment or operability impact: M-001 runs from the repository build on the operator's machine (A-011), with a settings file outside the repository naming the media tool, probe, face, font manifest, pilot folder, thresholds, layout, frame rate, bounds and duration tolerance, none with a default in code (F-006). No container, database or service is needed (C-021). The S06 database area changes nothing: the ledger is a file (D-003).\n\n## Delivery Plan\n\n### Sequencing Constraints\n\n| ID | Constraint | Modules | Prerequisites | Reason | Binds |\n|---|---|---|---|---|---|\n| P-001 | The Design Gate decision on D-001, D-002, D-003 and D-005 and the answer to Q-001 precede any module; M-001 then exists with its reference rule and the M-002 closure check before any component is added | M-001, M-002, M-003 | none | Verification of a boundary precedes work that assumes it holds | T-001, T-020, T-022 |\n| P-002 | The media tool invocation path (argument list, configured digest check, file-only protocol allow-list, bound, job ending every member, invoked-tool log) exists before any component starts the media tool | M-001, M-013 | P-001 | Contract definition precedes every consumer | T-010, T-011 |\n| P-003 | One 1080x1920 frame with stacked Vietnamese marks and the overlay, drawn through P-002's path and the staged face, is produced and probed, and the caption per-line maximum is measured, before the vertical check and composition rely on them | M-001, M-002, M-013 | P-002 | The vertical check rests on the proven route | T-006, T-007 |\n| P-004 | The held data (term classes, exemptions, money pattern, frames, call-to-action list, checklist identifiers) exist, with M-004 row 6 carrying the same list, before the fact sheet check and the generator read them | M-001, M-004, M-005 | P-001 | Contract definition precedes every consumer | T-002, T-003, T-004, T-019 |\n| P-005 | The ledger form, its location rule and its safeguards (chain, previous generation, atomic replace) exist before admission or packaging reads or appends | M-001 | P-001 | A reversibility safeguard precedes the first irreversible ledger write | T-011, T-018 |\n| P-006 | The pre-composition checks (vertical, coverage of each drawn character, caption lines, portrait clip, duration tolerance) gate composition | M-001, M-006 | P-003, P-004 | A gate precedes the step it gates | T-005, T-007, T-020 |\n| P-007 | Package digests, provenance and ready or held status exist before an approval binds to the video hash and before the checklist pre-fill reads check results | M-001 | P-005, P-006 | Approval binds to an assembled package | T-008, T-009, T-021 |\n| P-008 | The network guard (in-process listener, job-scoped socket tables, protocol allow-list check) and the dependency-list check exist before the end-to-end sample run whose evidence they certify | M-001, M-002 | P-002 | Verification of a boundary precedes evidence that assumes it | T-012 |\n| P-009 | Pause detection and manual timing validation exist before caption windows are drawn | M-001, M-013 | P-002, P-004 | Windows derive from the sentence count and the admitted recording | T-005, T-010 |\n| P-010 | Fixture producers write only to a temporary folder outside the repository, and the test matrix assigns each scope criterion to the Unit or Integration category, before integration tests consume fixtures | M-002, M-013 | P-002 | No media enters the repository (C-016) | T-015, T-017 |\n| P-011 | Verification evidence (sample run record, dependency list, invoked-tool log, repository media scan) exists before the release note and the branch delivery | M-002 | P-007, P-008, P-010 | Release evidence precedes release | T-013, T-014, T-016 |\n| P-012 | The operator guide cites the verbs and refusal names the sample run emits | M-004, M-005 | P-008 | The guide documents what the run emits | T-023 |\n\n### Test Strategy Focus Areas\n\n- Unit category (M-002, no process start): the eleven header fields and row fields blanked in turn; one term per class (a) to (g); the five strings of scope criterion 7; money patterns against \"1,5 l\u00edt\" and \"220V\"; frames and byte-exact disclosures; one, three and four fact rows; script hash stability; Part E row count; timing file cases of scope criterion 37; ledger limits on a temporary folder; approval after a one-byte change; checklist pre-fill of exactly B3, B5 and B8; equality of the held call-to-action list with M-004 row 6 and of the held identifiers with M-005.\n- Boundary checks (M-002): M-001's closure holds only M-001, M-006, M-015, MediaCompany.Domain and the platform; none of the networking assemblies of F-020; no type implementing the voice-model port (A-006).\n- Integration category (M-002, installed media tool): recordings of 60.0, 61.0, 299.9 and 300.0 s; two recording files; digest reuse naming the other video; tones with set pauses and a run-together variant; portrait and landscape stand-in clips; 1080x1920 probe; motion by frame difference; presenter and overlay presence at 0.5 s steps; caption windows against the timing; six digests recomputed.\n- Network evidence (P-008): the sample run starts M-001 as a child in a job; the harness fails on any socket-table row owned by a job member and on a non-zero telemetry count; every invocation in the tool log carries the file-only allow-list.\n- Repository evidence: a scan of tracked files for media extensions finds none added by this change (C-016).\n\n### Rollout and Rollback\n\n- Rollout: M-001 and M-002 land on the session branch with M-003, M-004 and M-005 in the same change; the operator configures the settings file and pilot folder outside the repository; the first real package is reviewed with the threshold of D-008 checked against it (A-005).\n- Rollback: remove M-001, M-002 and their M-003 entries and revert M-004 and M-005 together; no other module changes, and the pilot folder's packages and ledger remain readable evidence outside the repository.\n\n## Risks and Mitigations\n\n| ID | Class | Trigger | Impact | Likelihood | Affects | Mitigation | Owner |\n|---|---|---|---|---|---|---|---|\n| R-001 | structural | product-owner reads \"the delivered renderer\" of scope decision 1 as the browser renderer only (A-002 false) | O-002 breaks C-017 while O-001 and O-003 break C-014; no option remains without a relaxation | low | D-002, P-001 | Q-001 answered before implementation, held by P-001 | product-owner |\n| R-002 | security | The media tool opens a socket although every input is local and the allow-list holds only files (A-004 false) | C-014 fails for every option | low | D-005, P-008 | P-008 harness detects it on the sample run; escalate through orchestrator | qa |\n| R-003 | contract | The P-003 frame shows a mis-stacked mark or a missing precomposed glyph (A-003 false) | Captions illegible; D-002 moves to the O-003 fallback, which needs Q-005 | low | D-002, P-003 | P-003 proves it before composition is built | qa |\n| R-004 | contract | The kit 03 row 6 list and M-001's held list differ | A script carries a sentence the template does not hold; scope criterion 13 fails | medium | M-004, P-004 | M-002 consistency test reads the kit; both change in one change | dev-1-implement |\n| R-005 | structural | The voice-model port in M-015 is counted as a text-to-speech component (A-006 false) | M-001 cannot reference M-006, so FontCoverage reuse is lost | low | D-001, M-015 | Q-006; the closure test proves no implementation of the port | qa |\n| R-006 | security | An operator-named file is rooted or climbs out of the input folder | Reads outside the input set; foreign files enter the package | medium | M-001, P-001 | Plain names only, resolved and contained, refused naming the row | dev-1-implement |\n| R-007 | security | Operator text reaches a media tool filter description | Filter injection or wrong drawing | medium | D-002, P-002 | Text only through UTF-8 files with expansion off; descriptions from configured numbers; control characters refused | dev-1-implement |\n| R-008 | security | Video bytes change after an approval record is written | Unapproved bytes pass as approved | low | D-012, P-007 | Verification recomputes the SHA-256 at every check; a mismatch voids the approval | qa |\n| R-009 | security | A re-encoded or trimmed copy of another video's recording is submitted | The digest check passes it (scope decision 4) | medium | D-003 | Accepted residual; the fresh-recording item B13 stays unticked for the CEO | product-owner |\n| R-010 | contract | Whole-word matching refuses ordinary text such as \"da\" meaning leather, \"4k\" as a resolution, or another compound of \"nh\u1ea5t\" | Genuine facts refused | medium | D-004, P-004 | Exemption list in held data; Q-002; override sentence path | product-owner |\n| R-011 | operability | The threshold misses or splits pauses in the operator's room (A-005 false) | Frequent manual timing | medium | D-008, P-009 | Threshold re-set from the first real recording; manual timing path | qa |\n| R-012 | operability | The ledger file is lost, edited or corrupted | Limits and freshness go unenforced | low | D-003, P-005 | Chain verified before every read; previous generation kept; each package holds its entry | dev-1-implement |\n| R-013 | operability | The media tool executable is replaced (no installed manifest, F-006) | An unverified tool renders | low | D-013, P-002 | Configured SHA-256 checked before each run; version line recorded; Q-004 | orchestrator |\n| R-014 | delivery | Clip and recording lengths differ beyond tolerance or start apart (A-007 false) | Lip movement and captions drift | medium | D-002, P-006 | Duration-tolerance refusal; Q-003 | product-owner |\n| R-015 | delivery | A sentence needs more than two caption lines at the configured size (A-010 false) | The run stops on a real product | medium | D-007, P-006 | Refusal names the sentence; P-003 measures the per-line maximum; override sentence | dev-1-implement |\n| R-016 | security | Socket-table sampling misses a short-lived connection | C-014 passes falsely | low | D-005, P-008 | Layered guard: allow-list, in-process listener, static closure check | qa |\n| R-017 | structural | A brand comparison beyond \"so v\u1edbi\" and \"h\u01a1n h\u1eb3n\" reaches a script (A-009) | A comparison claim reaches a video | low | D-004 | CEO's Part E tick and checklist review; Q-007 | product-owner |\n\n## Estimate and Confidence\n\n- Overall: L (confidence: low), because the estimate rests on unconfirmed assumptions A-002, A-003, A-004 and A-006.\n- Breakdown:\n  - M-001: L (confidence: low); twelve components, one new module boundary, media tool invocation and composition.\n  - M-002: M (confidence: medium); two categories, generated fixtures, network harness.\n  - M-003: XS (confidence: high).\n  - M-004 and M-005: XS (confidence: high); wording only.\n  - P-003 render proof: S (confidence: low) until the frame is drawn.\n- Scope assumptions:\n  - One product, one presenter, Vietnamese captions, at most 60.0 s per video (C-005).\n  - Only the installed set is used (C-019).\n  - The answers to Q-001 and Q-006 confirm A-002 and A-006.\n- Uncertainty drivers:\n  - Text-filter mark stacking (A-003) and the socket behaviour of the media tool (A-004).\n  - Real-room pause detection (A-005) and real presenter clips (A-007).\n\n## Open Decisions and Escalations\n\nE-AUTHORITY events are recorded as Q-001, Q-002, Q-003, Q-005 and Q-007, each owned by its authority. No E-BOUNDARY event occurred.\n\n| ID | Question | Blocking | Owner | Affects | Consequence |\n|---|---|---|---|---|---|\n| Q-001 | Does \"the delivered renderer\" of scope decision 1 cover the installed media tool the production path configures as its renderer (A-002)? | non-blocking | product-owner | D-002, P-001 | Yes: O-002 stands. No: every option breaks a hard constraint, and the CEO relaxes scope decision 1 or criterion 34 for loopback sockets |\n| Q-002 | Which exemptions does the held list carry beyond \"nh\u1ea5t \u0111\u1ecbnh\", for example \"da\" as leather or \"4k\" as a resolution? | non-blocking | product-owner | D-004, P-004 | Listed: the text passes. Not listed: refused, and the operator uses an override or drops the row |\n| Q-003 | Is 0.5 s the tolerance between clip and recording length, with both starting together (A-007)? | non-blocking | product-owner | D-002, P-006 | Yes: as designed. Another value: configured. An offset: a configured start offset is added |\n| Q-004 | Should the installed media tool get an installed manifest like the renderer, browser, font and Node sets, hashing files already installed? | non-blocking | orchestrator | D-013, P-002 | Yes: M-001 checks against the manifest. No: configured executable digests stand |\n| Q-005 | If the P-003 frame fails (A-003 false), does the CEO accept the browser renderer's loopback sockets for O-003's text plates under criterion 34, or approve another component by name? This answers the plan's open question on a T-006 failure | non-blocking | orchestrator | D-002, P-003 | Accept: O-003 plates route. Refuse: composition waits for a named component |\n| Q-006 | Is the voice-model port interface, unimplemented in M-001's closure, outside the text-to-speech component of criterion 35 (A-006)? | non-blocking | qa | D-001, M-015 | Yes: as designed. No: M-001 drops the reference to M-006, which is a design change |\n| Q-007 | Does class (f) beyond \"so v\u1edbi\" and \"h\u01a1n h\u1eb3n\" stay with the CEO's Part E review (A-009)? | non-blocking | product-owner | D-004 | Yes: as designed. No: a held brand list is added |\n| Q-008 | Design Gate acceptance of D-001, D-002, D-003 and D-005, all at Proposed; tech-lead accepts under the producer exclusion rule | non-blocking | tech-lead | D-001, D-002, D-003, D-005 | Accepted: implementation starts at P-001. Not accepted: the design returns to the architect |\n\n## Sign-off\n\n- Architect: unsigned; producer of this package and its records, so excluded from accepting under the Producer Exclusion Rule\n- Tech Lead: unsigned; accepting Design Gate owner for this package and for D-001, D-002, D-003 and D-005\n- Product Owner: unsigned; product confirmation of Q-001, Q-002, Q-003 and Q-007\n- QA: unsigned; review of the test focus areas and of Q-006\n\n## Appendix A: Statement Register\n\n| ID | Statement | Source |\n|---|---|---|\n| S-001 | One product becomes one ready-to-review 9:16 video, reusing the delivered deterministic pipeline | Feature request, Why |\n| S-002 | The fact sheet is Part A of kit 03 in machine-readable form, each fact with its page section and screenshot file | Feature request, input 1 |\n| S-003 | Per video, the operator supplies product image files, an own-voice Vietnamese recording under 5 minutes made fresh, and the presenter clip | Feature request, inputs 2 to 4 |\n| S-004 | A fact or field carrying banned content is rejected, naming the row and the banned term | Feature request, likely scope 1 |\n| S-005 | The script generator fills Part B deterministically with no language model, places the disclosure verbatim at start and end, and emits Part E | Feature request, likely scope 2 |\n| S-006 | The 9:16 composition shows images with motion, the presenter clip, burned-in captions from the recorded script and the overlay for the whole video | Feature request, likely scope 3 |\n| S-007 | First, the RK-016 check: vertical output from the delivered renderer, and coverage by the installed face of every glyph drawn | Feature request, likely scope 3 |\n| S-008 | The package holds the video with its SHA-256, the provenance list, the input digests and the kit 04 checklist pre-filled, for approval by hash; nothing publishes | Feature request, likely scope 4 |\n| S-009 | The delivered pipeline and the manifest-verified installed set are reused | Feature request, reuse section |\n| S-010 | Agents and the tool create no account, sign in nowhere, contact no seller, buy nothing and publish nothing | Feature request, hard constraint 1 |\n| S-011 | Nothing is downloaded without the CEO's approval by name | Feature request, hard constraint 2 |\n| S-012 | The toolchain calls no generative model | Feature request, hard constraint 3 |\n| S-013 | No text-to-speech, no voice cloning, and a recording already used for another video is refused | Feature request, hard constraint 4 |\n| S-014 | The toolchain costs nothing to run | Feature request, hard constraint 5 |\n| S-015 | Frozen Wave 12 and Wave 13 material and the company store are untouched | Feature request, hard constraint 6 |\n| S-016 | The CEO approves every publication individually | Feature request, hard constraint 7 |\n| S-017 | The tooling is tested on a sample from repository fixtures or generated by repository code | Feature request, done means |\n| S-018 | The presenter reads only sourced facts, never claims use, and makes no skin, hair or body claim | Business intent, CEO decision record entry 1301 item 4 |\n| S-019 | One presenter is used on one account | Business intent, entries 1301 item 4 and 1302 item OD18 |\n| S-020 | Each video uses a fresh real recording; a digest already used is rejected | Business intent, entry 1305 |\n| S-021 | The design records a decision on each of the eleven deferred items | Execution plan, T-001 |\n| S-022 | The design adds no component outside the installed set, or names each one for the CEO's approval | Execution plan, T-001 acceptance |\n| S-023 | The .NET test run needs neither the company store database nor a container service | Execution plan, scope statements |\n| S-024 | RK-016 part 2 is proven by a rendered vertical frame | Execution plan, T-006 |\n| S-025 | The pilot ledger lives outside the company store and enforces 12 videos, two per product and distinct focus | Execution plan, T-018 |\n| S-026 | Kit 03 Part B row 6 and Part F, and kit 04 item B13, match the tool | Execution plan, T-019 and T-022 |\n| S-027 | The operator may be an employee recording in their own real voice | Execution plan, T-022 and T-023 |",
+        "digest": "sha256:091bf87a2e2a0edf82d4e2ee5621e65f",
+        "produced_by": "solution-design-and-risk-assessment"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the accepted change this agent implements: a technical design for feature work, a bug analysis for a defect fix, or the safety-net validation report for a behaviour-preserving refactor, which is the artifact the refactor workflow's own predecessor phase publishes. Without one there is no accepted change, and implementing anyway would mean designing."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "technical-design",
+      "reference": "runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+      "produced_by": "solution-design-and-risk-assessment",
+      "artifact": "technical-design.md",
+      "bytes": 62213,
+      "sections": {
+        "read_first": [
+          "Objective",
+          "Constraints",
+          "Impacted Modules",
+          "Selected Approach",
+          "Decisions",
+          "API and Data Model Impact",
+          "Delivery Plan",
+          "Open Decisions and Escalations"
+        ],
+        "on_demand": [
+          "Requirements Summary",
+          "Facts",
+          "Assumptions",
+          "Options Considered",
+          "Reusable Components and Reuse Rationale",
+          "Operational Considerations",
+          "Risks and Mitigations",
+          "Estimate and Confidence",
+          "Sign-off"
+        ]
+      }
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-535f3f938f32/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:868bc1420fb4c66947b89c51924f0558",
+    "bytes": 59744,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database",
+        "performance",
+        "security"
+      ],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "implementation"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-26T16:05:14Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/implementation-report.md",
+        "digest": "sha256:d0616790c1cb2c658ccc70b61ebb4a3e",
+        "supplies": null,
+        "bytes": 5809,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/technical-design.md",
+        "digest": "sha256:ef4bb02c7c6453013cf58a10b5c6f746",
+        "supplies": null,
+        "bytes": 6560,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "skills/dotnet/engineering-playbook.md",
+        "digest": "sha256:35fc0c6fcd8f834c3e2528d14465e17c",
+        "supplies": null,
+        "bytes": 1507,
+        "read": "required",
+        "read_reason": "skill S03 is required for this phase"
+      },
+      {
+        "path": "skills/error-handling/error-handling-strategy.md",
+        "digest": "sha256:f079a0cde78d28036a798b7be398579f",
+        "supplies": null,
+        "bytes": 1333,
+        "read": "required",
+        "read_reason": "skill S12 is required for this phase"
+      },
+      {
+        "path": "skills/testing/testing-strategy.md",
+        "digest": "sha256:186a1e81b3ff01bcadec23c9119e86d6",
+        "supplies": null,
+        "bytes": 1265,
+        "read": "required",
+        "read_reason": "skill S07 is required for this phase"
+      },
+      {
+        "path": "skills/architecture/clean-architecture-checklist.md",
+        "digest": "sha256:8e4f9ca28ad1bb63d8368998cb67cc5a",
+        "supplies": null,
+        "bytes": 4862,
+        "read": "required",
+        "read_reason": "skill S01 is required for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:f19a60b2df50db05b4d00e11d9687b71",
+    "input_digest": "sha256:81957731f6a1000c6b2dee1ab15ee115",
+    "inputs": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-16-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-16-feature-request.md",
+        "digest": "sha256:04f86d51a3d9db84789afc446e0fec4b"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-16-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-16-business-intent.md",
+        "digest": "sha256:d15aab6f3b7c6050e636a398b6fb6ead"
+      },
+      {
+        "type": "technical-design",
+        "reference": "runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-16-pilot-pipeline-a4df61/.claude/runs/run-535f3f938f32/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+        "digest": "sha256:091bf87a2e2a0edf82d4e2ee5621e65f"
+      }
+    ],
+    "unnarrowed": [
+      "runtime/README.md",
+      "skills/architecture/clean-architecture-checklist.md",
+      "skills/dotnet/engineering-playbook.md",
+      "skills/error-handling/error-handling-strategy.md",
+      "skills/testing/testing-strategy.md",
+      "templates/implementation-report.md",
+      "templates/technical-design.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "skills/architecture/clean-architecture-checklist.md",
+      "skills/dotnet/engineering-playbook.md",
+      "skills/error-handling/error-handling-strategy.md",
+      "skills/testing/testing-strategy.md",
+      "templates/implementation-report.md",
+      "templates/technical-design.md"
+    ],
+    "read_on_demand": [
+      "runtime/README.md",
+      "workflows/implement-feature.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 184720,
+    "bytes_required": 22885,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:578e05b4917d9dfde4ab0397bebad131",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-535f3f938f32/states/implementation/artifacts/implementation-report.md",
+      "runs/run-535f3f938f32/states/implementation/result-envelope.json",
+      "**"
+    ],
+    "write_exclusions": [
+      "runs/**",
+      "proposals/**"
+    ],
+    "command_execution": {
+      "allowed": true,
+      "purpose": "the repository's own test, build, and static-analysis commands, run to obtain the executed evidence the output contract requires",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "repository history rewriting, publishing, or release actions",
+        "any command whose effect is not recorded in the report's verification results"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "any write matching ['runs/**', 'proposals/**']",
+      "command execution other than the repository's own test, build, and static-analysis commands, run to obtain the executed evidence the output contract requires",
+      "external system, repository, or ticketing access",
+      "define or widen product scope",
+      "decide or revise the technical design rather than escalating the mismatch",
+      "approve, review, or award a readiness verdict to its own change",
+      "record a merge, release, or gate decision",
+      "relax an acceptance criterion, a quality threshold, or a declared invariant",
+      "introduce an undeclared side effect in critical business logic",
+      "modify committed run evidence or a governance record",
+      "access external systems directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "implement the change the accepted design and analysis describe",
+        "add, modify, and remove production code inside the impacted modules the design names",
+        "add or update automated tests that exercise the change",
+        "execute the project's own test and static-analysis commands to gather evidence",
+        "record the change set, the verification evidence, and the residual risk",
+        "record a tradeoff taken inside this agent's own implementation latitude",
+        "raise a deviation record when the design cannot be implemented as accepted"
+      ],
+      "prohibited": [
+        "define or widen product scope",
+        "decide or revise the technical design rather than escalating the mismatch",
+        "approve, review, or award a readiness verdict to its own change",
+        "record a merge, release, or gate decision",
+        "relax an acceptance criterion, a quality threshold, or a declared invariant",
+        "introduce an undeclared side effect in critical business logic",
+        "modify committed run evidence or a governance record",
+        "access external systems directly"
+      ],
+      "repositoryWrites": {
+        "allowed": true,
+        "rationale": "This is the only framework role that changes repository source. Its write scope cannot be enumerated per agent, because the files a change touches are named by the accepted design rather than by the manifest. The scope is therefore the repository, minus the evidence classes below, and every file actually written is declared in the change set and in the result envelope, where the runtime compares them.",
+        "scope": [
+          "**"
+        ],
+        "excluded": [
+          "runs/**",
+          "proposals/**"
+        ],
+        "exclusionRationale": "Committed run evidence and governance records are immutable to the agents whose work they record. A run artifact this agent could edit would let a change rewrite the evidence assessed against it."
+      },
+      "commandExecution": {
+        "allowed": true,
+        "purpose": "the repository's own test, build, and static-analysis commands, run to obtain the executed evidence the output contract requires",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "repository history rewriting, publishing, or release actions",
+          "any command whose effect is not recorded in the report's verification results"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical approved inputs and an identical context snapshot must produce the same change-set entry set, the same test-evidence set, the same deviation set, and the same declared verification status.",
+      "identifierSchemes": {
+        "changes": "C-<zero-padded-sequence>",
+        "tests": "T-<zero-padded-sequence>",
+        "deviations": "V-<zero-padded-sequence>",
+        "risks": "R-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "orderingRule": "Change-set entries are ordered by the sequence in which the accepted design requires them; ties break toward the lower path in lexical order. Test-evidence entries follow the change-set entries they cover.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied design, standards, or repository context."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "implementation-report.md",
+    "artifact_path": "runs/run-535f3f938f32/states/implementation/artifacts/implementation-report.md",
+    "template_ref": "templates/implementation-report.md",
+    "contract_ref": "agents/dev-1-implement/output.md",
+    "quality_ref": "agents/dev-1-implement/quality.md",
+    "validator": "implementation_report_validator",
+    "result_envelope_path": "runs/run-535f3f938f32/states/implementation/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-26T16:05:14Z",
+  "model_tier": {
+    "tier": "deep",
+    "host_hint": "opus",
+    "basis": "declared deep for implement-feature/implementation in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 68729,
+    "modules_core_bytes": 32672,
+    "slice_all_bytes": 184720,
+    "slice_required_bytes": 22885,
+    "inputs_bytes": 18422,
+    "upstream_full_bytes": 62214,
+    "upstream_read_first_bytes": 27575,
+    "task_context_bytes": 59744,
+    "fixed_bytes": 13658,
+    "legacy_estimate_bytes": 347743,
+    "progressive_estimate_bytes": 174956,
+    "legacy_estimate_tokens": 86935,
+    "progressive_estimate_tokens": 43739,
+    "savings_pct": 49.7
+  }
+}

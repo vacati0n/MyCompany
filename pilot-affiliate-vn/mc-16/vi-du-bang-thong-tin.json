@@ -1,0 +1,33 @@
+{
+  "formVersion": 1,
+  "videoCode": "V-01",
+  "productName": "Bình giữ nhiệt inox 500 ml (ví dụ)",
+  "subjectNoun": "bình giữ nhiệt",
+  "classification": "loại 500 ml màu xanh",
+  "pagePath": "/vi-du-san-pham-i.123.456",
+  "shopNameAndMall": "Gian hàng ví dụ, không phải Mall",
+  "readDate": "2026-10-26",
+  "niche": "đồ dùng nhà bếp",
+  "imagesUsed": ["anh-1.jpg", "anh-2.jpg", "anh-3.jpg"],
+  "productVideoNumber": 1,
+  "videoFocus": "dung tích và chất liệu",
+  "callToAction": 1,
+  "facts": [
+    {
+      "label": "F1",
+      "subjectNoun": "bình giữ nhiệt",
+      "attribute": "dung tích",
+      "value": "500 ml",
+      "sourceSection": "Chi tiết sản phẩm: Dung tích",
+      "screenshot": "chup-f1.png"
+    },
+    {
+      "label": "F2",
+      "subjectNoun": "bình giữ nhiệt",
+      "attribute": "chất liệu",
+      "value": "thép không gỉ 304",
+      "sourceSection": "Mô tả sản phẩm: Chất liệu",
+      "screenshot": "chup-f2.png"
+    }
+  ]
+}
