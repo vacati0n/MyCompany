@@ -2567,3 +2567,23 @@ MC-16 scope phase (run `run-535f3f938f32`).
 seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1307 — MC-16 Scope Gate approved; an employee operator may record in their own real voice
+
+**The CEO's own decision, 2026-10-26**, at the Scope Gate of run `run-535f3f938f32` (MC-16).
+
+1. **Scope approved** as the scope phase's third attempt states it, with the defaults it carries: captions in white on
+   a dark band in the lower third, one per sentence; a presenter clip that is not portrait is refused; product images
+   move by a slow pan or zoom; recording reuse is detected by the file's digest only; banned class (f) is "so với",
+   "hơn hẳn" and naming another shop or brand as better, not the bare word "hơn".
+2. **Employee voice.** Asked whether a human employee who later operates the tool may record the narration, the CEO
+   chose "Được, giọng thật" (yes, in their real voice). This amends `CEO-D-1304` item 1: the narration is the real
+   recorded voice of the CEO or of the employee operating the tool. Still no text-to-speech, no voice cloning, and a
+   fresh recording for every video (`CEO-D-1305`). The presenter stays one presenter on one account (`OD18`). Whether
+   a different human voice behind the same AI face bears on counsel questions Q-002 and Q-016 is an inference for
+   counsel, not a finding.
+
+**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,
+contact no seller, buy nothing, download no asset and publish nothing.
+
+---
