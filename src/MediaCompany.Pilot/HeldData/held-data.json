@@ -1,0 +1,236 @@
+{
+  "formVersion": 1,
+  "source": "MC-16 technical design D-004 and D-007; scope criteria 5, 7 and 13; CEO decision record entries 1304 to 1308",
+  "disclosureSentence": "Video tạo bởi AI. Video có liên kết tiếp thị, tôi nhận hoa hồng nếu bạn mua qua liên kết.",
+  "overlayText": "Video tạo bởi AI · Có liên kết tiếp thị",
+  "introductionFrame": "Đây là {subjectNoun}, {classification}.",
+  "factFrame": "{SubjectNoun} có {attribute} {value}.",
+  "callToAction": [
+    "Bấm vào giỏ hàng hoặc link sản phẩm để xem chi tiết.",
+    "Thông tin chi tiết, bạn xem trong thẻ sản phẩm của video."
+  ],
+  "bannedClasses": [
+    {
+      "id": "a",
+      "name": "tiền và số liệu bán hàng",
+      "terms": [
+        "giảm giá",
+        "khuyến mãi",
+        "mã giảm giá",
+        "đã bán",
+        "freeship"
+      ],
+      "patterns": [
+        "(?<![\\p{L}\\p{M}\\p{N}])\\d+(?:[.,]\\d+)*\\s*(?:đồng|đ|vnd|₫|k)(?![\\p{L}\\p{M}\\p{N}])",
+        "(?<![\\p{L}\\p{M}\\p{N}])\\d+(?:[.,]\\d+)?\\s*sao(?![\\p{L}\\p{M}\\p{N}])",
+        "[★⭐]"
+      ]
+    },
+    {
+      "id": "b",
+      "name": "từ tuyệt đối",
+      "terms": [
+        "nhất",
+        "duy nhất",
+        "tốt nhất",
+        "số một",
+        "đỉnh nhất",
+        "rẻ nhất"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "c",
+      "name": "sức khỏe, cơ thể, an toàn thực phẩm",
+      "terms": [
+        "sức khỏe",
+        "sức khoẻ",
+        "an toàn cho sức khỏe",
+        "an toàn cho sức khoẻ",
+        "da",
+        "tóc",
+        "cơ thể",
+        "kháng khuẩn",
+        "không độc hại",
+        "giảm cân",
+        "an toàn thực phẩm"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "d",
+      "name": "nói đã dùng hoặc nhận xét",
+      "terms": [
+        "mình đã dùng",
+        "tôi dùng thử",
+        "dùng rồi thấy",
+        "trải nghiệm",
+        "review",
+        "đánh giá",
+        "cảm nhận",
+        "mê lắm",
+        "xài ngon"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "e",
+      "name": "sàn khác",
+      "terms": [
+        "tiktok",
+        "lazada",
+        "tiki",
+        "sendo"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "f",
+      "name": "so sánh",
+      "terms": [
+        "so với",
+        "hơn hẳn"
+      ],
+      "patterns": []
+    },
+    {
+      "id": "g",
+      "name": "thúc giục",
+      "terms": [
+        "chỉ hôm nay",
+        "sắp hết hàng"
+      ],
+      "patterns": []
+    }
+  ],
+  "exemptions": [
+    "nhất định"
+  ],
+  "minimumCaptionFontSize": 56,
+  "minimumOverlayFontSize": 40,
+  "recordingMaximumSeconds": 60.0,
+  "recordingUploadCeilingSeconds": 300.0,
+  "pilotVideoLimit": 12,
+  "videosPerProductLimit": 2,
+  "checklist": [
+    {
+      "id": "A1",
+      "wording": "Hôm nay là **Ngày 10 trở đi**."
+    },
+    {
+      "id": "A2",
+      "wording": "Bài thử khớp môi đạt (T1 hoặc T2), kết quả đã ghi."
+    },
+    {
+      "id": "A3",
+      "wording": "Gói công cụ đã được CEO duyệt giá và trả theo tháng từ dòng cố định USD 42.99."
+    },
+    {
+      "id": "A4",
+      "wording": "Câu hỏi Shopee đã gửi. Đã có trả lời không bất lợi cho Q-013, Q-014, Q-015 — **hoặc** CEO đã ghi rõ quyết định chấp nhận rủi ro theo OD16 (ghi ngày)."
+    },
+    {
+      "id": "A5",
+      "wording": "Context-agent đã chụp lại bài 199468 và 164064, không có thay đổi bất lợi."
+    },
+    {
+      "id": "A6",
+      "wording": "Câu hỏi luật sư đã gửi, Q-002 và Q-016 đánh dấu ưu tiên. Chưa có trả lời bất lợi. Nếu chưa có trả lời: quyết định OD16 của CEO đã ghi."
+    },
+    {
+      "id": "A7",
+      "wording": "CEO đủ điều kiện tham gia; đã đăng ký KOC cá nhân; đã kiểm tra việc ghi nhận hoa hồng qua Shopee Video."
+    },
+    {
+      "id": "A8",
+      "wording": "Không có sự kiện dừng nào đang hiệu lực (phụ lục 3.2)."
+    },
+    {
+      "id": "B1",
+      "wording": "Ảnh trong video lấy từ trang của **đúng** sản phẩm sẽ gắn thẻ; đường dẫn trang và ngày đọc đã ghi ở Phần A của kịch bản. (Không xin phép người bán: CEO-D-1303. Rủi ro RK-010 vẫn mở.)"
+    },
+    {
+      "id": "B2",
+      "wording": "Mọi câu thông tin khớp với bảng nguồn (Phần E của kịch bản đã đánh dấu đủ)."
+    },
+    {
+      "id": "B3",
+      "wording": "Không có từ ngữ nói đã dùng sản phẩm; không có \"review\", \"trải nghiệm\", \"đánh giá\"; không có \"nhất\", \"duy nhất\", \"tốt nhất\", \"số một\"."
+    },
+    {
+      "id": "B4",
+      "wording": "Không có tuyên bố về sức khỏe, da, tóc hay cơ thể. Không có bác sĩ, người nổi tiếng hay quan chức."
+    },
+    {
+      "id": "B5",
+      "wording": "Không nhắc giá, khuyến mãi, sàn khác (TikTok, Lazada, Tiki, Sendo)."
+    },
+    {
+      "id": "B6",
+      "wording": "Người dẫn là người dẫn duy nhất đã đăng ký (cùng mã trong công cụ)."
+    },
+    {
+      "id": "B7",
+      "wording": "Bản ghi của CEO nói câu công bố **ở đầu** video (R11) và **nói lại ở cuối** (bộ tài liệu thêm, R11 không yêu cầu)."
+    },
+    {
+      "id": "B8",
+      "wording": "Chữ \"Video tạo bởi AI · Có liên kết tiếp thị\" có trên màn hình **suốt video**."
+    },
+    {
+      "id": "B9",
+      "wording": "Môi khớp, thanh điệu đúng, số và đơn vị đọc đúng, không méo mặt, răng, tay; khung dọc 9:16."
+    },
+    {
+      "id": "B10",
+      "wording": "Video được tạo riêng sau khi kịch bản này được duyệt; không tạo theo lô, không qua API."
+    },
+    {
+      "id": "B11",
+      "wording": "Đếm: tổng số video sau lần đăng này ≤ 12; hôm nay chưa đăng video nào; sản phẩm này có ≤ 2 video và hai video có trọng tâm khác nhau."
+    },
+    {
+      "id": "B12",
+      "wording": "Sản phẩm không thuộc ngành không có hoa hồng (sữa công thức, vitamin trẻ em, núm vú, bình sữa, thuốc OTC, rượu trên 15%) và không phải mỹ phẩm hay thực phẩm chức năng."
+    },
+    {
+      "id": "B13",
+      "wording": "Lời thoại là **bản ghi giọng thật của người vận hành** (CEO, hoặc nhân viên vận hành công cụ đọc bằng giọng thật của chính mình), ghi mới cho video này, đọc đúng kịch bản đã duyệt (Phần F của mẫu kịch bản). Không dùng giọng máy (TTS), không Vbee, không nhân bản giọng (CEO-D-1305)."
+    },
+    {
+      "id": "C1",
+      "wording": "**Bật nhãn \"Video tạo bởi AI\"** của Shopee — vẫn bắt buộc dù giọng là của CEO, vì gương mặt là AI (CEO-D-1304). (Nhãn tự động \"Video có thể chứa nội dung do AI tạo ra\" **không** thay được.) Lần đầu: chụp màn hình bước bật nhãn."
+    },
+    {
+      "id": "C2",
+      "wording": "Dòng đầu chú thích là câu công bố."
+    },
+    {
+      "id": "C3",
+      "wording": "Gắn thẻ đúng sản phẩm, đúng phân loại như trong hình."
+    },
+    {
+      "id": "C4",
+      "wording": "Không đặt lịch; không đăng lại lên tài khoản hay nền tảng khác."
+    },
+    {
+      "id": "D1",
+      "wording": "Mở lại video: nhãn AI hiện, thẻ sản phẩm hiện."
+    },
+    {
+      "id": "D2",
+      "wording": "Ghi vào `05-bang-do-30-ngay.md`: mã video, ngày, sản phẩm, đường dẫn video, thời gian CEO bỏ ra."
+    }
+  ],
+  "checklistTicked": {
+    "B3": [
+      "b",
+      "d"
+    ],
+    "B5": [
+      "a",
+      "e"
+    ],
+    "B8": []
+  }
+}

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Unicode NFC normalization is a no-op under invariant globalization (measured: "a" + U+0302 + U+0301 stays three
+         characters and reports itself normalized), and every banned-term, coverage and override check depends on NFC. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MediaCompany.Pilot\MediaCompany.Pilot.csproj" />
+  </ItemGroup>
+</Project>

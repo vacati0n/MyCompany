@@ -1,0 +1,27 @@
+{
+  "formVersion": 1,
+  "repositoryRoot": "D:/Project/MyCompany",
+  "pilotFolder": "C:/Users/vuhoangcao/MediaCompanyRun/pilot",
+  "mediaTool": {
+    "path": "C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/ffmpeg.exe",
+    "sha256": "589e50b766d251afdf181dd664d40bd94407e200b019989fd7468c7d118a28d0"
+  },
+  "probeTool": {
+    "path": "C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/ffprobe.exe",
+    "sha256": "02264dfa4f56baaa31e443ece8aa16d397f6b008200e7fd184d22b9009e75fd3"
+  },
+  "face": {
+    "path": "C:/Users/vuhoangcao/MediaCompanyRun/graphics/font/Inter-4.1/extras/ttf/Inter-SemiBold.ttf",
+    "manifest": "C:/Users/vuhoangcao/MediaCompanyRun/graphics/manifests/font.sha256",
+    "manifestEntry": "78a843fade9d4612a5567302fb595b56976eb5fcebf4fea5a5912d638bafcde3 *Inter-4.1/extras/ttf/Inter-SemiBold.ttf"
+  },
+  "frame": { "width": 1080, "height": 1920, "frameRate": 30 },
+  "safeArea": { "left": 60, "right": 180, "top": 200, "bottom": 480 },
+  "caption": { "fontSize": 56, "paddingX": 24, "paddingY": 16, "lineSpacing": 12, "maximumLinesPerPage": 2 },
+  "overlay": { "fontSize": 40, "paddingX": 24, "paddingY": 12, "lineSpacing": 0, "maximumLinesPerPage": 1 },
+  "imagePanel": { "x": 0, "y": 320, "width": 1080, "height": 1080, "motion": "zoom", "zoomMaximumPercent": 108 },
+  "presenterInset": { "x": 60, "y": 560, "width": 360, "height": 640 },
+  "pause": { "noiseFloorDb": -35, "minimumSilenceSeconds": 0.35 },
+  "clipToleranceSeconds": 0.5,
+  "processBoundSeconds": 600
+}
