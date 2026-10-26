@@ -2437,3 +2437,41 @@ Pre-publication conditions P1 to P8 of the addendum bind. **Unchanged:** `D-002`
 sign in nowhere, contact no seller, buy nothing and publish nothing.
 
 ---
+
+## CEO-D-1303 — Seller consent for product images: the CEO's ruling replaces condition P3
+
+**The CEO's own decision, 2026-10-26**, on condition P3 of `pilot-affiliate-vn/mc-15-addendum-1-ai-presenter.md`.
+
+The CEO's words: "tất cả sản phẩm trên shopee là được đồng ý từ ng bán rồi. yên tâm" (every product on Shopee already
+has the seller's consent; don't worry).
+
+1. **P3 is replaced by this ruling.** No written permission is sought from each seller for each image, and no seller is
+   contacted. The seller-permission parts of rules R2 and R7 of the addendum, and the seller outreach of days 5 to 9 of
+   its 30-day plan, fall with it. The words "used only with the seller's permission" in `CEO-D-1301` item 4 are read
+   as satisfied by this ruling. Because the images now come from the product page and not from the seller, two further
+   clauses are read as falling with P3: R7's "Không tải hình hay thu thập thông tin từ trang sản phẩm trên sàn", and
+   R8's tie of each fact to "bảng thông tin của người bán", whose source becomes the product page as the CEO reads it.
+   This reading is an inference from the ruling, not the CEO's words; the CEO confirms or corrects it. Every other
+   condition (P1, P2, P4 to P8) and every other rule (R1, R3 to R6, the rest of R8, R9 to R12) stands.
+2. **The CEO carries this risk** as the individual creator (`D-018`).
+3. **What the evidence says, recorded beside the ruling and not against it:**
+   - No first-party quote in `pilot-affiliate-vn/evidence/` says that an affiliate may reuse a seller's listing images
+     (`shopee-vn-and-market.md` 3.9 and gap 5).
+   - Shopee's terms (E-105, re-captured verbatim in `pilot-affiliate-vn/evidence/recapture-2026-10-26.md`) ban copying
+     Shopee's images or presence ("không được sao chép tên thương hiệu, logo, hình ảnh hoặc hiện diện của Shopee") and
+     collecting information on the platform ("Shopee nghiêm cấm việc Đối Tác TTLK thu thập bất kỳ thông tin nào trên
+     Sàn TMĐT").
+   - E-107 (article 199468, not re-captured) lists stealing or using others' content without permission as a banned
+     act, item (n), with fines up to VND 10 million per act.
+4. **Q-014 stays open but no longer blocks.** The CEO asks Shopee in writing whether listing images may be used in
+   Shopee Video affiliate content and whether the collection ban reaches them (`pilot-affiliate-vn/pilot-kit/
+   02-cau-hoi-shopee.md`). An adverse answer is a stop event under section 3.2 of the addendum for the videos it
+   covers. Q-006 and Q-019 (seller rights in the images) stay with counsel on the same terms.
+5. **Residual risk kept visible:** RK-010 stays open (medium, possible), now with no seller-permission mitigation;
+   its remaining mitigations are the written question to Shopee, the stop rule, and R12 (the image shows the tagged
+   product). RK-023 (sellers not answering) is closed, since no seller is asked. EC-001 for branch B still needs P4.
+
+**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,
+contact no seller, buy nothing, download no asset and publish nothing.
+
+---
