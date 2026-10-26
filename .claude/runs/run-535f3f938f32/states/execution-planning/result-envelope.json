@@ -1,0 +1,88 @@
+{
+  "invocation_id": "inv-535f3f938f32-02-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-535f3f938f32/states/execution-planning/artifacts/execution-plan.md"
+  ],
+  "structured_output": {
+    "plan_status": "complete",
+    "counts": {
+      "statements": 34,
+      "assumptions": 9,
+      "risks": 14,
+      "tasks": 23,
+      "edges": 38,
+      "edges_internal": 37,
+      "edges_external": 1,
+      "waves": 13,
+      "open_questions": 2,
+      "blocking_open_questions": 0
+    },
+    "topological_order": ["T-001", "T-003", "T-002", "T-006", "T-015", "T-017", "T-018", "T-011", "T-019", "T-004", "T-007", "T-010", "T-020", "T-005", "T-008", "T-009", "T-021", "T-012", "T-022", "T-023", "T-014", "T-013", "T-016"],
+    "waves": {
+      "1": ["T-001", "T-017"],
+      "2": ["T-003", "T-006", "T-015", "T-018", "T-019", "T-020", "T-022"],
+      "3": ["T-002", "T-011"],
+      "4": ["T-004"],
+      "5": ["T-007", "T-010"],
+      "6": ["T-005"],
+      "7": ["T-008"],
+      "8": ["T-009", "T-021"],
+      "9": ["T-012"],
+      "10": ["T-023"],
+      "11": ["T-014"],
+      "12": ["T-013"],
+      "13": ["T-016"]
+    },
+    "closure": {
+      "forward": "34/34",
+      "backward": "23/23",
+      "lateral_assumptions": "9/9",
+      "lateral_risks": "14/14",
+      "lateral_edges": "38/38"
+    },
+    "quality_check_set_version": "1.0.0",
+    "quality_checks": {
+      "Q1.1": "pass", "Q1.2": "pass", "Q1.3": "pass", "Q1.4": "pass", "Q1.5": "pass", "Q1.6": "pass", "Q1.7": "pass",
+      "Q2.1": "pass", "Q2.2": "pass", "Q2.3": "pass", "Q2.4": "pass", "Q2.5": "pass", "Q2.6": "pass", "Q2.7": "pass", "Q2.8": "pass",
+      "Q3.1": "pass", "Q3.2": "pass", "Q3.3": "pass", "Q3.4": "pass",
+      "Q4.1": "pass", "Q4.2": "pass", "Q4.3": "pass", "Q4.4": "pass", "Q4.5": "pass",
+      "Q5.1": "pass", "Q5.2": "pass", "Q5.3": "pass", "Q5.4": "pass", "Q5.5": "pass", "Q5.6": "pass", "Q5.7": "pass", "Q5.8": "pass", "Q5.9": "pass", "Q5.10": "pass",
+      "Q6.1": "pass", "Q6.2": "pass", "Q6.3": "pass", "Q6.4": "pass", "Q6.5": "pass", "Q6.6": "pass", "Q6.7": "pass", "Q6.8": "pass",
+      "Q7.1": "pass", "Q7.2": "pass", "Q7.3": "pass", "Q7.4": "pass", "Q7.5": "pass", "Q7.6": "pass",
+      "Q8.1": "pass", "Q8.2": "pass", "Q8.3": "pass", "Q8.4": "pass", "Q8.5": "pass",
+      "Q9.1": "pass", "Q9.2": "pass", "Q9.3": "pass", "Q9.4": "pass", "Q9.5": "pass", "Q9.6": "pass", "Q9.7": "pass",
+      "Q10.1": "pass", "Q10.2": "pass", "Q10.3": "pass", "Q10.4": "pass", "Q10.5": "pass",
+      "Q11.1": "pass", "Q11.2": "pass", "Q11.3": "pass", "Q11.4": "pass", "Q11.5": "pass"
+    },
+    "quality_checks_run": 70,
+    "quality_checks_passed": 70,
+    "repair_passes": [
+      "attempt 1: renamed business objective labels to BO1..BO5; set low confidence and assumption-dependent status on T-008, T-014, T-016, T-018, T-019, T-022, T-023 (Q5.9)",
+      "attempt 2 (Validation Engine V4.1/V4.8, framework Defect 5): raised task acceptance criteria to at least three distinct criteria on T-007, T-008, T-009, T-011, T-013, T-015, T-016, T-018, T-019, T-020, T-021, T-022, T-023; the other ten tasks already carried three",
+      "attempt 2 (Validation Engine V5.1): external edge From cell rewritten as 'external: CEO, via the orchestrator'"
+    ],
+    "self_check_note": "Attempt 1 self-check reported 70/70 but missed parser Defect 5 and the external-edge form; both are corrected in this attempt.",
+    "affected_areas_recorded": {
+      "security": "applies (R-010, R-011)",
+      "database": "lexical trigger, no schema work (A-006)",
+      "performance": "lexical trigger, no target stated (A-007)"
+    },
+    "repository_rescan": "none; paths named by the orchestrator's briefing confirmed present",
+    "boundary_statement": "No implementation work was performed and no external system was accessed."
+  },
+  "evidence_refs": [
+    "agents/planner/system.md",
+    "agents/planner/reasoning.md",
+    "agents/planner/output.md",
+    "agents/planner/quality.md",
+    "runs/run-535f3f938f32/states/execution-planning/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    "runs/run-535f3f938f32/states/execution-planning/artifacts/execution-plan.md",
+    "runs/run-535f3f938f32/states/execution-planning/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

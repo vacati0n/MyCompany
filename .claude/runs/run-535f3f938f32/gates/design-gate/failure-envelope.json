@@ -1,0 +1,81 @@
+{
+  "schema": "framework.runtime/failure-envelope.v1",
+  "envelope_id": "FE-run-535f3f938f32-Design Gate-01",
+  "escalation_id": "ESC-run-535f3f938f32-Design Gate-01",
+  "run_id": "run-535f3f938f32",
+  "work_item_id": "run-535f3f938f32::gate::Design Gate",
+  "state_id": "Design Gate",
+  "work_type": "gate",
+  "owner_agent_id": null,
+  "phase_index": 3,
+  "detected_at": "2026-10-26T16:02:23Z",
+  "detected_by": "runtime:state-engine",
+  "detection_point": "gate state",
+  "occurrence": 1,
+  "failure_class": "gate-approval-required",
+  "reason_code": "approval_wait",
+  "guard": "G6-GATE-EVIDENCE",
+  "detail": "evidence for solution-design-and-risk-assessment is complete; awaiting a decision from ['architect', 'tech-lead']",
+  "classification": {
+    "failure_class": "gate-approval-required",
+    "detection_point": "gate state",
+    "retryable": false,
+    "action": "escalate",
+    "default_action": "escalate",
+    "escalation_trigger": "no decision recorded within the deadline",
+    "blocked_reason": "awaiting_human_decision",
+    "required_decision_type": "gate-approval",
+    "basis": "config/execution-engine.md#human-escalation",
+    "attempt": 0,
+    "attempts_charged": 0,
+    "attempts_lost": 0,
+    "max_attempts": 3,
+    "attempts_remaining": 3,
+    "budget_exhausted": false,
+    "breaker_open": false,
+    "charged": true,
+    "next_delay_seconds": null,
+    "available_at": null,
+    "reason": "class 'gate-approval-required' is non-retryable at detection point 'gate state', so the declared action 'escalate' applies without consulting the retry budget"
+  },
+  "retry": {
+    "attempt": 0,
+    "attempts_lost": 0,
+    "attempts_charged": 0,
+    "max_attempts": 3,
+    "attempts_remaining": 3,
+    "budget_exhausted": false,
+    "breaker_open": false,
+    "next_delay_seconds": null,
+    "available_at": null,
+    "idempotency_key": null,
+    "profile_ref": "config/runtime.md#retry-policy"
+  },
+  "resulting_status": "blocked",
+  "blocked_reason": "awaiting_human_decision",
+  "required_decision_type": "gate-approval",
+  "owner_roles": [
+    "architect",
+    "tech-lead"
+  ],
+  "impacted_artifacts": [],
+  "evidence_bundle_ref": {
+    "guard_verdicts": [
+      "G6-GATE-EVIDENCE"
+    ],
+    "transition": "pending -> blocked",
+    "state_store": "runs/run-535f3f938f32/state.json",
+    "gate": null
+  },
+  "proposed_options": [
+    "approve the gate and proceed",
+    "reject the gate and roll back the evidence it assesses",
+    "request additional evidence before deciding"
+  ],
+  "default_fallback_action": "hold the work item blocked and await a human decision",
+  "clearing_action": "python .claude/runtime/framework_runtime.py gate --run-id run-535f3f938f32 --gate \"Design Gate\" --decision approve --owner-role <role> --decided-by <who> --rationale <text>",
+  "status": "resolved",
+  "resolved_at": "2026-10-26T16:04:58Z",
+  "resolution": "approved by tech-lead, recorded by CEO (owner), recorded by the orchestrator: decision record entry 1308",
+  "resolved_by": "human:CEO (owner), recorded by the orchestrator: decision record entry 1308"
+}

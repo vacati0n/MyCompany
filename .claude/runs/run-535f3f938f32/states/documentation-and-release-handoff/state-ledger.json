@@ -1,0 +1,79 @@
+{
+  "run_id": "run-535f3f938f32",
+  "slice": "phase:documentation-and-release-handoff",
+  "runtime_version": "0.11.1",
+  "status": "completed",
+  "queue_status": "Executing",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "state_id": "documentation-and-release-handoff",
+  "work_item_id": "run-535f3f938f32::documentation-and-release-handoff",
+  "idempotency_key": "sha256:2c16195149c840fe30db1ca62f86269d",
+  "attempt": 2,
+  "agent_id": "documentation",
+  "agent_version": "1.2.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "invocation_id": "inv-535f3f938f32-06-002",
+  "input_digest": "sha256:60b5ae6a453889fa3647086f7f2c6331",
+  "context_digest": "sha256:4a5bfc355c7a1d63a52636724d0108fe",
+  "module_load_order": [
+    "agents/documentation/system.md",
+    "agents/documentation/identity.md",
+    "agents/documentation/reasoning.md",
+    "agents/documentation/execution.md",
+    "agents/documentation/output.md",
+    "agents/documentation/quality.md",
+    "agents/documentation/examples.md"
+  ],
+  "artifact_path": "runs/run-535f3f938f32/states/documentation-and-release-handoff/artifacts/release-note.md",
+  "conditional_artifact_globs": [],
+  "result_envelope_path": "runs/run-535f3f938f32/states/documentation-and-release-handoff/result-envelope.json",
+  "validator": "release_note_validator",
+  "load_profile_mode": "progressive",
+  "context_budget": {
+    "modules_full_bytes": 90740,
+    "modules_core_bytes": 45513,
+    "slice_all_bytes": 181536,
+    "slice_required_bytes": 19701,
+    "inputs_bytes": 0,
+    "upstream_full_bytes": 12533,
+    "upstream_read_first_bytes": 6544,
+    "task_context_bytes": 71773,
+    "fixed_bytes": 63052,
+    "legacy_estimate_bytes": 347861,
+    "progressive_estimate_bytes": 206583,
+    "legacy_estimate_tokens": 86965,
+    "progressive_estimate_tokens": 51645,
+    "savings_pct": 40.6
+  },
+  "execution_started_at": "2026-10-26T18:18:33Z",
+  "execution_completed_at": "2026-10-26T18:28:38Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 34,
+    "checksPassed": 34,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 3,
+    "counts": {
+      "sections": 7,
+      "status": "complete",
+      "identifiers": {
+        "K": 16
+      },
+      "tableRows": {
+        "Known Issues": 16
+      },
+      "releaseVerdict": "handed-off",
+      "communicationBasis": "release-handoff",
+      "knownIssues": 16,
+      "version": "0.0.0+e264a7a"
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:d68ba961d11b166dc8d813cdab1e4f47",
+  "recovery": null
+}

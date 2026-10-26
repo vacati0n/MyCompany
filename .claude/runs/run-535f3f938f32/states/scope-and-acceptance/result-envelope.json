@@ -1,0 +1,83 @@
+{
+  "invocation_id": "inv-535f3f938f32-01-003",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-535f3f938f32/states/scope-and-acceptance/artifacts/scope-definition.md"
+  ],
+  "structured_output": {
+    "run_id": "run-535f3f938f32",
+    "attempt": 3,
+    "scope_id": "SCOPE-2026-0001",
+    "input_digest": "sha256:ee4cb936cd638b900bf8c8bac1e840ba",
+    "context_digest": "sha256:8432aa0d2cb1bf16c655abffc4957991",
+    "declared_status": "complete",
+    "scope_verdict": "bounded",
+    "counts": {
+      "in_scope_items": 14,
+      "exclusions": 10,
+      "acceptance_criteria": 40,
+      "scope_decisions": 17,
+      "open_questions": 1,
+      "blocking_open_questions": 0
+    },
+    "changes_from_attempt_2": [
+      "SD6 repaired: D-013, D-014 and D-015 now carry rationales a reviewer can assess (legibility and one-to-one provenance with the measured typeface; the face-cutting risk and the lip-sync check; the unaltered product image and the no-use transition rule)",
+      "Provenance corrected: D-011 and D-016 are decided by product-owner on the orchestrator's default, not by the CEO; the CEO did not answer the comparison question",
+      "D-013, D-014, D-015 and D-017 attributed to product-owner on the orchestrator's default; the CEO confirms at the Scope Gate",
+      "No other content changed"
+    ],
+    "quality_checks": {
+      "run": 50,
+      "passed": 50,
+      "basis": "self-assessed against quality.md; SD3, SD4, SD7 and C1 to C5 are re-run by the Validation Engine, whose verdict decides",
+      "results": {
+        "structural": {"S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass"},
+        "metadata": {"D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "SD1": "pass", "SD2": "pass (40 rows, 40 counted)", "D5": "pass (featureName and status agree; status restated in the Handoff)", "D6": "pass (digests copied from the attempt-3 envelope, unchanged from attempts 1 and 2)"},
+        "acceptance": {"SD3": "pass", "SD4": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass"},
+        "scope_integrity": {"SD5": "pass (not applicable: verdict bounded)", "SD8": "pass (10 exclusions)", "G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "pass"},
+        "value_alignment": {"L1": "pass", "L2": "pass", "L3": "pass (absence recorded as D-017)", "L4": "pass", "L5": "pass"},
+        "decision": {"SD6": "pass (all 17 decisions carry a rationale; D-013, D-014 and D-015 repaired in this attempt)", "D7": "pass", "D8": "pass", "D9": "pass"},
+        "authority_boundary": {"SD7": "pass", "B1": "pass", "B2": "pass", "B3": "pass", "B4": "pass", "B5": "pass", "B6": "pass"},
+        "content": {"C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass"}
+      }
+    },
+    "not_machine_checkable": {
+      "SN1": "judged: thresholds are stated as fixture or frame-sample conditions; the CEO confirms them at the Scope Gate",
+      "SN2": "judged: scope follows the ticket's four capabilities, the answers in decision record entry 1306 and the hard constraints; no widening; adjacent items are exclusions X-001 to X-010",
+      "SN3": "judged: the business goal restates the ticket and the CEO's decisions; the success measure is not supplied and is recorded as D-017"
+    },
+    "known_weaknesses": [
+      "The mechanism of pause detection, the fixed frame wording and the call-to-action list are left to the architect; the scope fixes behaviour only",
+      "The brand clause of class (f) ('naming another shop or brand as better') has no term list; it is covered only through the provenance rule A-006 until names are supplied",
+      "Several defaults (D-004, D-011 to D-017) rest on the orchestrator's relayed defaults, not on CEO answers; the CEO confirms them at the Scope Gate"
+    ],
+    "loaded_modules_in_load_order": [
+      "agents/product-owner/system.md",
+      "agents/product-owner/identity.md",
+      "agents/product-owner/reasoning.md",
+      "agents/product-owner/execution.md",
+      "agents/product-owner/output.md",
+      "agents/product-owner/quality.md"
+    ],
+    "examples_module": "not loaded: the output shape was unambiguous",
+    "research_read": "research/ceo-decision-record.md, section MC-16 scope answers (decision record entry 1306), read in part",
+    "external_access": "none; no command executed, no network access, no account access",
+    "gate_decision_recorded": false
+  },
+  "evidence_refs": [
+    "agents/product-owner/system.md",
+    "agents/product-owner/identity.md",
+    "agents/product-owner/reasoning.md",
+    "agents/product-owner/execution.md",
+    "agents/product-owner/output.md",
+    "agents/product-owner/quality.md",
+    "runs/run-535f3f938f32/states/scope-and-acceptance/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    "runs/run-535f3f938f32/states/scope-and-acceptance/artifacts/scope-definition.md",
+    "runs/run-535f3f938f32/states/scope-and-acceptance/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}
