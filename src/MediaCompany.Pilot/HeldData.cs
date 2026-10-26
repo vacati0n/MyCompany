@@ -32,8 +32,20 @@ public sealed record HeldData
     public required double RecordingUploadCeilingSeconds { get; init; }
     public required int PilotVideoLimit { get; init; }
     public required int VideosPerProductLimit { get; init; }
+    public required SafeAreaSetting SafeAreaMinimum { get; init; }
+    public required double ClipToleranceMaximumSeconds { get; init; }
+    public required double CaptionPageMinimumSeconds { get; init; }
+    public required IReadOnlyList<string> FirstPersonTerms { get; init; }
     public required IReadOnlyList<ChecklistItem> Checklist { get; init; }
-    public required IReadOnlyDictionary<string, IReadOnlyList<string>> ChecklistTicked { get; init; }
+
+    /// <summary>The checklist items the tool ticks when its own check passed (decision record entry 1309: B8 only).</summary>
+    public required IReadOnlyList<string> ChecklistTicked { get; init; }
+
+    /// <summary>
+    /// The checklist items the tool screens but never ticks (decision record entry 1309: B3 and B5), with the banned classes it
+    /// screens for; the checklist states what the screen found and leaves the tick to the CEO.
+    /// </summary>
+    public required IReadOnlyDictionary<string, IReadOnlyList<string>> ChecklistNoted { get; init; }
 
     public const int KnownFormVersion = 1;
 

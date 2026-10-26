@@ -1,6 +1,6 @@
 {
   "formVersion": 1,
-  "source": "MC-16 technical design D-004 and D-007; scope criteria 5, 7 and 13; CEO decision record entries 1304 to 1308",
+  "source": "MC-16 technical design D-004 and D-007; scope criteria 5, 7 and 13; CEO decision record entries 1304 to 1309",
   "disclosureSentence": "Video tạo bởi AI. Video có liên kết tiếp thị, tôi nhận hoa hồng nếu bạn mua qua liên kết.",
   "overlayText": "Video tạo bởi AI · Có liên kết tiếp thị",
   "introductionFrame": "Đây là {subjectNoun}, {classification}.",
@@ -21,7 +21,8 @@
         "freeship"
       ],
       "patterns": [
-        "(?<![\\p{L}\\p{M}\\p{N}])\\d+(?:[.,]\\d+)*\\s*(?:đồng|đ|vnd|₫|k)(?![\\p{L}\\p{M}\\p{N}])",
+        "(?<![\\p{L}\\p{M}\\p{N}])\\d+(?:[.,]\\d+)*\\s*(?:đồng(?!\\s+hồ(?![\\p{L}\\p{M}\\p{N}]))|vnđ|vnd|usd|nghìn|ngàn|triệu|tr|đ|k|₫|\\$)(?![\\p{L}\\p{M}\\p{N}])",
+        "\\$\\s*\\d",
         "(?<![\\p{L}\\p{M}\\p{N}])\\d+(?:[.,]\\d+)?\\s*sao(?![\\p{L}\\p{M}\\p{N}])",
         "[★⭐]"
       ]
@@ -108,6 +109,26 @@
   ],
   "minimumCaptionFontSize": 56,
   "minimumOverlayFontSize": 40,
+  "safeAreaMinimum": {
+    "left": 60,
+    "right": 180,
+    "top": 200,
+    "bottom": 480
+  },
+  "clipToleranceMaximumSeconds": 0.5,
+  "captionPageMinimumSeconds": 1.2,
+  "firstPersonTerms": [
+    "tôi",
+    "mình",
+    "em",
+    "chúng tôi",
+    "chúng mình",
+    "tụi mình",
+    "bọn mình",
+    "tớ",
+    "anh",
+    "chị"
+  ],
   "recordingMaximumSeconds": 60.0,
   "recordingUploadCeilingSeconds": 300.0,
   "pilotVideoLimit": 12,
@@ -222,7 +243,10 @@
       "wording": "Ghi vào `05-bang-do-30-ngay.md`: mã video, ngày, sản phẩm, đường dẫn video, thời gian CEO bỏ ra."
     }
   ],
-  "checklistTicked": {
+  "checklistTicked": [
+    "B8"
+  ],
+  "checklistNoted": {
     "B3": [
       "b",
       "d"
@@ -230,7 +254,6 @@
     "B5": [
       "a",
       "e"
-    ],
-    "B8": []
+    ]
   }
 }

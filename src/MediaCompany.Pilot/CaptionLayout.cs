@@ -11,9 +11,9 @@ public sealed record TextLayout(RectangleSetting Safe, RectangleSetting OverlayB
 /// caption box spans the safe-area width at its bottom and is as tall as the configured lines per page need. The caption line width
 /// is the safe-area width less the box's side padding, so a phone player's buttons and description never cover a caption.
 ///
-/// A sentence wider than the configured lines is shown as consecutive pages inside the sentence's own window (the time split in
-/// proportion to each page's characters), never with a smaller size: the fixed disclosure sentence does not fit two lines at
-/// 56 px in an 840 px safe area, which is recorded in the implementation report as an escalated deviation.
+/// A sentence wider than the configured lines is shown as consecutive pages inside the sentence's own window, never with a
+/// smaller size (decision record entry 1309): the fixed disclosure sentence does not fit two lines at 56 px in an 840 px safe
+/// area. Each page stays on screen at least the configured minimum (1.2 s or more); a window too short for that is refused.
 /// </summary>
 public static class CaptionLayout
 {
@@ -128,7 +128,12 @@ public static class CaptionLayout
         return lines;
     }
 
-    /// <summary>The caption pages of every sentence, each inside its sentence window, the window split by page characters.</summary>
+    /// <summary>
+    /// The caption pages of every sentence, each inside its sentence window (decision record entry 1309). Each page is given the
+    /// configured minimum on-screen time and the rest of the window is shared in proportion to each page's characters; the page
+    /// boundaries are rounded down to the millisecond, so no page is shorter than the minimum. A window shorter than its pages times
+    /// the minimum is refused, naming the sentence.
+    /// </summary>
     public static IReadOnlyList<CaptionPage> Pages(
         IReadOnlyList<ScriptSentence> sentences, IReadOnlyList<(double Start, double End)> windows, TextLayout layout, PilotSettings settings, FaceMetrics metrics)
     {
@@ -141,23 +146,41 @@ public static class CaptionLayout
             throw new ArgumentException("one window per sentence is required", nameof(windows));
         }
 
+        var minimum = settings.CaptionPageMinimumSeconds;
         var pages = new List<CaptionPage>();
         for (var s = 0; s < sentences.Count; s++)
         {
             var lines = Lines(sentences[s].Text, layout.CaptionLineWidth, settings.Caption.FontSize, metrics);
             var groups = lines.Chunk(settings.Caption.MaximumLinesPerPage).Select(g => (IReadOnlyList<string>)g).ToList();
-            var total = groups.Sum(g => g.Sum(l => l.Length));
             var (start, end) = windows[s];
+            var needed = groups.Count * minimum;
+            if (end - start < needed - 1e-9)
+            {
+                throw new PilotRefusal("caption-page-too-short", string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                    $"Câu {sentences[s].Number} cần {groups.Count} trang phụ đề, mỗi trang ít nhất {minimum:0.0#} giây, tức {needed:0.0#} giây; khoảng nói của câu chỉ có {end - start:0.00} giây. Ghi lại và nói câu {sentences[s].Number} chậm hơn, hoặc sửa tệp {CaptionTiming.TimingFileName} cho khoảng của câu dài hơn."));
+            }
+
+            var extra = Math.Max(0, (end - start) - needed);
+            var total = Math.Max(1, groups.Sum(g => g.Sum(l => l.Length)));
+            var characters = 0;
             var at = start;
             for (var p = 0; p < groups.Count; p++)
             {
-                var share = (end - start) * groups[p].Sum(l => l.Length) / Math.Max(1, total);
-                var pageEnd = p == groups.Count - 1 ? end : Math.Round(at + share, 3);
+                characters += groups[p].Sum(l => l.Length);
+                var share = Math.Floor(extra * characters / total * 1000) / 1000;
+                var pageEnd = p == groups.Count - 1 ? end : Math.Round(start + ((p + 1) * minimum) + share, 3);
                 pages.Add(new CaptionPage(sentences[s].Number, p + 1, groups[p], Math.Round(at, 3), Math.Round(pageEnd, 3)));
                 at = pageEnd;
             }
         }
 
         return pages;
+    }
+
+    /// <summary>The sentence a caption's pages show, rejoined: equal to the script sentence when no word was lost or changed.</summary>
+    public static string Rejoined(IReadOnlyList<CaptionPage> pages, int sentence)
+    {
+        ArgumentNullException.ThrowIfNull(pages);
+        return string.Join(" ", pages.Where(p => p.Sentence == sentence).OrderBy(p => p.Page).SelectMany(p => p.Lines));
     }
 }

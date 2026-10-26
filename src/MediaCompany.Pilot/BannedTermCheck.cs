@@ -20,6 +20,7 @@ public sealed class BannedTermCheck
     private readonly List<(BannedClass Class, string Term, string[] Syllables)> _terms = [];
     private readonly List<(BannedClass Class, Regex Pattern)> _patterns = [];
     private readonly List<string[]> _exemptions = [];
+    private readonly List<(string Term, string[] Syllables)> _firstPerson = [];
 
     public BannedTermCheck(HeldData held)
     {
@@ -38,6 +39,11 @@ public sealed class BannedTermCheck
         }
 
         _exemptions.AddRange(held.Exemptions.Select(Syllables));
+
+        // The words an operator's own sentence may not carry (decision on correction request 2): the held first-person words, then
+        // the class (d) terms of claimed use and review.
+        var useAndReview = held.BannedClasses.Where(c => c.Id == "d").SelectMany(c => c.Terms);
+        _firstPerson.AddRange(held.FirstPersonTerms.Concat(useAndReview).Select(t => (t, Syllables(t))));
     }
 
     public static BannedTermCheck Held { get; } = new(HeldData.Current);
@@ -80,6 +86,17 @@ public sealed class BannedTermCheck
         }
 
         return findings;
+    }
+
+    /// <summary>
+    /// The first held first-person word, or use or review term, found in the text as whole syllables after NFC and lower-casing;
+    /// null when there is none. "Mình dùng mỗi sáng" yields "mình"; "kem" never yields "em".
+    /// </summary>
+    public string? FirstPerson(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        var syllables = Syllables(text);
+        return _firstPerson.FirstOrDefault(t => Occurrences(syllables, t.Syllables).Any()).Term;
     }
 
     /// <summary>Refuses the text on its first banned term, naming where and the term.</summary>

@@ -60,10 +60,16 @@ public sealed class Producer(PilotSettings settings, HeldData held, BannedTermCh
                 throw new PilotRefusal("network-guard-failed", $"Bộ công cụ không qua kiểm tra mạng: {string.Join("; ", _guard.Findings)}");
             }
 
-            var sheet = FactSheetCheck.Read(factSheetPath, banned);
+            if (!File.Exists(factSheetPath))
+            {
+                throw new PilotRefusal("fact-sheet-missing", $"Không thấy bảng thông tin {factSheetPath}.");
+            }
+
+            var inputFolder = Path.GetDirectoryName(Path.GetFullPath(factSheetPath))!;
+            var sheetBytes = File.ReadAllBytes(factSheetPath);
+            var sheet = FactSheetCheck.Check(sheetBytes, inputFolder, banned);
             code = sheet.VideoCode;
             Pass("fact-sheet", true, $"{sheet.Facts.Count} dòng thông tin, {sheet.ImagesUsed.Count} ảnh");
-            var inputFolder = Path.GetDirectoryName(Path.GetFullPath(factSheetPath))!;
             var ledger = Ledger.Open(settings.PilotFolder, held);
             ledger.RefuseOverLimits(sheet);
             Pass("ledger-limits", true, $"{ledger.Current.Count} video trong sổ, chuỗi băm hợp lệ");
@@ -105,11 +111,20 @@ public sealed class Producer(PilotSettings settings, HeldData held, BannedTermCh
             Face.RequireCoverage(face, drawn);
             Pass("glyph-coverage", true, $"{_drawn.Count} ký tự khác nhau, phông chữ có đủ");
 
-            var (windows, source) = CaptionTiming.Windows(inputFolder, recording, script.Sentences.Count, _tool, settings);
+            var (windows, source, timingBytes) = CaptionTiming.Windows(inputFolder, recording, script.Sentences.Count, _tool, settings);
             _timingSource = source;
             var pages = CaptionLayout.Pages(script.Sentences, windows, layout, settings, face.Metrics);
-            _captions = script.Sentences.Select(s => string.Join(" ", pages.Where(p => p.Sentence == s.Number).SelectMany(p => p.Lines))).ToList();
-            Pass("caption-timing", true, $"{windows.Count} khoảng câu từ {source}, {pages.Count} trang phụ đề");
+            _captions = script.Sentences.Select(s => CaptionLayout.Rejoined(pages, s.Number)).ToList();
+            Pass("caption-timing", true, string.Create(CultureInfo.InvariantCulture,
+                $"{windows.Count} khoảng câu từ {source}, {pages.Count} trang phụ đề, mỗi trang ít nhất {settings.CaptionPageMinimumSeconds:0.0#} giây"));
+            var changed = script.Sentences.FirstOrDefault(s => !string.Equals(CaptionLayout.Rejoined(pages, s.Number), s.Text, StringComparison.Ordinal));
+            if (changed is not null)
+            {
+                throw new PilotRefusal("caption-text-changed",
+                    $"Phụ đề của câu {changed.Number} ghép lại là \"{CaptionLayout.Rejoined(pages, changed.Number)}\", khác câu trong kịch bản \"{changed.Text}\".");
+            }
+
+            Pass("caption-text", true, $"phụ đề của {script.Sentences.Count} câu ghép lại đúng từng chữ của kịch bản");
 
             var stamp = clock().UtcDateTime.ToString("yyyyMMdd'T'HHmmssfff'Z'", CultureInfo.InvariantCulture);
             var package = Path.Combine(settings.PilotFolder, "runs", $"{Safe(sheet.VideoCode)}-{stamp}");
@@ -117,9 +132,50 @@ public sealed class Producer(PilotSettings settings, HeldData held, BannedTermCh
             var inputs = Path.Combine(package, PackageFiles.Inputs);
             Directory.CreateDirectory(work);
             Directory.CreateDirectory(inputs);
-            File.Copy(face.Path, Path.Combine(work, Composition.FaceFileName), overwrite: true);
-            var images = sheet.ImagesUsed.Select(n => Path.Combine(inputFolder, n)).ToList();
-            var plan = new CompositionPlan(work, images, clip, recording, layout, pages, held.OverlayText, Path.Combine(package, PackageFiles.Video));
+            File.WriteAllBytes(Path.Combine(work, Composition.FaceFileName), face.Bytes.ToArray());
+
+            // Each input is read once: those bytes are hashed, compared with the digest admitted earlier where there is one, written
+            // into the package, and the composition reads the package copies, so the video is made from the bytes that were hashed.
+            var inputList = new List<PackageInput>();
+            var staged = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            string Stage(string role, string full, byte[]? alreadyRead = null, string? admitted = null)
+            {
+                var name = Path.GetFileName(full);
+                var target = Path.Combine(inputs, name);
+                if (!staged.TryGetValue(name, out var digest))
+                {
+                    var bytes = alreadyRead ?? File.ReadAllBytes(full);
+                    digest = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(bytes));
+                    File.WriteAllBytes(target, bytes);
+                    staged[name] = digest;
+                }
+
+                if (admitted is not null && !string.Equals(digest, admitted, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new PilotRefusal("input-changed",
+                        $"Tệp {name} đã đổi trong lúc chạy: SHA-256 lúc kiểm là {admitted}, lúc chép vào gói là {digest}. Không dùng tệp này; chạy lại.");
+                }
+
+                inputList.Add(new PackageInput(role, name, digest));
+                return target;
+            }
+
+            Stage("fact-sheet", Path.GetFullPath(factSheetPath), sheetBytes);
+            Stage("script", scriptPath, scriptBytes);
+            var stagedRecording = recording with { FullPath = Stage("recording", recording.FullPath, admitted: recording.Sha256) };
+            var stagedClip = clip with { FullPath = Stage("presenter-clip", clip.FullPath, admitted: clip.Sha256) };
+            var images = sheet.ImagesUsed.Select(n => Stage("image", Path.Combine(inputFolder, n))).ToList();
+            foreach (var screenshot in sheet.Facts.Select(f => Path.Combine(inputFolder, f.Screenshot)).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                Stage("screenshot", screenshot);
+            }
+
+            if (_timingSource == "timing-file")
+            {
+                Stage("timing-file", Path.Combine(inputFolder, CaptionTiming.TimingFileName), timingBytes);
+            }
+
+            var plan = new CompositionPlan(work, images, stagedClip, stagedRecording, layout, pages, held.OverlayText, Path.Combine(package, PackageFiles.Video));
             Composition.WriteTextFiles(plan);
             _tool.Media("compose video", Composition.Arguments(plan, settings), work);
             Directory.Delete(work, recursive: true);
@@ -132,39 +188,13 @@ public sealed class Producer(PilotSettings settings, HeldData held, BannedTermCh
             var overlay = new RunCheck("overlay-present", check.OverlayBrightestAtStart >= 200 && check.OverlayBrightestAtEnd >= 200,
                 $"chữ lớp nhãn sáng nhất {check.OverlayBrightestAtStart} ở 0,5 giây và {check.OverlayBrightestAtEnd} ở khung cuối (cần ≥ 200)");
             _checks.Add(overlay);
-            Composition.ExtractFrame(_tool, plan.OutputFile, Math.Round(recording.Facts.DurationSeconds / 2, 3), Path.Combine(package, PackageFiles.Frame));
+            var disclosure = pages.First(p => p.Sentence == script.Sentences.First(x => x.Kind == SentenceKind.OpeningDisclosure).Number && p.Page == 1);
+            Composition.ExtractFrame(_tool, plan.OutputFile, Math.Round((disclosure.Start + disclosure.End) / 2, 3), Path.Combine(package, PackageFiles.Frame));
             Pass("network-guard-running", telemetry.Events == 0, $"{telemetry.Events} sự kiện socket hoặc phân giải tên trong tiến trình");
 
             var held_ = _checks.Where(c => !c.Passed).Select(c => $"{c.Name}: {c.Detail}").ToList();
             var status = held_.Count == 0 ? "ready" : "held";
             var videoSha = MediaTool.Sha256File(plan.OutputFile);
-
-            var inputList = new List<PackageInput>();
-            void CopyInput(string role, string full)
-            {
-                var name = Path.GetFileName(full);
-                File.Copy(full, Path.Combine(inputs, name), overwrite: true);
-                inputList.Add(new PackageInput(role, name, MediaTool.Sha256File(full)));
-            }
-
-            CopyInput("fact-sheet", Path.GetFullPath(factSheetPath));
-            CopyInput("script", scriptPath);
-            CopyInput("recording", recording.FullPath);
-            CopyInput("presenter-clip", clip.FullPath);
-            foreach (var image in images)
-            {
-                CopyInput("image", image);
-            }
-
-            foreach (var screenshot in sheet.Facts.Select(f => Path.Combine(inputFolder, f.Screenshot)).Distinct(StringComparer.OrdinalIgnoreCase))
-            {
-                CopyInput("screenshot", screenshot);
-            }
-
-            if (_timingSource == "timing-file")
-            {
-                CopyInput("timing-file", Path.Combine(inputFolder, CaptionTiming.TimingFileName));
-            }
 
             File.WriteAllBytes(Path.Combine(package, PackageFiles.Script), scriptBytes);
             File.WriteAllText(Path.Combine(package, PackageFiles.ScriptText), ScriptGenerator.Render(script, sheet), new System.Text.UTF8Encoding(false));

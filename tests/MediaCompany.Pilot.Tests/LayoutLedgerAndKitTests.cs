@@ -95,7 +95,7 @@ public sealed class CaptionLayoutTests
     public void TextSmallerThanTheCeoMinimumIsRefused(int caption, int overlay)
     {
         var settings = Settings(s => s with { Caption = s.Caption with { FontSize = caption }, Overlay = s.Overlay with { FontSize = overlay } });
-        Assert.Equal("settings-invalid", Assert.Throws<PilotRefusal>(() => settings.Validate(HeldData.Current)).Code);
+        Assert.Equal("settings-looser-than-ceo", Assert.Throws<PilotRefusal>(() => settings.Validate(HeldData.Current)).Code);
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public sealed class TimingTests
     {
         var refusal = Assert.Throws<PilotRefusal>(() => CaptionTiming.ReadTimingFile("0.00 2.40\n3.00 5.40\n", 3, 8.4));
         Assert.Equal("timing-file-invalid", refusal.Code);
-        Assert.Contains("3 câu", refusal.Message, StringComparison.Ordinal);
+        Assert.Contains("câu 3 không có dòng", refusal.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -255,17 +255,33 @@ public sealed class LedgerTests
 [Trait("Category", "Unit")]
 public sealed class ApprovalAndChecklistTests
 {
-    private static string Package(string status = "ready")
+    /// <summary>
+    /// A package as the producer leaves it: a folder under the pilot folder's runs, a stand-in video (not media), and, when ready,
+    /// the ledger entry appended to the pilot ledger and copied into the package with the manifest naming it.
+    /// </summary>
+    internal static string Package(string status = "ready", string code = "V-01")
     {
-        var folder = PilotTestEnvironment.NewFolder("package");
-        File.WriteAllBytes(Path.Combine(folder, PackageFiles.Video), Encoding.ASCII.GetBytes("not a real video, only bytes to hash"));
+        var pilot = PilotTestEnvironment.NewFolder("pilot");
+        var folder = Path.Combine(pilot, "runs", $"{code}-20261027T000000000Z");
+        Directory.CreateDirectory(folder);
+        File.WriteAllBytes(Path.Combine(folder, PackageFiles.Video), Encoding.ASCII.GetBytes("not a real video, only bytes to hash " + code));
+        var sha = MediaTool.Sha256File(Path.Combine(folder, PackageFiles.Video));
+        LedgerEntry? entry = null;
+        if (status == "ready")
+        {
+            var ledger = Ledger.Open(pilot, HeldData.Current);
+            var sheet = new FactSheet(code, "Sản phẩm", "bình", "loại 1", "/p/" + code, "Gian hàng", "2026-10-26", "bếp", ["a.png"], 1, "dung tích", [], 1);
+            entry = ledger.Append(sheet, "rec-" + code, sha, folder, DateTimeOffset.UnixEpoch);
+            File.WriteAllBytes(Path.Combine(folder, PackageFiles.LedgerEntry), Ledger.SerializeEntry(entry));
+        }
+
         var manifest = new PackageManifest
         {
-            FormVersion = 1, VideoCode = "V-01", Status = status, HeldReasons = status == "ready" ? [] : ["overlay-present: 0"],
-            VideoFile = PackageFiles.Video, VideoSha256 = MediaTool.Sha256File(Path.Combine(folder, PackageFiles.Video)),
+            FormVersion = 1, VideoCode = code, Status = status, HeldReasons = status == "ready" ? [] : ["overlay-present: 0"],
+            VideoFile = PackageFiles.Video, VideoSha256 = sha,
             ScriptSha256 = "s", RecordingSha256 = "r", Inputs = [], MediaToolPath = "m", MediaToolSha256 = "m", ProbeToolPath = "p",
             ProbeToolSha256 = "p", MediaToolVersionLine = "v", FacePath = "f", FaceSha256 = "f", FaceManifestLine = "l", Checks = [],
-            LedgerEntryHash = null, ProducedAt = "2026-10-26T00:00:00Z",
+            LedgerEntryHash = entry?.EntryHash, ProducedAt = "2026-10-26T00:00:00Z",
         };
         PackageFiles.WriteJson(Path.Combine(folder, PackageFiles.Manifest), manifest);
         return folder;
@@ -304,7 +320,7 @@ public sealed class ApprovalAndChecklistTests
     }
 
     [Fact]
-    public void TheChecklistTicksExactlyB3B5AndB8AndLeavesTheTwentyFourOthersUnticked()
+    public void TheChecklistTicksOnlyB8AndLeavesTheTwentySixOthersUntickedWithB3AndB5Noted()
     {
         var sheet = new SheetFixture().Check();
         var script = ScriptGenerator.Generate(sheet, HeldData.Current, BannedTermCheck.Held);
@@ -313,10 +329,17 @@ public sealed class ApprovalAndChecklistTests
         var rows = text.Split('\n').Where(l => Regex.IsMatch(l, @"^\| [A-D]\d+ \|")).ToList();
         Assert.Equal(27, rows.Count);
         var ticked = rows.Where(r => r.Contains('☑', StringComparison.Ordinal)).Select(r => r.Split('|')[1].Trim()).ToList();
-        Assert.Equal(["B3", "B5", "B8"], ticked);
+        Assert.Equal(["B8"], ticked);
         var unticked = rows.Where(r => !r.Contains('☑', StringComparison.Ordinal)).Select(r => r.Split('|')[1].Trim()).ToList();
-        Assert.Equal(["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2", "B4", "B6", "B7", "B9", "B10", "B11", "B12", "B13", "C1", "C2", "C3", "C4", "D1", "D2"], unticked);
-        Assert.All(rows.Where(r => ticked.Contains(r.Split('|')[1].Trim())), r => Assert.Contains("công cụ", r, StringComparison.Ordinal));
+        Assert.Equal(["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B9", "B10", "B11", "B12", "B13", "C1", "C2", "C3", "C4", "D1", "D2"], unticked);
+        Assert.Equal("công cụ", rows.Single(r => r.StartsWith("| B8 ", StringComparison.Ordinal)).Split('|')[3].Trim());
+        foreach (var noted in new[] { "B3", "B5" })
+        {
+            var cells = rows.Single(r => r.StartsWith($"| {noted} ", StringComparison.Ordinal)).Split('|');
+            Assert.Equal("CEO (công cụ đã soát)", cells[3].Trim());
+            Assert.StartsWith("☐ Công cụ không thấy từ nhóm", cells[4].Trim(), StringComparison.Ordinal);
+            Assert.Contains("CEO tự kiểm và tự tích", cells[4], StringComparison.Ordinal);
+        }
     }
 
     [Fact]
@@ -458,7 +481,9 @@ public sealed class OperatorGuideTests
         var section = guide[guide.IndexOf("## 7.", StringComparison.Ordinal)..guide.IndexOf("## 8.", StringComparison.Ordinal)];
         var rows = section.Split('\n').Where(l => Regex.IsMatch(l, @"^\| `[a-z-]+` \|")).ToList();
         var codes = rows.Select(l => Regex.Match(l, @"`([a-z-]+)`").Groups[1].Value).ToList();
-        Assert.Equal(["banned-term", "recording-too-long", "recording-reused", "clip-not-portrait", "clip-length-mismatch", "approval-hash-mismatch", "approval-void"], codes);
+        Assert.Equal(["banned-term", "override-first-person", "recording-too-long", "recording-reused", "clip-not-portrait", "clip-length-mismatch",
+            "caption-page-too-short", "settings-looser-than-ceo", "ledger-truncated", "ledger-entry-missing", "package-file-not-plain", "package-ledger-mismatch",
+            "approval-hash-mismatch", "approval-void"], codes);
         var source = Source();
         Assert.All(codes, code => Assert.Contains($"\"{code}\"", source, StringComparison.Ordinal));
     }

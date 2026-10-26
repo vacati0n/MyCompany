@@ -102,6 +102,9 @@ public sealed record PilotSettings
     public required RectangleSetting PresenterInset { get; init; }
     public required PauseSetting Pause { get; init; }
     public required double ClipToleranceSeconds { get; init; }
+
+    /// <summary>The least time one caption page stays on screen (decision record entry 1309); 1.2 s or more.</summary>
+    public required double CaptionPageMinimumSeconds { get; init; }
     public required int ProcessBoundSeconds { get; init; }
 
     public static readonly JsonSerializerOptions Json = new()
@@ -146,19 +149,11 @@ public sealed record PilotSettings
         return settings;
     }
 
-    /// <summary>Refuses settings that break a fixed rule: the CEO's minimum text sizes, a motion name, the pilot folder's location.</summary>
+    /// <summary>Refuses settings that break a fixed rule: the CEO's held values (entries 1308 and 1309), a motion name, the pilot folder's location.</summary>
     public void Validate(HeldData held)
     {
         ArgumentNullException.ThrowIfNull(held);
-        if (Caption.FontSize < held.MinimumCaptionFontSize)
-        {
-            throw new PilotRefusal("settings-invalid", $"Cỡ chữ phụ đề {Caption.FontSize} px nhỏ hơn mức tối thiểu {held.MinimumCaptionFontSize} px.");
-        }
-
-        if (Overlay.FontSize < held.MinimumOverlayFontSize)
-        {
-            throw new PilotRefusal("settings-invalid", $"Cỡ chữ lớp nhãn {Overlay.FontSize} px nhỏ hơn mức tối thiểu {held.MinimumOverlayFontSize} px.");
-        }
+        RefuseLooserThanCeo(held);
 
         if (Caption.MaximumLinesPerPage is < 1 or > 2)
         {
@@ -180,7 +175,7 @@ public sealed record PilotSettings
             throw new PilotRefusal("settings-invalid", "imagePanel.zoomMaximumPercent phải lớn hơn 100 và không quá 150.");
         }
 
-        if (Frame.FrameRate is < 1 or > 60 || ProcessBoundSeconds < 1 || ClipToleranceSeconds < 0 || Pause.MinimumSilenceSeconds <= 0)
+        if (Frame.FrameRate is < 1 or > 60 || ProcessBoundSeconds < 1 || double.IsNaN(ClipToleranceSeconds) || ClipToleranceSeconds < 0 || Pause.MinimumSilenceSeconds <= 0)
         {
             throw new PilotRefusal("settings-invalid", "frameRate (1 đến 60), processBoundSeconds, clipToleranceSeconds và pause.minimumSilenceSeconds phải hợp lệ.");
         }
@@ -204,6 +199,54 @@ public sealed record PilotSettings
         if (inside)
         {
             throw new PilotRefusal("pilot-folder-in-repository", $"Thư mục thí điểm {pilot} nằm trong kho mã; hãy đặt nó ngoài kho mã.");
+        }
+    }
+
+    /// <summary>
+    /// Refuses settings that loosen decision record entries 1308 and 1309, naming the setting and the CEO's value. The cases: caption
+    /// text below the held minimum (56 px); overlay text below the held minimum (40 px); a safe-area margin below the held minimum
+    /// (left 60, right 180, top 200, bottom 480); a clip tolerance above the held maximum (0.5 s); a caption page minimum below the held
+    /// minimum (1.2 s). Stricter values (larger text, wider margins, a smaller tolerance, a longer page time) are accepted.
+    /// </summary>
+    public void RefuseLooserThanCeo(HeldData held)
+    {
+        ArgumentNullException.ThrowIfNull(held);
+        static void Refuse(string what) => throw new PilotRefusal("settings-looser-than-ceo", what + " Giá trị này nới lỏng quyết định của CEO; chỉ được đặt chặt hơn.");
+        if (Caption.FontSize < held.MinimumCaptionFontSize)
+        {
+            Refuse($"Cỡ chữ phụ đề (caption.fontSize) {Caption.FontSize} px nhỏ hơn mức tối thiểu {held.MinimumCaptionFontSize} px.");
+        }
+
+        if (Overlay.FontSize < held.MinimumOverlayFontSize)
+        {
+            Refuse($"Cỡ chữ lớp nhãn (overlay.fontSize) {Overlay.FontSize} px nhỏ hơn mức tối thiểu {held.MinimumOverlayFontSize} px.");
+        }
+
+        var minimum = held.SafeAreaMinimum;
+        foreach (var (name, value, least) in new[]
+        {
+            ("safeArea.left", SafeArea.Left, minimum.Left),
+            ("safeArea.right", SafeArea.Right, minimum.Right),
+            ("safeArea.top", SafeArea.Top, minimum.Top),
+            ("safeArea.bottom", SafeArea.Bottom, minimum.Bottom),
+        })
+        {
+            if (value < least)
+            {
+                Refuse($"Lề vùng an toàn {name} {value} px nhỏ hơn mức tối thiểu {least} px.");
+            }
+        }
+
+        if (!(ClipToleranceSeconds <= held.ClipToleranceMaximumSeconds))
+        {
+            Refuse(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"Độ lệch cho phép của clip (clipToleranceSeconds) {ClipToleranceSeconds} giây lớn hơn mức tối đa {held.ClipToleranceMaximumSeconds} giây."));
+        }
+
+        if (!(CaptionPageMinimumSeconds >= held.CaptionPageMinimumSeconds))
+        {
+            Refuse(string.Create(System.Globalization.CultureInfo.InvariantCulture,
+                $"Thời gian tối thiểu mỗi trang phụ đề (captionPageMinimumSeconds) {CaptionPageMinimumSeconds} giây nhỏ hơn mức tối thiểu {held.CaptionPageMinimumSeconds} giây."));
         }
     }
 }

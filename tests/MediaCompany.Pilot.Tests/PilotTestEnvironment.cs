@@ -74,6 +74,7 @@ internal static class PilotTestEnvironment
             PresenterInset = new RectangleSetting { X = 60, Y = 560, Width = 360, Height = 640 },
             Pause = new PauseSetting { NoiseFloorDb = -35, MinimumSilenceSeconds = 0.35 },
             ClipToleranceSeconds = 0.5,
+            CaptionPageMinimumSeconds = 1.2,
             ProcessBoundSeconds = 600,
         };
         return change is null ? settings : change(settings);

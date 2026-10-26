@@ -93,7 +93,7 @@ internal static class Frames
 internal static class MediaInputs
 {
     public const int Sentences = 5;
-    public const double Speech = 2.4;
+    public const double Speech = 3.0;
     public const double Pause = 0.6;
     public const double Duration = (Sentences * (Speech + Pause)) - Pause;
 
@@ -260,11 +260,69 @@ public sealed class ProducedVideoTests(ProducedPackage package) : IClassFixture<
     }
 
     [Fact]
-    public void ThePackageChecklistTicksOnlyB3B5AndB8()
+    public void ThePackageChecklistTicksOnlyB8()
     {
         var text = File.ReadAllText(Path.Combine(package.Result.PackageFolder, PackageFiles.Checklist));
         var ticked = text.Split('\n').Where(l => l.Contains('☑', StringComparison.Ordinal)).Select(l => l.Split('|')[1].Trim()).ToList();
-        Assert.Equal(["B3", "B5", "B8"], ticked);
+        Assert.Equal(["B8"], ticked);
+    }
+
+    [Fact]
+    public void EveryCaptionPageStaysOnScreenAtLeastTheMinimumAndTheDisclosureIsPaged()
+    {
+        Assert.Equal(1.2, package.Settings.CaptionPageMinimumSeconds);
+        Assert.All(package.Pages, p => Assert.True(p.End - p.Start >= 1.2 - 1e-9,
+            string.Create(CultureInfo.InvariantCulture, $"sentence {p.Sentence} page {p.Page}: {p.End - p.Start:0.000} s")));
+        Assert.True(package.Pages.Count(p => p.Sentence == 1) >= 2);
+        Assert.True(package.Pages.Count(p => p.Sentence == MediaInputs.Sentences) >= 2);
+    }
+
+    [Fact]
+    public void ThePagedCaptionsWereCheckedAtRunTimeToRejoinIntoTheScript()
+    {
+        var checks = package.Record.GetProperty("checks").EnumerateArray().ToList();
+        var check = checks.Single(c => c.GetProperty("name").GetString() == "caption-text");
+        Assert.True(check.GetProperty("passed").GetBoolean());
+        foreach (var sentence in package.Script.Sentences)
+        {
+            Assert.Equal(sentence.Text, CaptionLayout.Rejoined(package.Pages, sentence.Number));
+        }
+    }
+
+    [Fact]
+    public void TheProofFrameOfThePackageIsTakenDuringTheDisclosuresFirstPage()
+    {
+        var frame = Path.Combine(package.Result.PackageFolder, PackageFiles.Frame);
+        var caption = Frames.Statistics(frame, package.Layout.CaptionBox, "YMAX", string.Empty);
+        Assert.True(caption.Single().Value >= 200, "no caption in frame.png");
+        var first = package.Pages.First(p => p.Sentence == 1 && p.Page == 1);
+        var extracted = package.Record.GetProperty("toolLog").EnumerateArray()
+            .Where(e => e.GetProperty("purpose").GetString() == "extract frame")
+            .Select(e => e.GetProperty("arguments").EnumerateArray().Select(a => a.GetString()!).ToList())
+            .Single();
+        var at = double.Parse(extracted[extracted.IndexOf("-ss") + 1], CultureInfo.InvariantCulture);
+        Assert.InRange(at, first.Start, first.End);
+    }
+
+    [Fact]
+    public void TheVideoIsComposedFromThePackageCopiesWhoseBytesWereHashed()
+    {
+        var manifest = package.Result.Manifest;
+        var inputs = Path.Combine(package.Result.PackageFolder, PackageFiles.Inputs);
+        var recording = manifest.Inputs.Single(i => i.Role == "recording");
+        Assert.Equal(manifest.RecordingSha256, recording.Sha256);
+        var source = Path.GetDirectoryName(package.FactSheet)!;
+        foreach (var input in manifest.Inputs)
+        {
+            Assert.Equal(File.ReadAllBytes(Path.Combine(source, input.Name)), File.ReadAllBytes(Path.Combine(inputs, input.Name)));
+        }
+
+        var compose = package.Record.GetProperty("toolLog").EnumerateArray()
+            .Single(e => e.GetProperty("purpose").GetString() == "compose video")
+            .GetProperty("arguments").EnumerateArray().Select(a => a.GetString()!).ToList();
+        var read = compose.Where((a, i) => i > 0 && compose[i - 1] == "-i").ToList();
+        Assert.Equal(manifest.Inputs.Count(i => i.Role == "image") + 2, read.Count);
+        Assert.All(read, path => Assert.StartsWith(inputs, path, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -391,7 +449,8 @@ public sealed class AdmissionTests
         var file = PilotTestEnvironment.Recording(folder, 5, 2.4, 0.6);
         var recording = new AdmittedMedia("recording.wav", file, MediaTool.Sha256File(file), tool.Probe("t", file));
         var settings = PilotTestEnvironment.Settings(PilotTestEnvironment.NewFolder("pilot"));
-        var (windows, source) = CaptionTiming.Windows(folder, recording, 5, tool, settings);
+        var (windows, source, timingBytes) = CaptionTiming.Windows(folder, recording, 5, tool, settings);
+        Assert.Null(timingBytes);
         Assert.Equal("pause-detection", source);
         Assert.Equal(5, windows.Count);
         for (var i = 0; i < 5; i++)
@@ -457,11 +516,11 @@ public sealed class FrameAndSafeAreaTests
         var layout = CaptionLayout.Boxes(settings, metrics, HeldData.Current);
         var sentences = new List<ScriptSentence> { new(1, SentenceKind.OpeningDisclosure, HeldData.Current.DisclosureSentence, "x", "y") };
         sentences.AddRange(HeldData.Current.CallToAction.Select((c, i) => new ScriptSentence(i + 2, SentenceKind.CallToAction, c, "x", "y")));
-        var pages = CaptionLayout.Pages(sentences, [(0.0, 3.0), (3.0, 4.0), (4.0, 5.0)], layout, settings, metrics);
+        var pages = CaptionLayout.Pages(sentences, [(0.0, 2.4), (2.4, 3.6), (3.6, 6.0)], layout, settings, metrics);
         var plan = new CompositionPlan(work, [], null!, null!, layout, pages, HeldData.Current.OverlayText, Path.Combine(work, "out.mp4"));
         Composition.WriteTextFiles(plan);
         File.Copy(PilotTestEnvironment.FacePath, Path.Combine(work, Composition.FaceFileName));
-        PilotTestEnvironment.Draw(work, "-f", "lavfi", "-i", "color=c=black:s=1080x1920:r=10:d=5",
+        PilotTestEnvironment.Draw(work, "-f", "lavfi", "-i", "color=c=black:s=1080x1920:r=10:d=6",
             "-vf", Composition.TextLayer(plan, settings) + ",format=yuv420p", "-c:v", "libx264", "-preset", "ultrafast", "-qp", "0", "out.mp4");
         var outside = new[]
         {
@@ -473,7 +532,7 @@ public sealed class FrameAndSafeAreaTests
         foreach (var region in outside)
         {
             var samples = Frames.Statistics(plan.OutputFile, region, "YMAX", string.Empty);
-            Assert.Equal(50, samples.Count);
+            Assert.Equal(60, samples.Count);
             Assert.All(samples, s => Assert.True(s.Value <= 17, string.Create(CultureInfo.InvariantCulture, $"text outside the safe area ({region}) at {s.Time:0.0} s: {s.Value}")));
         }
 
@@ -511,10 +570,10 @@ public sealed class FrameAndSafeAreaTests
     }
 
     [Fact]
-    public void TheSocketHarnessSeesASocketItIsShown()
+    public void TheSocketHarnessSeesASocketOpenedByAJobMember()
     {
         using var harness = new SocketTableHarness();
-        harness.Watch(Environment.ProcessId);
+        harness.TrackCurrentProcess();
         using var socket = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Dgram, System.Net.Sockets.ProtocolType.Udp);
         socket.Bind(new System.Net.IPEndPoint(System.Net.IPAddress.Loopback, 0));
         var waited = Stopwatch.StartNew();

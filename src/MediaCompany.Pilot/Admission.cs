@@ -109,7 +109,8 @@ public static class CaptionTiming
     private static readonly Regex Start = new(@"silence_start:\s*(-?[0-9.]+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
     private static readonly Regex End = new(@"silence_end:\s*(-?[0-9.]+)", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
 
-    public static (IReadOnlyList<(double Start, double End)> Windows, string Source) Windows(
+    /// <summary>The sentence windows and their source; when the source is the timing file, its bytes as read (they go into the package).</summary>
+    public static (IReadOnlyList<(double Start, double End)> Windows, string Source, byte[]? TimingBytes) Windows(
         string inputFolder, AdmittedMedia recording, int sentences, MediaTool tool, PilotSettings settings)
     {
         ArgumentNullException.ThrowIfNull(recording);
@@ -118,7 +119,8 @@ public static class CaptionTiming
         var timing = Path.Combine(inputFolder, TimingFileName);
         if (File.Exists(timing))
         {
-            return (ReadTimingFile(File.ReadAllText(timing), sentences, recording.Facts.DurationSeconds), "timing-file");
+            var bytes = File.ReadAllBytes(timing);
+            return (ReadTimingFile(new System.Text.UTF8Encoding(false).GetString(bytes), sentences, recording.Facts.DurationSeconds), "timing-file", bytes);
         }
 
         var filter = string.Create(CultureInfo.InvariantCulture,
@@ -127,7 +129,7 @@ public static class CaptionTiming
             ["-hide_banner", "-nostdin", "-nostats", .. MediaTool.Input(recording.FullPath), "-af", filter, "-f", "null", "-"],
             Path.GetDirectoryName(recording.FullPath)!);
         var silences = ParseSilences(errors, recording.Facts.DurationSeconds);
-        return (FromSilences(silences, sentences, recording.Facts.DurationSeconds), "pause-detection");
+        return (FromSilences(silences, sentences, recording.Facts.DurationSeconds), "pause-detection", null);
     }
 
     /// <summary>The silences the detector reported; a silence that runs to the end of the file ends at the duration.</summary>
@@ -189,27 +191,33 @@ public static class CaptionTiming
 
     /// <summary>
     /// Reads the operator's timing file: one line per sentence, in order, "start end" in seconds with a dot for decimals, each start
-    /// before its end, no window overlapping the one before, every window inside the recording. The refusal names the line.
+    /// before its end, no window overlapping the one before, every window inside the recording. The lines are judged in sentence
+    /// order and the refusal names the first failing sentence. The cases: a sentence with no line; a line that is not two finite
+    /// numbers (a word, NaN or Infinity included); a window that ends before it starts, overlaps the one before or leaves the
+    /// recording; a line beyond the last sentence.
     /// </summary>
     public static IReadOnlyList<(double Start, double End)> ReadTimingFile(string text, int sentences, double duration)
     {
         ArgumentNullException.ThrowIfNull(text);
         var lines = text.ReplaceLineEndings("\n").Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
-        if (lines.Count != sentences)
-        {
-            throw new PilotRefusal("timing-file-invalid", $"Tệp {TimingFileName} có {lines.Count} dòng; kịch bản có {sentences} câu, cần đúng {sentences} dòng.");
-        }
-
         var windows = new List<(double, double)>();
         var previousEnd = 0.0;
-        for (var i = 0; i < lines.Count; i++)
+        for (var i = 0; i < sentences; i++)
         {
+            if (i >= lines.Count)
+            {
+                throw new PilotRefusal("timing-file-invalid",
+                    $"Tệp {TimingFileName}: câu {i + 1} không có dòng. Tệp có {lines.Count} dòng; kịch bản có {sentences} câu, cần đúng {sentences} dòng.");
+            }
+
             var parts = lines[i].Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 2
                 || !double.TryParse(parts[0], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var start)
-                || !double.TryParse(parts[1], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var end))
+                || !double.TryParse(parts[1], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var end)
+                || !double.IsFinite(start) || !double.IsFinite(end))
             {
-                throw new PilotRefusal("timing-file-invalid", $"Tệp {TimingFileName}, dòng của câu {i + 1}: cần hai số giây \"bắt-đầu kết-thúc\", ví dụ \"0.00 3.20\".");
+                throw new PilotRefusal("timing-file-invalid",
+                    $"Tệp {TimingFileName}, câu {i + 1} (dòng \"{lines[i]}\"): cần hai số giây \"bắt-đầu kết-thúc\", ví dụ \"0.00 3.20\".");
             }
 
             if (end <= start || start < previousEnd || end > duration + 0.0005)
@@ -221,6 +229,12 @@ public static class CaptionTiming
 
             windows.Add((start, end));
             previousEnd = end;
+        }
+
+        if (lines.Count > sentences)
+        {
+            throw new PilotRefusal("timing-file-invalid",
+                $"Tệp {TimingFileName}: dòng {sentences + 1} (\"{lines[sentences]}\") thừa, không có câu {sentences + 1}. Kịch bản có {sentences} câu, cần đúng {sentences} dòng.");
         }
 
         return windows;

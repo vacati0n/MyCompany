@@ -5,8 +5,11 @@ namespace MediaCompany.Pilot;
 /// <summary>One drawn character, its code point and whether the installed face maps it.</summary>
 public sealed record DrawnCharacter(string Character, string CodePoint, bool Covered);
 
-/// <summary>The admitted face: its bytes' SHA-256, as the font manifest names it, its reading and its metrics.</summary>
-public sealed record AdmittedFace(string Path, string Sha256, string ManifestLine, FaceReading Reading, FaceMetrics Metrics);
+/// <summary>
+/// The admitted face: its bytes' SHA-256, as the font manifest names it, its reading, its metrics, and the bytes that were hashed,
+/// which are the bytes staged for drawing (the file is not read a second time).
+/// </summary>
+public sealed record AdmittedFace(string Path, string Sha256, string ManifestLine, FaceReading Reading, FaceMetrics Metrics, ReadOnlyMemory<byte> Bytes);
 
 /// <summary>
 /// THE FACE CHECKS (design D-010). The configured face must hash to the digest its font-manifest line carries, and every drawn
@@ -48,7 +51,7 @@ public static class Face
             throw new PilotRefusal("face-unreadable", $"Phông chữ {setting.Path} không đọc được: {refused.Message}");
         }
 
-        return new AdmittedFace(setting.Path, actual, line, reading, FaceMetrics.Read(bytes));
+        return new AdmittedFace(setting.Path, actual, line, reading, FaceMetrics.Read(bytes), bytes);
     }
 
     /// <summary>Refuses a drawn text with a character the face does not map, naming the text and the character.</summary>

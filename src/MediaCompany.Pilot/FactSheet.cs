@@ -240,6 +240,12 @@ public static class FactSheetCheck
         banned.Refuse($"{where} (giá trị)", value);
         if (overrideSentence is not null)
         {
+            if (banned.FirstPerson(overrideSentence) is { } person)
+            {
+                throw new PilotRefusal("override-first-person",
+                    $"{where}: câu thay thế có \"{person}\". Câu thay thế chỉ nói về sản phẩm, không xưng ngôi thứ nhất, không nói đã dùng hay nhận xét; viết lại hoặc bỏ câu thay thế.");
+            }
+
             banned.Refuse($"{where} (câu thay thế)", overrideSentence);
             if (!overrideSentence.Contains(value, StringComparison.Ordinal))
             {

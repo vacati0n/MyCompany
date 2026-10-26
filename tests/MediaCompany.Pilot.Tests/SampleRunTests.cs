@@ -7,7 +7,7 @@ namespace MediaCompany.Pilot.Tests;
 
 /// <summary>
 /// The end-to-end sample: the built tool run as the operator runs it, every verb from generated fixtures, under the socket-table
-/// harness, followed by the six demonstrated refusals. The root is MC16_SAMPLE_ROOT when set, otherwise a temporary folder; a
+/// harness, followed by the eight demonstrated refusals. The root is MC16_SAMPLE_ROOT when set, otherwise a temporary folder; a
 /// transcript of every command line, its exit code and its output is written to the root.
 /// </summary>
 [Collection("media")]
@@ -15,6 +15,7 @@ namespace MediaCompany.Pilot.Tests;
 public sealed class SampleRunTests
 {
     private readonly StringBuilder _transcript = new();
+    private SocketTableHarness? _harness;
 
     [Fact]
     public void AllFiveVerbsRunAndEachDemonstratedRefusalNamesItsCode()
@@ -25,6 +26,7 @@ public sealed class SampleRunTests
         var settingsPath = PilotTestEnvironment.WriteSettings(root, settings);
         var v01 = MediaInputs.Folder(root, "V-01");
         using var harness = new SocketTableHarness();
+        _harness = harness;
 
         Expect(0, "ĐẠT [check]", "check", "--settings", settingsPath, "--facts", v01);
         Expect(0, "ĐẠT [script]", "script", "--settings", settingsPath, "--facts", v01);
@@ -60,6 +62,21 @@ public sealed class SampleRunTests
         var shortSheet = Prepared(root, "V-04", "/san-pham/mau-4", clipSeconds: MediaInputs.Duration - 1.0);
         Expect(2, "TỪ CHỐI [clip-length-mismatch]", "produce", "--settings", settingsPath, "--facts", shortSheet);
 
+        // Sentences spoken so fast that the disclosure's two caption pages cannot each stay 1.2 s on screen.
+        var fastSheet = Prepared(root, "V-07", "/san-pham/mau-7",
+            recording: f => PilotTestEnvironment.Recording(f, MediaInputs.Sentences, 1.5, MediaInputs.Pause, pitch: 610),
+            clipSeconds: (MediaInputs.Sentences * (1.5 + MediaInputs.Pause)) - MediaInputs.Pause);
+        Expect(2, "TỪ CHỐI [caption-page-too-short]", "produce", "--settings", settingsPath, "--facts", fastSheet);
+
+        // A copy of the package whose manifest names a video file outside the package folder.
+        var renamed = Path.Combine(root, "goi-sua-tep-ke");
+        CopyFolder(package, renamed);
+        var manifestPath = Path.Combine(renamed, PackageFiles.Manifest);
+        var manifest = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(manifestPath))!;
+        manifest["videoFile"] = Path.Combine("..", Path.GetFileName(package), PackageFiles.Video);
+        File.WriteAllText(manifestPath, manifest.ToJsonString(), new UTF8Encoding(false));
+        Expect(2, "TỪ CHỐI [package-file-not-plain]", "verify", "--package", renamed);
+
         // One byte of an approved video changed, in a copy of the package.
         var copy = Path.Combine(root, "goi-da-sua-1-byte");
         CopyFolder(package, copy);
@@ -71,15 +88,20 @@ public sealed class SampleRunTests
         Expect(2, "TỪ CHỐI [approval-hash-mismatch]", "approve", "--package", copy, "--name", "Người duyệt mẫu", "--sha256", sha);
 
         harness.Dispose();
+        _harness = null;
         var facts = new MediaTool(settings).Probe("sample", Path.Combine(package, PackageFiles.Video));
         _transcript.AppendLine(CultureInfo.InvariantCulture, $"ffprobe video.mp4: {facts.Displayed.Width}x{facts.Displayed.Height}, {facts.DurationSeconds:0.000} s, audio {facts.HasAudio}");
-        _transcript.AppendLine(CultureInfo.InvariantCulture, $"socket-table harness: {harness.Samples} samples, {harness.Rows.Count} rows owned by a watched process");
+        var names = harness.MemberNames.GroupBy(n => n, StringComparer.OrdinalIgnoreCase).Select(g => $"{g.Key} x{g.Count()}").Order(StringComparer.Ordinal);
+        _transcript.AppendLine(CultureInfo.InvariantCulture, $"socket-table harness: {harness.Samples} samples, {harness.MemberCount} processes seen in the harness job ({string.Join(", ", names)}), {harness.Rows.Count} rows owned by a job member");
         File.WriteAllText(Path.Combine(root, "sample-transcript.txt"), _transcript.ToString(), new UTF8Encoding(false));
 
         Assert.Equal((1080, 1920), facts.Displayed);
         Assert.Equal(MediaTool.Sha256File(Path.Combine(package, PackageFiles.Video)), sha);
         Assert.True(File.Exists(Path.Combine(package, PackageFiles.Frame)));
         Assert.True(harness.Samples > 10);
+        Assert.Contains("ffmpeg", harness.MemberNames);
+        Assert.Contains("ffprobe", harness.MemberNames);
+        Assert.Contains("MediaCompany.Pilot", harness.MemberNames);
         Assert.Empty(harness.Rows);
     }
 
@@ -126,6 +148,7 @@ public sealed class SampleRunTests
         }
 
         using var process = Process.Start(info)!;
+        _harness?.Track(process);
         var output = process.StandardOutput.ReadToEndAsync();
         var errors = process.StandardError.ReadToEndAsync();
         process.WaitForExit();
