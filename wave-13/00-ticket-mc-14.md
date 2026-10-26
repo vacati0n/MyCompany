@@ -5,6 +5,7 @@
 - Labels: implement, wave-13, studio-direction, motion-graphics, 3d-animation, shorts
 - Routed as: /implement (feature-request)
 - Starts: **only after MC-13 (Wave 12) is merged** (`CEO-D-1200`)
+- **Status: FROZEN 2026-10-26** by `CEO-D-1300` (pivot to the affiliate pilot, MC-15). Deferred, not cancelled; do not start without a new owner decision.
 
 ## Description
 
