@@ -2613,3 +2613,23 @@ contact no seller, buy nothing, download no asset and publish nothing.
 seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1309 — MC-16 quality review: long captions page in two-line pages; B3 and B5 stay for the CEO to tick
+
+**The CEO's own decision, 2026-10-27**, on the quality review of run `run-535f3f938f32` (MC-16).
+
+1. **Caption paging.** At 56 px inside the safe area of `CEO-D-1308`, the fixed disclosure sentence needs four lines.
+   The CEO chose "Chia trang 2 dòng": a sentence too long for two lines is shown as consecutive two-line pages
+   within the time window in which it is spoken. Each page stays on screen for at least 1.2 s. Where the window is
+   too short for that, the tool refuses and names the sentence. This amends the scope rule of one caption, of at most
+   two lines, per sentence.
+2. **B3 and B5 are not pre-ticked.** The price and claim-of-use checks are closed word lists. They are widened (for
+   example "VNĐ", "nghìn", "triệu", and first-person wording in an operator's override), but cannot catch every
+   phrasing. The CEO chose "CEO tự tích": the package states that the tool's check found nothing, and leaves B3 ("no
+   claim of use") and B5 ("no price") unticked for the CEO, who reads the script. Only B8 (the "Video tạo bởi AI"
+   overlay for the whole video) is pre-ticked. This amends the scope rule that pre-ticked exactly B3, B5 and B8.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1308`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---
