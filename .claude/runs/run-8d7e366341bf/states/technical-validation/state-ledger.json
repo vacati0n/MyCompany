@@ -1,0 +1,78 @@
+{
+  "run_id": "run-8d7e366341bf",
+  "slice": "phase:technical-validation",
+  "runtime_version": "0.11.1",
+  "status": "completed",
+  "queue_status": "Executing",
+  "command_id": "research",
+  "workflow_id": "research",
+  "workflow_version": "1.1.0",
+  "state_id": "technical-validation",
+  "work_item_id": "run-8d7e366341bf::technical-validation",
+  "idempotency_key": "sha256:a532b1a322a46fdd678763e3b34ff07e",
+  "attempt": 2,
+  "agent_id": "context-agent",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "invocation_id": "inv-8d7e366341bf-02-002",
+  "input_digest": "sha256:4696cde24034020bf6570823127e972c",
+  "context_digest": "sha256:81fa6ec86a71e883d8e8284da9b036f3",
+  "module_load_order": [
+    "agents/context-agent/system.md",
+    "agents/context-agent/identity.md",
+    "agents/context-agent/reasoning.md",
+    "agents/context-agent/execution.md",
+    "agents/context-agent/output.md",
+    "agents/context-agent/quality.md",
+    "agents/context-agent/examples.md"
+  ],
+  "artifact_path": "runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+  "conditional_artifact_globs": [],
+  "result_envelope_path": "runs/run-8d7e366341bf/states/technical-validation/result-envelope.json",
+  "validator": "investigation_report_validator",
+  "load_profile_mode": "progressive",
+  "context_budget": {
+    "modules_full_bytes": 84771,
+    "modules_core_bytes": 45112,
+    "slice_all_bytes": 181398,
+    "slice_required_bytes": 16185,
+    "inputs_bytes": 7113,
+    "upstream_full_bytes": 21025,
+    "upstream_read_first_bytes": 21025,
+    "task_context_bytes": 6222,
+    "fixed_bytes": 79250,
+    "legacy_estimate_bytes": 373557,
+    "progressive_estimate_bytes": 174907,
+    "legacy_estimate_tokens": 93389,
+    "progressive_estimate_tokens": 43726,
+    "savings_pct": 53.2
+  },
+  "execution_started_at": "2026-10-26T11:36:58Z",
+  "execution_completed_at": "2026-10-26T11:54:39Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 31,
+    "checksPassed": 31,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 3,
+    "counts": {
+      "sections": 9,
+      "status": "provisional",
+      "identifiers": {
+        "E": 131,
+        "O": 4,
+        "Q": 17
+      },
+      "tableRows": {
+        "Evidence": 131,
+        "Options Evaluated": 4
+      }
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:d7702669bdc9bd952b573fede635bb88",
+  "recovery": null
+}

@@ -1,0 +1,363 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\opus-5-5-videos-f170ff\\.claude\\runs\\run-8d7e366341bf\\states\\research-framing\\artifacts\\requirement-framing.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 36,
+  "checksPassed": 36,
+  "notMachineCheckable": 4,
+  "counts": {
+    "sections": 9,
+    "status": "provisional",
+    "identifiers": {
+      "O": 7,
+      "R": 26,
+      "AI": 26,
+      "B": 12,
+      "AS": 8,
+      "Q": 9
+    },
+    "tableRows": {
+      "Target Outcomes": 7,
+      "Requirements": 26,
+      "Acceptance Intent": 26,
+      "Framing Boundaries": 12,
+      "Assumptions": 8,
+      "Open Questions": 9
+    },
+    "framingVerdict": "partially-framed",
+    "targetOutcomes": 7,
+    "requirements": 26,
+    "functionalRequirements": 22,
+    "nonFunctionalRequirements": 4,
+    "acceptanceIntent": 26,
+    "framingBoundaries": 12,
+    "assumptions": 8,
+    "openQuestions": 9,
+    "blockingOpenQuestions": 2
+  },
+  "checks": [
+    {
+      "id": "C1.1",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "Metadata block present with every declared field populated",
+      "result": "pass",
+      "detail": "11 of 11 fields populated"
+    },
+    {
+      "id": "C1.2",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "producedBy is an agent contracted to emit requirement-framing.md",
+      "result": "pass",
+      "detail": "producedBy='business-analyst'; contracted producers: ['business-analyst']"
+    },
+    {
+      "id": "C1.3",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "schemaVersion is 1.0.0 and agentVersion is semantic",
+      "result": "pass",
+      "detail": "schemaVersion=1.0.0 agentVersion=1.0.0"
+    },
+    {
+      "id": "C1.4",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='provisional'"
+    },
+    {
+      "id": "C2.1",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "All 9 mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "9 of 9 present, once each"
+    },
+    {
+      "id": "C2.2",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Business Context', 'Target Outcomes', 'Requirements', 'Acceptance Intent', 'Framing Boundaries', 'Assumptions', 'Open Questions', 'Handoff']"
+    },
+    {
+      "id": "C2.3",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 section introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C2.4",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "C2.5",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Advisory",
+      "description": "No template authoring guidance remains in the emitted artifact",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C3.1",
+      "quality_ref": "config/execution-engine.md#agent-adapter",
+      "severity": "Blocking",
+      "description": "At most 1 fenced block(s), as the contract permits",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; 1 permitted"
+    },
+    {
+      "id": "C3.2",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "C3.3",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "C4.1",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "Every declared field label is present in its section",
+      "result": "pass",
+      "detail": "13 declared field(s) present"
+    },
+    {
+      "id": "C4.2",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "No declared field is left unanswered",
+      "result": "pass",
+      "detail": "every declared field carries a value"
+    },
+    {
+      "id": "C4.3",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Correctable",
+      "description": "Fields with a declared substance floor carry more than a token answer",
+      "result": "pass",
+      "detail": "all fields meet their floor"
+    },
+    {
+      "id": "C5.1",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Fields bound to a vocabulary use a permitted value",
+      "result": "pass",
+      "detail": "all bounded fields valid"
+    },
+    {
+      "id": "C5.2",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Correctable",
+      "description": "Fields bound to a format match it",
+      "result": "pass",
+      "detail": "all formatted fields valid"
+    },
+    {
+      "id": "C4.4",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared minimum carry at least that many items",
+      "result": "pass",
+      "detail": "all list sections meet their minimum"
+    },
+    {
+      "id": "C4.5",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared table carry it, with the declared columns",
+      "result": "pass",
+      "detail": "row counts: {'Target Outcomes': 7, 'Requirements': 26, 'Acceptance Intent': 26, 'Framing Boundaries': 12, 'Assumptions': 8, 'Open Questions': 9}"
+    },
+    {
+      "id": "C4.6",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "No table row leaves a required cell empty",
+      "result": "pass",
+      "detail": "all rows complete"
+    },
+    {
+      "id": "C6.1",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "C6.2",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "Every referenced identifier is defined in its declaring section",
+      "result": "pass",
+      "detail": "defined: {'O': 7, 'R': 26, 'AI': 26, 'B': 12, 'AS': 8, 'Q': 9}"
+    },
+    {
+      "id": "C6.3",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "No identifier is defined twice",
+      "result": "pass",
+      "detail": "identifiers unique"
+    },
+    {
+      "id": "C6.4",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Correctable",
+      "description": "Identifiers ascend from 001 without gaps",
+      "result": "pass",
+      "detail": "contiguous: {'O': 7, 'R': 26, 'AI': 26, 'B': 12, 'AS': 8, 'Q': 9}"
+    },
+    {
+      "id": "C7.1",
+      "quality_ref": "config/execution-engine.md#context-loader",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "RN1",
+      "quality_ref": "agents/business-analyst/output.md#requirements",
+      "severity": "Advisory",
+      "description": "Each requirement is one the supplied inputs support, not one inferred for the business",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "RN2",
+      "quality_ref": "agents/business-analyst/output.md#requirements",
+      "severity": "Advisory",
+      "description": "The requirement set covers the known edge cases of the intent, with none silently dropped",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "RN3",
+      "quality_ref": "agents/business-analyst/output.md#target-outcomes",
+      "severity": "Advisory",
+      "description": "The declared outcomes are the outcomes the requester holds, not ones substituted for them",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "RN4",
+      "quality_ref": "agents/business-analyst/output.md#acceptance-intent",
+      "severity": "Advisory",
+      "description": "Each acceptance intent describes something acceptance could genuinely demonstrate",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "RF1",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "framingVerdict is one of framed, partially-framed, blocked",
+      "result": "pass",
+      "detail": "framingVerdict='partially-framed'"
+    },
+    {
+      "id": "RF2",
+      "quality_ref": "templates/requirement-framing.md",
+      "severity": "Blocking",
+      "description": "requirementCount equals the number of requirements recorded",
+      "result": "pass",
+      "detail": "metadata=26 table=26 row(s)"
+    },
+    {
+      "id": "RF3",
+      "quality_ref": "agents/business-analyst/output.md#traceability",
+      "severity": "Blocking",
+      "description": "Every requirement names the target outcome it serves",
+      "result": "pass",
+      "detail": "26 requirement(s) trace to a declared outcome"
+    },
+    {
+      "id": "RF4",
+      "quality_ref": "agents/business-analyst/output.md#requirements",
+      "severity": "Blocking",
+      "description": "Every requirement declares its type as functional or non-functional",
+      "result": "pass",
+      "detail": "26 requirement(s), each typed"
+    },
+    {
+      "id": "RF5",
+      "quality_ref": "agents/business-analyst/output.md#acceptance-intent",
+      "severity": "Blocking",
+      "description": "Every acceptance intent names the requirement it bounds",
+      "result": "pass",
+      "detail": "26 acceptance intent(s) trace to a declared requirement"
+    },
+    {
+      "id": "RF6",
+      "quality_ref": "agents/business-analyst/quality.md#testability",
+      "severity": "Blocking",
+      "description": "Every requirement is bounded by at least one acceptance intent",
+      "result": "pass",
+      "detail": "26 requirement(s), each demonstrated by acceptance intent"
+    },
+    {
+      "id": "RF7",
+      "quality_ref": "agents/business-analyst/quality.md#framing-integrity",
+      "severity": "Blocking",
+      "description": "A partially-framed or blocked framing records at least one open question",
+      "result": "pass",
+      "detail": "framingVerdict='partially-framed', 9 open question(s)"
+    },
+    {
+      "id": "RF8",
+      "quality_ref": "agents/business-analyst/quality.md#framing-integrity",
+      "severity": "Correctable",
+      "description": "A completed framing names at least one framing boundary",
+      "result": "pass",
+      "detail": "12 boundary(s) recorded"
+    },
+    {
+      "id": "RF9",
+      "quality_ref": "agents/business-analyst/quality.md#assumption-checks",
+      "severity": "Blocking",
+      "description": "Every assumption states the basis it rests on",
+      "result": "pass",
+      "detail": "8 assumption(s), each with a basis"
+    },
+    {
+      "id": "RF10",
+      "quality_ref": "agents/business-analyst/quality.md#assumption-checks",
+      "severity": "Correctable",
+      "description": "Every assumption declares a confidence of high, medium, low",
+      "result": "pass",
+      "detail": "8 assumption(s), each rated"
+    },
+    {
+      "id": "RF11",
+      "quality_ref": "agents/business-analyst/quality.md#authority-boundary",
+      "severity": "Blocking",
+      "description": "The artifact issues no task, change, or design identifier owned downstream",
+      "result": "pass",
+      "detail": "no downstream identifier scheme used"
+    }
+  ]
+}

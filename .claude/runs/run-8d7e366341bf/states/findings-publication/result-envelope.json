@@ -1,0 +1,127 @@
+{
+  "invocation_id": "inv-8d7e366341bf-05-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-8d7e366341bf/states/findings-publication/artifacts/release-note.md"
+  ],
+  "structured_output": {
+    "release_verdict": "findings-published",
+    "artifact_status": "provisional",
+    "communication_basis": "findings",
+    "stage8_row": "any basis: position establishable but a required statement is unsupported -> verdict as the findings row (findings-published), status provisional",
+    "provisional_reasons": [
+      "The owner's amendment (CEO-D-1301) introduces a content form (AI presenter on seller-permitted product images) that no phase evaluated against the recommendation's criteria (K-014)",
+      "The superseded steps of the 30-day plan have no replacement sequence in any supplied artifact (K-015)",
+      "The break-even cost basis no longer describes the pilot, and the presenter tool is unpriced (K-010)",
+      "The governing amendment reached this phase outside the envelope inputs and is not covered by inputDigest (K-017)"
+    ],
+    "audience": {
+      "named": "CEO (owner, reads Vietnamese)",
+      "source": "the operator's dispatch briefing; no stakeholder-list or communication-requirements input in the envelope",
+      "inferred_from_phase": false
+    },
+    "inputs": {
+      "governing": "runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md (TR-MC15-002, digest sha256:99ebe14498e1e93a14a090407085f27f per envelope)",
+      "superseded_draft_context_only": "runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md (TR-MC15-001)",
+      "read_outside_envelope_on_operator_direction": [
+        "research/ceo-decision-record.md, entries CEO-D-1300 and CEO-D-1301",
+        "runs/run-8d7e366341bf/state.json, Recommendation Gate record (decided 2026-10-26T12:33:21Z)",
+        "pilot-affiliate-vn/evidence/recapture-2026-10-26.md"
+      ],
+      "named_by_operator_but_not_read": [
+        "pilot-affiliate-vn/evidence/shopee-vn-and-market.md",
+        "pilot-affiliate-vn/evidence/tiktok-vn-and-law.md"
+      ],
+      "precedence_applied": "Where CEO-D-1301 and the gate record differ from TR-MC15-002, the owner's decision is published and the superseded draft content is flagged in Backward compatibility notes and the Known Issues table"
+    },
+    "known_issues": 17,
+    "known_issue_order": "TR-MC15-002 risk register order (K-001 to K-011), then TR-MC15-002 open questions (K-012, K-013), then items arising from the amendment and the evidence comparison (K-014 to K-016), then the run-process item (K-017)",
+    "published_statements": {
+      "count": 84,
+      "counting_rule": "each top-level field value carrying inline text, each nested bullet, and each Known Issues row",
+      "by_section": {
+        "Metadata": 4,
+        "Highlights": 15,
+        "Technical Changes and Compatibility": 20,
+        "Operational Notes": 15,
+        "Validation Summary": 7,
+        "Known Issues": 17,
+        "Communication": 6
+      },
+      "sources": {
+        "TR-MC15-002": "options, criteria, risk register, 30-day plan, CEO actions, measurements, tax range, break-even, reversal plan",
+        "CEO-D-1301 and the Recommendation Gate record": "path, niches, fallback, tier 2, start now, amended content form, its conditions and stop condition, standing-decision rulings, OD6 not used",
+        "recapture-2026-10-26": "E-076, E-089, E-094, E-100, E-102, E-108 and E-110 wording; 13 confirmed, 2 changed, 1 not found",
+        "task-context.yaml": "phase validation counts and gate owners, quoted in Test status"
+      }
+    },
+    "changes_by_stage5_class": {
+      "breaking": 1,
+      "contract": 2,
+      "operational": 1,
+      "feature": 1,
+      "fix": 3,
+      "improvement": 2,
+      "internal": 0
+    },
+    "breaking_change": "Parts of the TR-MC15-002 30-day plan, CEO action list, sequencing, measurement and break-even are superseded by CEO-D-1301; published with what each reader relying on the plan will meet and what to do (follow CEO-D-1301; re-sequencing routed to tech-lead)",
+    "escalations": [
+      {"to": "tech-lead", "items": ["K-005", "K-006", "K-008", "K-010", "K-014", "K-015", "K-016"]},
+      {"to": "orchestrator", "items": ["K-012", "K-017"]},
+      {"to": "CEO, with counsel", "items": ["K-001", "K-002", "K-005", "K-006", "K-013"]},
+      {"to": "architect", "items": ["K-011"]}
+    ],
+    "quality_checks": {
+      "run": 62,
+      "passed": 62,
+      "results": {
+        "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+        "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass", "D7": "pass",
+        "P1": "pass", "P2": "pass", "P3": "pass", "P4": "pass", "P5": "pass", "P6": "pass",
+        "R3": "pass", "X1": "pass", "X2": "pass", "X3": "pass", "X4": "pass",
+        "R1": "pass", "R2": "pass", "R4": "pass", "R5": "pass", "R7": "pass", "R8": "pass", "R9": "pass",
+        "V1": "pass", "V2": "pass", "V3": "pass",
+        "K1": "pass", "K2": "pass", "K3": "pass", "K4": "pass", "K5": "pass", "K6": "pass",
+        "R6": "pass", "A1": "pass", "A2": "pass", "A3": "pass", "A4": "pass", "A5": "pass", "A6": "pass",
+        "A7": "pass", "A8": "pass", "A9": "pass", "A10": "pass", "A11": "pass", "A12": "pass", "A13": "pass",
+        "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass", "C6": "pass"
+      },
+      "check_notes": {
+        "D5": "sourceInputs lists the five inputs read in full and relied on. Two are typed by nearest declared type: the owner decision and gate record as final-change-summary, and the page re-capture as verification-report; each reference states what it is",
+        "P5": "One disagreement recorded rather than resolved: TR-MC15-002 cites E-094 for orders completing within 30 days, while the re-captured E-094 quotes only the 7-day cookie (K-016)",
+        "X3": "Every compatibility statement is a direct comparison of TR-MC15-002 text with CEO-D-1301 text; no consequence was inferred beyond them, and the replacement sequence is routed rather than written",
+        "S4": "One fenced block, the metadata block. output.md allows four, but release_note_validator inherits max_fenced_blocks=1 (framework Finding 9, still present)",
+        "A12": "No command executed. The Validation Engine was not run by this agent; the runtime runs release_note_validator at completion. Conformance was self-checked by reading release_note_validator.py and artifact_contract.py"
+      }
+    },
+    "not_machine_checkable": {
+      "N1": "Discharged: the note publishes the recommendation as the owner approved and amended it, with each superseded part of the draft named rather than carried forward",
+      "N2": "Discharged: superseded draft content (samples, hands-only footage, sample cost, USD 42 break-even basis, 'keep the samples', the RK-002/RK-009/RK-010 mitigations and the OD9 rationale for Q-002) is flagged as no longer applicable, not restated as current",
+      "N3": "Discharged with a limitation: every owner-visible change from CEO-D-1301 is represented; the assessment of the new form is not overstated and is recorded as missing (K-014)"
+    },
+    "validator_run_by_agent": false,
+    "observations_for_orchestrator": [
+      "The failure-envelope.json in this phase folder (G4-GATE, gate-approval-required) is resolved at 2026-10-26T12:33:21Z with every guard passing; it was treated as stale (framework Finding 11 pattern). The phase did not block at G1-CAPABILITY.",
+      "workflows/research.md still says findings-publication blocks at G1-CAPABILITY because documentation has no registry/agents.yaml record; the registry holds a documentation record and the guard passed, so that text is stale.",
+      "The envelope digest for the recommendation-draft input (sha256:99ebe14498e1e93a14a090407085f27f) differs from the completed_phases digest in task-context.yaml (sha256:a5d0c030aa51a48892b6bc73cc536da7); this agent cannot recompute either and did not resolve it.",
+      "templates/release-note.md and release_note_validator.py name agents/documentation.md as the binding contract; that file does not exist (the host adapter records this).",
+      "Skill dispatch marked S03 (.NET) and S01 required and derived affected areas react-frontend and performance from the tokens 'jsx' and 'profile'; none of those domains appears in this publication and none is recorded as affected."
+    ]
+  },
+  "evidence_refs": [
+    "agents/documentation/system.md",
+    "agents/documentation/identity.md",
+    "agents/documentation/reasoning.md",
+    "agents/documentation/execution.md",
+    "agents/documentation/output.md",
+    "agents/documentation/quality.md",
+    "runs/run-8d7e366341bf/states/findings-publication/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    "runs/run-8d7e366341bf/states/findings-publication/artifacts/release-note.md",
+    "runs/run-8d7e366341bf/states/findings-publication/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

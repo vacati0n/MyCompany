@@ -1,0 +1,84 @@
+{
+  "invocation_id": "inv-8d7e366341bf-01-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md"
+  ],
+  "structured_output": {
+    "run_id": "run-8d7e366341bf",
+    "state_id": "research-framing",
+    "agent_id": "business-analyst",
+    "agent_version": "1.0.0",
+    "framingId": "FRAME-2026-0001",
+    "framingVerdict": "partially-framed",
+    "status": "provisional",
+    "requirementCount": 26,
+    "inputDigest": "sha256:4ce44ea4cf2b08c1aee25150130fa9be",
+    "contextDigest": "sha256:4f9e487720a6b4c8ba6b207522451ff8",
+    "counts": {
+      "targetOutcomes": 7,
+      "requirements": 26,
+      "requirementsByType": {"functional": 22, "non-functional": 4},
+      "acceptanceIntent": 26,
+      "framingBoundaries": 12,
+      "assumptions": 8,
+      "openQuestions": 9,
+      "blockingOpenQuestions": 2,
+      "blockingOpenQuestionIds": ["Q-001", "Q-002"]
+    },
+    "phaseGateOwnership": {
+      "gate": "Framing Gate",
+      "decidedBy": "product-owner",
+      "decisionRecordedByThisAgent": false
+    },
+    "checks": {
+      "note": "Self-inspection against quality.md. The Validation Engine was not executed (command execution is not permitted to this role), so every result below is this agent's own inspection of the rendered file.",
+      "run": 29,
+      "passed": 29,
+      "results": {
+        "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass",
+        "C6.1": "pass", "C6.2": "pass", "C6.3": "pass",
+        "C7": "pass", "C8": "pass", "C9": "pass",
+        "RF1": "pass", "RF2": "pass", "RF3": "pass", "RF4": "pass",
+        "RF5": "pass", "RF6": "pass", "RF7": "pass", "RF8": "pass",
+        "RF9": "pass", "RF10": "pass", "RF11": "pass",
+        "C10": "pass", "C11": "pass", "C12": "pass"
+      }
+    },
+    "notMachineCheckableObligations": {
+      "RN1": {"result": "pass", "note": "Every requirement traces to a supplied research question item or a supplied constraint of the business intent."},
+      "RN2": {"result": "pass", "note": "Edge cases recorded: US-only rules carried into Vietnam (R-005, AS-003); unsourced points and source conflicts (R-006); completeness claims (R-007); ineligible applicant (R-001); restricted categories (R-010); unsourced break-even inputs (R-021); reuse of frozen work (R-023)."},
+      "RN3": {"result": "pass", "note": "Outcomes are the seven outcomes the research question's sections and deliverable state; no outcome was substituted."},
+      "RN4": {"result": "pass", "note": "Each acceptance intent names an observation that a report section would show; no threshold or test design is stated."}
+    },
+    "repairItemsMoved": [],
+    "scopeAndSlice": {
+      "readInFull": ["system.md", "identity.md", "reasoning.md", "execution.md", "output.md", "quality.md", "task-context.yaml", "templates/requirement-framing.md", "workflows/research.md", "workflows/workflow-gate-matrix.md", "context/product-context.md", "context/release-context.md", "context/technical-context.md", "skills/business/domain-modeling.md", "domain-model/agent-specification.md", "research/framework-defects.md"],
+      "notRead": ["examples.md (output shape was not ambiguous; not loaded)", "research/platform-policy-dossier.md and research/language-market-analysis.md section 7.4 (outside the frozen context slice; the research question's summary of them is used and recorded as AS-004)"],
+      "repositoryRescan": "none"
+    },
+    "frameworkDefectsApplied": {
+      "finding6_crossDocumentIdentifiers": "The artifact cites no identifier from another document; standing decisions and the ticket are cited descriptively. Repository research documents may cite by number.",
+      "defect3_declaredSideEffects": "declared_side_effects holds only the two files written, with no prose entries.",
+      "finding7_gateRationale": "Recorded as Q-009 and in the Handoff.",
+      "defect1_inputIdentifierDrift": "Recorded as Q-007; not verified in the repository."
+    },
+    "evidenceStandardRecorded": "Vietnamese first-party pages (TikTok Shop Vietnam Seller and Affiliate Center and Academy, Shopee Affiliate Vietnam) and Vietnamese official legal texts, per R-005, R-011, R-012 and R-013. Third-party figures are never the sole basis for a rule or revenue number."
+  },
+  "evidence_refs": [
+    "agents/business-analyst/system.md",
+    "agents/business-analyst/identity.md",
+    "agents/business-analyst/reasoning.md",
+    "agents/business-analyst/execution.md",
+    "agents/business-analyst/output.md",
+    "agents/business-analyst/quality.md",
+    "runs/run-8d7e366341bf/states/research-framing/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    "runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md",
+    "runs/run-8d7e366341bf/states/research-framing/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

@@ -1,0 +1,505 @@
+{
+  "invocation_id": "inv-8d7e366341bf-01-001",
+  "run_id": "run-8d7e366341bf",
+  "work_item_id": "run-8d7e366341bf::research-framing",
+  "idempotency_key": "sha256:423ec4d1d1db8f6d66e105bb078e1c74",
+  "state_id": "research-framing",
+  "phase_index": 1,
+  "agent_id": "business-analyst",
+  "agent_version": "1.0.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/business-analyst.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/business-analyst/manifest.yaml",
+    "load_order": [
+      "agents/business-analyst/system.md",
+      "agents/business-analyst/identity.md",
+      "agents/business-analyst/reasoning.md",
+      "agents/business-analyst/execution.md",
+      "agents/business-analyst/output.md",
+      "agents/business-analyst/quality.md",
+      "agents/business-analyst/examples.md"
+    ],
+    "module_digests": {
+      "agents/business-analyst/system.md": "sha256:5d498c8147ee160ad2beeeb50663b709",
+      "agents/business-analyst/identity.md": "sha256:1653585cb897ff96d92099dfed2f5f14",
+      "agents/business-analyst/reasoning.md": "sha256:60a784bf7d53ed133ccac0651e64ad68",
+      "agents/business-analyst/execution.md": "sha256:4915b1665e4cc9ea2b318e8dc66aa292",
+      "agents/business-analyst/output.md": "sha256:984889b1e61f3aed5005447969fe408a",
+      "agents/business-analyst/quality.md": "sha256:2a32cbbe5bf521ce272cdf03431e269a",
+      "agents/business-analyst/examples.md": "sha256:68506660e33639358e0f888e597a94c6"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/business-analyst/system.md",
+        "agents/business-analyst/reasoning.md",
+        "agents/business-analyst/output.md",
+        "agents/business-analyst/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/business-analyst/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/business-analyst/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/business-analyst/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 32697,
+      "full_bytes": 66204
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "requirement-analysis",
+      "problem-framing",
+      "requirement-clarification",
+      "outcome-alignment",
+      "acceptance-intent-definition"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S02",
+        "proficiency": "Primary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S07",
+        "proficiency": "Secondary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S02",
+        "registryIdentifier": "domain-modeling",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "business-intent",
+      "problem-statement",
+      "requirement-input",
+      "product-context",
+      "scope-definition",
+      "technical-context",
+      "stakeholder-map",
+      "business-constraints",
+      "regulatory-constraints",
+      "success-measures",
+      "domain-glossary",
+      "prior-framing",
+      "investigation-question",
+      "research-question",
+      "decision-scope"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "research-question",
+        "reference": "runs/inputs/mc-15-research-question.md",
+        "source_file": ".claude/runs/inputs/mc-15-research-question.md",
+        "text": "# MC-15: Affiliate pilot research - TikTok Shop and Shopee in Vietnam: who may join, what it pays, what the law and the platforms require, and which content the company can make that earns\n\n- Source: local://research/ceo-decision-record.md#ceo-d-1300\n- Issue type: Research   Priority: Highest\n- Labels: research, affiliate, tiktok-shop, shopee, vietnam, pilot, pivot\n- Routed as: /research\n\n## Description\n\nAFFILIATE PILOT RESEARCH \u2014 TIKTOK SHOP AND SHOPEE, VIETNAM\n\n### WHY \u2014 THE OWNER'S DECISION OF 2026-10-26 (`CEO-D-1300`)\n\nThe owner judged that the video the company has built toward cannot earn money on the path the plan set, and decided that the company **focuses on affiliate revenue**, with **TikTok Shop affiliate and Shopee Affiliate in Vietnam** as the pilot that becomes the model. Research comes first; nothing is built, no account is opened and nothing is downloaded until the owner approves this research's recommendation. Waves 12 and 13 are frozen, not cancelled.\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 START HERE, DO NOT REPEAT IT\n\n- `research/platform-policy-dossier.md`: TikTok Shop affiliate **US** rules (1,000 followers, identity verification, posting limits; a pilot page calling 5,000 the \"traditional requirement\"), TikTok's disclosure rule for Shop creators, TikTok Creator Rewards excluding Vietnam. **Nothing first-party for Vietnam.**\n- `research/language-market-analysis.md` \u00a77.4: Shopee commissions ~1\u20138% by category and a 5% fee from February 2026, both **[THIRD-PARTY]**; Lazada for comparison.\n- `research/ceo-decision-record.md`: `D-018` (individual creator), `D-021` (Vietnamese disclosure law unestablished; affiliate disclosure is a standing rule), `D-002` (every publication approved by the CEO), and `CEO-D-1300` with the decisions it reopens.\n- The delivered pipeline (Waves 1\u201311 on `main`): narration, deterministic graphics drawn by code, provenance of every on-screen fact, owner approval by hash, the held-stage refusal. Wave 12's 3D and shorts work is on an unmerged frozen branch.\n\nEvery claim keeps the labels of `MASTER-PLAN.md` (**[OFFICIAL POLICY]**, **[DOCUMENTED RECOMMENDATION]**, **[INDUSTRY PRACTICE]**, **[INFERENCE]**; **ESTIMATE**, **MEASURED**). Vietnamese first-party pages (TikTok Shop Vietnam Seller/Affiliate Center and Academy, Shopee Affiliate Vietnam, Vietnamese government legal texts) are the standard; a third-party figure is never the sole basis for a rule or a revenue number.\n\n### RESEARCH QUESTIONS\n\n1. **Eligibility and onboarding, per platform (Vietnam).** Age, residency, identity verification (CCCD / eKYC), follower or activity minimums, account type (personal vs business), tax code requirement, payout method and currency, payout threshold and timing. What the CEO must do personally; what an agent may never do (create accounts, handle credentials).\n2. **Commission and fees.** First-party commission structure by category (open vs targeted/seller-set plans on TikTok Shop; Shopee's category rates and extra commissions), attribution window, what voids a commission (returns, cancellations, self-purchase), platform fees and deductions. Every figure dated.\n3. **Content rules.** Each platform's rules for affiliate/shoppable content in Vietnam: disclosure labelling, unoriginal or reused content, AI-generated content labelling, what product footage and claims are allowed (health, cosmetics, supplements, children's products), posting limits, link and live-stream rules, and what gets an account restricted.\n4. **Vietnamese law.** The affiliate/advertising disclosure obligations under the Law on Advertising and its amendments, e-commerce decrees and consumer-protection rules as they apply to an individual affiliate; personal income tax on affiliate commissions (who withholds, at what rate, thresholds) and any household-business registration trigger. Where first-party text cannot settle a point, say so and name it for local counsel; do not infer law.\n5. **Content form options.** At least three, each costed and risk-rated against question 3: (a) real product footage shot by a person (samples: free sample programmes, buying, returning); (b) graphics drawn by code from product images and recorded product facts, reusing the delivered pipeline; (c) a mix. For each: what the platforms' originality rules say, what top-earning Vietnamese affiliate content of that form looks like (observed, cited), the CEO's time per video, and production cost per video. No generative model is assumed; if an option needs one, say so and price it separately.\n6. **Product niche.** Two to four candidate categories for the pilot ranked on first-party commission, demand evidence, return/refund risk, claim and regulatory risk, and fit with options in question 5.\n7. **Economics.** Break-even per month as a formula and as an ESTIMATE with stated assumptions (views per video, click-through, conversion, average order value, commission net of fees and tax), against the existing monthly budget (USD 77.41, metered ceiling USD 34.42). Which assumptions have no source; how the pilot would measure them in its first 30 days.\n8. **What `CEO-D-1300` supersedes.** For `D-005`, `D-007`, `D-008`, `D-022` and `D-021`: keep, amend or supersede, each with its reason, for the owner to rule. What of the delivered pipeline the pilot reuses, and what Waves 12/13 would contribute if unfrozen.\n\n### DELIVERABLE\n\nA research report in this folder with a **recommendation**: platforms and order (TikTok Shop, Shopee, or both, and why), the content form, the niche, the first 30-day pilot plan with the measurements it takes, the CEO's personal actions (account, verification, samples), the open legal points for counsel, and the decisions the owner must take. Options and a recommendation, never a single unexamined path.\n\n### NOT IN THIS RESEARCH\n\nOpening any account, signing up for any programme, contacting sellers, buying samples, downloading tools or assets, building code, or publishing. Any platform other than TikTok and Shopee in Vietnam except as a short comparison. Changes to the frozen Wave 12 branch or to MC-14.\n\n### BINDING CONSTRAINTS CARRIED FORWARD\n\n1. **Nothing publishes**; `D-002` per-publication approval stands.\n2. The CEO is the individual creator and carries the legal position (`D-018`); agents never create accounts or touch credentials.\n3. Budget USD 77.41 per month, metered ceiling USD 34.42, unless the research recommends a change for the owner to approve.\n4. No invented figure on screen or in the report: every number is sourced or labelled ESTIMATE with its arithmetic.\n5. Affiliate disclosure is a standing rule (`D-021`) until Vietnamese law is established.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Give every agent its own staging folder, never brief a non-implementing role to write a repository file, and require the list whenever an agent claims a finding covers \"every\" case.\n\n## Acceptance criteria\n\n_Not provided in the ticket. To be defined and approved at the research-framing gate._",
+        "digest": "sha256:173eaa7f033a6541872576451bf31293"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-15-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-15-business-intent.md",
+        "text": "# Business intent for MC-15 (the owner's decision, verbatim from research/ceo-decision-record.md)\n\n## CEO-D-1300 \u2014 Pivot: affiliate revenue first, TikTok Shop and Shopee in Vietnam as the pilot\n\n**The CEO's own decision, 2026-10-26**, after MC-14 (PR #13) merged.\n\n1. The CEO judges that the video the company has been building (long narrated YouTube explainers, then 3D animation\n   drawn by code) **cannot earn money** on the path the plan set: advertising revenue waits on partner-programme\n   thresholds the company has not started toward.\n2. **The company focuses on affiliate revenue.** The pilot is **TikTok (TikTok Shop affiliate) and Shopee (Shopee\n   Affiliate) in Vietnam**, built as a model before anything else is expanded.\n3. **Research first**: the pilot is scoped by a research ticket (`MC-15`, `pilot-affiliate-vn/00-ticket-mc-15.md`,\n   routed as `/research`) whose recommendation the CEO approves before any build, account or download.\n4. **The visual form is left to the research** to propose with options (real product footage, graphics drawn by code,\n   or a mix), weighed against each platform's originality and disclosure rules and against cost; the CEO chooses.\n5. **Wave 12 (MC-13) and Wave 13 (MC-14) are frozen, not cancelled.** The MC-13 feature branch stays as committed and\n   unmerged; MC-14 stays on `main` as a deferred ticket. Their pipeline (deterministic rendering drawn by code,\n   provenance, owner approval by hash) is available to the pilot if the research recommends it.\n\n**What this reopens, and does not yet replace** (the research must say which it supersedes, for the CEO to rule):\n`D-005` (advertising + affiliate; affiliate becomes the lead line), `D-007` (YouTube only at launch), `D-008` (one\nEnglish YouTube channel first), `D-022` (the first item carries no affiliate link) and the Vietnamese disclosure gap\ncarried by `D-021`. **Unchanged:** `D-002` (the CEO approves every publication individually), `D-018` (the CEO operates\nas an individual creator and carries the legal position), the monthly budget and its metered ceiling, and that agents\nnever create platform accounts or handle the CEO's credentials.\n\nDecision block: `CEO-D-1300`\u2013`CEO-D-1399`, `CEO-C-1300`\u2013`CEO-C-1399`.\n\n---",
+        "digest": "sha256:9402a0dea67c9b146f1f3c75bdc1e80c"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the intent being framed: a business intent for a feature or change, a problem statement for an `investigate` run, or a requirement input where requirements already exist in draft. Without one there is nothing to frame, and framing anyway would mean recording this agent's own reading of what the business wanted."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [],
+  "task_context": {
+    "path": "runs/run-8d7e366341bf/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:3cb482570b0abc7ad67d9fd0999b4e9b",
+    "bytes": 3071,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "research-framing"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-26T10:51:36Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "required",
+        "read_reason": "this artifact names the gate it is evidence for and its owners"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/research.md",
+        "digest": "sha256:5cb31ed60a86d70cb6b1128a8280e62a",
+        "supplies": "framework-context",
+        "bytes": 7599,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/requirement-framing.md",
+        "digest": "sha256:3e6ccce2ba36928d458a500b643283aa",
+        "supplies": null,
+        "bytes": 4839,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "domain-model/agent-specification.md",
+        "digest": "sha256:ce2f6da48f89ce2732a3a198a6513205",
+        "supplies": null,
+        "bytes": 2277,
+        "read": "on-demand",
+        "read_reason": "the vocabulary and lifecycle the contracts are stated in; consult when a contract term is unclear"
+      },
+      {
+        "path": "skills/business/domain-modeling.md",
+        "digest": "sha256:256460c4d60b91f95985534e36f997db",
+        "supplies": null,
+        "bytes": 1414,
+        "read": "required",
+        "read_reason": "skill S02 is required for this phase"
+      }
+    ],
+    "context_digest": "sha256:4f9e487720a6b4c8ba6b207522451ff8",
+    "input_digest": "sha256:4ce44ea4cf2b08c1aee25150130fa9be",
+    "inputs": [
+      {
+        "type": "research-question",
+        "reference": "runs/inputs/mc-15-research-question.md",
+        "source_file": ".claude/runs/inputs/mc-15-research-question.md",
+        "digest": "sha256:173eaa7f033a6541872576451bf31293"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-15-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-15-business-intent.md",
+        "digest": "sha256:9402a0dea67c9b146f1f3c75bdc1e80c"
+      }
+    ],
+    "unnarrowed": [
+      "domain-model/agent-specification.md",
+      "skills/business/domain-modeling.md",
+      "templates/requirement-framing.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "skills/business/domain-modeling.md",
+      "templates/requirement-framing.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "read_on_demand": [
+      "domain-model/agent-specification.md",
+      "workflows/research.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 108531,
+    "bytes_required": 14209,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": null,
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md",
+      "runs/run-8d7e366341bf/states/research-framing/result-envelope.json"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": false,
+      "purpose": "none. Every input this agent reasons over is supplied through the invocation envelope or read from the frozen context slice.",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "any repository modification",
+        "any command whose result would enter the framing without a recorded basis"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution",
+      "external system, repository, or ticketing access",
+      "write, modify, or review production code or tests",
+      "define the technical approach, structure, or architecture decision, which belongs to architect",
+      "record or supersede an architecture decision record",
+      "decompose work into tasks, estimates, or a sequence, which belongs to planner",
+      "state an implementation mechanism as though it were a business rule",
+      "record a requirement the supplied inputs do not support",
+      "finalize two requirements that contradict each other",
+      "omit a known edge case from the requirement set",
+      "set an acceptance threshold or design a verification method, which belongs to product-owner and qa",
+      "decide a gate that assesses evidence this agent produced",
+      "declare release readiness, a delivery date, or a merge decision",
+      "modify committed run evidence or a governance record",
+      "access external systems directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "analyze a supplied business intent and state the problem it is meant to solve",
+        "decompose an intent into functional and non-functional requirements",
+        "align every requirement to a declared target outcome",
+        "state the acceptance intent a requirement must later be verified against",
+        "draw and record the boundary of the framing, with a revisit trigger per exclusion",
+        "record an assumption with the basis it rests on and the impact of it being wrong",
+        "record an ambiguity as an open question with its owner",
+        "lower the framing verdict where the inputs do not support a complete framing",
+        "decide a gate over evidence another role produced"
+      ],
+      "prohibited": [
+        "write, modify, or review production code or tests",
+        "define the technical approach, structure, or architecture decision, which belongs to architect",
+        "record or supersede an architecture decision record",
+        "decompose work into tasks, estimates, or a sequence, which belongs to planner",
+        "state an implementation mechanism as though it were a business rule",
+        "record a requirement the supplied inputs do not support",
+        "finalize two requirements that contradict each other",
+        "omit a known edge case from the requirement set",
+        "set an acceptance threshold or design a verification method, which belongs to product-owner and qa",
+        "decide a gate that assesses evidence this agent produced",
+        "declare release readiness, a delivery date, or a merge decision",
+        "modify committed run evidence or a governance record",
+        "access external systems directly"
+      ],
+      "repositoryWrites": {
+        "allowed": false,
+        "scope": "none. This agent writes its own artifact and result envelope at the paths the invocation envelope names, and nothing else in the repository.",
+        "rationale": "Framing is an act of statement, not of change. Every requirement this agent records is read and acted on by a later phase, so writing repository content here would make the agent an author of the work its own framing governs."
+      },
+      "commandExecution": {
+        "allowed": false,
+        "purpose": "none. Every input this agent reasons over is supplied through the invocation envelope or read from the frozen context slice.",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "any repository modification",
+          "any command whose result would enter the framing without a recorded basis"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical inputs and an identical context snapshot must produce the same outcome set, the same requirement set, the same requirement types, the same acceptance intent set, the same assumption and open-question sets, and the same framing verdict, in the same order.",
+      "identifierSchemes": {
+        "targetOutcomes": "O-<zero-padded-sequence>",
+        "requirements": "R-<zero-padded-sequence>",
+        "acceptanceIntent": "AI-<zero-padded-sequence>",
+        "framingBoundaries": "B-<zero-padded-sequence>",
+        "assumptions": "AS-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "orderingRule": "Target outcomes keep the order the supplied intent states them in. Requirements are ordered by the outcome they serve, then by priority descending; ties break toward the lower requirement text in lexical order. Acceptance intent follows the order of the requirement it bounds.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied intent, context, or requirement input."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "requirement-framing.md",
+    "artifact_path": "runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md",
+    "template_ref": "templates/requirement-framing.md",
+    "contract_ref": "agents/business-analyst/output.md",
+    "quality_ref": "agents/business-analyst/quality.md",
+    "validator": "requirement_framing_validator",
+    "result_envelope_path": "runs/run-8d7e366341bf/states/research-framing/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-26T10:51:36Z",
+  "model_tier": {
+    "tier": "light",
+    "host_hint": "haiku",
+    "basis": "declared light for research/research-framing in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 66204,
+    "modules_core_bytes": 32697,
+    "slice_all_bytes": 108531,
+    "slice_required_bytes": 14209,
+    "inputs_bytes": 9386,
+    "upstream_full_bytes": 0,
+    "upstream_read_first_bytes": 0,
+    "task_context_bytes": 3071,
+    "fixed_bytes": 14507,
+    "legacy_estimate_bytes": 198628,
+    "progressive_estimate_bytes": 73870,
+    "legacy_estimate_tokens": 49657,
+    "progressive_estimate_tokens": 18467,
+    "savings_pct": 62.8
+  }
+}

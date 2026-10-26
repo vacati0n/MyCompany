@@ -1,0 +1,36 @@
+{
+  "run_id": "run-8d7e366341bf",
+  "correlation_id": "corr-8d7e366341bf",
+  "command_id": "research",
+  "workflow_id": "research",
+  "workflow_version": "1.1.0",
+  "intent": "feature",
+  "requester": "operator",
+  "priority": "standard",
+  "policy_profile": "framework-default",
+  "runtime_version": "0.11.1",
+  "phases": [
+    "research-framing",
+    "technical-validation",
+    "option-synthesis",
+    "recommendation-draft",
+    "findings-publication"
+  ],
+  "inputs": [
+    {
+      "type": "research-question",
+      "reference": "runs/inputs/mc-15-research-question.md",
+      "digest": "sha256:173eaa7f033a6541872576451bf31293"
+    },
+    {
+      "type": "business-intent",
+      "reference": "runs/inputs/mc-15-business-intent.md",
+      "digest": "sha256:9402a0dea67c9b146f1f3c75bdc1e80c"
+    }
+  ],
+  "submitted_at": "2026-10-26T10:51:27Z",
+  "knowledge_loop": {
+    "hydration": "on",
+    "basis": "hydration_default 'on' in config/knowledge-policy.json at plan time"
+  }
+}

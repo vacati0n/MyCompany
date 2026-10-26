@@ -1,0 +1,276 @@
+schema: framework.runtime/task-context.v1
+task_id: run-8d7e366341bf
+command: research
+workflow: research v1.1.0
+run_status: Completed
+updated_at: '2026-10-26T12:44:06Z'
+objective: 'Source: local://research/ceo-decision-record.md#ceo-d-1300 Issue type: Research Priority: Highest Labels: research,
+  affiliate, tiktok-shop, shopee, vietnam, pilot, pivot Routed as: /research AFFILIATE PILOT RESEARCH — TIKTOK SHOP AND SHOPEE,
+  VIETNAM The owner judged that the video the company has built toward cannot earn money on the path the plan set, and decided
+  that the company focuses on affiliate revenue, with TikTok Shop affiliate and Shopee Affiliate in Vietnam as the pilot that
+  becomes the model. Research comes first; nothing is built, no account is opened and nothing is downloaded until the owner
+  approves this research''s recommendation. Waves 12 and 13 are frozen, not cancelled.'
+inputs:
+- type: research-question
+  reference: runs/inputs/mc-15-research-question.md
+  digest: sha256:173eaa7f033a6541872576451bf31293
+- type: business-intent
+  reference: runs/inputs/mc-15-business-intent.md
+  digest: sha256:9402a0dea67c9b146f1f3c75bdc1e80c
+relevant_agents:
+- phase: research-framing
+  agent: business-analyst
+  status: completed
+  required_skills:
+  - S02
+- phase: technical-validation
+  agent: context-agent
+  status: completed
+  required_skills:
+  - S01
+  - S03
+  - S06
+  - S11
+- phase: option-synthesis
+  agent: tech-lead
+  status: completed
+  required_skills:
+  - S01
+  - S08
+  - S09
+- phase: recommendation-draft
+  agent: tech-lead
+  status: completed
+  required_skills:
+  - S02
+  - S08
+- phase: findings-publication
+  agent: documentation
+  status: completed
+  required_skills:
+  - S10
+  - S11
+completed_phases:
+- phase: research-framing
+  agent: business-analyst
+  artifact: runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md
+  digest: sha256:8772d82c9c62a4da446f402b52733aba
+  validation: pass 36/36
+  attempts: 1
+- phase: technical-validation
+  agent: context-agent
+  artifact: runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md
+  digest: sha256:d7702669bdc9bd952b573fede635bb88
+  validation: pass 31/31
+  attempts: 2
+- phase: option-synthesis
+  agent: tech-lead
+  artifact: runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md
+  digest: sha256:36e0d7afbc4af571796312032461dd08
+  validation: pass 33/33
+  attempts: 1
+- phase: recommendation-draft
+  agent: tech-lead
+  artifact: runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md
+  digest: sha256:a5d0c030aa51a48892b6bc73cc536da7
+  validation: pass 33/33
+  attempts: 1
+- phase: findings-publication
+  agent: documentation
+  artifact: runs/run-8d7e366341bf/states/findings-publication/artifacts/release-note.md
+  digest: sha256:cd86f719976a47e022cefe21024f8a74
+  validation: pass 34/34
+  attempts: 1
+gates:
+- gate: Framing Gate
+  closes: research-framing
+  decision: approved
+  owner_role: product-owner
+  decided_by: CEO vuhoangcao
+- gate: Technical Validity Gate
+  closes: technical-validation
+  decision: approved
+  owner_role: architect
+  decided_by: architect subagent (host-dispatched by orchestrator)
+- gate: Recommendation Gate
+  closes: recommendation-draft
+  decision: approved
+  owner_role: orchestrator
+  decided_by: orchestrator, on the CEO's explicit approval in chat 2026-10-26
+artifacts:
+  research-framing: runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md
+  technical-validation: runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md
+  option-synthesis: runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md
+  recommendation-draft: runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md
+  findings-publication: runs/run-8d7e366341bf/states/findings-publication/artifacts/release-note.md
+parallel_groups:
+- - research-framing
+- - technical-validation
+- - option-synthesis
+- - recommendation-draft
+- - findings-publication
+assumptions:
+- 'AS-001: The Vietnamese first-party pages named in the research question are the correct first-party set | The research
+  question names them as the evidence standard | medium'
+- 'AS-002: The Shopee commission range and the 5% fee from February 2026 are third-party figures to be re-verified, no...
+  | The research question labels them third-party and cites the language-market analysis | low'
+- 'AS-003: The US-only TikTok Shop rules in the platform-policy dossier do not apply to Vietnam | The research question states
+  the dossier holds nothing first-party for Vietnam | medium'
+- 'AS-004: The repository files the research question cites contain what it describes | The research question''s summary;
+  those files are outside the frozen context slice and were not read here (Q... | medium'
+- 'AS-005: The monthly budget of USD 77.41 and metered ceiling of USD 34.42 are current | Both supplied inputs state the same
+  figures; no dated source is supplied | medium'
+- 'AS-006: The CEO is the sole individual creator for the pilot | The individual-creator decision, as the research question
+  states it | high'
+- 'AS-007: The named Vietnamese legal texts (advertising law and amendments, e-commerce decrees, consumer protection r...
+  | The research question names them | medium'
+- 'AS-008: The delivered pipeline has the capabilities the research question lists (narration, deterministic graphics,...
+  | The research question''s description; not verified here | medium'
+open_questions:
+- 'Q-001: Through what channel does Vietnamese first-party evidence enter the run? The technical-validation role is p... |
+  yes | orchestrator'
+- 'Q-002: What are the acceptance criteria for the research, which the research question defers to this gate, includi... |
+  yes | product-owner'
+- 'Q-003: What revenue target would make the pilot count as earning? None is supplied, so the break-even has no targe... |
+  no | CEO'
+- 'Q-004: Which budget figure binds the pilot spend, the monthly budget of USD 77.41 or the metered ceiling of USD 34... |
+  no | CEO'
+- 'Q-005: Is the pilot content in Vietnamese or English? The language is not stated, and a standing decision sets the... |
+  no | CEO'
+- 'Q-006: The CEO''s residency, age, and tax status are not supplied, so the eligibility conditions in R-001 cannot be...
+  | no | CEO'
+- 'Q-007: Does the downstream input role of this artifact in technical-validation accept it? A recorded framework def... |
+  no | orchestrator'
+- 'Q-008: The current text of the five standing decisions and the current state of the delivered pipeline and frozen... |
+  no | context-agent'
+- 'Q-009: How do the Framing Gate decision and the answers to these questions reach the technical-validation dispatch... |
+  no | orchestrator'
+- 'Q-001: Does Shopee''s competing-platform clause bind one person who also runs a TikTok Shop affiliate account, or o...
+  | yes | local counsel; CEO to request Shopee confirmation'
+- 'Q-002: Is an affiliate account an influencer under Advertising Law Art. 15a(3) through Decree 55/2024 Art. 2(1), a... |
+  yes | local counsel; further collection of the decree text'
+- 'Q-003: Which PIT rate applies to affiliate commission, 2 or 5 percent, on what legal basis, and is Letter 7403 con... |
+  yes | local counsel; further collection of the letter text'
+- 'Q-004: Does the platform withhold PIT on the CEO''s commission, from what date, under which decree, and in what ord...
+  | yes | local counsel; further collection of decree texts'
+- 'Q-005: Do either platform''s AI-label rules, or Law 134/2025, reach code-drawn graphics that are not generative? | no |
+  local counsel; further collection'
+- 'Q-006: What are the CEO''s age, tax-code status, CCCD chip and NFC status, and existing accounts? | yes | CEO'
+- 'Q-007: Which commission settlement timing applies (7, 3, 15 days or day 3 or 15), and what do the 2024 withdrawal... |
+  no | further collection (orchestrator to route)'
+- 'Q-008: What is Shopee''s current category rate table, and is TikTok an approved channel for an affiliate account? | no
+  | CEO (view or Shopee support)'
+- 'Q-009: Can the cited pages and texts be captured as read on 2026-10-26? None is in the pack, so first-party observ... |
+  yes | further collection (orchestrator to route, with documented capture)'
+- 'Q-010: What is the owner''s keep, amend or supersede ruling on each reopened standing decision, and what is each en...
+  | no | CEO'
+- 'Q-011: Is the Framing Gate acceptance criteria and the operator''s answers recorded in the repository, and is the s...
+  | no | orchestrator, with product-owner'
+- 'Q-012: What are TikTok''s Link-Share Only limits and Creator Health Rating point values, and may faceless or brand-...
+  | no | further collection (orchestrator to route)'
+- 'Q-013: What are the penalties under the amended advertising law; does Shopee''s disclosure gap matter; are TikTok S...
+  | no | local counsel'
+- 'Q-014: Is reuse of seller-supplied product footage permitted on each platform? | no | local counsel; CEO to seek seller
+  permission'
+- 'Q-015: What observed Vietnamese examples and performance exist by content form, what is the Shopee-specific affili... |
+  no | further collection (orchestrator to route)'
+- 'Q-016: What are the Shopee KOL DN and MCN thresholds, and how often do small KOC accounts receive PPV or PPLS invi... |
+  no | further collection (orchestrator to route)'
+- 'Q-017: The business-intent input was not read; the delivered pipeline and frozen Wave 12 and 13 state were not exa... |
+  no | orchestrator'
+- 'Q-001: Does the Shopee competitor clause (E-104) bar a creator who also earns on TikTok Shop? Owner: counsel or Shopee.
+  Affects O-001, RK-001.'
+- 'Q-002: Does Art. 15a(3) (E-046) apply to the CEO as an affiliate creator? Owner: counsel. Affects RK-002 and sample cost.'
+- 'Q-003: Which PIT rate applies and who withholds it? Owner: counsel. Affects RK-003 and the net factor.'
+- 'Q-004: Is Shopee Video a permitted channel for a KOC with no followers, and does it earn commission there? Owner: Shopee,
+  asked by the CEO. Affects O-003, RK...'
+- 'Q-005: Do code-drawn overlays from recorded facts need an AI label? Owner: counsel or platform. Affects O-006, O-007, RK-009.'
+- 'Q-006: May seller product images be used in overlays? Owner: Shopee or the seller. Affects O-006, RK-010.'
+- 'Q-007: What category commission rates apply to the chosen niches? Owner: CEO from the login-gated table. Affects RK-008
+  and the break-even.'
+- 'Q-008: Will the owner fund samples from the standing line or raise the budget? Owner: CEO. Affects RK-014.'
+- 'Q-009: Does the delivered pipeline render vertical video with Vietnamese glyphs? Owner: architect. Affects O-007 overlays,
+  RK-016.'
+- 'Q-001: Does E-104 bind the person on unregistered channels, and may the CEO later run TikTok Shop while a Shopee account
+  is active? Owner: counsel, with Shop...'
+- 'Q-002: Does Art. 15a(3) (E-046) apply to the CEO as an affiliate creator? Owner: counsel. Affects RK-002 and sample cost
+  after the pilot.'
+- 'Q-003: Is Shopee affiliate commission business income for the CEO, at what PIT rate, who withholds, and must he sign up
+  as a business individual? Owner: coun...'
+- 'Q-004: Do Shopee Video product tags attribute commission to a new KOC, and at what channel rate? Owner: CEO in-app, else
+  Shopee support. Affects O-003, RK-007.'
+- 'Q-005: Do code-drawn overlays from recorded facts need the "Video tạo bởi AI" label? Owner: counsel or Shopee. Affects
+  O-006, O-007, RK-009.'
+- 'Q-006: May seller product images be used in overlays? Owner: counsel, Shopee or the seller. Affects O-006, RK-010.'
+- 'Q-007: What category commission rates apply to the chosen products? Owner: CEO from the login-gated table. Affects RK-008
+  and the break-even.'
+- 'Q-008: Will the owner fund samples from the standing line or raise the budget? Owner: CEO. Affects RK-014, RK-002.'
+- 'Q-010: Does the five-page re-capture discharge the C12 re-capture precondition, given that E-086, E-088, E-097, E-098,
+  E-103, E-107 and E-109 were not re-cap...'
+- 'Q-011: Which 30-day target tier does the CEO choose? Owner: CEO. Affects the day-30 reading.'
+- 'Q-012: What disclosure form and penalties apply under the amended advertising law for Shopee Video posts? Owner: counsel.
+  Affects EC-002, D-021 part 1.'
+objectives:
+- 'Decision to support: The owner''s decision whether and how to run an affiliate pilot on TikTok Shop and Shopee Affiliate
+  in Vietnam, and the architect''s Techn...'
+- 'Key question: Do the staged Vietnamese first-party rules and legal texts settle the platform, eligibility, payout, commission,
+  content and tax facts that the...'
+- 'Scope boundaries: Inside: validation of the staged TikTok Shop VN and Shopee VN pack and its cited Vietnamese legal and
+  tax texts against the framing''s eligi...'
+affected_areas:
+  determinable: true
+  declared: []
+  triggered:
+    react-frontend:
+    - source: artifact:option-synthesis
+      term: jsx
+    - source: artifact:recommendation-draft
+      term: jsx
+    database:
+    - source: artifact:findings-publication
+      term: database
+    performance:
+    - source: artifact:technical-validation
+      term: profile
+    security:
+    - source: artifact:technical-validation
+      term: permission
+    - source: artifact:option-synthesis
+      term: credential
+    - source: artifact:recommendation-draft
+      term: credential
+  not_triggered:
+  - avalonia-ui
+  sources_scanned:
+  - input:research-question
+  - input:business-intent
+  - artifact:research-framing
+  - artifact:technical-validation
+  - artifact:option-synthesis
+  - artifact:recommendation-draft
+  - artifact:findings-publication
+relevant_skills:
+  research-framing:
+    S02: required
+  technical-validation:
+    S01: required
+    S03: required
+    S06: required
+    S11: required
+  option-synthesis:
+    S01: required
+    S08: required
+    S09: required
+  recommendation-draft:
+    S02: required
+    S08: required
+  findings-publication:
+    S10: required
+    S11: required
+repository_context:
+  relevant_modules: []
+  relevant_files: []
+  rescan_required_when:
+  - the scope or the accepted design changes
+  - a dependency this context does not name is discovered
+  - a named module or file no longer exists at the recorded path

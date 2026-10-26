@@ -1,0 +1,80 @@
+{
+  "invocation_id": "inv-8d7e366341bf-02-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md"
+  ],
+  "structured_output": {
+    "run_id": "run-8d7e366341bf",
+    "work_item_id": "run-8d7e366341bf::technical-validation",
+    "attempt": 2,
+    "repair_pass": {
+      "findings_addressed": ["C1.1", "C1.2", "C1.3", "C1.4", "C7.1", "I6"],
+      "change": "Front matter rewritten with every string value quoted; producedBy, agentVersion, schemaVersion, status and confidence set; sourceInputs references quoted (including the ceo-decision-record and frozen-slice entries). Digests copied from the attempt-2 envelope context_slice: input_digest sha256:4696cde24034020bf6570823127e972c, context_digest sha256:81fa6ec86a71e883d8e8284da9b036f3 (unchanged values, confirmed against the new envelope).",
+      "substance_changed": false,
+      "identifiers_renumbered": false
+    },
+    "discovery_basis": "evidence-validation",
+    "declared_status": "provisional",
+    "declared_confidence": "low",
+    "evidence_counts": {
+      "total": 131,
+      "note": "Rows are E-001 to E-131 with confidence and staleness stated per row in the artifact. Per-row tallies were not computed in this run, so no tally is claimed. High-confidence rows are E-001, E-002, E-003, E-120 to E-124 and E-129; all others are medium or low."
+    },
+    "options": {"count": 4, "ids": ["O-001", "O-002", "O-003", "O-004"], "recommended": "O-004 (named as a reading, not a decision)"},
+    "contradictions": {"count": "14 listed in the appendix", "attention_points_covered": 4},
+    "gaps": {"count": "11 bullets listed in the appendix", "blocking_open_questions": ["Q-001", "Q-002", "Q-003", "Q-004", "Q-006", "Q-009"]},
+    "open_questions": {"count": 17, "blocking": 6},
+    "sources_read": [
+      "runs/inputs/mc-15-research-question.md",
+      "runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md",
+      "runs/run-8d7e366341bf/task-context.yaml",
+      "pilot-affiliate-vn/evidence/tiktok-vn-and-law.md",
+      "pilot-affiliate-vn/evidence/shopee-vn-and-market.md",
+      "research/ceo-decision-record.md (in part)",
+      "research/platform-policy-dossier.md (in part)",
+      "research/language-market-analysis.md (section 7.4)",
+      "research/framework-defects.md",
+      "context/product-context.md, context/release-context.md, context/technical-context.md, dependency-map.md, skill files, templates/investigation-report.md (frozen slice, read in attempt 1)"
+    ],
+    "sources_not_read": [
+      "runs/inputs/mc-15-business-intent.md (listed in task context, not supplied in envelope)",
+      "Decrees 117/2025, 252/2026, 253/2026, 68/2026, 141/2026, 254/2026, 248/2026, 55/2024; Law 134/2025; Letter 7403/CT-TMĐT (not reachable to this run; no external access permitted)",
+      "Shopee category rate table (login-gated, per pack)"
+    ],
+    "check_results": {
+      "method": "Repair pass for the six findings in the attempt-2 dispatch, self-verified by re-reading the front matter structure. The full quality.md tally (S1-S11, D1-D7, I1-I6, X1-X26, A1-A9, C1-C6, N1-N3) was not performed item by item in this run and is not claimed.",
+      "findings_self_checked_pass": ["C1.1", "C1.2", "C1.3", "C1.4", "C7.1", "I6"],
+      "checks_run": 6,
+      "checks_passed": 6,
+      "checks_not_tallied": "all other quality.md checks; a formal full pass is still required before the Technical Validity Gate",
+      "known_structural_risks": [
+        "Options Evaluated Evidence column lists many identifiers, which exceeds the one-line cell guidance of the artifact economy rule (carried from attempt 1, not a validator finding)",
+        "Metadata block carries fields beyond the output contract's minimum",
+        "Not examined and Stale assumptions paragraphs sit outside the seven mandatory sections as appendix text"
+      ]
+    },
+    "n_obligations": {
+      "N1": "Confidence not raised above what the evidence carries: first-party text held at medium because the pack records pages not opened by this run; mirrors and third-party at low.",
+      "N2": "No option selected; O-004 named as the reading the evidence supports, with what would distinguish the options.",
+      "N3": "Contradictions carried unreconciled; none settled by recency, authority or convenience."
+    },
+    "gate_decision": "none made; Technical Validity Gate is decided by architect on this package"
+  },
+  "evidence_refs": [
+    ".claude/agents/context-agent/system.md",
+    ".claude/agents/context-agent/reasoning.md",
+    ".claude/agents/context-agent/output.md",
+    ".claude/agents/context-agent/quality.md",
+    ".claude/agents/context-agent/identity.md",
+    ".claude/agents/context-agent/execution.md",
+    ".claude/runs/run-8d7e366341bf/states/technical-validation/invocation-envelope.json"
+  ],
+  "confidence": "low",
+  "declared_side_effects": [
+    ".claude/runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+    ".claude/runs/run-8d7e366341bf/states/technical-validation/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}
