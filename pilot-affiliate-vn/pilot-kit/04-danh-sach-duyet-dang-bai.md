@@ -1,7 +1,7 @@
 # Danh sách duyệt từng bài đăng (D-002)
 
 - CEO duyệt **riêng từng video** theo danh sách này (`D-002`). **Thiếu một mục thì không đăng.**
-- Căn cứ: phụ lục 1 mục 3.3 (sửa theo CEO-D-1303), quy tắc R1 đến R12, điều kiện P1 đến P8, CEO-D-1301, CEO-D-1302 (OD14 đến OD18).
+- Căn cứ: phụ lục 1 mục 3.3 (sửa theo CEO-D-1303 và CEO-D-1304), quy tắc R1 đến R12, điều kiện P1 đến P8, CEO-D-1301, CEO-D-1302 (OD14 đến OD18).
 - In một bản cho mỗi video, hoặc chép bảng vào `05-bang-do-30-ngay.md` dòng của video đó.
 
 Mã video: V-__  Ngày đăng dự kiến: Ngày __ (____-__-__)  Sản phẩm: ______________
@@ -31,18 +31,19 @@ Mã video: V-__  Ngày đăng dự kiến: Ngày __ (____-__-__)  Sản phẩm: 
 | B4 | Không có tuyên bố về sức khỏe, da, tóc hay cơ thể. Không có bác sĩ, người nổi tiếng hay quan chức. | R5, E-031 | ☐ |
 | B5 | Không nhắc giá, khuyến mãi, sàn khác (TikTok, Lazada, Tiki, Sendo). | E-104; mẫu kịch bản Phần C | ☐ |
 | B6 | Người dẫn là người dẫn duy nhất đã đăng ký (cùng mã trong công cụ). | R3, R5, OD18 | ☐ |
-| B7 | Người dẫn nói câu công bố **ở đầu** video (R11) và **nói lại ở cuối** (bộ tài liệu thêm, R11 không yêu cầu). | R11; mẫu kịch bản | ☐ |
+| B7 | Bản ghi của CEO nói câu công bố **ở đầu** video (R11) và **nói lại ở cuối** (bộ tài liệu thêm, R11 không yêu cầu). | R11; mẫu kịch bản | ☐ |
 | B8 | Chữ "Video tạo bởi AI · Có liên kết tiếp thị" có trên màn hình **suốt video**. | R11 | ☐ |
 | B9 | Môi khớp, thanh điệu đúng, số và đơn vị đọc đúng, không méo mặt, răng, tay; khung dọc 9:16. | Bài thử mục 2.4 | ☐ |
 | B10 | Video được tạo riêng sau khi kịch bản này được duyệt; không tạo theo lô, không qua API. | R9 | ☐ |
 | B11 | Đếm: tổng số video sau lần đăng này ≤ 12; hôm nay chưa đăng video nào; sản phẩm này có ≤ 2 video và hai video có trọng tâm khác nhau. | R9, R10 | ☐ |
 | B12 | Sản phẩm không thuộc ngành không có hoa hồng (sữa công thức, vitamin trẻ em, núm vú, bình sữa, thuốc OTC, rượu trên 15%) và không phải mỹ phẩm hay thực phẩm chức năng. | E-103, CEO-D-1301 mục 1 | ☐ |
+| B13 | Lời thoại là **bản ghi giọng thật của CEO**, ghi mới cho video này, đọc đúng kịch bản đã duyệt (Phần F của mẫu kịch bản). Không dùng giọng máy (TTS), không Vbee, không nhân bản giọng (phần nhân bản: đề xuất mặc định, chờ CEO xác nhận). | CEO-D-1304 | ☐ |
 
 ## C. Khi đăng (CEO tự làm trong ứng dụng)
 
 | # | Mục | Căn cứ | ☐ |
 |---|---|---|---|
-| C1 | **Bật nhãn "Video tạo bởi AI"** của Shopee. (Nhãn tự động "Video có thể chứa nội dung do AI tạo ra" **không** thay được.) Lần đầu: chụp màn hình bước bật nhãn. | E-108, R3, R11, mục 2.6 | ☐ |
+| C1 | **Bật nhãn "Video tạo bởi AI"** của Shopee — vẫn bắt buộc dù giọng là của CEO, vì gương mặt là AI (CEO-D-1304). (Nhãn tự động "Video có thể chứa nội dung do AI tạo ra" **không** thay được.) Lần đầu: chụp màn hình bước bật nhãn. | E-108, R3, R11, mục 2.6 | ☐ |
 | C2 | Dòng đầu chú thích là câu công bố. | R11 | ☐ |
 | C3 | Gắn thẻ đúng sản phẩm, đúng phân loại như trong hình. | R12, E-109 | ☐ |
 | C4 | Không đặt lịch; không đăng lại lên tài khoản hay nền tảng khác. | phụ lục 3.2; OD18 | ☐ |

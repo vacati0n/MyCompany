@@ -5,7 +5,7 @@
 - **OD17: luôn ghi riêng hai loại** — "đang chờ" (đơn đã ghi nhận, chưa hoàn tất) và "đã ghi có" (hoa hồng hợp lệ đã được ghi có). Không cộng hai loại vào một ô. Nếu Ngày 30 chỉ có "đang chờ": kết quả bậc 2 là **"chưa xác định"**, đọc lại vào **Ngày 45**.
 - Tên các chỉ số mà ứng dụng Shopee Affiliate hiển thị chưa được kiểm (UNVERIFIED). Lần đầu đăng nhập, CEO ghi tên đúng của các mục "đang chờ" và "đã ghi có" vào Phần A.
 
-Ngày 1 = ____-__-__ (ngày CEO đăng ký Shopee Affiliate).
+Ngày 1 = ____-__-__ (ngày CEO đăng ký Shopee Affiliate). CEO báo đã mở tài khoản Shopee ngày 2026-10-26 (CEO-D-1304; agent chưa thấy). Nếu đó là đăng ký Shopee Affiliate dạng KOC cá nhân thì Ngày 1 = 2026-10-26; CEO ghi rõ ở Phần A.
 
 ---
 
@@ -13,6 +13,7 @@ Ngày 1 = ____-__-__ (ngày CEO đăng ký Shopee Affiliate).
 
 | Mục | Giá trị | Nguồn hoặc ghi chú |
 |---|---|---|
+| Tài khoản mở ngày 2026-10-26 là Shopee Affiliate dạng KOC cá nhân? (có / không; nếu không, ngày đăng ký Affiliate) | | CEO-D-1304, CEO tự báo |
 | Tên mục "đang chờ" trong ứng dụng | | CEO ghi lần đầu |
 | Tên mục "đã ghi có" trong ứng dụng | | CEO ghi lần đầu |
 | Ngày gửi câu hỏi luật sư | | `01-cau-hoi-luat-su.md` |
@@ -20,8 +21,8 @@ Ngày 1 = ____-__-__ (ngày CEO đăng ký Shopee Affiliate).
 | Ngày gửi câu hỏi Shopee | | `02-cau-hoi-shopee.md` |
 | Ngày và nội dung trả lời Q-013, Q-014, Q-015, Q-004, câu 5 (thời hạn đơn), Q-018 | | |
 | Quyết định OD16 của CEO (nếu chưa có trả lời tới Ngày 10): chấp nhận / không | | ghi ngày |
-| Bài thử T1: ngày, đạt/trượt từng tiêu chí 1–5 | | phụ lục 2.4 |
-| Bài thử T2 (nếu cần): ngày, kết quả | | |
+| Bài thử T1 (HeyGen, bản ghi âm của CEO): ngày; công cụ có nhận tệp ghi âm không; đạt/trượt từng tiêu chí 1–5 | | phụ lục 2.4; CEO-D-1304 |
+| Bài thử T2 (D-ID, cùng bản ghi âm): ngày; nhận tệp ghi âm không; kết quả | | |
 | Công cụ đã mua; ngày mua; **số tiền thực bị trừ** (USD hoặc VND) | | so với dòng cố định USD 42.99 (OD13) |
 | Ngày gia hạn của gói | | ESTIMATE khoảng Ngày 37 (ngày mua 7 + 30) |
 | Tỷ lệ hoa hồng của từng sản phẩm đã chọn (Q-007) | | bảng tỷ lệ trong tài khoản |
@@ -30,7 +31,7 @@ Ngày 1 = ____-__-__ (ngày CEO đăng ký Shopee Affiliate).
 
 ## B. Nhật ký từng video
 
-| Mã | Ngày | Sản phẩm (phân loại) | Video thứ mấy của SP | Đường dẫn video | Nhãn AI đã bật | Phút CEO bỏ ra | Ghi chú (giảm hiển thị, bị xóa, gỡ) |
+| Mã | Ngày | Sản phẩm (phân loại) | Video thứ mấy của SP | Đường dẫn video | Nhãn AI đã bật | Phút CEO bỏ ra (kể cả ghi âm) | Ghi chú (giảm hiển thị, bị xóa, gỡ) |
 |---|---|---|---|---|---|---|---|
 | V-01 | | | | | ☐ | | |
 | V-02 | | | | | ☐ | | |
@@ -47,7 +48,7 @@ Ngày 1 = ____-__-__ (ngày CEO đăng ký Shopee Affiliate).
 
 Mốc: **ít nhất 6 video trước Ngày 16** (phụ lục 3.1, đăng dồn về đầu). Tổng tối đa 12; tối đa 1 mỗi ngày; tối đa 2 mỗi sản phẩm.
 
-Thời gian CEO mỗi video theo phụ lục là **ESTIMATE 47.5 phút** (khoảng 32.5 đến 75), chưa có số đo. Trong 47.5 phút có 7.5 phút xin phép người bán; theo CEO-D-1303 không còn bước này, nên ước tính mới là **40 phút** (ESTIMATE: 47.5 − 7.5 = 40), khoảng 25 đến 67.5 (ESTIMATE: 32.5 − 7.5; 75 − 7.5). Cột "Phút CEO bỏ ra" thay ước tính này bằng số đo.
+Thời gian CEO mỗi video theo phụ lục là **ESTIMATE 47.5 phút** (khoảng 32.5 đến 75), chưa có số đo. Trong 47.5 phút có 7.5 phút xin phép người bán; theo CEO-D-1303 không còn bước này, nên ước tính mới là **40 phút** (ESTIMATE: 47.5 − 7.5 = 40), khoảng 25 đến 67.5 (ESTIMATE: 32.5 − 7.5; 75 − 7.5). **Ước tính 40 phút chưa tính việc ghi âm** (phụ lục tính cho giọng máy; CEO-D-1304 thêm bước CEO đọc và ghi âm, nghe lại, chưa có ước tính). Cột "Phút CEO bỏ ra (kể cả ghi âm)" thay ước tính này bằng số đo; nên ghi riêng số phút ghi âm trong ô ghi chú.
 
 ## C. Nhật ký hằng ngày
 

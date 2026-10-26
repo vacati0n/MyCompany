@@ -2475,3 +2475,44 @@ has the seller's consent; don't worry).
 contact no seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1304 — The AI presenter lip-syncs to the CEO's own recorded voice
+
+**The CEO's own decision, 2026-10-26**, given in the chat with the orchestrator session, on the presenter form of
+`CEO-D-1301` item 4 and the tool choice `OD12` of `CEO-D-1302`.
+
+The CEO's words: "anh mở tài khoản shopee rồi . về tiếng việt là tiếng mẹ đẻ có thể dùng bản ghi âm của anh được" (I
+have opened the Shopee account. As for Vietnamese, it is my native language, so my own recordings can be used). Asked
+whether an AI face is still needed with a real voice, the CEO chose "Mặt AI + giọng anh" (AI face plus my voice) over
+dropping the avatar.
+
+1. **Voice.** The narration of every video is the CEO's own recorded voice, in Vietnamese. The AI face lip-syncs to
+   that recording. No text-to-speech is used in the pilot, and Vbee is dropped.
+2. **Proposed default, not the CEO's words: no voice cloning.** Each video uses a fresh real recording of its own
+   approved script; no tool is given the CEO's voice to clone. This is the orchestrator's proposed default and stands
+   only when the CEO confirms it.
+3. **Tool (`OD12` revised, a proposal for the CEO).** Whichever of HeyGen and D-ID passes the lip-sync test (file
+   `pilot-affiliate-vn/pilot-kit/07-kich-ban-thu-va-mo-ta-nguoi-dan.md`) driven by the CEO's own uploaded recording is
+   bought, billed monthly at USD 29 (HeyGen Creator or D-ID Pro), from the USD 42.99 fixed line of `OD13`. The D-ID
+   Pro plus Vbee path (about USD 35.43, ESTIMATE) falls away. What the evidence says
+   (`pilot-affiliate-vn/evidence/ai-presenter-pricing-2026-10-26.md`):
+   - D-ID Studio accepts uploaded audio, MP3 or WAV up to 5 minutes. The quote ("upload an audio file for your avatar to
+     speak") comes from a D-ID help search result, not a fetched page. D-ID Pro keeps a visible generic "AI" mark in
+     the bottom left corner (D3).
+   - HeyGen's acceptance of uploaded audio is not quoted anywhere in the evidence: **UNVERIFIED**, settled by the test.
+   - Whether either free tier or trial accepts uploaded audio is **UNVERIFIED**, settled by the test.
+4. **Everything else stands.** The "Video tạo bởi AI" label is still turned on for every video, because the face is AI.
+   Scripts use only sourced facts and never claim use of the product. The disclosure is spoken at the start and the
+   end. The Article 15a(3) stop rule (`OD14`), `D-002`, and one presenter on one account (`OD18`) are unchanged.
+5. **Fact reported, not verified:** the CEO reports opening "the Shopee account" on 2026-10-26. No agent has seen it;
+   agents never sign in. Whether it is the Shopee Affiliate registration as an individual KOC, and so whether day 1 of
+   the plan is 2026-10-26, is for the CEO to state in the measurement sheet. If it is, the "before day 1" steps
+   (counsel pack sent, eligibility checked) are already due.
+6. **Effect on the open questions, an inference for counsel and not a finding:** the presenter now speaks in the
+   CEO's real voice, which may bear on whether the CEO is presenting the product personally under Article 15a(3)
+   (`Q-002`, `Q-016`). The counsel pack asks this.
+
+**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,
+contact no seller, buy nothing, download no asset and publish nothing.
+
+---

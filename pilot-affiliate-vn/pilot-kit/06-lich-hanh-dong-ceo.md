@@ -1,9 +1,9 @@
 # Lịch hành động của CEO, từng ngày
 
-- Thay cho danh sách hành động ở phụ lục 1 mục 3.5, theo CEO-D-1302 và CEO-D-1303.
-- **Thay đổi so với phụ lục:** không xin phép người bán (bỏ Ngày 5 đến 9 của phụ lục, bỏ RK-023). CEO tự đọc trang sản phẩm và ghi bảng thông tin. Mọi bước khác giữ nguyên.
+- Thay cho danh sách hành động ở phụ lục 1 mục 3.5, theo CEO-D-1302, CEO-D-1303 và CEO-D-1304.
+- **Thay đổi so với phụ lục:** không xin phép người bán (bỏ Ngày 5 đến 9 của phụ lục, bỏ RK-023). CEO tự đọc trang sản phẩm và ghi bảng thông tin. **Giọng là bản ghi âm của chính CEO** (CEO-D-1304): không giọng máy, không Vbee; CEO ghi âm mỗi kịch bản trước khi tạo video. Mọi bước khác giữ nguyên.
 - "CEO" là CEO tự làm. "Agent" chỉ soạn văn bản; agent không tạo tài khoản, không đăng nhập, không liên hệ người bán, không mua, không tải tài sản, không đăng gì (`D-002`, `D-018`).
-- Ngày 1 = ngày CEO đăng ký Shopee Affiliate. Các mốc thời gian đều từ phụ lục 1 mục 3.1; số phút là ESTIMATE của phụ lục, chưa đo.
+- Ngày 1 = ngày CEO đăng ký Shopee Affiliate. CEO báo đã mở tài khoản Shopee ngày **2026-10-26** (CEO-D-1304; agent không đăng nhập nên chưa thấy). Nếu đó là đăng ký Shopee Affiliate dạng KOC cá nhân thì Ngày 1 = 2026-10-26, và các việc "Trước Ngày 1" đã đến hạn: làm ngay. Các mốc thời gian đều từ phụ lục 1 mục 3.1; số phút là ESTIMATE của phụ lục, chưa đo.
 
 ---
 
@@ -19,7 +19,8 @@
 
 | ☐ | Việc | Ai | Tài liệu |
 |---|---|---|---|
-| ☐ | Đăng ký Shopee Affiliate dạng **KOC cá nhân**. Không đăng ký kênh TikTok nào. Nhập thông tin thanh toán khớp CCCD 100%. (Việc đăng ký có thể kéo dài tới Ngày 3.) | CEO | E-085, shopee 1.9 |
+| ☑ | **CEO báo đã mở tài khoản ngày 2026-10-26.** CEO tự kiểm trong tài khoản: đó là Shopee Affiliate dạng **KOC cá nhân**, thông tin thanh toán khớp CCCD 100%. Nếu chưa phải: đăng ký dạng KOC cá nhân. (Việc đăng ký có thể kéo dài tới Ngày 3.) | CEO | E-085, shopee 1.9; CEO-D-1304 |
+| ☐ | **Nhắc: không đăng ký kênh TikTok nào** (hay bất kỳ kênh mạng xã hội nào) với Shopee Affiliate, cả lúc đăng ký lẫn về sau. Mạng xã hội chỉ là kênh tiếp thị khi được đăng ký và Shopee chấp thuận (E-082); điều khoản đối thủ E-104 là rủi ro RK-001. Chỉ dùng Shopee Video. | CEO | E-082, E-104, RK-001 |
 | ☐ | Gửi Shopee câu hỏi bằng văn bản (Q-013, Q-014, Q-015, Q-004, câu 5 về thời hạn đơn, Q-018). Lưu bản chụp. Khoảng 20 phút (ESTIMATE). | CEO | `02-cau-hoi-shopee.md` |
 | ☐ | Giao context-agent chụp lại bài 199468, 164064, 122941 và đoạn "30 ngày" của bài 122944 (P5, Q-017). Hạn Ngày 3. | CEO giao, context-agent làm | phụ lục 5.3 |
 
@@ -27,13 +28,14 @@
 
 | ☐ | Việc | Ai | Tài liệu |
 |---|---|---|---|
-| ☐ | Bài thử **T1** trên gói miễn phí HeyGen, với kịch bản thử do agent soạn. Tự chấm 5 tiêu chí. Không đăng video thử. 30 đến 45 phút (ESTIMATE). | CEO (agent soạn kịch bản thử) | phụ lục 2.4 |
+| ☐ | **Ghi âm** kịch bản thử (tệp 07) bằng giọng của CEO; MP3 hoặc WAV. Giữ tệp này cho cả T1 và T2. | CEO | `07-kich-ban-thu-va-mo-ta-nguoi-dan.md`; CEO-D-1304 |
+| ☐ | Bài thử **T1** trên gói miễn phí HeyGen: **tải bản ghi âm lên** cho người dẫn khớp môi (HeyGen có nhận tệp ghi âm không là UNVERIFIED; nếu không nhận, ghi "trượt" và sang T2). Tự chấm 5 tiêu chí. Không đăng video thử. 30 đến 45 phút (ESTIMATE của phụ lục, chưa tính ghi âm). | CEO (agent soạn kịch bản thử) | phụ lục 2.4 |
 
 ## Ngày 3
 
 | ☐ | Việc | Ai |
 |---|---|---|
-| ☐ | Chỉ khi T1 trượt: bài thử **T2** (dùng thử D-ID với giọng Vbee miễn phí). Nếu cả hai trượt: không dùng người dẫn AI, chuyển OD15 (O-007 có mẫu). | CEO |
+| ☐ | Chỉ khi T1 trượt: bài thử **T2** (dùng thử D-ID, **cùng bản ghi âm của CEO**; không Vbee). Nếu cả hai trượt: không dùng người dẫn AI, chuyển OD15 (O-007 có mẫu). | CEO |
 | ☐ | Đọc bảng tỷ lệ hoa hồng trong tài khoản (Q-007) và kiểm tra hoa hồng có được ghi nhận qua Shopee Video không (RK-007, P8). Ghi vào bảng đo. | CEO |
 
 ## Ngày 4
@@ -58,14 +60,14 @@
 
 | ☐ | Việc | Ai |
 |---|---|---|
-| ☐ | Nếu T1 (hoặc T2) đạt: duyệt giá và **trả gói tháng** (HeyGen Creator USD 29; hoặc D-ID Pro + Vbee khoảng USD 35.43, ESTIMATE) từ dòng cố định USD 42.99. Ghi số tiền thực bị trừ. | CEO |
+| ☐ | Nếu T1 (hoặc T2) đạt: duyệt giá và **trả gói tháng** (công cụ đạt bài thử: HeyGen Creator USD 29 hoặc D-ID Pro USD 29, theo tháng; OD12 sửa theo CEO-D-1304, chờ CEO duyệt) từ dòng cố định USD 42.99. Không mua Vbee. Ghi số tiền thực bị trừ. | CEO |
 | ☐ | Tạo **đúng một** người dẫn từ mô tả do agent soạn (không avatar có sẵn). Lưu mô tả, ngày, mã người dẫn. 30 đến 45 phút (ESTIMATE). | CEO |
 
 ## Ngày 8 và 9
 
 | ☐ | Việc | Ai |
 |---|---|---|
-| ☐ | Tạo video V-01 và V-02, mỗi video một lần tạo riêng (R9). Duyệt theo danh sách D-002, phần B. Chưa đăng. | CEO |
+| ☐ | Ghi âm kịch bản đã duyệt của V-01 và V-02, mỗi video một bản ghi mới (Phần F của mẫu kịch bản). Tạo video V-01 và V-02 từ bản ghi đó, mỗi video một lần tạo riêng (R9). Duyệt theo danh sách D-002, phần B. Chưa đăng. | CEO |
 
 ## Ngày 10: cổng đăng đầu tiên
 
@@ -79,7 +81,7 @@
 
 | ☐ | Việc | Ai |
 |---|---|---|
-| ☐ | Mỗi ngày tối đa 1 video; tổng tối đa 12; tối đa 2 mỗi sản phẩm. **Ít nhất 6 video trước Ngày 16.** Mỗi video qua đủ danh sách duyệt. | CEO duyệt và đăng; agent soạn kịch bản |
+| ☐ | Mỗi ngày tối đa 1 video; tổng tối đa 12; tối đa 2 mỗi sản phẩm. **Ít nhất 6 video trước Ngày 16.** Mỗi video: CEO ghi âm kịch bản đã duyệt, tạo video, qua đủ danh sách duyệt. | CEO ghi âm, duyệt và đăng; agent soạn kịch bản |
 | ☐ | Ghi bảng đo ít nhất 2 ngày một lần. | CEO |
 
 ## Ngày 10 đến 30, việc lặp lại

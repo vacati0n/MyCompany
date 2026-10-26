@@ -15,7 +15,7 @@
 >
 > Tôi là cá nhân Việt Nam, dự định tham gia chương trình Tiếp thị liên kết của Shopee (Shopee Affiliate) với hình thức KOC Affiliate cá nhân, chỉ đăng video trên Shopee Video. Tôi chưa có người theo dõi.
 >
-> Hình thức nội dung: video có một **người dẫn do AI tạo** (dự kiến HeyGen; D-ID nếu HeyGen không đạt bài thử của tôi), đặt trên **hình ảnh sản phẩm thật lấy từ trang sản phẩm trên Shopee**. Người dẫn chỉ đọc thông tin sản phẩm có nguồn từ trang sản phẩm, **không bao giờ nói đã dùng sản phẩm**, không đánh giá. Tôi **không mua và không dùng** sản phẩm trong 30 ngày đầu. Mỗi video bật nhãn "Video tạo bởi AI" của Shopee, có câu công bố quảng cáo ở đầu và cuối video, chữ công bố trên màn hình suốt video và ở dòng đầu chú thích. Ngách: đồ gia dụng và nhà bếp, sau đó phụ kiện điện thoại. Không mỹ phẩm, không thực phẩm chức năng.
+> Hình thức nội dung: video có một **người dẫn do AI tạo** (HeyGen hoặc D-ID, công cụ nào đạt bài thử của tôi), **lời thoại là giọng thật của tôi** do tôi tự đọc và ghi âm, gương mặt AI khớp môi theo bản ghi, đặt trên **hình ảnh sản phẩm thật lấy từ trang sản phẩm trên Shopee**. Người dẫn chỉ đọc thông tin sản phẩm có nguồn từ trang sản phẩm, **không bao giờ nói đã dùng sản phẩm**, không đánh giá. Tôi **không mua và không dùng** sản phẩm trong 30 ngày đầu. Mỗi video bật nhãn "Video tạo bởi AI" của Shopee, có câu công bố quảng cáo ở đầu và cuối video, chữ công bố trên màn hình suốt video và ở dòng đầu chú thích. Ngách: đồ gia dụng và nhà bếp, sau đó phụ kiện điện thoại. Không mỹ phẩm, không thực phẩm chức năng.
 >
 > Tối đa 12 video trong 30 ngày, tối đa 1 video mỗi ngày. Video đầu tiên không đăng trước Ngày 10.
 >
@@ -34,7 +34,7 @@
 
 **Câu hỏi:**
 - (a) Một cá nhân đăng ký Shopee Affiliate dạng KOC, chưa có người theo dõi, có phải là "người có ảnh hưởng" theo Điều 3(9) Luật 19/2023 và Nghị định 55/2024 không? Xin Luật sư xác nhận lại nguyên văn Điều 2(1) Nghị định 55/2024.
-- (b) Kết luận có khác đi không khi người xuất hiện trong video là **người dẫn do AI tạo**, không phải hình ảnh của tôi?
+- (b) Kết luận có khác đi không khi người xuất hiện trong video là **người dẫn do AI tạo**, không phải hình ảnh của tôi, nhưng **giọng nói là giọng thật của tôi**? Việc dùng giọng thật có làm tôi được coi là trực tiếp giới thiệu sản phẩm theo Điều 15a(3) không?
 - (c) Nếu tôi là "người có ảnh hưởng": video theo hình thức trên (không dùng sản phẩm, chỉ đọc thông tin có nguồn) có vi phạm Điều 15a(3)(a) không?
 
 ### Câu 2 (Q-016). Nếu câu trả lời Câu 1 là "có"
