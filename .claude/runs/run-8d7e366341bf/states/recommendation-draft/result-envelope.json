@@ -1,0 +1,67 @@
+{
+  "invocation_id": "inv-8d7e366341bf-04-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md"
+  ],
+  "structured_output": {
+    "decisionBasis": "recommendation",
+    "recommendedOption": "O-003",
+    "readinessDecision": "proceed-with-conditions",
+    "status": "provisional",
+    "criteriaApplied": 12,
+    "optionsEvaluated": 11,
+    "risksRecorded": 16,
+    "blockingItemsOpen": 3,
+    "severityCounts": {"critical": 1, "high": 6, "medium": 7, "low": 2},
+    "decidingAuthority": "orchestrator (Recommendation Gate at recommendation-draft); the CEO as owner takes owner decisions OD1 to OD11",
+    "pairedChoices": {"contentForm": "O-007 footage-first", "niche": "O-008", "secondNiche": "O-009", "fallbackPlatform": "O-002"},
+    "changesFromOptionSynthesis": {
+      "leadingOptionChanged": false,
+      "scoreChanges": ["O-003 EC-010 missed -> met (E-110 quoted: stopping without breach carries no stated cost); O-003 now 12 of 12"],
+      "optionTableChanges": ["O-003 delivery risk high -> medium; summary drops E-100 and the channel-status caveat"],
+      "riskStatusChanges": ["RK-005 open -> resolved", "RK-007 open -> mitigated, likelihood possible -> unlikely", "RK-001, RK-002, RK-009, RK-010, RK-015 open -> mitigated (plan complies under every counsel answer)"],
+      "riskTextChanges": ["RK-003 E-100 not found, tax range from law", "RK-004 E-085 confirmed, E-087 6-month rule", "RK-013 quoted E-110 plus E-087 and E-089"],
+      "taxRange": "Shopee net factor 0.8902 to 0.9902 (was 0.89118 or 0.9902 from E-100)",
+      "breakEvenOrders": "165-184 at 3.68%, 61-68 at 10%, 31-34 at 20% (ESTIMATE)",
+      "targetTier2": "redefined as one valid commission credited by day 30, not paid out"
+    },
+    "recaptureCountNote": "evidence file lists 13 confirmed, 2 changed, 1 not found; dispatch summary said 12 confirmed while listing 13",
+    "inputMapping": {
+      "investigation-report": "supplied input",
+      "technical-options": "option-synthesis upstream artifact",
+      "prior-gate-evidence": "technical-validity-gate.md and recapture-2026-10-26.md, supplied by the dispatch",
+      "workflow-constraints": "gate decisions restated inline in the dispatch"
+    },
+    "checksRun": 41,
+    "checksPassed": 41,
+    "blockingFailures": [],
+    "correctableRepairs": [],
+    "notMachineCheckable": ["NMC1", "NMC2", "NMC3", "NMC4"],
+    "validatorResult": "pass, 33/33 machine checks, 4 declared not-machine-checkable",
+    "commandsRun": [
+      "cat/sed/grep read-only reads of the dispatch prompt, envelope, task context, modules, skills, templates, upstream artifacts, gate record, re-capture and research/framework-defects.md",
+      "python -c arithmetic for Shopee net factors and break-even orders",
+      "python runtime/technical_recommendation_validator.py runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md --envelope runs/run-8d7e366341bf/states/recommendation-draft/invocation-envelope.json",
+      "git status --short"
+    ],
+    "frameworkDefectsHonoured": ["Defect 3: declared_side_effects carries paths only", "Finding 6: no foreign Q-nnn, O-nnn, RK-nnn or EC-nnn tokens; IR questions restated under this artifact's own Q register"],
+    "escalations": [],
+    "openQuestions": 12
+  },
+  "evidence_refs": [
+    "agents/tech-lead/system.md",
+    "agents/tech-lead/identity.md",
+    "agents/tech-lead/reasoning.md",
+    "agents/tech-lead/output.md",
+    "agents/tech-lead/quality.md",
+    "runs/run-8d7e366341bf/states/recommendation-draft/invocation-envelope.json"
+  ],
+  "confidence": "low",
+  "declared_side_effects": [
+    "runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md",
+    "runs/run-8d7e366341bf/states/recommendation-draft/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

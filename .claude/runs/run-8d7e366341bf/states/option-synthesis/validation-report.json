@@ -1,0 +1,339 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\opus-5-5-videos-f170ff\\.claude\\runs\\run-8d7e366341bf\\states\\option-synthesis\\artifacts\\technical-recommendation.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 33,
+  "checksPassed": 33,
+  "notMachineCheckable": 4,
+  "counts": {
+    "sections": 11,
+    "status": "provisional",
+    "identifiers": {
+      "EC": 12,
+      "O": 11,
+      "RK": 16,
+      "Q": 9
+    },
+    "tableRows": {
+      "Evaluation Criteria": 12,
+      "Options": 11,
+      "Tradeoff Analysis": 11,
+      "Risk and Blocker Register": 16
+    },
+    "criteria": 12,
+    "options": 11,
+    "risks": 16,
+    "blockingItemsOpen": 7,
+    "decisionBasis": "option-analysis",
+    "recommendedOption": "O-003",
+    "readinessDecision": "proceed-with-conditions",
+    "decidingAuthority": "orchestrator (Recommendation Gate at recommendation-draft; this phase has no gate); the CEO as owner rules on the pilot",
+    "severity": {
+      "critical": 1,
+      "high": 6,
+      "medium": 7,
+      "low": 2
+    }
+  },
+  "checks": [
+    {
+      "id": "C1.1",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "Metadata block present with every declared field populated",
+      "result": "pass",
+      "detail": "12 of 12 fields populated"
+    },
+    {
+      "id": "C1.2",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "producedBy is an agent contracted to emit technical-recommendation.md",
+      "result": "pass",
+      "detail": "producedBy='tech-lead'; contracted producers: ['tech-lead']"
+    },
+    {
+      "id": "C1.3",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "schemaVersion is 1.0.0 and agentVersion is semantic",
+      "result": "pass",
+      "detail": "schemaVersion=1.0.0 agentVersion=1.0.0"
+    },
+    {
+      "id": "C1.4",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='provisional'"
+    },
+    {
+      "id": "C2.1",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "All 10 mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "10 of 10 present, once each"
+    },
+    {
+      "id": "C2.2",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Decision Context', 'Evaluation Criteria', 'Options', 'Tradeoff Analysis', 'Risk and Blocker Register', 'Assessment Summary', 'Recommendation', 'Delivery Impact', 'Readiness']"
+    },
+    {
+      "id": "C2.3",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 section introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C2.4",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "C2.5",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Advisory",
+      "description": "No template authoring guidance remains in the emitted artifact",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C3.1",
+      "quality_ref": "config/execution-engine.md#agent-adapter",
+      "severity": "Blocking",
+      "description": "At most 3 fenced block(s), as the contract permits",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; 3 permitted"
+    },
+    {
+      "id": "C3.2",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "C3.3",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "C4.1",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "Every declared field label is present in its section",
+      "result": "pass",
+      "detail": "23 declared field(s) present"
+    },
+    {
+      "id": "C4.2",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "No declared field is left unanswered",
+      "result": "pass",
+      "detail": "every declared field carries a value"
+    },
+    {
+      "id": "C4.3",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Correctable",
+      "description": "Fields with a declared substance floor carry more than a token answer",
+      "result": "pass",
+      "detail": "all fields meet their floor"
+    },
+    {
+      "id": "C5.1",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Fields bound to a vocabulary use a permitted value",
+      "result": "pass",
+      "detail": "all bounded fields valid"
+    },
+    {
+      "id": "C5.2",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Correctable",
+      "description": "Fields bound to a format match it",
+      "result": "pass",
+      "detail": "all formatted fields valid"
+    },
+    {
+      "id": "C4.4",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared minimum carry at least that many items",
+      "result": "pass",
+      "detail": "all list sections meet their minimum"
+    },
+    {
+      "id": "C4.5",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared table carry it, with the declared columns",
+      "result": "pass",
+      "detail": "row counts: {'Evaluation Criteria': 12, 'Options': 11, 'Tradeoff Analysis': 11, 'Risk and Blocker Register': 16}"
+    },
+    {
+      "id": "C4.6",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "No table row leaves a required cell empty",
+      "result": "pass",
+      "detail": "all rows complete"
+    },
+    {
+      "id": "C6.1",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "C6.2",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "Every referenced identifier is defined in its declaring section",
+      "result": "pass",
+      "detail": "defined: {'EC': 12, 'O': 11, 'RK': 16, 'Q': 9}"
+    },
+    {
+      "id": "C6.3",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "No identifier is defined twice",
+      "result": "pass",
+      "detail": "identifiers unique"
+    },
+    {
+      "id": "C6.4",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Correctable",
+      "description": "Identifiers ascend from 001 without gaps",
+      "result": "pass",
+      "detail": "contiguous: {'EC': 12, 'O': 11, 'RK': 16, 'Q': 9}"
+    },
+    {
+      "id": "C7.1",
+      "quality_ref": "config/execution-engine.md#context-loader",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "N1",
+      "quality_ref": "agents/tech-lead/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "The criteria were fixed before the options were scored, not adjusted to fit one",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N2",
+      "quality_ref": "agents/tech-lead/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "Every option genuinely open under the recorded constraints was enumerated",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N3",
+      "quality_ref": "agents/tech-lead/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "Each effort and severity position reflects the evidence, not the schedule",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N4",
+      "quality_ref": "agents/tech-lead/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "No quality gate was traded, weakened, or routed around to reach the recommendation",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "T1",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Blocking",
+      "description": "The metadata recommendation and readiness decision match the sections that state them",
+      "result": "pass",
+      "detail": "metadata recommendedOption='O-003' section='O-003'; metadata readinessDecision='proceed-with-conditions' section='proceed-with-conditions'"
+    },
+    {
+      "id": "T2",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "The decision basis, every scale value, every criterion source, and every risk owner come from the declared vocabularies",
+      "result": "pass",
+      "detail": "basis='option-analysis', 12 criteria, 11 option(s), 16 risk(s)"
+    },
+    {
+      "id": "T3",
+      "quality_ref": "agents/tech-lead/quality.md#semantic-checks",
+      "severity": "Blocking",
+      "description": "The assessment summary recomputes exactly from the criteria, option, and risk tables",
+      "result": "pass",
+      "detail": "summary equals the counted tables: {'criteria applied': 12, 'options evaluated': 11, 'risks and blockers recorded': 16, 'blocking items open': 7}"
+    },
+    {
+      "id": "T4",
+      "quality_ref": "agents/tech-lead/identity.md#decision-rules",
+      "severity": "Blocking",
+      "description": "The recommended option is one the artifact evaluated, or the decision is deferred",
+      "result": "pass",
+      "detail": "recommended 'O-003'; defined options ['O-001', 'O-002', 'O-003', 'O-004', 'O-005', 'O-006', 'O-007', 'O-008', 'O-009', 'O-010', 'O-011']; assessed in tradeoff analysis ['O-001', 'O-002', 'O-003', 'O-004', 'O-005', 'O-006', 'O-007', 'O-008', 'O-009', 'O-010', 'O-011']"
+    },
+    {
+      "id": "T5",
+      "quality_ref": "agents/tech-lead/output.md#5-tradeoff-analysis",
+      "severity": "Blocking",
+      "description": "At least two options are recorded, and every one is assessed exactly once in the tradeoff analysis",
+      "result": "pass",
+      "detail": "11 option(s), each assessed once"
+    },
+    {
+      "id": "T6",
+      "quality_ref": "agents/tech-lead/identity.md#policy-constraints",
+      "severity": "Blocking",
+      "description": "An unqualified proceed carries no open critical or high blocker",
+      "result": "pass",
+      "detail": "decision='proceed-with-conditions', 7 open blocking item(s)"
+    },
+    {
+      "id": "T7",
+      "quality_ref": "templates/technical-recommendation.md",
+      "severity": "Correctable",
+      "description": "The outstanding blockers named at the close are exactly the open critical and high entries",
+      "result": "pass",
+      "detail": "readiness names ['RK-001', 'RK-002', 'RK-003', 'RK-004', 'RK-005', 'RK-006', 'RK-007']; register carries ['RK-001', 'RK-002', 'RK-003', 'RK-004', 'RK-005', 'RK-006', 'RK-007']"
+    },
+    {
+      "id": "T8",
+      "quality_ref": "agents/tech-lead/quality.md#semantic-checks",
+      "severity": "Blocking",
+      "description": "The deciding authority is named and is not the agent that produced this artifact",
+      "result": "pass",
+      "detail": "deciding authority='orchestrator (Recommendation Gate at recommendation-draft; this phase has no gate); the CEO as owner rules on the pilot'"
+    }
+  ]
+}

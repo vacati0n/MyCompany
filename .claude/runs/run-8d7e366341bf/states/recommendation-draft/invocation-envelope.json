@@ -1,0 +1,670 @@
+{
+  "invocation_id": "inv-8d7e366341bf-04-001",
+  "run_id": "run-8d7e366341bf",
+  "work_item_id": "run-8d7e366341bf::recommendation-draft",
+  "idempotency_key": "sha256:a4b64061cab81e635dcb2706c74a3d0b",
+  "state_id": "recommendation-draft",
+  "phase_index": 4,
+  "agent_id": "tech-lead",
+  "agent_version": "1.0.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/tech-lead.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/tech-lead/manifest.yaml",
+    "load_order": [
+      "agents/tech-lead/system.md",
+      "agents/tech-lead/identity.md",
+      "agents/tech-lead/reasoning.md",
+      "agents/tech-lead/execution.md",
+      "agents/tech-lead/output.md",
+      "agents/tech-lead/quality.md",
+      "agents/tech-lead/examples.md"
+    ],
+    "module_digests": {
+      "agents/tech-lead/system.md": "sha256:081be142defd6ad87af3a7215ea0554b",
+      "agents/tech-lead/identity.md": "sha256:a4d4b0551e7c3c7c5ca215cbda127fe7",
+      "agents/tech-lead/reasoning.md": "sha256:7f7df86f5e7c009201a7821eff52eaec",
+      "agents/tech-lead/execution.md": "sha256:30237977a8f0376aea772f50ba43f275",
+      "agents/tech-lead/output.md": "sha256:0ba794175ec5623751c5dfe82e8e57e5",
+      "agents/tech-lead/quality.md": "sha256:3d355fb87d3e95aae52584ffda145d3a",
+      "agents/tech-lead/examples.md": "sha256:b625d6761978f650ff4dc7bfee0193ab"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/tech-lead/system.md",
+        "agents/tech-lead/reasoning.md",
+        "agents/tech-lead/output.md",
+        "agents/tech-lead/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/tech-lead/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/tech-lead/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/tech-lead/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 38133,
+      "full_bytes": 82075
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "feasibility-assessment",
+      "option-evaluation",
+      "tradeoff-analysis",
+      "sequencing-judgement",
+      "delivery-risk-assessment",
+      "readiness-recommendation"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S03",
+        "proficiency": "Primary",
+        "registryIdentifier": "engineering-playbook",
+        "specificationPath": "skills/dotnet/engineering-playbook.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S01",
+        "proficiency": "Primary",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S02",
+        "proficiency": "Primary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S07",
+        "proficiency": "Primary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S08",
+        "proficiency": "Primary",
+        "registryIdentifier": "performance-engineering",
+        "specificationPath": "skills/performance/performance-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Primary",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S10",
+        "proficiency": "Primary",
+        "registryIdentifier": "git-collaboration",
+        "specificationPath": "skills/git/git-collaboration.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S06",
+        "proficiency": "Secondary",
+        "registryIdentifier": "database-engineering",
+        "specificationPath": "skills/database/database-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S11",
+        "proficiency": "Secondary",
+        "registryIdentifier": "observability-logging",
+        "specificationPath": "skills/logging/observability-logging.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S02",
+        "registryIdentifier": "domain-modeling",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S08",
+        "registryIdentifier": "performance-engineering",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S08",
+      "displayName": "Performance Engineering",
+      "specificationPath": "skills/performance/performance-engineering.md",
+      "status": "required",
+      "area": "performance",
+      "basis": "area performance triggered by 'profile' in artifact:technical-validation",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Primary)"
+    },
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Primary)"
+    },
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Primary)"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "area security triggered by 'permission' in artifact:technical-validation",
+      "source": "agent-manifest (Primary)"
+    },
+    {
+      "skillCode": "S10",
+      "displayName": "Git Collaboration",
+      "specificationPath": "skills/git/git-collaboration.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Primary)"
+    },
+    {
+      "skillCode": "S06",
+      "displayName": "Database Engineering",
+      "specificationPath": "skills/database/database-engineering.md",
+      "status": "not-triggered",
+      "area": "database",
+      "basis": "area database is not affected by this task; the skill stays resolved and is read only if the work reveals the domain",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S11",
+      "displayName": "Logging and Observability",
+      "specificationPath": "skills/logging/observability-logging.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "investigation-report",
+      "review-package",
+      "validation-report",
+      "technical-design",
+      "implementation-report",
+      "scope-definition",
+      "execution-plan",
+      "bug-analysis",
+      "evaluation-criteria",
+      "technical-options",
+      "workflow-constraints",
+      "implementation-context",
+      "readiness-criteria",
+      "release-checklist",
+      "risk-profile",
+      "capacity-constraints",
+      "dependency-map",
+      "prior-gate-evidence",
+      "unresolved-findings"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "investigation-report",
+        "reference": "runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/opus-5-5-videos-f170ff/.claude/runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+        "text": "```yaml\ninvestigation:\n  investigationId: \"inv-8d7e366341bf-02-002-technical-validation\"\n  decisionReference: \"MC-15 affiliate pilot on TikTok Shop and Shopee in Vietnam: owner decision on platforms, content form and start; architect Technical Validity Gate on this evidence\"\n  sourceInputs:\n    - type: \"research-question\"\n      reference: \"runs/inputs/mc-15-research-question.md\"\n    - type: \"requirement-framing\"\n      reference: \"runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md\"\n    - type: \"context-sources\"\n      reference: \"runs/run-8d7e366341bf/task-context.yaml\"\n    - type: \"context-sources\"\n      reference: \"pilot-affiliate-vn/evidence/tiktok-vn-and-law.md\"\n    - type: \"context-sources\"\n      reference: \"pilot-affiliate-vn/evidence/shopee-vn-and-market.md\"\n    - type: \"context-sources\"\n      reference: \"research/ceo-decision-record.md (read in part: lines 79-101, 137-151, 186-225, 751, 824-897, 1043-1142, 2358-2382)\"\n    - type: \"context-sources\"\n      reference: \"research/platform-policy-dossier.md (read in part)\"\n    - type: \"context-sources\"\n      reference: \"research/language-market-analysis.md (section 7.4, lines 468-521)\"\n    - type: \"context-sources\"\n      reference: \"research/framework-defects.md (read in full)\"\n    - type: \"context-sources\"\n      reference: \"frozen slice members read: context/product-context.md, context/release-context.md, context/technical-context.md, dependency-map.md, skills S01, S03, S11 files, templates/investigation-report.md\"\n  producedBy: \"context-agent\"\n  agentVersion: \"1.1.0\"\n  schemaVersion: \"1.0.0\"\n  status: \"provisional\"\n  confidence: \"low\"\n  inputDigest: \"sha256:4696cde24034020bf6570823127e972c\"\n  contextDigest: \"sha256:81fa6ec86a71e883d8e8284da9b036f3\"\n```\n\n## Metadata\n\n- Investigation ID: inv-8d7e366341bf-02-002-technical-validation\n- Owner: context-agent\n- Requested by: Orchestrator, research workflow, phase technical-validation, for the MC-15 request\n- Decision deadline: unknown (no deadline is stated in the supplied inputs)\n\n## Objective\n\n- Decision to support: The owner's decision whether and how to run an affiliate pilot on TikTok Shop and Shopee Affiliate in Vietnam, and the architect's Technical Validity Gate on this evidence.\n- Key question: Do the staged Vietnamese first-party rules and legal texts settle the platform, eligibility, payout, commission, content and tax facts that the framing requires, and where they do not, what stands unresolved?\n- Scope boundaries: Inside: validation of the staged TikTok Shop VN and Shopee VN pack and its cited Vietnamese legal and tax texts against the framing's eligibility, payout, commission, content, law and tax requirements, the four attention points, and contradictions with prior records. Outside: the content-form choice (owner, per the framing boundary); niche ranking and break-even economics (option-synthesis, tech-lead and owner); acceptance thresholds (product-owner); legal conclusions (local counsel, Q-001 to Q-005); the delivered pipeline and the frozen Wave 12 and Wave 13 facts (not examined, see Q-017); platforms other than TikTok Shop and Shopee in Vietnam (framing boundary); the company-as-seller route (outside the owner's individual-creator decision, E-122). Scope was fixed from the dispatch and the framing; the pack was read before this artifact was drafted, and the scope recorded here was not narrowed to what the pack contained.\n\n## Context\n\n- Relevant systems and components: TikTok Shop VN creator path (E-006 to E-042); Shopee Affiliate VN path (E-075 to E-110); Vietnamese advertising, e-commerce and consumer-protection law (E-043 to E-059); personal income tax withholding and registration layer (E-060 to E-074); market data (E-111 to E-119). Dependencies: payout requires identity, tax code and bank details (E-013, E-014, E-016, E-086); commission is payable only after settlement or delivery, and voids follow cancellation, refund and fraud (E-017, E-024, E-095). Impact surface: every publication carries disclosure duties (E-046, E-047, E-057) and AI-label duties (E-031 to E-033, E-108); a content form changes which of these bind it. Creator-rating and posting-limit enforcement gates shoppable video (E-039, E-041).\n- Related incidents or prior findings: The owner's pivot entry and the standing decisions it reopens (E-120 to E-124); the platform dossier's Vietnam statements (E-125 to E-130); the language analysis's Shopee figures (E-131); framework defects bearing on intake (E-005). None identified as incidents.\n- Constraints and assumptions:\n  - Established constraints: no command execution, no external access, writes limited to the two permitted files (envelope constraints). No observation reaches high confidence: the pack records pages this run did not open, so first-party text is held at medium, mirrors and third-party reports at low (Stage 4 table, E-004 excepted).\n  - Supplied constraints, operator-stated and not in a repository record (E-004, Q-011): every eligibility, commission and content rule cites a Vietnamese first-party page or legal text with URL, access date and quotation, otherwise it is unverified and routed to local counsel; at least three content-form options and at least two niches must be scored in the next phase; pilot content is Vietnamese; budget stays USD 77.41 per month with a USD 34.42 metered ceiling, which research may propose changing; research proposes the 30-day earning target; the CEO is the Vietnam-resident individual creator.\n  - Assumptions carried from the framing, not verified here: the monthly budget and ceiling are current; the repository files the research question cites contain what it describes (not read); the CEO is the sole individual creator (operator-stated); the delivered pipeline has the capabilities listed (not read). Stale-assumption status is in the appendix.\n  - Stage 5 removals: the pack's worked net-take-home figure (derived, not a source), its niche scores and niche recommendation (gatherer judgement), its reading that hands-only footage is the most compatible form (inference), and its reading that an affiliate falls within the advertising definition (inference, see Q-002).\n\n## Evidence\n\n| ID | Source | Observation | Confidence | Staleness |\n|---|---|---|---|---|\n| E-001 | runs/inputs/mc-15-research-question.md, Description: \"Vietnamese first-party pages ... are the standard; a third-party figure is never the sole basis\" | States the evidence standard: Vietnamese first-party pages and Vietnamese government legal texts; a third-party figure is never the sole basis for a rule or revenue number | high | as of 2026-10-26 |\n| E-002 | runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md, frontmatter, Open Questions and Handoff | Framing verdict partially-framed, status provisional; two framing questions blocking (evidence channel; acceptance criteria); 26 requirements, including a US-only rule may never be stated as Vietnamese | high | as of 2026-10-26 |\n| E-003 | runs/run-8d7e366341bf/task-context.yaml, gates | Framing Gate decision approved, decided by the CEO, owner role product-owner; Technical Validity Gate decision null with owner null; Recommendation Gate null | high | as of 2026-10-26 |\n| E-004 | Operator instruction for this run restating the Framing Gate decision and answers; no repository record of it | States the acceptance criteria (cited first-party or legal source with URL, access date and quotation, otherwise unverified and routed to counsel; three content forms and two niches scored); Vietnamese content; budget USD 77.41 and ceiling USD 34.42, research may propose change; research proposes the 30-day earning target; CEO is the individual creator | low | unknown |\n| E-005 | research/framework-defects.md, Defect 1 and Finding 7 | Input identifier drift between producer output and consumer inputs was open upstream on 2026-09-26; a gate rationale reaches no downstream phase unless restated in its dispatch | medium | as of 2026-09-26 |\n| E-006 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.1 (page 6837793229817601) | TikTok Shop VN creators must be 18 or older | medium | as of 2026-07-17 |\n| E-007 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.1 (page 1679024774448913) | Commission requires completed age verification; without it links generate an ordinary link with no commission | medium | as of 2026-06-23 |\n| E-008 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.2 (page 6837793229817601) | Full affiliate creator needs at least 1,000 followers; no prior revocation of e-commerce rights; ID linked to no more than 5 TikTok Shop accounts; at least 1 Creator Health Rating point to keep status | medium | as of 2026-07-17 |\n| E-009 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.3 (page 1679024774448913) | A Link-Share Only tier exists, separate from full affiliate creators, and can create affiliate links | medium | as of 2026-06-23 |\n| E-010 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.3 (search snippets only, page not opened) | Link-Share Only: no follower minimum, no earning from short video or LIVE, automatic upgrade at 1,000 followers | low | unknown |\n| E-011 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.4 (page 6837793229817601) | Only government, politician and party accounts are excluded by name; submitted identity must belong to the account owner and cannot be transferred once verified | medium | as of 2026-07-17 |\n| E-012 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.4 (page 6837795792701186) | A shop may link up to 4 marketing accounts; a marketing account may promote Product Pool items to earn commission if it meets affiliate criteria | medium | as of 2025-11-07 |\n| E-013 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.5 (page 6837838528808705) | 12-digit chip-based CCCD and an NFC scan are required for creators in Vietnam; triggered by a link video, by LIVE, and by withdrawal | medium | as of 2026-07-22 |\n| E-014 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.6 (page 8831988245645057) | Valid tax code mandatory from 2026-07-01; the 12-digit CCCD is used as the tax code; income may be withheld at the highest rate without one | medium | as of 2026-07-01 |\n| E-015 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.7 (page 6837828965910273) | Withdrawal minimum VND 10,000; bank fee USD 0.12 plus 1% tax per transaction; ZaloPay 1.55% plus 1%; bank 3 to 5 working days | medium | as of 2024-02-20 |\n| E-016 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.7 (page 1679024774448913) | Creators must enter bank details before they can receive commission | medium | as of 2026-06-23 |\n| E-017 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.7 (page 6837840205842177) | Commission payable only after the seller's order is settled; standard settlement 7 calendar days, fast 3, extended 15; up to 30 for suspicious activity | medium | as of 2026-09-11 |\n| E-018 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 1.7 (page 7904880287155985) | Commission paid on day 3 or day 15 after delivery, depending on seller terms; not paid while a dispute is open | medium | as of 2026-01-30 |\n| E-019 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.1 (page 6837788624340738) | Open collaboration and targeted collaboration are both offered; where a product is in both, the targeted commission applies | medium | as of 2026-10-14 |\n| E-020 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.2 (pages 3747225037670161, 7904880287155985) | The final rate is set by the seller; TikTok gives suggested percentages; rate decreases reach existing creators only after 30 days; increases apply at once | medium | as of 2024-06-27 |\n| E-021 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.3 (search snippets) | No first-party page opened gives category commission rates; snippets report 20 to 35 percent, anecdotal | low | unknown |\n| E-022 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.4 (pages 6837840205842177, 1679024774448913) | Last-click attribution; 7 days direct and 7 days indirect; an affiliate link is valid for at most 100 days | medium | as of 2026-09-11 |\n| E-023 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.4 (pages 6837840205842177, 7904880287155985) | Commission base is the customer's actual paid price times the rate, excluding platform and seller discounts and product tax; alternative formula (revenue minus refunds) times rate | medium | as of 2026-09-11 |\n| E-024 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.5 (page 6837840205842177) | Cancellation before receipt, full refund in the after-sales period and fraud each remove commission; partial refund gives partial commission | medium | as of 2026-09-11 |\n| E-025 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.5 (page 645359505819393) | Fake or self orders are banned, including orders by the creator or people linked to the creator | medium | as of 2026-09-22 |\n| E-026 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.5 (pages 6837776049932034, 8831988245645057) | Commission may be frozen for up to 90 days during review and deducted for serious or repeated cases | medium | as of 2026-09-22 |\n| E-027 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 2.6 (page 2948277949679376) | Business-seller PIT feature: default rate 10%, seller may set 0 to 35%; not enabled for individual or household-business sellers | medium | as of 2025-09-24 |\n| E-028 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.1 (TikTok Branded Content Policy VN, bc-policy/vi) | Commercial-content toggle required for branded content; affiliate content is covered by the definition (commission per sale via links or promo codes); handling of Shop product-link videos not stated | medium | as of 2026-08-04 |\n| E-029 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.2 (page 6837791128880898) | Unoriginal content is all content the creator did not create; a product review stitched without new commentary is the example; hiding reuse brings heavier penalties | medium | as of 2026-09-22 |\n| E-030 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.2 (pages 8831988245645057, 645359505819393) | Escalated enforcement for unoriginal content, effective 2025-09-15; mass reposting of TikTok Shop content to other platforms is banned | medium | as of 2026-09-22 |\n| E-031 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.3 (AIGC guide, page 6832782790018833) | Turn on the AI-generated label in post settings; no AI or editing to show skin, hair or body improvement; no AI doctors, celebrities or officials; generic or cartoon characters recommended; static AI images discouraged | medium | as of 2026-10-21 |\n| E-032 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.3 (page 6837773789480706) | Creators must use the AIGC label as required by the Community Guidelines | medium | as of 2026-03-17 |\n| E-033 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.3 (Community Guidelines integrity page) | Creators must label AI-generated content showing realistic scenes or people | medium | as of 2026-09-24 |\n| E-034 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.3 (page 8831988245645057) | The posting limit also applies to AIGC content, effective 2026-03-30 | medium | as of 2026-03-30 |\n| E-035 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.3 (search snippets only) | Creator Health Rating penalties: up to 20 points for AIGC non-disclosure, up to 40 for AI impersonation | low | unknown |\n| E-036 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.4 (pages 8831988245645057, 6837773789480706) | No misleading claims on product function, effect or medical use; sale of weight-management products not allowed; stricter weight-control claim rule effective 2026-07-07 | medium | as of 2026-07-07 |\n| E-037 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.4 (bc-policy/vi) | Branded content bans pharmaceuticals and health-care products, diet supplements, infant formula, cosmetic surgery, CBD, tobacco, financial services and MLM; OTC drugs not permitted in Vietnam; the same policy allows vitamin supplements for 18+ in listed markets including Vietnam | medium | as of 2026-08-04 |\n| E-038 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.4 (page 6837773789480706) | Content showing under-18 minors promoting products is banned; exception where adults appear with them | medium | as of 2026-03-17 |\n| E-039 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.5 (page 5393782430680848) | Posting limit triggered by 5 or more non-interactive or misleading videos in 7 days; then at most 7 TikTok Shop videos per 7 days; excess videos show no product link; LIVE unaffected | medium | as of 2026-08-24 |\n| E-040 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.5 (rule update 2025-10-10) | Non-interactive means no meaningful on-screen activity; the product must be mentioned aloud or shown; text overlay alone does not count | medium | as of 2025-10-10 |\n| E-041 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.6 (page 5320538579699457) | New creators start at 200 Creator Health Rating points (scale 0 to 1,000); at 150 or less shoppable video, LIVE and showcase are lost for 3 days; 100 or less 7 days; 50 or less 14 days; 0 removes e-commerce rights; points reset after 90 days | medium | as of 2026-10-19 |\n| E-042 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 3.6 (page 6837776049932034) | Serious or repeated cases can remove a creator permanently; appeal within 30 days; no appeal against point-threshold actions | medium | as of 2026-09-22 |\n| E-043 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Law 75/2025, government-hosted PDF text) | Law 75/2025 amending Law 16/2012 takes effect 2026-01-01 (Art. 3(1)); the text was read by the gatherer, not by this run | medium | as of 2026-01-01 |\n| E-044 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 2(8) as amended) | Ad-product transmitter is a person who directly advertises, recommends or endorses products online | medium | as of 2026-01-01 |\n| E-045 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 15a(2)) | Every transmitter must comply with consumer law and pay tax on advertising revenue, and is liable if ad content breaches Art. 19 | medium | as of 2026-01-01 |\n| E-046 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 15a(3)) | An influencer (as defined in consumer law) may not introduce a product it has not used or does not clearly understand; must announce it is advertising immediately before and during | medium | as of 2026-01-01 |\n| E-047 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 23(2)(a) and (\u0111)) | Online ads need a clear identifying mark; social-network users who advertise must mark ad or sponsored content | medium | as of 2026-01-01 |\n| E-048 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 23(3)(a)) | Transmitters must register for tax, declare and pay tax on advertising-service revenue | medium | as of 2026-01-01 |\n| E-049 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 19(1) as amended) | Ad content must be truthful, accurate and clear, and not misleading on features, quality or uses | medium | as of 2026-01-01 |\n| E-050 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.1 (Art. 20(4) as amended) | Cosmetics ads need a product notification; infant nutrition products up to 36 months have conditions; medical devices need a circulation number or import licence | medium | as of 2026-01-01 |\n| E-051 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.2 (Law 122/2025, Art. 40) | E-commerce Law 122/2025 takes effect 2026-07-01; date corroborated by several outlets; text read from a mirror | medium | as of 2026-07-01 |\n| E-052 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.2 (Art. 3(12), 3(14), mirror) | Defines e-commerce affiliate service (advertising via access links or referral codes) and e-commerce affiliate person; clause numbers conflict with a news report | low | as of 2026-07-01 |\n| E-053 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.2 (Art. 26, mirror) | Affiliate duties: give identity information to the service provider; refuse promotion on flagged platforms or unregistered MLM; refuse content contrary to social ethics; remove links to unlawful goods when found or asked; provide information on request | low | as of 2026-07-01 |\n| E-054 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.2 (Art. 24, mirror) | Livestream sellers: platform identity verification; no false or misleading claims; stop and remove content once a violation is found | low | as of 2026-07-01 |\n| E-055 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.2 (summaries of Decree 248/2026) | Decree 248/2026, dated 2026-06-30, is said to implement the e-commerce law; its text was not read | low | as of 2026-06-30 |\n| E-056 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.3 (Consumer Protection Law 19/2023, Art. 3(9), mirror) | Influencer: expert, reputable person or person drawing social attention in a field, as specified by the Government | low | as of 2024-07-01 |\n| E-057 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.3 (Art. 10(1)(h), mirror; HCMC leaflet) | Failing to notify consumers in advance and publicly of sponsoring an influencer is a prohibited act; the HCMC Department of Justice leaflet states the same | medium | as of 2024-07-01 |\n| E-058 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.3 (Art. 10(1)(a), mirror) | Deceiving or confusing consumers with false, incomplete or inaccurate information is prohibited | low | as of 2024-07-01 |\n| E-059 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 4.3 (Decree 55/2024 Art. 2(1), two secondary summaries) | Per two secondary summaries, an influencer includes a person with a significant following or an account eligible for advertising or commerce programmes on digital platforms; decree text not read | medium | as of 2024-07-01 |\n| E-060 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.2 (PIT Law 109/2025 Art. 7(c) and (\u0111), mirror) | Services 2 percent; digital content including digital advertising 5 percent; mirror letters the 5 percent item as point (\u0111), not (d) | low | as of 2026-07-01 |\n| E-061 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.2 (baochinhphu.vn guidance, Tax Office No. 3 HCMC) | Agency commission bears PIT at 2 percent; livestream product promotion is digital content or advertising at 5 percent | medium | as of 2026-09-23 |\n| E-062 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.1 (MOF journal report of Letter 7403/CT-TM\u0110T, letter not opened) | Affiliate income that is not salary is business income | low | as of 2026-10-08 |\n| E-063 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.2 (same report) | Affiliate services are taxed at 5 percent, citing point d of clause 3 of Art. 7 | low | as of 2026-10-08 |\n| E-064 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (same report) | A platform with ordering and payment functions, TikTok Shop given as example, must withhold, file and pay, citing Decree 252/2026 Art. 43 | low | as of 2026-10-08 |\n| E-065 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (summaries of Decree 252/2026) | Decree 252/2026, effective 2026-07-01, places the withhold-and-pay duty on platforms with ordering and payment functions; reported to replace Decree 117/2025; text not read | medium | as of 2026-07-01 |\n| E-066 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (baochinhphu.vn guidance, S\u01a1n La tax office) | Affiliate income already withheld at source by the platform, so no further declaration, citing Decree 117/2025 Art. 11(4) | medium | as of 2026-05-15 |\n| E-067 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (baochinhphu.vn guidance, Tax Office No. 3 HCMC) | TikTok does not currently withhold tax before paying; the household business self-declares | medium | as of 2026-09-23 |\n| E-068 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (xaydungchinhsach.chinhphu.vn guidance) | Platforms with ordering and payment are responsible for withholding, filing and paying on behalf under Decree 117/2025 | medium | as of 2026-03-16 |\n| E-069 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (third-party snippets of Decree 117/2025 Art. 5(2)) | Resident PIT on sales: goods 0.5 percent, services 2 percent, transport-linked 1.5 percent; primary text not read | low | as of 2025-06-09 |\n| E-070 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.3 (xaydungchinhsach guidance on Decree 253/2026 Art. 50) | Payers withhold 10 percent of income before payment, from VND 5 million per payment, to individuals without a labour contract; said to apply only to wage-type income | medium | as of 2026-07-03 |\n| E-071 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.4 (PIT Law 109/2025 Art. 7(1), mirror; EY alert) | Annual revenue of VND 500 million or less: no PIT payable; rates apply to the excess; business-income rules from tax year 2026 | medium | as of 2026-07-01 |\n| E-072 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.4 (baochinhphu.vn guidance citing Decree 68/2026 Art. 11(3)) | Revenue above VND 3 billion, or annual revenue above VND 500 million under the income method, requires annual consolidation and finalisation | medium | as of 2026-09-23 |\n| E-073 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.5 (MOF journal on Letter 7403) | Business-income affiliates register, declare and pay under Decrees 68/2026 and 141/2026; annual revenue above VND 1 billion requires registration to use invoices | low | as of 2026-10-08 |\n| E-074 | pilot-affiliate-vn/evidence/tiktok-vn-and-law.md section 5.5 (baochinhphu.vn guidance, one case) | One affiliate in the Q&A registered a household business to pay tax and issue invoices, with an e-invoice to TikTok as buyer under Decree 254/2026 Art. 9 | medium | as of 2026-09-23 |\n| E-075 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.1 (help article 122944) | Current affiliate terms published 2026-07-08, effective 7 days later | medium | as of 2026-07-08 |\n| E-076 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.2 (article 122944) | Four participant types; companies cannot join the KOL/KOC form; KOL DN needs a daily order threshold and service contract; MCN and short-tail routes; Seller Affiliate open to all types | medium | as of 2026-07-08 |\n| E-077 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.3 (article 122944) | A partner may join under only one form and may hold only one affiliate account | medium | as of 2026-07-08 |\n| E-078 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.4 (article 122944) | Under-18s need a parent's or guardian's permission | medium | as of 2026-07-08 |\n| E-079 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.4 (Shopee blog; blog disclaims accuracy) | Business-individual form is for people aged 18 and over | low | unknown |\n| E-080 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.5 (article 122944) | KOL bar: at least 5,000 followers on TikTok or YouTube, or 10,000 on Facebook or Instagram; below it a partner becomes KOC; KOC has no minimum | medium | as of 2026-07-08 |\n| E-081 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.6 (article 203394 referenced) | A new account is recorded as individual by default and may convert to business individual | medium | unknown |\n| E-082 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.7 (article 122944) | Promotion only on registered and approved channels; the terms list Facebook, Snapchat, Zalo, Instagram, Pinterest and Twitter, not TikTok; accounts reviewed monthly | medium | as of 2026-07-08 |\n| E-083 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.7 (Shopee blog) | Blog lists TikTok, Facebook, Instagram, YouTube and X as channels | low | unknown |\n| E-084 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.7 (article 134926) | Linked channels are checked at approval and periodically against Community Standards, including ownership and copied content | medium | unknown |\n| E-085 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.8 (article 122944) | Full name, CCCD, bank account and tax code are mandatory for individuals; business individuals provide an invoice; companies provide a VAT invoice and are paid within 30 working days | medium | as of 2026-07-08 |\n| E-086 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.9 (article 180808) | Payment profile must be a domestic individual account, match the 12-digit CCCD exactly, be in the same name, and be supported by ID photos and a tax-code screenshot; payouts go only to the person's own account | medium | unknown |\n| E-087 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.10 (article 122944) | Minimum payout VND 10,000; payment may be refused if payment information is missing 6 months after first revenue | medium | as of 2026-07-08 |\n| E-088 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.11 (article 188941) | Individuals paid twice weekly from November 2025: orders completed Sunday to Tuesday paid the following Tuesday; Wednesday to Saturday the following Thursday; businesses twice monthly | medium | as of 2025-11-01 |\n| E-089 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.12 (article 122944) | Video (PPV) and live (PPLS) campaigns are invitation-only modes of the same programme, offered by email for a fixed fee, open to KOL/KOC, KOL DN and MCN | medium | unknown |\n| E-090 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q1.13 (Shopee blog) | Joining is free | low | unknown |\n| E-091 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.1 (article 122944) | Commission equals net successful-order value times the category rate Shopee sets from time to time; three types: base (Shopee-paid), Xtra (seller-paid), bonus | medium | as of 2026-07-08 |\n| E-092 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.2 (articles 123037, 122941) | Rates vary by period, category and media channel; the rate table is login-gated and was not read; the rate is fixed when the order is placed | medium | unknown |\n| E-093 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.3 (GHN blog, third-party) | Maximum commission per order VND 30,000; women's fashion 3.68 percent; third-party only | low | as of 2025-10-25 |\n| E-094 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.4 (articles 122944, 122941) | Cookie lasts 7 days on app and web; the order must be placed within 7 days of the click; a successful order is completed within 30 days of the visit | medium | as of 2026-07-08 |\n| E-095 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.5 (article 122944) | Cancelled, refused or returned orders are excluded; fraud, bot orders and orders next to prohibited content are excluded | medium | as of 2026-07-08 |\n| E-096 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.6 (article 122944) | Purchases through the partner's own link and purchases for resale are excluded | medium | as of 2026-07-08 |\n| E-097 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.7 (articles 164064, 122941) | Shopee Video Xtra commission advertised up to 35 percent; Xtra is seller-funded, for opted-in products only, not on homepage or category links; unlimited Xtra wording implies a cap on base commission | medium | unknown |\n| E-098 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.8 (article 174381) | Affiliate service fee 0.98 percent of everything the partner receives, deducted each period from 16 to 31 July 2025 | medium | as of 2025-07-31 |\n| E-099 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.9 (third-party seller-tool sources) | A 5 percent technical support fee is described as a fee on cross-border sellers from February 2026; no first-party affiliate page in the pack carries a 5 percent fee | low | unknown |\n| E-100 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.10 (article 196407; article 122944) | Shopee withholds 10 percent PIT on each payment of VND 250,000 or more from 2025-11-20 (previously VND 2,000,000); terms confirm this for non-business individuals | medium | as of 2025-11-20 |\n| E-101 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.11 (article 163104) | Business individuals and household businesses: VAT 5 percent and PIT 5 percent withheld by Shopee; VND 1 billion threshold; Shopee does not do the annual settlement | medium | unknown |\n| E-102 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.12 (article 122944) | Individuals have 24 hours to dispute a commission result, after which it is deemed accepted | medium | as of 2026-07-08 |\n| E-103 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q2.13 (article 132472) | No commission on infant formula, baby vitamins and supplements, pacifiers, baby bottles, OTC medicines, or alcohol above 15 percent | medium | unknown |\n| E-104 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.1 (article 122944, section 3.1) | Affiliates may not promote products of sellers on competing e-commerce platforms that are Shopee's competitors, naming TikTok, Lazada, Tiki and Sendo; the reach of the clause is not defined in the pack | medium | as of 2026-07-08 |\n| E-105 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.2 (article 122944) | Banned methods include unapproved email, SMS or ZNS; SEM bidding on Shopee; pop-ups and auto-redirects; contests; copying Shopee content; scraping; buying to resell; negative comments on Shopee | medium | as of 2026-07-08 |\n| E-106 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.3 (article 122944) | Doctor or pharmacist imagery banned for food and supplements; superlatives banned without legal evidence; partners must hold required licences | medium | as of 2026-07-08 |\n| E-107 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.4 (article 199468) | Anti-fraud policy bans stolen content, link-only posts, clickbait, mass video creation by tools, multiple accounts and emulators; fine up to VND 10 million per act | medium | as of 2024-09-05 |\n| E-108 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.5 (article 202687) | AI videos must carry the label \"Video t\u1ea1o b\u1edfi AI\"; unlabelled AI videos are deleted from 2026-09-23, citing Law 134/2025 effective 2026-03-01; same AI avatar across several accounts banned; penalties escalate | medium | as of 2026-09-23 |\n| E-109 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.6 (article 164064) | The cart is removed if the video does not show the tagged product; low-quality videos may lose the video feature | medium | unknown |\n| E-110 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q3.7 (article 122944) | Termination after 6 consecutive months with no results and for false ID, tax or bank details, multiple accounts, automated registration or unfair competition; liquidated damages 30 percent of amounts paid; pending payouts retained | medium | as of 2026-07-08 |\n| E-111 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.1 (press citations, third-party) | 2025 GMV share: Shopee 56.04 percent, TikTok Shop 41.31 percent; another outlet gives 57.5 and 39.6; market share, not a rule or revenue number | low | unknown |\n| E-112 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.2 (press, third-party) | H1 2025 TikTok Shop growth 69 percent; share rose from 29 to 39 percent | low | unknown |\n| E-113 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.3 (secondary aggregator, press summary) | H1 2026: Shopee 54.5 percent, TikTok Shop 43.4 percent; original YouNet report not seen | low | unknown |\n| E-114 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.5 (press, two outlets) | Vietnam digital economy about USD 39 billion and e-commerce about USD 25 billion in 2025; about 650,000 video-commerce sellers, up 60 percent | medium | unknown |\n| E-115 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.5 (press; sources conflict) | Video-commerce average order value about USD 5.5 to 7; sources conflict on whether the 1.3 billion figure is GMV or transactions | low | unknown |\n| E-116 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.6 (community posts, press summary) | TikTok Shop VN 2025: fashion and accessories over USD 2.4 billion; home and living over USD 1.1 billion; food about USD 557 million; beauty share 28.9 to 44.1 percent | low | unknown |\n| E-117 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.7 (secondary press summary) | About 60 percent of sellers' TikTok Shop VN revenue said to come from affiliate; livestream 35 to 40 percent of region-wide GMV, not Vietnam-specific | low | unknown |\n| E-118 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.8 (press summary) | Mall shops are 2.64 percent of shops and 35.7 percent of Shopee and TikTok Shop sales in Q3 2025 | low | unknown |\n| E-119 | pilot-affiliate-vn/evidence/shopee-vn-and-market.md Q4.9 (press summary) | Average selling price up about 33 percent while Q4 2025 volume fell 8 percent year on year, attributed to higher platform fees | low | unknown |\n| E-120 | research/ceo-decision-record.md, lines 2358-2382 (pivot entry, heading \"Pivot: affiliate revenue first\") | The pivot entry reopens five standing decisions (revenue model, payee and entity, launch scope, first-item entry, disclosure entry); keeps the per-publication, individual-creator, budget and no-account entries unchanged | high | as of 2026-10-26 |\n| E-121 | research/ceo-decision-record.md, lines 1043-1123 (disclosure entry) | The two Vietnamese disclosure gaps stay carried; affiliate disclosure is a standing rule until Vietnamese law settles it; the entry treats Vietnamese disclosure law as unestablished | high | unknown |\n| E-122 | research/ceo-decision-record.md, lines 824-897 and 79-101 (individual-creator and per-publication entries) | Operate as an individual creator with the CEO carrying the legal position; every publication is CEO-approved individually; both unchanged by the pivot entry | high | unknown |\n| E-123 | research/ceo-decision-record.md, lines 137-151, 186-225, 1125-1142 (revenue-model, payee, launch-scope and first-item entries) | Revenue model at launch: platform advertising plus affiliate; payee: Vietnam-resident, YouTube only at first; launch scope: YouTube English first; first item carries no affiliate link; each reopened by the pivot entry, current text read in part | high | unknown |\n| E-124 | research/ceo-decision-record.md, line 751 | The record states decision numbers were renumbered in a fourth round, so identifiers are not stable across rounds | high | unknown |\n| E-125 | research/platform-policy-dossier.md section 2.1 (as read in part) | TikTok Creator Rewards available in eight countries, Vietnam excluded | low | unknown |\n| E-126 | research/platform-policy-dossier.md, TikTok Shop affiliate section (as read in part) | US TikTok Shop affiliate rules: 1,000 followers, identity verification, posting limits; a pilot page calls 5,000 the traditional requirement; US-only | low | unknown |\n| E-127 | research/platform-policy-dossier.md section 4.1 (as read in part) | Vietnam TikTok Shop listed as \"Available\" for branded content | low | unknown |\n| E-128 | research/platform-policy-dossier.md section 4.2 (as read in part) | PIT claim: Circular 40/2021, rates 2 and 5 percent, threshold VND 100 million; third-party and unverified in the dossier | low | unknown |\n| E-129 | research/platform-policy-dossier.md, gap 14 (as read in part) | The dossier states it could not verify Vietnamese advertising-law disclosure | high | unknown |\n| E-130 | research/platform-policy-dossier.md, lines 625-630 (as read in part) | The Branded Content Policy is stated to cover affiliate links; the statement is US-scoped | low | unknown |\n| E-131 | research/language-market-analysis.md section 7.4, lines 468-521 | Shopee commission 1 to 8 percent by category and a 5 percent fee from February 2026, both labelled third-party | low | unknown |\n\n## Options Evaluated\n\n| ID | Option | Benefits | Risks | Effort | Evidence |\n|---|---|---|---|---|---|\n| O-001 | Run TikTok Shop affiliate and Shopee Affiliate together from the CEO's one individual identity | Both first-party rule sets are on record for eligibility, payout, commission and content (E-006 to E-042, E-075 to E-110) | Shopee's competing-platform clause may bar promoting TikTok sellers from one identity (E-104); tax and withholding conflicts apply to both paths (E-060 to E-074, E-100) | Evidence supports no effort figure | E-006 E-007 E-008 E-009 E-010 E-011 E-012 E-013 E-014 E-015 E-016 E-017 E-018 E-019 E-020 E-021 E-022 E-023 E-024 E-025 E-026 E-027 E-028 E-029 E-030 E-031 E-032 E-033 E-034 E-035 E-036 E-037 E-038 E-039 E-040 E-041 E-042 E-043 E-044 E-045 E-046 E-047 E-048 E-049 E-050 E-051 E-052 E-053 E-054 E-055 E-056 E-057 E-058 E-059 E-060 E-061 E-062 E-063 E-064 E-065 E-066 E-067 E-068 E-069 E-070 E-071 E-072 E-073 E-074 E-075 E-076 E-077 E-078 E-079 E-080 E-081 E-082 E-083 E-084 E-085 E-086 E-087 E-088 E-089 E-090 E-091 E-092 E-093 E-094 E-095 E-096 E-097 E-098 E-099 E-100 E-101 E-102 E-103 E-104 E-105 E-106 E-107 E-108 E-109 E-110 E-111 E-112 E-113 E-114 E-115 E-116 E-117 E-118 E-119 E-120 E-121 E-122 E-123 E-124 E-125 E-126 E-127 E-128 E-129 E-130 E-131 |\n| O-002 | Run TikTok Shop affiliate only, as the CEO's individual creator account | First-party creator path with stated eligibility, commission and attribution rules (E-006 to E-024) | Creator Health Rating and posting-limit enforcement (E-039, E-041); tax rate and withholding conflicts (E-060 to E-067); disclosure and AI-label duties (E-028, E-031 to E-034, E-046) | Evidence supports no effort figure | E-006 E-007 E-008 E-009 E-010 E-011 E-012 E-013 E-014 E-015 E-016 E-017 E-018 E-019 E-020 E-021 E-022 E-023 E-024 E-025 E-026 E-027 E-028 E-029 E-030 E-031 E-032 E-033 E-034 E-035 E-036 E-037 E-038 E-039 E-040 E-041 E-042 E-043 E-044 E-045 E-046 E-047 E-048 E-049 E-050 E-051 E-052 E-053 E-054 E-055 E-056 E-057 E-058 E-059 E-060 E-061 E-062 E-063 E-064 E-065 E-066 E-067 E-068 E-069 E-070 E-071 E-072 E-073 E-074 E-111 E-112 E-113 E-114 E-115 E-116 E-117 E-118 E-119 E-120 E-121 E-122 E-123 E-124 E-125 E-126 E-127 E-128 E-129 E-130 |\n| O-003 | Run Shopee Affiliate only, as an individual KOC account | KOC has no follower minimum; 7-day cookie; payouts twice weekly (E-080, E-094, E-088) | 10 percent withholding on payments from VND 250,000 (E-100); the competing-platform clause (E-104) concerns promoting TikTok-listed sellers, which a Shopee-only course would not do on its face; channel approval and AI-label deletion rule (E-082, E-108) | Evidence supports no effort figure | E-075 E-076 E-077 E-078 E-079 E-080 E-081 E-082 E-083 E-084 E-085 E-086 E-087 E-088 E-089 E-090 E-091 E-092 E-093 E-094 E-095 E-096 E-097 E-098 E-099 E-100 E-101 E-102 E-103 E-104 E-105 E-106 E-107 E-108 E-109 E-110 E-043 E-044 E-045 E-046 E-047 E-048 E-049 E-050 E-051 E-052 E-053 E-054 E-055 E-056 E-057 E-058 E-059 E-060 E-061 E-062 E-063 E-064 E-065 E-066 E-067 E-068 E-069 E-070 E-071 E-072 E-073 E-074 E-111 E-112 E-113 E-114 E-115 E-116 E-117 E-118 E-119 E-120 E-121 E-122 E-123 E-124 E-129 E-131 |\n| O-004 | Defer any account, programme, sample or build until the blocking points in Open Questions are settled | Avoids acting on the standing contradictions and gaps listed below; the reopened decisions keep their current text until the owner rules (E-120 to E-124) | No revenue path in the interim; the framing's blocking questions stay open (E-002); the reopened decisions stay unruled | Evidence supports no effort figure; no cost of delay is stated in the evidence | E-002 E-017 E-018 E-031 E-032 E-033 E-045 E-046 E-047 E-048 E-056 E-057 E-059 E-060 E-061 E-062 E-063 E-064 E-065 E-066 E-067 E-068 E-069 E-070 E-071 E-072 E-073 E-074 E-082 E-083 E-104 E-108 E-120 E-121 E-122 E-123 E-124 E-128 E-129 |\n\nOption order follows the Stage 8 rule (distinct observations cited, ties to the lower identifier). It is a count of citations and is not a ranking of merit.\n\n## Recommendation\n\n- Recommended option: O-004, named as the reading the evidence supports for the current state. It is not a decision, and the owner or the architect decides it.\n- Rationale: The evidence favours none of O-001 to O-003 clearly. Each rests on a standing contradiction or unresolved gap: the competing-platform clause for O-001 (E-104; Q-001); the influencer and used-product duty and the disclosure duty for all three (E-046, E-059; Q-002); the rate and withholding conflicts for all three (E-061, E-062, E-063, E-064, E-066, E-067; Q-003, Q-004). O-004 rests only on those unresolved points and on the reopened decisions' current text, and does not depend on any one rate or withholding statement being right. What would distinguish the options: counsel's reading of E-104 (decides whether O-001 is open); counsel's reading of E-046 with E-059 (decides the used-product duty for any option); a settled rate and withholding status (E-060 to E-067; decides the economics of O-002 and O-003); and captured first-party pages (Q-009). Confidence is low for this reason.\n- Preconditions: The evidence shows these must hold before any option proceeds: the scope of E-104 is read by counsel or confirmed by Shopee (Q-001); the used-product and announcement duties are read for an affiliate account (E-046, E-059; Q-002); a PIT rate and withholding status are settled (E-064 to E-067; Q-003, Q-004); the reopened decisions are ruled on (E-120; Q-010).\n- Risks requiring monitoring: AI-label rules in force on both platforms (E-031 to E-033, E-108); tax rules changed on 2026-07-01 and under further decrees (E-064, E-065, E-067); the pivot entry's reopened standing decisions (E-120, E-121); pages dated after the access date may change (E-033, E-041).\n\n## Next Steps\n\n- Immediate actions: Local counsel to give written readings on Q-001 to Q-005, Q-013 and Q-014. Orchestrator to route further collection for Q-007, Q-009, Q-012, Q-015, Q-016 and Q-017, and to record the operator-stated criteria (Q-011). CEO to answer Q-006 and Q-010 and to seek Shopee confirmation (Q-001, Q-008). These are routed to their owners; this report does not sequence them.\n- Decision owner and deadline: The CEO decides whether a pilot runs, the reopened decisions and the content form. The architect decides the Technical Validity Gate on this report. No deadline is stated in the inputs (unknown).\n- Follow-up validation: Re-capture of the cited pages and texts by a role with documented capture (Q-009); then re-check of E-017 against E-018, E-060 against E-063, E-064 against E-066 and E-067, and E-104 against counsel's reading, with the Stage 10 tables re-run.\n\n## Contradictions and Gaps\n\nContradictions (each stands; none was settled by recency, authority or convenience):\n\n- Competing-platform clause against the pilot as the research question describes it: E-104 and E-001 describe different things (the clause, and the pilot the owner asked to be researched); both stand. Attention point 1, see Q-001. E-082 adds that TikTok is absent from the terms' list while E-083 lists it.\n- PIT withholding status: E-066 (2026-05-15, already withheld at source), E-067 (2026-09-23, TikTok does not withhold) and E-064 (2026-10-08, as reported, platform must withhold). The later date of E-064 does not settle the conflict; E-064 is a letter reported second-hand. Attention point 4, see Q-004.\n- PIT rate for affiliate commission: E-061 and E-060 (2 percent for agency commission; 5 percent for digital advertising) against E-063 (5 percent for affiliate services). The lettering of the rate point differs (E-060). Attention point 4, see Q-003.\n- Influencer scope: E-059 (eligible account counts) against E-056 (person of standing \"as specified by the Government\"); the decision turns on the decree text, which was not read. Attention point 2, see Q-002. The pack's reading that an affiliate is within the definition is inference, not recorded here.\n- Advertising-law premise: E-121 treats Vietnamese disclosure law as unestablished; E-047 and E-046 state disclosure duties in the law text as read by the gatherer. Stands for counsel; the record's date is unknown.\n- Settlement timing: E-017 (7, 3, 15 days) against E-018 (day 3 or day 15). Both first-party, different dates. Stands; see Q-007.\n- Shopee channel list: E-082 (TikTok not listed) against E-083 (TikTok listed). Stands; see Q-008.\n- Shopee minimum age: E-078 (under-18 needs permission) against E-079 (business-individual form for 18 and over). Possibly different forms; stands.\n- Shopee fee: E-131 (third-party 5 percent fee from February 2026) against E-098 (first-party 0.98 percent affiliate fee); E-099 reads the 5 percent as a seller fee. The first-party affiliate fee is stated; the 5 percent figure's application to affiliates stays unverified.\n- Shopee commission levels: E-131 (1 to 8 percent) against E-093 (third-party 3.68 percent and VND 30,000 cap); no first-party number exists in the pack (E-092).\n- Market share: E-111 (56.04 and 41.31 percent) against the other outlet figures in the same row (57.5 and 39.6 percent); E-113 for H1 2026. Stands.\n- PIT threshold: E-128 (VND 100 million, Circular 40/2021) against E-071 (VND 500 million, Law 109/2025 Art. 7(1)). Stands; the status of Circular 40/2021 is not established.\n- Withholding figures for different persons: E-100 (10 percent for non-business individuals on Shopee), E-101 (5 percent VAT and 5 percent PIT for business individuals), E-027 (10 percent default for business sellers, not enabled for individuals) and E-061 (2 percent for agency commission). Not reconciled; Q-004.\n- Branded content: E-037 states that health-care products are banned and, in the same policy, that vitamin supplements are allowed for 18+ in Vietnam. Stands; Q-013.\n- US figures: E-126 (US 5,000 and 1,000) against E-008 (Vietnam 1,000). Not a contradiction, because they describe different markets; recorded so that no US figure is carried as a Vietnamese rule.\n\nAttention points:\n\n- Attention point 1, competing-platform clause and one identity: E-104 names TikTok and does not define reach. The terms do not say whether the same person's TikTok Shop activity is covered or only promotion of TikTok-listed sellers through Shopee links. No source settles it. Blocking; Q-001.\n- Attention point 2, Advertising Law Art. 15a(3) and affiliates: E-046 is first-party law text (medium, read via a government-hosted PDF). Whether an affiliate is an influencer depends on the Government decree (E-056, E-059); the decree text was not read. If it is, E-046 requires use or clear understanding before introduction and an announcement before and during. The pack reads faceless and AI channels as unaddressed (no explicit rule); unresolved. Blocking; Q-002.\n- Attention point 3, AI-content labelling on both platforms: TikTok requires the AI label (E-031, E-032), a label for realistic scenes or people (E-033), bans AI doctors, celebrities and officials (E-031), and applies the posting limit to AIGC (E-034). Shopee requires a label, deletes unlabelled AI videos from 2026-09-23 under Law 134/2025 (E-108; not in the framing's named legal set and not read), and bans one AI avatar across accounts (E-108). Neither source states whether code-drawn, non-generative graphics count as AI content. Not blocking for the platform choice; Q-005 bears on content form.\n- Attention point 4, the tax conflict: see the PIT withholding status, rate and figure conflicts above. Shopee's 10 percent withholding (E-100) is a withholding rate on payments; whether it equals the final tax is not stated. Blocking; Q-003, Q-004.\n\nGaps (each names the question that would close it):\n\n- Primary texts not opened: Decree 117/2025 Art. 5(2) and 11(4), Decree 252/2026 Art. 43, Decree 253/2026 Art. 50, Decree 68/2026 Art. 11(3), Decree 55/2024 Art. 2(1), Decree 254/2026 Art. 9, Decree 248/2026, Law 134/2025, Letter 7403/CT-TM\u0110T, and the status of Decrees 52/2013 and 85/2021. vbpl.vn rendered empty and thuvienphapluat.vn returned 403. Closes by Q-002, Q-003, Q-004, Q-005, Q-013.\n- Shopee category rate table: login-gated, not read; no first-party rate figure exists in the pack. Closes by Q-008.\n- TikTok category commission rates: no first-party page found. Closes by Q-009.\n- Link-Share Only limits, Creator Health Rating point values, and whether faceless or brand-owned accounts may be full affiliate creators: no explicit rule found. Closes by Q-012.\n- Whether TikTok Shop product-link videos are auto-labelled or exempt from the branded-content toggle: not stated. Closes by Q-013.\n- The Shopee terms contain no disclosure clause; Vietnamese law (E-047) applies regardless, and penalties under the amended law were not researched. Closes by Q-013.\n- Reuse of seller-supplied product footage: no explicit permission on Shopee; TikTok's unoriginal-content rule (E-029) applies to content the creator did not make. Closes by Q-014.\n- Observed Vietnamese content-form examples and performance by form: not found; Shopee-specific affiliate GMV share, category average order value and Q3 2026 market data also not found. Closes by Q-015.\n- KOL DN and MCN thresholds, and how often small KOC accounts receive PPV or PPLS invitations: not quantified. Closes by Q-016.\n- Order in which Shopee's 0.98 percent fee and PIT are applied: not confirmed. Closes by Q-004.\n- CEO's age, tax-code status, CCCD chip and NFC status, and existing accounts: not supplied. Closes by Q-006.\n- Revenue target and break-even: not evaluated here (scope); the research proposes the 30-day earning target per E-004.\n\nStale assumptions (named, not carried as fact):\n\n- The framing's assumption that the Shopee commission range and the 5 percent fee are third-party figures to re-verify is partly superseded by E-098 (first-party affiliate fee 0.98 percent) and E-099; the 5 percent figure's applicability to affiliates remains unverified.\n- The framing's assumption that the US-only TikTok rules do not apply to Vietnam is supported by E-006 to E-008 and is not superseded.\n- The framing's assumption that the legal set is the named texts is incomplete: E-108 cites Law 134/2025, which the framing does not name and this run did not read.\n- The framing's assumption that the monthly budget and ceiling are current has no dated source; it is neither superseded nor verified. Staleness unknown.\n- The framing's assumption that the repository files the research question cites contain what it describes was not checked. Unverified.\n- The pivot entry's premise that Vietnamese disclosure law is unestablished (E-121) is contradicted in part by E-047 and E-046 as read in the pack (see Contradictions).\n\nNot examined (declared scope not reached): the decree and letter texts listed above; the Shopee rate table; the business-intent input (listed in the task context but not supplied in the envelope and not read); the delivered pipeline and the frozen branch; the current text of the reopened decisions, read in part only (E-123). No source was unreachable to this run, which made no external access; the pack records these as unreachable to its gatherer: vbpl.vn (empty), thuvienphapluat.vn (403), affiliate.shopee.vn (login), shopee.vn/affiliate (503 or rate-limit).\n\n## Open Questions\n\n| ID | Question | Blocking | Owner | Affects |\n|---|---|---|---|---|\n| Q-001 | Does Shopee's competing-platform clause bind one person who also runs a TikTok Shop affiliate account, or only promotion of TikTok-listed sellers through Shopee links? | yes | local counsel; CEO to request Shopee confirmation | O-001, O-003, E-104, E-082 |\n| Q-002 | Is an affiliate account an influencer under Advertising Law Art. 15a(3) through Decree 55/2024 Art. 2(1), and if so which used-product and announcement duties apply to each introduced product? | yes | local counsel; further collection of the decree text | O-001, O-002, O-003, E-046, E-056, E-059 |\n| Q-003 | Which PIT rate applies to affiliate commission, 2 or 5 percent, on what legal basis, and is Letter 7403 confirmed? | yes | local counsel; further collection of the letter text | O-001, O-002, O-003, E-060, E-061, E-063 |\n| Q-004 | Does the platform withhold PIT on the CEO's commission, from what date, under which decree, and in what order with Shopee's 0.98 percent fee? | yes | local counsel; further collection of decree texts | O-001, O-002, O-003, E-064, E-065, E-066, E-067, E-100 |\n| Q-005 | Do either platform's AI-label rules, or Law 134/2025, reach code-drawn graphics that are not generative? | no | local counsel; further collection | O-002, O-003, E-031, E-032, E-033, E-108 |\n| Q-006 | What are the CEO's age, tax-code status, CCCD chip and NFC status, and existing accounts? | yes | CEO | O-001, O-002, O-003, E-006, E-007, E-013, E-014 |\n| Q-007 | Which commission settlement timing applies (7, 3, 15 days or day 3 or 15), and what do the 2024 withdrawal fees and 1 percent tax line cover? | no | further collection (orchestrator to route) | O-002, O-003, E-015, E-017, E-018 |\n| Q-008 | What is Shopee's current category rate table, and is TikTok an approved channel for an affiliate account? | no | CEO (view or Shopee support) | O-001, O-003, E-082, E-083, E-092 |\n| Q-009 | Can the cited pages and texts be captured as read on 2026-10-26? None is in the pack, so first-party observations rest on the gatherer's record. | yes | further collection (orchestrator to route, with documented capture) | O-001, O-002, O-003, O-004 |\n| Q-010 | What is the owner's keep, amend or supersede ruling on each reopened standing decision, and what is each entry's current text? | no | CEO | O-004, E-120, E-121, E-122, E-123 |\n| Q-011 | Is the Framing Gate acceptance criteria and the operator's answers recorded in the repository, and is the slice extended to cover the prior records read in this run? | no | orchestrator, with product-owner | O-004, E-003, E-004 |\n| Q-012 | What are TikTok's Link-Share Only limits and Creator Health Rating point values, and may faceless or brand-owned accounts be full affiliate creators? | no | further collection (orchestrator to route) | O-002, E-009, E-010, E-011, E-012, E-035 |\n| Q-013 | What are the penalties under the amended advertising law; does Shopee's disclosure gap matter; are TikTok Shop product-link videos exempt from the toggle? | no | local counsel | O-001, O-002, O-003, E-028, E-047, E-057 |\n| Q-014 | Is reuse of seller-supplied product footage permitted on each platform? | no | local counsel; CEO to seek seller permission | O-002, O-003, E-029, E-105 |\n| Q-015 | What observed Vietnamese examples and performance exist by content form, what is the Shopee-specific affiliate GMV share, and what is category average order value and Q3 2026 market data? | no | further collection (orchestrator to route) | O-001, O-002, O-003, E-111, E-115, E-117 |\n| Q-016 | What are the Shopee KOL DN and MCN thresholds, and how often do small KOC accounts receive PPV or PPLS invitations? | no | further collection (orchestrator to route) | O-003, E-080, E-089 |\n| Q-017 | The business-intent input was not read; the delivered pipeline and frozen Wave 12 and 13 state were not examined; the research question's repository file claims are unverified. | no | orchestrator | O-004, E-001 |",
+        "digest": "sha256:ebf31efc76c7a3652515548dab9b5eb6",
+        "produced_by": "technical-validation"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the established position this decision rests on: an investigation report for an `investigate` or `research` run, a review package for a `review-pull-request` merge decision, a validation report or review package for a `release` readiness assessment, or a technical design where the structural approach is what the options differ over. Without one there is no evidence base, and recommending anyway would mean deciding delivery on this agent's own reading of a situation nobody established."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "investigation-report",
+      "reference": "runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+      "produced_by": "technical-validation",
+      "artifact": "investigation-report.md",
+      "bytes": 59830,
+      "sections": null
+    },
+    {
+      "type": "technical-recommendation",
+      "reference": "runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md",
+      "produced_by": "option-synthesis",
+      "artifact": "technical-recommendation.md",
+      "bytes": 23815,
+      "sections": null
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-8d7e366341bf/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:b90e3ca7f3e8cf258ea216eab1930f78",
+    "bytes": 11751,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "performance",
+        "react-frontend",
+        "security"
+      ],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "recommendation-draft"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-26T12:19:58Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/research.md",
+        "digest": "sha256:5cb31ed60a86d70cb6b1128a8280e62a",
+        "supplies": "framework-context",
+        "bytes": 7599,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/technical-recommendation.md",
+        "digest": "sha256:6103849a70a82758c3199190e59661f5",
+        "supplies": null,
+        "bytes": 8189,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/investigation-report.md",
+        "digest": "sha256:2eacfec1724e12ff2165a49b8844aed3",
+        "supplies": null,
+        "bytes": 3683,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "skills/business/domain-modeling.md",
+        "digest": "sha256:256460c4d60b91f95985534e36f997db",
+        "supplies": null,
+        "bytes": 1414,
+        "read": "required",
+        "read_reason": "skill S02 is required for this phase"
+      },
+      {
+        "path": "skills/performance/performance-engineering.md",
+        "digest": "sha256:018d88d8cc352700bf6bb06703a8129e",
+        "supplies": null,
+        "bytes": 1266,
+        "read": "required",
+        "read_reason": "skill S08 is required for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:f2c4ea84ec5c767f8af6efd2806736eb",
+    "input_digest": "sha256:ebf31efc76c7a3652515548dab9b5eb6",
+    "inputs": [
+      {
+        "type": "investigation-report",
+        "reference": "runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/opus-5-5-videos-f170ff/.claude/runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+        "digest": "sha256:ebf31efc76c7a3652515548dab9b5eb6"
+      }
+    ],
+    "unnarrowed": [
+      "runtime/README.md",
+      "skills/business/domain-modeling.md",
+      "skills/performance/performance-engineering.md",
+      "templates/investigation-report.md",
+      "templates/technical-recommendation.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "skills/business/domain-modeling.md",
+      "skills/performance/performance-engineering.md",
+      "templates/investigation-report.md",
+      "templates/technical-recommendation.md"
+    ],
+    "read_on_demand": [
+      "runtime/README.md",
+      "workflows/research.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 177777,
+    "bytes_required": 16101,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:cbc0647dc90c2995d9470acbca390613",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md",
+      "runs/run-8d7e366341bf/states/recommendation-draft/result-envelope.json"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": true,
+      "purpose": "read-only inspection of repository and run state \u2014 history, dependency structure, prior gate evidence, and the framework's own verification output \u2014 run to ground an effort, sequencing, or readiness position in something other than assertion",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "any command that modifies source, tests, committed run evidence, or a governance record",
+        "repository history rewriting, publishing, merging, or release actions",
+        "any command whose result is not recorded in the recommendation"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution other than read-only inspection of repository and run state \u2014 history, dependency structure, prior gate evidence, and the framework's own verification output \u2014 run to ground an effort, sequencing, or readiness position in something other than assertion",
+      "external system, repository, or ticketing access",
+      "write, repair, or refactor production code",
+      "author the structural design, the module boundaries, or a decision record, which belong to architect",
+      "define, widen, or narrow product scope, which belongs to product-owner",
+      "set or reinterpret an acceptance criterion",
+      "decompose work into tasks, which belongs to planner",
+      "execute the validation whose result it weighs, which belongs to qa",
+      "record a gate decision as taken, in any phase",
+      "decide a gate that assesses evidence this agent produced",
+      "recommend a direction that weakens a quality gate to protect a schedule",
+      "recommend an unqualified proceed while a critical or high blocker stands open",
+      "recommend an option the artifact did not evaluate against the declared criteria",
+      "state an effort or risk position the recorded evidence does not support",
+      "modify committed run evidence or a governance record",
+      "access external systems directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "judge whether a proposed direction is deliverable under the constraints in force",
+        "fix the evaluation criteria a set of options is judged against, before scoring them",
+        "evaluate named options against those criteria and state the tradeoff each carries",
+        "state the sequencing, dependency, and capacity consequences of each option",
+        "record the risks and blockers that stand between a direction and delivery",
+        "estimate effort at the granularity the declared effort scale permits",
+        "recommend one option, or record that the decision is deferred and say what defers it",
+        "recommend a readiness position, with the conditions a conditional one rests on",
+        "name the authority that decides the gate this artifact is evidence for",
+        "decide a gate over evidence another role produced"
+      ],
+      "prohibited": [
+        "write, repair, or refactor production code",
+        "author the structural design, the module boundaries, or a decision record, which belong to architect",
+        "define, widen, or narrow product scope, which belongs to product-owner",
+        "set or reinterpret an acceptance criterion",
+        "decompose work into tasks, which belongs to planner",
+        "execute the validation whose result it weighs, which belongs to qa",
+        "record a gate decision as taken, in any phase",
+        "decide a gate that assesses evidence this agent produced",
+        "recommend a direction that weakens a quality gate to protect a schedule",
+        "recommend an unqualified proceed while a critical or high blocker stands open",
+        "recommend an option the artifact did not evaluate against the declared criteria",
+        "state an effort or risk position the recorded evidence does not support",
+        "modify committed run evidence or a governance record",
+        "access external systems directly"
+      ],
+      "repositoryWrites": {
+        "allowed": false,
+        "scope": "none. This agent writes its own artifact and its result envelope, and nothing else in the repository, in any phase.",
+        "rationale": "A recommendation is worth what its independence is worth. An agent that could change the code, the design, or the criteria while judging the direction would be recommending on its own work, and every gate over this artifact would be assessing evidence its producer had shaped twice over."
+      },
+      "commandExecution": {
+        "allowed": true,
+        "purpose": "read-only inspection of repository and run state \u2014 history, dependency structure, prior gate evidence, and the framework's own verification output \u2014 run to ground an effort, sequencing, or readiness position in something other than assertion",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "any command that modifies source, tests, committed run evidence, or a governance record",
+          "repository history rewriting, publishing, merging, or release actions",
+          "any command whose result is not recorded in the recommendation"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical inputs and an identical context snapshot must produce the same criteria set, the same option set, the same tradeoff assessment, the same risk and blocker set with the same severities, the same recommended option, the same readiness position, and the same declared artifact status.",
+      "identifierSchemes": {
+        "evaluationCriteria": "EC-<zero-padded-sequence>",
+        "options": "O-<zero-padded-sequence>",
+        "risksAndBlockers": "RK-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "orderingRule": "Evaluation criteria are ordered by descending priority; ties keep the order of the source that declared them. Options keep the order they were supplied or discovered in, so that a re-run cannot reorder them into a different-looking comparison. Risks and blockers are ordered by descending severity; ties break toward the lower identifier.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied options, constraints, or repository context."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "technical-recommendation.md",
+    "artifact_path": "runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md",
+    "template_ref": "templates/technical-recommendation.md",
+    "contract_ref": "agents/tech-lead/output.md",
+    "quality_ref": "agents/tech-lead/quality.md",
+    "validator": "technical_recommendation_validator",
+    "result_envelope_path": "runs/run-8d7e366341bf/states/recommendation-draft/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-26T12:19:58Z",
+  "model_tier": {
+    "tier": "standard",
+    "host_hint": "inherit",
+    "basis": "declared standard for research/recommendation-draft in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 82075,
+    "modules_core_bytes": 38133,
+    "slice_all_bytes": 177777,
+    "slice_required_bytes": 16101,
+    "inputs_bytes": 0,
+    "upstream_full_bytes": 59831,
+    "upstream_read_first_bytes": 59831,
+    "task_context_bytes": 11751,
+    "fixed_bytes": 19500,
+    "legacy_estimate_bytes": 339183,
+    "progressive_estimate_bytes": 145316,
+    "legacy_estimate_tokens": 84795,
+    "progressive_estimate_tokens": 36329,
+    "savings_pct": 57.2
+  }
+}

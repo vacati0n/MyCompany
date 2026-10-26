@@ -1,0 +1,339 @@
+{
+  "run_id": "run-8d7e366341bf",
+  "runtime_version": "0.11.1",
+  "command_id": "research",
+  "workflow_id": "research",
+  "workflow_version": "1.1.0",
+  "status": "Completed",
+  "input_digest": "sha256:74429528d3aa52d6f63c53f6f4cf3775",
+  "created_at": "2026-10-26T10:51:27Z",
+  "updated_at": "2026-10-26T12:44:06Z",
+  "states": {
+    "research-framing": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "business-analyst",
+      "attempt": 1,
+      "attempts_lost": 0,
+      "attempts_charged": 1,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:423ec4d1d1db8f6d66e105bb078e1c74",
+      "artifact_path": "runs/run-8d7e366341bf/states/research-framing/artifacts/requirement-framing.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-8d7e366341bf/states/research-framing/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 36,
+        "checksPassed": 36,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 4,
+        "counts": {
+          "sections": 9,
+          "status": "provisional",
+          "identifiers": {
+            "O": 7,
+            "R": 26,
+            "AI": 26,
+            "B": 12,
+            "AS": 8,
+            "Q": 9
+          },
+          "tableRows": {
+            "Target Outcomes": 7,
+            "Requirements": 26,
+            "Acceptance Intent": 26,
+            "Framing Boundaries": 12,
+            "Assumptions": 8,
+            "Open Questions": 9
+          },
+          "framingVerdict": "partially-framed",
+          "targetOutcomes": 7,
+          "requirements": 26,
+          "functionalRequirements": 22,
+          "nonFunctionalRequirements": 4,
+          "acceptanceIntent": 26,
+          "framingBoundaries": 12,
+          "assumptions": 8,
+          "openQuestions": 9,
+          "blockingOpenQuestions": 2
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "technical-validation": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "context-agent",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:a532b1a322a46fdd678763e3b34ff07e",
+      "artifact_path": "runs/run-8d7e366341bf/states/technical-validation/artifacts/investigation-report.md",
+      "blocked_reason": null,
+      "failure_class": "output-schema-failure",
+      "state_ledger": "runs/run-8d7e366341bf/states/technical-validation/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 31,
+        "checksPassed": 31,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 9,
+          "status": "provisional",
+          "identifiers": {
+            "E": 131,
+            "O": 4,
+            "Q": 17
+          },
+          "tableRows": {
+            "Evidence": 131,
+            "Options Evaluated": 4
+          }
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "option-synthesis": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "tech-lead",
+      "attempt": 1,
+      "attempts_lost": 0,
+      "attempts_charged": 1,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:6c0cc0f0b6a689675c6bc04670102a4a",
+      "artifact_path": "runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-8d7e366341bf/states/option-synthesis/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 33,
+        "checksPassed": 33,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 4,
+        "counts": {
+          "sections": 11,
+          "status": "provisional",
+          "identifiers": {
+            "EC": 12,
+            "O": 11,
+            "RK": 16,
+            "Q": 9
+          },
+          "tableRows": {
+            "Evaluation Criteria": 12,
+            "Options": 11,
+            "Tradeoff Analysis": 11,
+            "Risk and Blocker Register": 16
+          },
+          "criteria": 12,
+          "options": 11,
+          "risks": 16,
+          "blockingItemsOpen": 7,
+          "decisionBasis": "option-analysis",
+          "recommendedOption": "O-003",
+          "readinessDecision": "proceed-with-conditions",
+          "decidingAuthority": "orchestrator (Recommendation Gate at recommendation-draft; this phase has no gate); the CEO as owner rules on the pilot",
+          "severity": {
+            "critical": 1,
+            "high": 6,
+            "medium": 7,
+            "low": 2
+          }
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "recommendation-draft": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "tech-lead",
+      "attempt": 1,
+      "attempts_lost": 0,
+      "attempts_charged": 1,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:a4b64061cab81e635dcb2706c74a3d0b",
+      "artifact_path": "runs/run-8d7e366341bf/states/recommendation-draft/artifacts/technical-recommendation.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-8d7e366341bf/states/recommendation-draft/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 33,
+        "checksPassed": 33,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 4,
+        "counts": {
+          "sections": 11,
+          "status": "provisional",
+          "identifiers": {
+            "EC": 12,
+            "O": 11,
+            "RK": 16,
+            "Q": 12
+          },
+          "tableRows": {
+            "Evaluation Criteria": 12,
+            "Options": 11,
+            "Tradeoff Analysis": 11,
+            "Risk and Blocker Register": 16
+          },
+          "criteria": 12,
+          "options": 11,
+          "risks": 16,
+          "blockingItemsOpen": 3,
+          "decisionBasis": "recommendation",
+          "recommendedOption": "O-003",
+          "readinessDecision": "proceed-with-conditions",
+          "decidingAuthority": "orchestrator (Recommendation Gate at recommendation-draft); the CEO as owner takes the owner decisions OD1 to OD11",
+          "severity": {
+            "critical": 1,
+            "high": 6,
+            "medium": 7,
+            "low": 2
+          }
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "findings-publication": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "documentation",
+      "attempt": 1,
+      "attempts_lost": 0,
+      "attempts_charged": 1,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:2a56cfd63670f63b1dcf4a10706a115f",
+      "artifact_path": "runs/run-8d7e366341bf/states/findings-publication/artifacts/release-note.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-8d7e366341bf/states/findings-publication/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 34,
+        "checksPassed": 34,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 7,
+          "status": "provisional",
+          "identifiers": {
+            "K": 17
+          },
+          "tableRows": {
+            "Known Issues": 17
+          },
+          "releaseVerdict": "findings-published",
+          "communicationBasis": "findings",
+          "knownIssues": 17,
+          "version": "2026.10.26"
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    }
+  },
+  "gates": {
+    "Framing Gate": {
+      "gate": "Framing Gate",
+      "closes_state": "research-framing",
+      "owner_roles": [
+        "business-analyst",
+        "product-owner"
+      ],
+      "producer_agent": "business-analyst",
+      "decision": "approved",
+      "owner_role": "product-owner",
+      "decided_by": "CEO vuhoangcao",
+      "rationale": "CEO approved 2026-10-26 acting as product-owner. Acceptance criteria (answers Q-002): every eligibility, commission/fee and content rule cites a TikTok Shop Vietnam or Shopee Vietnam first-party page or a Vietnamese legal text, with URL, access date and quotation; anything without a first-party source is marked unverified and routed to local counsel; the recommendation scores at least 3 content-form options and at least 2 niches. Q-005: pilot content is in Vietnamese. Q-004: budget stays USD 77.41/month with the USD 34.42 metered ceiling; the research may propose a change for the CEO to approve. Q-003: the research proposes the 30-day earning target for the CEO to choose. Q-006: the CEO is the Vietnam-resident individual creator (D-007, D-018). Q-001 evidence channel (orchestrator): a web-enabled evidence-gathering agent captures first-party pages into a staged evidence pack that context-agent validates.",
+      "evidence_ref": "runs/run-8d7e366341bf/states/research-framing",
+      "decided_at": "2026-10-26T11:20:52Z",
+      "decision_history": []
+    },
+    "Technical Validity Gate": {
+      "gate": "Technical Validity Gate",
+      "closes_state": "technical-validation",
+      "owner_roles": [
+        "context-agent",
+        "architect"
+      ],
+      "producer_agent": "context-agent",
+      "decision": "approved",
+      "owner_role": "architect",
+      "decided_by": "architect subagent (host-dispatched by orchestrator)",
+      "rationale": "Approve with conditions C1-C12 (full record pilot-affiliate-vn/gates/technical-validity-gate.md). Platform rules trace to TikTok Shop VN and Shopee VN first-party pages with URL, date, quote; 16 claims spot-checked trace to the pack; no third-party figure promoted. Three legal points (Shopee competitor clause, Art. 15a(3) influencer scope, PIT rate/withholder) stay open for counsel; every option must branch on them (C1, C2), disclose always (C3), show tax as a range (C4), treat commission rates as unsourced (C5), label market data third-party (C6), score >=3 forms and >=2 niches (C9), stay in Vietnamese within USD 77.41/34.42 (C11); no account, sample, download or publication (C12).",
+      "evidence_ref": "runs/run-8d7e366341bf/states/technical-validation",
+      "decided_at": "2026-10-26T11:57:08Z",
+      "decision_history": []
+    },
+    "Recommendation Gate": {
+      "gate": "Recommendation Gate",
+      "closes_state": "recommendation-draft",
+      "owner_roles": [
+        "tech-lead",
+        "orchestrator"
+      ],
+      "producer_agent": "tech-lead",
+      "decision": "approved",
+      "owner_role": "orchestrator",
+      "decided_by": "orchestrator, on the CEO's explicit approval in chat 2026-10-26",
+      "rationale": "CEO approved recommendation O-003 (Shopee Affiliate as individual KOC on Shopee Video; niche O-008 home and kitchen then O-009; fallback O-002 TikTok Shop only after Shopee activity ends or a written narrow reading of E-104; O-001 excluded) with owner decisions OD1-OD5, OD8, OD10, OD11 as proposed, 30-day target tier 2 (one valid commission credited by day 30) and start now (OD9) with counsel questions sent in parallel. AMENDMENT to the content form, by the CEO: no sample purchases in the first 30 days (OD6 sample line not used). Form becomes real product images used only with the seller's permission plus an AI presenter labelled 'Video tao boi AI' that reads only sourced product facts and never claims to have used the product (not a review). This supersedes CEO-D-903/CEO-D-1004 for the pilot only, to be recorded as a new CEO decision. Conditions: (a) counsel answers Art. 15a(3) scope (Q-002); if an affiliate is an influencer, the AI-presenter form stops until the product is used; (b) the AI presenter tool is priced and approved by the owner before use, metered ceiling USD 34.42 unchanged unless the owner rules; (c) one AI presenter on one account only (E-108); no AI doctors, celebrities or officials, no body/skin-improvement claims (E-031); (d) disclosure on every publication (D-021 part 2); D-002 per-publication approval stands; (e) agents create no accounts, handle no credentials, contact no sellers, publish nothing. RK-005 resolved by the 2026-10-26 re-capture of five first-party pages; E-100 not found, tax modelled as a range from law; E-086, E-088, E-097, E-098, E-103, E-107, E-109 not re-captured and flagged where used.",
+      "evidence_ref": "pilot-affiliate-vn/evidence/recapture-2026-10-26.md",
+      "decided_at": "2026-10-26T12:33:21Z",
+      "decision_history": []
+    }
+  },
+  "summary": {
+    "run_id": "run-8d7e366341bf",
+    "run_status": "Completed",
+    "phases": 5,
+    "completed": 5,
+    "blocked": 0,
+    "failed": 0,
+    "pending": 0,
+    "retrying": 0,
+    "active": 0,
+    "transitions": 31,
+    "replays_suppressed": 0
+  },
+  "recovery": {
+    "ledger": "runs/run-8d7e366341bf/recovery-ledger.json",
+    "classifications": 7,
+    "open": 0,
+    "resolved": 7,
+    "retries_scheduled": 1,
+    "by_failure_class": {
+      "gate-approval-required": 6,
+      "output-schema-failure": 1
+    },
+    "retry_profile": {
+      "max_attempts": 3,
+      "backoff_strategy": "exponential",
+      "base_delay_seconds": 2,
+      "multiplier": 2,
+      "max_delay_seconds": 60,
+      "jitter_ratio": 0.2,
+      "circuit_breaker_threshold": 3,
+      "policy_ref": "config/runtime.md#retry-policy"
+    }
+  }
+}

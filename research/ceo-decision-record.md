@@ -2382,3 +2382,58 @@ never create platform accounts or handle the CEO's credentials.
 Decision block: `CEO-D-1300`–`CEO-D-1399`, `CEO-C-1300`–`CEO-C-1399`.
 
 ---
+
+## CEO-D-1301 — MC-15 recommendation approved: Shopee Video as a KOC, an AI presenter on real product images, start now
+
+**The CEO's own decision, 2026-10-26**, at the Recommendation Gate of run `run-8d7e366341bf` (MC-15).
+
+1. **Path:** Shopee Affiliate as an individual KOC, on Shopee Video. Niche: home and kitchen gadgets first, phone
+   accessories second; cosmetics and supplements excluded. TikTok Shop is the fallback only, started after the Shopee
+   activity ends or after a written narrow reading of Shopee's competing-platform clause; both at once is excluded.
+2. **30-day target:** tier 2, at least one valid commission credited by day 30, with the pilot's measurements recorded.
+3. **Start now.** The questions for local counsel (competing-platform clause reach, Advertising Law Art. 15a(3) scope,
+   personal income tax, AI-label reach, reuse of seller media) are sent in parallel.
+4. **Content form, amending the research:** no sample purchases in the first 30 days. Real product images, used only
+   with the seller's permission, presented by an **AI presenter** carrying the label "Video tạo bởi AI". The presenter
+   reads only recorded, sourced product facts and **never claims to have used the product**; it introduces, it does
+   not review. One presenter on one account; no AI doctors, celebrities or officials; no skin, hair or body claims.
+5. **This supersedes `CEO-D-903` and `CEO-D-1004` (no generative model for visuals) for the affiliate pilot only.** The
+   frozen Waves 12 and 13 keep them. The presenter tool is priced and approved by the CEO before first use; the metered
+   ceiling of USD 34.42 stands unless the CEO rules otherwise.
+6. **Stop condition:** if counsel finds that an affiliate creator is an influencer under Art. 15a(3), the AI-presenter
+   form stops until the product has been used.
+7. **Standing decisions:** `D-005`, `D-007`, `D-008` amended as the recommendation proposes (affiliate leads; Shopee
+   Affiliate VN with the CEO as payee; one Vietnamese Shopee Video pilot channel); `D-021` part 2 (always disclose) kept,
+   part 1 sent to counsel; `D-022` kept for the frozen YouTube item only. Register as an individual; decline Shopee
+   "KOL Booking" campaigns during the pilot.
+
+**Unchanged:** `D-002` (the CEO approves every publication), `D-018` (the CEO is the individual creator); agents create
+no account, handle no credential, contact no seller and publish nothing.
+
+---
+
+## CEO-D-1302 — MC-15 Addendum 1 approved: AI-presenter tool, budget line, stop rule and publishing start
+
+**The CEO's own decision, 2026-10-26**, on `pilot-affiliate-vn/mc-15-addendum-1-ai-presenter.md`, approving owner
+decisions OD12 to OD18 as proposed.
+
+1. **OD12, tool:** HeyGen Creator, billed monthly (USD 29), bought only after the CEO personally passes the free-tier
+   Vietnamese lip-sync test; fallback D-ID Pro with a Vbee Vietnamese voice, billed monthly (about USD 35.43, ESTIMATE).
+2. **OD13, budget line:** the subscription is paid from the USD 42.99 fixed line; the USD 34.42 metered ceiling is
+   untouched; the total stays USD 77.41 per month.
+3. **OD14, adverse counsel ruling:** if counsel finds an affiliate creator is an influencer under Art. 15a(3), the CEO
+   stops publishing that day and takes down every AI-presenter video within 24 hours; videos are not edited instead.
+4. **OD15, fallback form:** real footage (O-007) is kept as the fallback; sample spend is limited to USD 13.99 in a
+   month the tool is paid, unless the CEO raises the budget.
+5. **OD16, publishing start:** no publication before day 10; if Shopee or counsel has not answered by then, the CEO
+   explicitly accepts or refuses the risk before the first video. This replaces the start-now rationale of `CEO-D-1301`
+   item 3; the 30-day plan of the addendum otherwise starts now.
+6. **OD17, reading target tier 2:** on day 30, pending and credited commissions are recorded separately; if only
+   pending ones exist, the result is read again on day 45.
+7. **OD18, one presenter:** one presenter generated from a prompt (no stock avatar), used on the one Shopee account only,
+   including no reuse on a later TikTok fallback until Shopee answers on unoriginal content.
+
+Pre-publication conditions P1 to P8 of the addendum bind. **Unchanged:** `D-002`, `D-018`; agents create no account,
+sign in nowhere, contact no seller, buy nothing and publish nothing.
+
+---

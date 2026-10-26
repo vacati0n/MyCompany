@@ -1,0 +1,48 @@
+{
+  "invocation_id": "inv-8d7e366341bf-03-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md"
+  ],
+  "structured_output": {
+    "decisionBasis": "option-analysis",
+    "recommendedOption": "O-003",
+    "readinessDecision": "proceed-with-conditions",
+    "status": "provisional",
+    "criteriaApplied": 12,
+    "optionsEvaluated": 11,
+    "risksRecorded": 16,
+    "blockingItemsOpen": 7,
+    "severityCounts": {"critical": 1, "high": 6, "medium": 7, "low": 2},
+    "decidingAuthority": "orchestrator (Recommendation Gate at recommendation-draft; this phase has no gate); the CEO as owner rules on the pilot",
+    "pairedChoices": {"contentForm": "O-007", "niche": "O-008", "secondNiche": "O-009", "fallbackPlatform": "O-002"},
+    "checksRun": 41,
+    "checksPassed": 41,
+    "blockingFailures": 0,
+    "correctableRepairs": 0,
+    "notMachineCheckable": ["NMC1", "NMC2", "NMC3", "NMC4"],
+    "validatorResult": "pass, 33/33 machine checks, 4 declared not-machine-checkable",
+    "commandsRun": [
+      "git log --oneline -1 main",
+      "git ls-tree -r --name-only main src graphics",
+      "python runtime/technical_recommendation_validator.py runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md --envelope runs/run-8d7e366341bf/states/option-synthesis/invocation-envelope.json"
+    ],
+    "escalations": [],
+    "openQuestions": 9
+  },
+  "evidence_refs": [
+    "agents/tech-lead/system.md",
+    "agents/tech-lead/identity.md",
+    "agents/tech-lead/reasoning.md",
+    "agents/tech-lead/output.md",
+    "agents/tech-lead/quality.md",
+    "runs/run-8d7e366341bf/states/option-synthesis/invocation-envelope.json"
+  ],
+  "confidence": "low",
+  "declared_side_effects": [
+    "runs/run-8d7e366341bf/states/option-synthesis/artifacts/technical-recommendation.md",
+    "runs/run-8d7e366341bf/states/option-synthesis/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

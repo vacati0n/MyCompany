@@ -1,0 +1,81 @@
+{
+  "schema": "framework.runtime/failure-envelope.v1",
+  "envelope_id": "FE-run-8d7e366341bf-Technical Validity Gate-01",
+  "escalation_id": "ESC-run-8d7e366341bf-Technical Validity Gate-01",
+  "run_id": "run-8d7e366341bf",
+  "work_item_id": "run-8d7e366341bf::gate::Technical Validity Gate",
+  "state_id": "Technical Validity Gate",
+  "work_type": "gate",
+  "owner_agent_id": null,
+  "phase_index": 2,
+  "detected_at": "2026-10-26T11:54:39Z",
+  "detected_by": "runtime:state-engine",
+  "detection_point": "gate state",
+  "occurrence": 1,
+  "failure_class": "gate-approval-required",
+  "reason_code": "approval_wait",
+  "guard": "G6-GATE-EVIDENCE",
+  "detail": "evidence for technical-validation is complete; awaiting a decision from ['context-agent', 'architect']",
+  "classification": {
+    "failure_class": "gate-approval-required",
+    "detection_point": "gate state",
+    "retryable": false,
+    "action": "escalate",
+    "default_action": "escalate",
+    "escalation_trigger": "no decision recorded within the deadline",
+    "blocked_reason": "awaiting_human_decision",
+    "required_decision_type": "gate-approval",
+    "basis": "config/execution-engine.md#human-escalation",
+    "attempt": 0,
+    "attempts_charged": 0,
+    "attempts_lost": 0,
+    "max_attempts": 3,
+    "attempts_remaining": 3,
+    "budget_exhausted": false,
+    "breaker_open": false,
+    "charged": true,
+    "next_delay_seconds": null,
+    "available_at": null,
+    "reason": "class 'gate-approval-required' is non-retryable at detection point 'gate state', so the declared action 'escalate' applies without consulting the retry budget"
+  },
+  "retry": {
+    "attempt": 0,
+    "attempts_lost": 0,
+    "attempts_charged": 0,
+    "max_attempts": 3,
+    "attempts_remaining": 3,
+    "budget_exhausted": false,
+    "breaker_open": false,
+    "next_delay_seconds": null,
+    "available_at": null,
+    "idempotency_key": null,
+    "profile_ref": "config/runtime.md#retry-policy"
+  },
+  "resulting_status": "blocked",
+  "blocked_reason": "awaiting_human_decision",
+  "required_decision_type": "gate-approval",
+  "owner_roles": [
+    "context-agent",
+    "architect"
+  ],
+  "impacted_artifacts": [],
+  "evidence_bundle_ref": {
+    "guard_verdicts": [
+      "G6-GATE-EVIDENCE"
+    ],
+    "transition": "pending -> blocked",
+    "state_store": "runs/run-8d7e366341bf/state.json",
+    "gate": null
+  },
+  "proposed_options": [
+    "approve the gate and proceed",
+    "reject the gate and roll back the evidence it assesses",
+    "request additional evidence before deciding"
+  ],
+  "default_fallback_action": "hold the work item blocked and await a human decision",
+  "clearing_action": "python .claude/runtime/framework_runtime.py gate --run-id run-8d7e366341bf --gate \"Technical Validity Gate\" --decision approve --owner-role <role> --decided-by <who> --rationale <text>",
+  "status": "resolved",
+  "resolved_at": "2026-10-26T11:57:08Z",
+  "resolution": "approved by architect, recorded by architect subagent (host-dispatched by orchestrator)",
+  "resolved_by": "human:architect subagent (host-dispatched by orchestrator)"
+}

@@ -1,0 +1,79 @@
+{
+  "run_id": "run-8d7e366341bf",
+  "slice": "phase:findings-publication",
+  "runtime_version": "0.11.1",
+  "status": "completed",
+  "queue_status": "Executing",
+  "command_id": "research",
+  "workflow_id": "research",
+  "workflow_version": "1.1.0",
+  "state_id": "findings-publication",
+  "work_item_id": "run-8d7e366341bf::findings-publication",
+  "idempotency_key": "sha256:2a56cfd63670f63b1dcf4a10706a115f",
+  "attempt": 1,
+  "agent_id": "documentation",
+  "agent_version": "1.2.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "invocation_id": "inv-8d7e366341bf-05-001",
+  "input_digest": "sha256:1437f5e6a4cbb60857d7b91539fdedcd",
+  "context_digest": "sha256:c84fb2a1bb501b514bb1ae4aa1006dae",
+  "module_load_order": [
+    "agents/documentation/system.md",
+    "agents/documentation/identity.md",
+    "agents/documentation/reasoning.md",
+    "agents/documentation/execution.md",
+    "agents/documentation/output.md",
+    "agents/documentation/quality.md",
+    "agents/documentation/examples.md"
+  ],
+  "artifact_path": "runs/run-8d7e366341bf/states/findings-publication/artifacts/release-note.md",
+  "conditional_artifact_globs": [],
+  "result_envelope_path": "runs/run-8d7e366341bf/states/findings-publication/result-envelope.json",
+  "validator": "release_note_validator",
+  "load_profile_mode": "progressive",
+  "context_budget": {
+    "modules_full_bytes": 90740,
+    "modules_core_bytes": 45513,
+    "slice_all_bytes": 177156,
+    "slice_required_bytes": 15480,
+    "inputs_bytes": 0,
+    "upstream_full_bytes": 52293,
+    "upstream_read_first_bytes": 52293,
+    "task_context_bytes": 13938,
+    "fixed_bytes": 13296,
+    "legacy_estimate_bytes": 333485,
+    "progressive_estimate_bytes": 140520,
+    "legacy_estimate_tokens": 83371,
+    "progressive_estimate_tokens": 35130,
+    "savings_pct": 57.9
+  },
+  "execution_started_at": "2026-10-26T12:33:45Z",
+  "execution_completed_at": "2026-10-26T12:44:06Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 34,
+    "checksPassed": 34,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 3,
+    "counts": {
+      "sections": 7,
+      "status": "provisional",
+      "identifiers": {
+        "K": 17
+      },
+      "tableRows": {
+        "Known Issues": 17
+      },
+      "releaseVerdict": "findings-published",
+      "communicationBasis": "findings",
+      "knownIssues": 17,
+      "version": "2026.10.26"
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:cd86f719976a47e022cefe21024f8a74",
+  "recovery": null
+}
