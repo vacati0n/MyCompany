@@ -2587,3 +2587,29 @@ seller, buy nothing, download no asset and publish nothing.
 contact no seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1308 — MC-16 Design Gate approved, with phone-screen safe areas
+
+**The CEO's own decision, 2026-10-26**, at the Design Gate of run `run-535f3f938f32` (MC-16).
+
+1. **Design approved with safe areas.** The design composes the 1080x1920 (9:16) video with the installed ffmpeg only,
+   with no browser and no socket, in a separate .NET tool that never touches the company store; the pilot ledger is a
+   hash-chained file outside the repository. Asked first, the CEO answered "khung hinh dien thoai di dong vi da so
+   nguoi dung xem reels hoac youtube short" (a mobile phone frame, because most people watch Reels or YouTube Shorts).
+   Asked again with the design restated as that frame plus safe areas, the CEO chose "Duyệt kèm vùng an toàn".
+   - Captions and the overlay "Video tạo bởi AI · Có liên kết tiếp thị" sit inside a safe area, clear of the
+     right-hand action buttons (like, comment, cart) and the caption and description text at the bottom of the Shopee
+     Video, Reels and Shorts players.
+   - The text is large enough to read on a small screen.
+   The tool still publishes nowhere.
+2. **Fallback for Vietnamese marks.** If the proof frame shows ffmpeg drawing a Vietnamese mark wrongly, the CEO allows
+   ahead of time ("Cho phép nội bộ") the fallback: the installed browser renderer draws only the caption plates as
+   transparent images. It may open loopback sockets on 127.0.0.1 only, never a connection off the machine, and the
+   package states it.
+3. **Clip and recording tolerance.** The presenter clip and the recording start together, and their lengths may differ
+   by at most 0.5 s ("0,5 giây"). Beyond that, the tool refuses and names the difference in seconds.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1307`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---
