@@ -1,10 +1,10 @@
 ```yaml
 releaseNote:
-  releaseId: "MC15-PILOT-KIT-2026-10-26"
+  releaseId: "MC15-PILOT-KIT-2026-10-26-R2"
   version: "2026.10.26"
   sourceInputs:
     - type: final-change-summary
-      reference: "research/ceo-decision-record.md, entries CEO-D-1301, CEO-D-1302 and CEO-D-1303"
+      reference: "research/ceo-decision-record.md, entries CEO-D-1301, CEO-D-1302, CEO-D-1303 and CEO-D-1304"
     - type: technical-recommendation
       reference: "pilot-affiliate-vn/mc-15-addendum-1-ai-presenter.md (TR-MC15-002-A1: rules R1 to R12, conditions P1 to P8, 30-day plan, Q-013 to Q-019, OD12 to OD18)"
     - type: technical-recommendation
@@ -16,8 +16,8 @@ releaseNote:
   schemaVersion: 1.0.0
   status: provisional
   releaseVerdict: handed-off
-  inputDigest: "sha256:d076b0d5abe1670219ec079809a3a13e"
-  contextDigest: "sha256:bc0c81226eaa0cef542a08d691ce6944"
+  inputDigest: "sha256:98691b45e92882aab51a12a8b114f4d5"
+  contextDigest: "sha256:5b8656d05f020e56815f1c967c4c828a"
 ```
 
 ## Metadata
@@ -38,14 +38,16 @@ releaseNote:
   - `06-lich-hanh-dong-ceo.md`: lịch từng ngày và điều kiện dừng.
   - `07-kich-ban-thu-va-mo-ta-nguoi-dan.md`: kịch bản thử khớp môi T1/T2 và mô tả người dẫn duy nhất.
 - Bug fixes: None identified.
-- Improvements: Ghi CEO-D-1303 vào `research/ceo-decision-record.md`: quyết định của CEO thay điều kiện P3; bộ tài liệu bỏ bước xin phép người bán.
+- Improvements:
+  - Ghi CEO-D-1303 vào `research/ceo-decision-record.md`: quyết định của CEO thay điều kiện P3; bộ tài liệu bỏ bước xin phép người bán.
+  - Lần 2 (R2): ghi CEO-D-1304: gương mặt AI khớp môi theo **bản ghi âm giọng thật của CEO**; không giọng máy, không Vbee; đề xuất không nhân bản giọng (chờ CEO xác nhận); OD12 sửa thành đề xuất "công cụ nào đạt bài thử với tệp ghi âm, USD 29 theo tháng". Cập nhật 01, 02, 03 (Phần F ghi âm), 04 (B13), 05, 06 (tài khoản CEO báo đã mở ngày 2026-10-26; nhắc không đăng ký kênh TikTok; bước ghi âm), 07.
 
 ## Technical Changes and Compatibility
 
 - API or contract changes: None identified.
 - Database or migration impact: None identified.
 - Configuration changes: None identified.
-- Backward compatibility notes: Phụ lục 1 không bị sửa. Theo CEO-D-1303, P3, phần xin phép người bán của R2 và R7, lệnh cấm lấy hình và thông tin từ trang sản phẩm của R7, nguồn "bảng thông tin của người bán" của R8 (hai điểm sau là suy luận từ quyết định, CEO xác nhận hoặc sửa), và bước Ngày 5 đến 9 trong lịch của phụ lục không còn áp dụng; mục 3.3 và 3.5 của phụ lục được thay bằng `04-` và `06-`.
+- Backward compatibility notes: Phụ lục 1 không bị sửa. Theo CEO-D-1304, đường D-ID Pro + Vbee (khoảng USD 35.43) và giọng máy của mục 2.4 không còn áp dụng; bảng thời gian mục 3.4 chưa tính bước ghi âm. Theo CEO-D-1303, P3, phần xin phép người bán của R2 và R7, lệnh cấm lấy hình và thông tin từ trang sản phẩm của R7, nguồn "bảng thông tin của người bán" của R8 (hai điểm sau là suy luận từ quyết định, CEO xác nhận hoặc sửa), và bước Ngày 5 đến 9 trong lịch của phụ lục không còn áp dụng; mục 3.3 và 3.5 của phụ lục được thay bằng `04-` và `06-`.
 
 ## Operational Notes
 
@@ -67,7 +69,9 @@ releaseNote:
 | `K-002` | Câu công bố quảng cáo chưa được luật sư xác nhận. | Mọi video. | Dùng câu của phụ lục 1; sửa cả ba lớp khi có ý kiến luật sư. | Q-012 |
 | `K-003` | E-107 và E-109 chưa được chụp lại; câu "hoàn tất trong 30 ngày" chưa được chụp lại. | Điều kiện P5; thời điểm đọc bậc 2. | Context-agent chụp lại Ngày 1 đến 3. | Q-017, P5 |
 | `K-004` | Tên các chỉ số trong ứng dụng Shopee Affiliate, vị trí nút nhãn AI và kênh hỗ trợ nhận câu hỏi bằng văn bản đều UNVERIFIED. | Bảng đo và thư gửi Shopee. | CEO ghi lại ở lần đăng nhập và lần đăng đầu. | Q-018 |
-| `K-005` | Thời gian CEO mỗi video (ESTIMATE 40 phút sau khi bỏ bước xin phép) chưa đo. | Kế hoạch thời gian. | Cột "Phút CEO bỏ ra" của bảng đo. | Bảng đo, Phần B |
+| `K-005` | Thời gian CEO mỗi video (ESTIMATE 40 phút sau khi bỏ bước xin phép) chưa đo, và chưa tính bước ghi âm của CEO-D-1304. | Kế hoạch thời gian. | Cột "Phút CEO bỏ ra" của bảng đo. | Bảng đo, Phần B |
+| `K-006` | HeyGen có nhận tệp ghi âm hay không là UNVERIFIED; D-ID Studio nhận MP3/WAV tới 5 phút chỉ theo kết quả tìm kiếm trang trợ giúp; gói miễn phí và bản dùng thử có nhận ghi âm không cũng UNVERIFIED. D-ID Pro giữ dấu "AI" chung ở góc dưới trái. | Lựa chọn công cụ (OD12 sửa). | Bài thử T1/T2 với cùng bản ghi của CEO trả lời. | CEO-D-1304, OD12 |
+| `K-007` | CEO báo đã mở tài khoản Shopee ngày 2026-10-26; agent chưa thấy, và chưa rõ đó có phải đăng ký Shopee Affiliate dạng KOC cá nhân không. | Ngày 1 có thể là 2026-10-26; khi đó các việc "Trước Ngày 1" đã đến hạn. | CEO ghi rõ ở Phần A của bảng đo. | CEO-D-1304 |
 
 ## Communication
 

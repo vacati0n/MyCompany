@@ -13,7 +13,7 @@
 >
 > Tôi là KOC Affiliate cá nhân, mới đăng ký, chỉ đăng nội dung trên Shopee Video. Tôi muốn tuân thủ đúng Điều khoản và Điều kiện Chương trình Tiếp thị liên kết (cập nhật ngày 08/07/2026), Chính sách chống gian lận (bài 199468) và quy định về nội dung AI trên Shopee Video (bài 202687). Xin Shopee trả lời bằng văn bản các câu hỏi sau.
 >
-> **Hình thức nội dung của tôi:** mỗi video có một người dẫn do AI tạo (tạo từ mô tả, không dùng avatar có sẵn, chỉ dùng trên một tài khoản Shopee của tôi), đặt trên hình ảnh sản phẩm lấy từ trang sản phẩm trên Shopee. Người dẫn đọc thông tin sản phẩm có trên trang sản phẩm, không nói đã dùng sản phẩm. Tôi bật nhãn "Video tạo bởi AI" mỗi lần đăng. Mỗi video có kịch bản riêng, tạo riêng từng cái, không dùng API, không đăng tự động. Tối đa 12 video trong 30 ngày, tối đa 1 video mỗi ngày, tối đa 2 video cho mỗi sản phẩm.
+> **Hình thức nội dung của tôi:** mỗi video có một người dẫn do AI tạo (tạo từ mô tả, không dùng avatar có sẵn, chỉ dùng trên một tài khoản Shopee của tôi), đặt trên hình ảnh sản phẩm lấy từ trang sản phẩm trên Shopee. Lời thoại là giọng thật của tôi, tôi tự đọc và ghi âm; gương mặt AI khớp môi theo bản ghi. Lời thoại chỉ gồm thông tin sản phẩm có trên trang sản phẩm, không nói đã dùng sản phẩm. Tôi bật nhãn "Video tạo bởi AI" mỗi lần đăng. Mỗi video có kịch bản riêng, tạo riêng từng cái, không dùng API, không đăng tự động. Tối đa 12 video trong 30 ngày, tối đa 1 video mỗi ngày, tối đa 2 video cho mỗi sản phẩm.
 >
 > **1. Tạo video hàng loạt.** Chính sách chống gian lận (bài 199468, mục t) cấm dùng công cụ "tạo video hàng loạt". Cách làm trên, dùng công cụ AI để tạo từng video riêng, có bị coi là "tạo video hàng loạt" không? Shopee có ngưỡng số lượng nào không?
 >
