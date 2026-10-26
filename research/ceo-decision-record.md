@@ -2335,3 +2335,22 @@ closes after its review, verification, documentation and closure, with the chang
 CEO's explicit go.
 
 ---
+
+## CEO-D-1200 — Wave 13 brings in studio direction; Wave 12 is not touched
+
+**The CEO's own decision, 2026-10-26**, while Wave 12 (MC-13) is paused before its re-review, after a study of 703
+published prompts for videos drawn by code with Claude Opus 5.5
+(`research/code-drawn-video-techniques-2026-10-26.md`).
+
+1. The CEO judges that competitors are moving much faster; the studio must learn their direction techniques.
+2. **Wave 12 is not touched**: none of the study's techniques enters MC-13's scope, design or implementation.
+3. **Wave 13 (MC-14, `wave-13/00-ticket-mc-14.md`) brings in every studio-direction technique of the study** (its §3,
+   T1 to T13), with the company's own scene-direction template; sound effects and a normalised mix (T12) are proposed
+   at the scope gate with named downloads for the CEO to rule.
+4. Wave 13 starts **only after MC-13 is merged**. Every Wave 12 constraint carries: no generative model, USD 0.00
+   metered, owner-approved downloads, nothing published.
+5. Third-party prompts are learned from, never copied verbatim.
+
+Decision block: `CEO-D-1200`–`CEO-D-1299`, `CEO-C-1200`–`CEO-C-1299`.
+
+---
