@@ -37,7 +37,7 @@ Mã video: V-__  Ngày đăng dự kiến: Ngày __ (____-__-__)  Sản phẩm: 
 | B10 | Video được tạo riêng sau khi kịch bản này được duyệt; không tạo theo lô, không qua API. | R9 | ☐ |
 | B11 | Đếm: tổng số video sau lần đăng này ≤ 12; hôm nay chưa đăng video nào; sản phẩm này có ≤ 2 video và hai video có trọng tâm khác nhau. | R9, R10 | ☐ |
 | B12 | Sản phẩm không thuộc ngành không có hoa hồng (sữa công thức, vitamin trẻ em, núm vú, bình sữa, thuốc OTC, rượu trên 15%) và không phải mỹ phẩm hay thực phẩm chức năng. | E-103, CEO-D-1301 mục 1 | ☐ |
-| B13 | Lời thoại là **bản ghi giọng thật của CEO**, ghi mới cho video này, đọc đúng kịch bản đã duyệt (Phần F của mẫu kịch bản). Không dùng giọng máy (TTS), không Vbee, không nhân bản giọng (phần nhân bản: đề xuất mặc định, chờ CEO xác nhận). | CEO-D-1304 | ☐ |
+| B13 | Lời thoại là **bản ghi giọng thật của CEO**, ghi mới cho video này, đọc đúng kịch bản đã duyệt (Phần F của mẫu kịch bản). Không dùng giọng máy (TTS), không Vbee, không nhân bản giọng (CEO-D-1305). | CEO-D-1304, CEO-D-1305 | ☐ |
 
 ## C. Khi đăng (CEO tự làm trong ứng dụng)
 

@@ -2516,3 +2516,24 @@ dropping the avatar.
 contact no seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1305 — No voice cloning: every video uses a fresh real recording
+
+**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session, on the proposed default of
+`CEO-D-1304` item 2.
+
+Asked "Không nhân bản giọng: mỗi video dùng một bản ghi âm thật, ghi mới. CEO xác nhận hay bác bỏ?", the CEO chose
+"Xác nhận".
+
+1. **Confirmed.** No tool is given the CEO's voice to clone, and no voice-generation or "voice clone" feature is turned
+   on in the presenter tool. Each video uses a fresh real recording of its own approved script, made after that script
+   is approved; sentences are never spliced from another video's recording. `CEO-D-1304` item 2 stands as a decision,
+   no longer as a proposal.
+2. **Effect on the kit and on MC-16.** Part F of `pilot-affiliate-vn/pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md` drops
+   its "awaiting confirmation" note. The MC-16 toolchain refuses to package a video whose recording is not new for that
+   video: a recording whose digest was already used by another video is rejected.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` item 1 (no text-to-speech); agents create no account, sign in nowhere,
+contact no seller, buy nothing, download no asset and publish nothing.
+
+---

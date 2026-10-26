@@ -1,7 +1,7 @@
 # Mẫu kịch bản cho người dẫn AI (Shopee Video)
 
 - Áp dụng cho mọi video của thí điểm. Căn cứ: CEO-D-1301 mục 4; phụ lục 1, quy tắc R3 đến R12; CEO-D-1303; CEO-D-1304.
-- **Theo CEO-D-1304, lời thoại là giọng thật của CEO**: CEO tự đọc và ghi âm kịch bản đã duyệt, gương mặt AI khớp môi theo bản ghi. Không dùng giọng máy (TTS), không dùng Vbee. Đề xuất mặc định, chờ CEO xác nhận: không nhân bản giọng, mỗi video một bản ghi mới (Phần F).
+- **Theo CEO-D-1304, lời thoại là giọng thật của CEO**: CEO tự đọc và ghi âm kịch bản đã duyệt, gương mặt AI khớp môi theo bản ghi. Không dùng giọng máy (TTS), không dùng Vbee. Theo CEO-D-1305 (CEO đã xác nhận): không nhân bản giọng, mỗi video một bản ghi mới (Phần F).
 - Agent soạn kịch bản theo mẫu này **chỉ từ bảng thông tin CEO đã ghi** (Phần A). Agent không mở, không tải, không thu thập gì từ trang sản phẩm trên Shopee. CEO kiểm từng câu với bảng nguồn trước khi tạo video.
 - Câu công bố dưới đây lấy nguyên từ phụ lục 1 mục 2.4. Hình thức công bố theo luật **chưa được luật sư xác nhận** (Q-012). Khi có ý kiến luật sư, sửa ở đây trước, rồi mới dùng.
 
@@ -100,7 +100,7 @@ Không viết: "Ấm sôi nhanh nhất", "Mình dùng mỗi sáng", "Thép khôn
 Căn cứ: CEO-D-1304. Các mẹo kỹ thuật dưới đây là hướng dẫn chung, không có nguồn trong bằng chứng; chỉnh theo kết quả bài thử T1.
 
 1. **Chỉ đọc kịch bản đã duyệt**, đúng từng chữ, cả câu công bố ở đầu và ở cuối. Không thêm câu ngoài kịch bản, không nói "mình đã dùng", không nhận xét cá nhân. Đọc số và đơn vị bằng chữ, giống dòng chữ viết của kịch bản (ví dụ "một phẩy năm lít").
-2. **Mỗi video một bản ghi mới**, ghi sau khi kịch bản của video đó được duyệt. Không ghép câu từ bản ghi của video khác. (Đề xuất mặc định của CEO-D-1304, chờ CEO xác nhận.)
+2. **Mỗi video một bản ghi mới**, ghi sau khi kịch bản của video đó được duyệt. Không ghép câu từ bản ghi của video khác. (CEO-D-1305, CEO đã xác nhận.)
 3. **Không dùng giọng máy, không nhân bản giọng**: không bật tính năng tạo giọng hay "voice clone" trong công cụ; công cụ chỉ nhận tệp ghi âm.
 4. Phòng yên tĩnh, không nhạc nền; điện thoại hoặc micro cách miệng khoảng một gang tay; đọc chậm, rõ thanh điệu.
 5. Lưu tệp MP3 hoặc WAV, tên `V-__-ghi-am`, dài **dưới 5 phút** (giới hạn tải lên của D-ID Studio, theo kết quả tìm kiếm trang trợ giúp D-ID; với HeyGen, việc nhận tệp ghi âm là UNVERIFIED). Giữ tệp gốc cho tới hết Ngày 45.
