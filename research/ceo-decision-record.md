@@ -2537,3 +2537,33 @@ Asked "Không nhân bản giọng: mỗi video dùng một bản ghi âm thật,
 contact no seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1306 — MC-16 scope answers: the tool writes the script, a call to action without price, pause-detected captions, 60 seconds is a hard limit
+
+**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session on the four blocking questions of the
+MC-16 scope phase (run `run-535f3f938f32`).
+
+1. **The tool writes the script for the CEO to record.** Asked how each fact row becomes a spoken sentence when the
+   toolchain may use no language model, the CEO's words: "viết kịch bản cho CEO thu âm. sau này sẽ handover lại cho
+   nhân viên là human." (write the script for the CEO to record; later this will be handed over to a human employee).
+   The orchestrator reads this as: the script generator produces every spoken sentence itself, deterministically, from
+   the fact sheet; the CEO does not write sentences. The person who runs the tool and records is the operator (the CEO
+   now, a human employee later); the per-publication approval stays the CEO's under `D-002`. Whether the employee may
+   also record the voice is not decided here: `CEO-D-1304` names the CEO's voice, and a change needs a CEO decision.
+2. **The call to action carries no price.** Asked about the template's guidance sentence, which says "giá", the CEO's
+   words: "hãy dùng câu dễ dẫn dắt khách hàng bằng cách bấm vào giỏ hàng, bấm link để xem chi tiết...." (use a sentence
+   that leads the customer to tap the cart or the link to see details). Part B row 6 of the script template is
+   replaced by a call to tap the cart or the product link for details, with no price, discount or urgency wording.
+   The bare word "giá" is not a banned term (it would refuse products such as "giá đỡ điện thoại"); money amounts,
+   discounts, promotions, sold counts and ratings stay banned.
+3. **Caption timing by pause detection.** The CEO chose the proposed default: the tool finds the pauses between
+   sentences in the recording by signal processing (no speech recognition); the operator reads with a clear pause
+   between sentences; when the pauses found do not match the sentence count, the tool stops and the operator writes the
+   timings by hand.
+4. **Sixty seconds is a hard limit.** The CEO chose "Chặn trên 60 giây": a recording longer than 60 seconds is refused;
+   the operator drops the optional third fact and records again. The 5-minute upload ceiling is moot below it.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304`, `CEO-D-1305`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---
