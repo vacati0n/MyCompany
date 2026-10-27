@@ -13,6 +13,7 @@ okf_version: "0.2"
 - [validation-check C7.1 on investigation-report.md](L-0f9dba9d29.md) - Metadata digests match the frozen snapshot recorded in the invocation envelope
 - [validation-check I6 on investigation-report.md](L-9c1cc9ec43.md) - The report-level confidence uses the declared vocabulary
 - [validation-check C3.2 on release-note.md](L-ae8d96f7c5.md) - No model, vendor, or provider named
+- [validation-check C3.2 on scope-definition.md](L-7589a73850.md) - No model, vendor, or provider named
 - [validation-check C6.1 on scope-definition.md](L-cf46b749eb.md) - Identifiers use the zero-padded three-digit scheme
 - [validation-check SD6 on scope-definition.md](L-56c82f972a.md) - Every scope decision carries a rationale a reviewer can assess
 - [validation-check D14.3 on technical-design.md](L-16562ce500.md) - Every open decision owner resolves to a known agent

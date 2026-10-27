@@ -1,0 +1,655 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-03-001",
+  "run_id": "run-6fa26c9657d3",
+  "work_item_id": "run-6fa26c9657d3::solution-design-and-risk-assessment",
+  "idempotency_key": "sha256:ba893de18d0dbde08d5a018f9e4ebba9",
+  "state_id": "solution-design-and-risk-assessment",
+  "phase_index": 3,
+  "agent_id": "architect",
+  "agent_version": "1.0.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/architect.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/architect/manifest.yaml",
+    "load_order": [
+      "agents/architect/system.md",
+      "agents/architect/identity.md",
+      "agents/architect/reasoning.md",
+      "agents/architect/execution.md",
+      "agents/architect/output.md",
+      "agents/architect/quality.md",
+      "agents/architect/examples.md"
+    ],
+    "module_digests": {
+      "agents/architect/system.md": "sha256:c168589dc2f7d21c5904b04eabac3bcb",
+      "agents/architect/identity.md": "sha256:261f5905d1bd778d6ab5f56f0f542762",
+      "agents/architect/reasoning.md": "sha256:41610cfdb31cf831427216f91c3cab67",
+      "agents/architect/execution.md": "sha256:506d978c15d875e9228206f6ca63ec1c",
+      "agents/architect/output.md": "sha256:bf440b99fb1db7d4750ad563bb2c2ea4",
+      "agents/architect/quality.md": "sha256:ce1c8f09d9d185400063ec43b073d0c7",
+      "agents/architect/examples.md": "sha256:3ec7bba43b60810b9a05d73f42cc1c02"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/architect/system.md",
+        "agents/architect/reasoning.md",
+        "agents/architect/output.md",
+        "agents/architect/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/architect/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/architect/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/architect/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 51183,
+      "full_bytes": 110065
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "architecture-analysis",
+      "impact-analysis",
+      "technical-approach-definition",
+      "reuse-assessment",
+      "option-evaluation",
+      "architecture-decision-authoring",
+      "sequencing-guidance",
+      "structural-risk-analysis",
+      "architecture-estimation"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S01",
+        "proficiency": "Primary",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S02",
+        "proficiency": "Secondary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S06",
+        "proficiency": "Secondary",
+        "registryIdentifier": "database-engineering",
+        "specificationPath": "skills/database/database-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S08",
+        "proficiency": "Secondary",
+        "registryIdentifier": "performance-engineering",
+        "specificationPath": "skills/performance/performance-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Secondary",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S01",
+        "registryIdentifier": "clean-architecture-checklist",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S03",
+        "registryIdentifier": "engineering-playbook",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S06",
+        "registryIdentifier": "database-engineering",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S09",
+        "registryIdentifier": "secure-engineering",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S06",
+      "displayName": "Database Engineering",
+      "specificationPath": "skills/database/database-engineering.md",
+      "status": "required",
+      "area": "database",
+      "basis": "area database triggered by 'database' in input:feature-request",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "area security triggered by 'authorization' in artifact:scope-and-acceptance",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S08",
+      "displayName": "Performance Engineering",
+      "specificationPath": "skills/performance/performance-engineering.md",
+      "status": "required",
+      "area": "performance",
+      "basis": "area performance triggered by 'performance' in artifact:execution-planning",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "change-request",
+      "feature-request",
+      "business-intent",
+      "architecture-context",
+      "execution-plan",
+      "architecture-decision-records",
+      "dependency-inventory",
+      "module-boundaries",
+      "non-functional-requirements",
+      "operability-security-compliance-constraints",
+      "incident-history",
+      "known-issues"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-18-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-18-feature-request.md",
+        "text": "# MC-18: \"Read from link\": the web app reads one public Shopee product page and fills the fact sheet\n\n- Source: `CEO-D-1313` (the CEO's own decision, 2026-10-27); local://research/ceo-decision-record.md#ceo-d-1313\n- Issue type: Feature   Priority: Highest\n- Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, network-egress, vietnamese\n- Routed as: /implement (implement-feature)\n- Builds on: MC-17 (`src/MediaCompany.Pilot.Web`, run `run-022d0492a75a`, commit 3e220c0) on MC-16 (`src/MediaCompany.Pilot`).\n  Neither is merged to `main`. Branch `claude/mc-18-shopee-read-link` is cut from `claude/mc-17-pilot-web-fffc59`.\n\n## Description\n\n### WHY\n\nThe CEO's words: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\" (I accept the risk and want it fully automatic.)\nToday step 1 of the MC-17 web app asks the operator to type every fact of the fact sheet by hand from the product page,\nand to save the three product images and the screenshot themselves. `CEO-D-1313` allows the tool to read the public\nproduct page itself, one product per click, and to fill the fact sheet and save the images.\n\n### WHAT THE OPERATOR DOES\n\n1. At step 1, the operator pastes an affiliate link or a product link and presses one button.\n2. The tool follows the link to the **public product page on shopee.vn**, reads that product's own name, price,\n   classification, specifications, description and images, fills the fact sheet form and saves the images into the\n   video's folder.\n3. Every filled field is marked as read from the page. The operator reviews each fact, and the MC-16 fact-sheet check\n   (banned terms, price spellings, use claims) runs exactly as for typed facts. Nothing is accepted without the\n   operator's review.\n4. If Shopee blocks the read, asks for sign-in, shows a CAPTCHA, or the page cannot be parsed, the tool stops and offers\n   **paste mode**: the operator copies the page's text from their own browser and pastes it; the tool parses the paste\n   and fills the same fields.\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 REUSE IT\n\n- MC-17's step 1 form, its live banned-term check, its image and screenshot steps, and its request guard.\n- MC-16's fact sheet check, which stays the authority on what a fact sheet may hold.\n- Installed on this machine: the .NET 10 SDK (`HttpClient`), and the headless browser the MC-17 tests already drive.\n\n### HARD CONSTRAINTS (from `CEO-D-1313`, unchanged)\n\n1. One product per operator click. No crawling of other pages, no category scan, no batch runs, no scheduled reads.\n2. No sign-in, no cookies or session of the CEO, and affiliate.shopee.vn is never opened.\n3. No CAPTCHA solving, no browser impersonation to evade anti-bot measures (no forged headers or signatures, no faked\n   user agent), no IP rotation, no proxy. A block, a sign-in wall or a CAPTCHA means stop and offer paste mode.\n4. Network egress only to shopee.vn hosts and only during the read step. The MC-16 toolchain stays at zero sockets and\n   video composition stays fully offline. The web app keeps listening on 127.0.0.1 only.\n5. Downloads are relaxed only for the product images of the product the operator supplied (`CEO-D-1303` relaxed per\n   `CEO-D-1313` item 3).\n6. Fetched facts pass the MC-16 fact-sheet check unchanged; the CEO reviews each fact and approves each video (`D-002`).\n7. Stop condition (`CEO-D-1313` item 6): the read step can be switched off in one place, leaving paste mode working.\n8. Download no package (no npm, NuGet or pip package, no CDN script) unless the CEO approves it by name. No generative\n   model, no speech recognition, no metered service.\n9. Agents never sign in, create accounts, contact sellers, buy or publish. Frozen MC-13 and MC-14 and the `mediacompany`\n   database are not touched.\n10. Tests run offline: product pages, blocked pages, sign-in walls and images are served by a code-generated local\n    fixture server, never shopee.vn. No media file is added to the repository. Agents do not read shopee.vn during\n    development unless the CEO allows it by name at the Scope Gate.\n\n### OPEN FOR THE SCOPE GATE\n\n- **Image hosts.** Shopee serves product images from hosts outside shopee.vn (for example `*.susercontent.com`). The\n  decision names \"m\u00e1y ch\u1ee7 shopee.vn\" only. The CEO decides whether the image CDN of the product is included.\n- **Short links.** Affiliate links are commonly `s.shopee.vn/...` redirects; the read follows redirects only within the\n  allowed hosts.\n- **Live check.** Whether an agent may read one real public product page once, on the CEO's named link, to show the step\n  working; otherwise the demo uses the local fixture and paste mode only.\n\n### DONE MEANS\n\n- MC-18 runs through every phase and gate of `implement-feature`; the CEO decides at the Scope and Design gates.\n- The step is shown working in the Browser pane against the local fixture, including a block that falls back to paste\n  mode.\n- Committed and pushed on `claude/mc-18-shopee-read-link`; the CEO gets the compare link.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no\nrepository file; an agent claiming a finding covers \"every\" case lists the cases; a `failure-envelope.json` of class\n`gate-approval-required` in a phase folder is stale once that phase's dispatch prompt exists (Finding 11).\n\n## Acceptance criteria\n\n_To be defined by the scope phase and approved at the Scope Gate._",
+        "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-18-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-18-business-intent.md",
+        "text": "# Business intent for MC-18 (the owner's request and decisions, verbatim)\n\n## The CEO's request, 2026-10-27, in chat (relayed by the MC-16 session, confirmed directly in the MC-17 session)\n\n\"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n. H\u00e3y so\u1ea1n quy\u1ebft \u0111\u1ecbnh CEO cho ph\u00e9p bot t\u1ef1 \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m qua link ti\u1ebfp th\u1ecb \u0111\u1ec3 t\u00f4i duy\u1ec7t.\"\nApproval of the draft: \"ch\u1ea5p nh\u1eadn nguy\u00ean v\u0103n\". Confirmed in the MC-17 session: \"X\u00e1c nh\u1eadn, l\u00e0m sau MC-17\".\n\n---\n\n## The approved text, Vietnamese, as the CEO approved it\n\n### CEO-D-1313 \u2014 Bot t\u1ef1 \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m Shopee \u0111\u1ec3 \u0111i\u1ec1n b\u1ea3ng th\u00f4ng tin\n\n**Quy\u1ebft \u0111\u1ecbnh c\u1ee7a CEO, 2026-10-27.** L\u1eddi CEO: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\"\n\n1. **\u0110\u01b0\u1ee3c ph\u00e9p:** khi CEO \u0111\u01b0a v\u00e0o m\u1ed9t link ti\u1ebfp th\u1ecb/link s\u1ea3n ph\u1ea9m, c\u00f4ng c\u1ee5 m\u1edf **trang s\u1ea3n ph\u1ea9m c\u00f4ng khai tr\u00ean\n   shopee.vn** m\u00e0 link \u0111\u00f3 tr\u1ecf t\u1edbi, l\u1ea5y t\u00ean, gi\u00e1, ph\u00e2n lo\u1ea1i, th\u00f4ng s\u1ed1, m\u00f4 t\u1ea3 v\u00e0 \u1ea3nh c\u1ee7a ch\u00ednh s\u1ea3n ph\u1ea9m \u0111\u00f3, r\u1ed3i t\u1ef1 \u0111i\u1ec1n\n   b\u1ea3ng th\u00f4ng tin v\u00e0 l\u01b0u \u1ea3nh v\u00e0o th\u01b0 m\u1ee5c video. M\u1ed7i l\u1ea7n **m\u1ed9t s\u1ea3n ph\u1ea9m, do CEO b\u1ea5m**; kh\u00f4ng t\u1ef1 d\u00f2 trang kh\u00e1c, kh\u00f4ng\n   qu\u00e9t danh m\u1ee5c, kh\u00f4ng ch\u1ea1y h\u00e0ng lo\u1ea1t.\n2. **V\u1eabn gi\u1eef:** kh\u00f4ng \u0111\u0103ng nh\u1eadp, kh\u00f4ng d\u00f9ng cookie/phi\u00ean c\u1ee7a CEO, kh\u00f4ng m\u1edf affiliate.shopee.vn (trang \u0111\u00f3 c\u1ea7n \u0111\u0103ng\n   nh\u1eadp). Kh\u00f4ng v\u01b0\u1ee3t CAPTCHA, kh\u00f4ng gi\u1ea3 tr\u00ecnh duy\u1ec7t \u0111\u1ec3 n\u00e9 ch\u1ed1ng bot, kh\u00f4ng \u0111\u1ed5i IP. N\u1ebfu Shopee ch\u1eb7n ho\u1eb7c \u0111\u00f2i \u0111\u0103ng nh\u1eadp\n   \u2192 d\u1eebng v\u00e0 chuy\u1ec3n sang c\u00e1ch b\u00e1n t\u1ef1 \u0111\u1ed9ng (CEO d\u00e1n n\u1ed9i dung trang v\u00e0o, c\u00f4ng c\u1ee5 \u0111i\u1ec1n).\n3. **Thay \u0111\u1ed5i:** quy \u0111\u1ecbnh \"kh\u00f4ng t\u1ea3i t\u00e0i s\u1ea3n n\u00e0o\" (CEO-D-1303) \u0111\u01b0\u1ee3c n\u1edbi **ri\u00eang** cho \u1ea3nh s\u1ea3n ph\u1ea9m CEO \u0111\u01b0a v\u00e0o; quy\n   \u0111\u1ecbnh ch\u1ec9 k\u1ebft n\u1ed1i n\u1ed9i b\u1ed9 (CEO-D-1308) \u0111\u01b0\u1ee3c n\u1edbi **ri\u00eang** cho b\u01b0\u1edbc \u0111\u1ecdc trang t\u1edbi m\u00e1y ch\u1ee7 shopee.vn. B\u01b0\u1edbc d\u1ef1ng video\n   v\u1eabn ho\u00e0n to\u00e0n ngo\u1ea1i tuy\u1ebfn.\n4. **Ki\u1ec3m tra gi\u1eef nguy\u00ean:** d\u1eef li\u1ec7u bot l\u1ea5y v\u1eabn qua ph\u00e9p ki\u1ec3m tra b\u1ea3ng th\u00f4ng tin c\u1ee7a MC-16 (t\u1eeb c\u1ea5m, c\u00e1ch vi\u1ebft gi\u00e1,\n   c\u00e2u t\u1ef1 nh\u1eadn \u0111\u00e3 d\u00f9ng), CEO v\u1eabn xem l\u1ea1i t\u1eebng d\u1eef ki\u1ec7n, v\u00e0 v\u1eabn duy\u1ec7t t\u1eebng video tr\u01b0\u1edbc khi \u0111\u0103ng (D-002).\n5. **R\u1ee7i ro CEO nh\u1eadn (D-018):** \u0111i\u1ec1u kho\u1ea3n Shopee (E-105) c\u1ea5m \u0111\u1ed1i t\u00e1c \"thu th\u1eadp b\u1ea5t k\u1ef3 th\u00f4ng tin n\u00e0o tr\u00ean S\u00e0n TM\u0110T\";\n   bot \u0111\u1ecdc trang c\u00f3 th\u1ec3 b\u1ecb coi l\u00e0 vi ph\u1ea1m \u2192 c\u00f3 th\u1ec3 b\u1ecb kh\u00f3a t\u00e0i kho\u1ea3n affiliate v\u00e0 m\u1ea5t hoa h\u1ed3ng; E-107 ph\u1ea1t t\u1edbi\n   10 tri\u1ec7u \u0111\u1ed3ng m\u1ed7i h\u00e0nh vi d\u00f9ng n\u1ed9i dung kh\u00f4ng \u0111\u01b0\u1ee3c ph\u00e9p.\n6. **\u0110i\u1ec1u ki\u1ec7n d\u1eebng:** Shopee tr\u1ea3 l\u1eddi Q-014 b\u1ea5t l\u1ee3i ho\u1eb7c g\u1eedi b\u1ea5t k\u1ef3 c\u1ea3nh b\u00e1o t\u00e0i kho\u1ea3n n\u00e0o \u2192 t\u1eaft bot ngay trong ng\u00e0y,\n   quay v\u1ec1 c\u00e1ch b\u00e1n t\u1ef1 \u0111\u1ed9ng. Q-014 v\u1eabn \u0111\u01b0\u1ee3c g\u1eedi.\n\n**Kh\u00f4ng \u0111\u1ed5i:** D-002, D-018; agent kh\u00f4ng t\u1ea1o t\u00e0i kho\u1ea3n, kh\u00f4ng li\u00ean h\u1ec7 ng\u01b0\u1eddi b\u00e1n, kh\u00f4ng mua, kh\u00f4ng \u0111\u0103ng.\n\n---\n\n## CEO-D-1313 \u2014 The bot reads the public Shopee product page to fill the fact sheet\n\n**The CEO's own decision, 2026-10-27.** The CEO's words: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\" (I accept\nthe risk and want it fully automatic.) The CEO approved the Vietnamese text verbatim (\"ch\u1ea5p nh\u1eadn nguy\u00ean v\u0103n\") in the\nMC-16 session and confirmed it directly in the MC-17 session, choosing to build it as a follow-up run after MC-17\ncloses. This entry is the English form.\n\n1. **Allowed:** when the CEO supplies an affiliate link or product link, the tool opens the **public product page on\n   shopee.vn** that the link points to. It takes that product's own name, price, classification, specifications,\n   description and images, then fills the fact sheet and saves the images into the video folder. **One product at a\n   time, on the CEO's click.** No crawling of other pages, no category scanning, no batch runs.\n2. **Kept:** no sign-in, no use of the CEO's cookies or session, and affiliate.shopee.vn is not opened (it requires\n   sign-in). No CAPTCHA solving, no browser impersonation to evade anti-bot measures, no IP rotation. If Shopee blocks\n   the page or asks for sign-in, the tool stops and falls back to the semi-automatic mode: the CEO pastes the page\n   content and the tool fills the sheet.\n3. **Changed:** the \"download no asset\" rule (`CEO-D-1303`) is relaxed **only** for the product images of the product\n   the CEO supplies. The local-connections-only rule (`CEO-D-1308`) is relaxed **only** for the page-reading step, to\n   shopee.vn hosts. Video composition stays fully offline.\n4. **Checks unchanged:** the data the bot takes still passes the MC-16 fact-sheet check (banned terms, price\n   spellings, use claims). The CEO still reviews each fact, and still approves each video before it is published\n   (`D-002`).\n5. **Risk the CEO carries (`D-018`):** Shopee's terms (E-105) forbid partners from \"collecting any information on the\n   e-commerce platform\". A bot reading pages may be judged a breach, which can mean the affiliate account is locked and\n   commission is lost. E-107 sets a fine of up to 10 million dong for each unauthorised use of content.\n6. **Stop condition:** if Shopee answers Q-014 unfavourably or sends any account warning, the bot is switched off the\n   same day and the tool returns to the semi-automatic mode. Q-014 is still sent.\n\n**Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.",
+        "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+      },
+      {
+        "type": "execution-plan",
+        "reference": "runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-18-shopee-read-link-27d13c/.claude/runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+        "text": "```yaml\nplan:\n  planId: PLAN-run-6fa26c9657d3-MC-18\n  sourceInputs:\n    - type: feature-request\n      reference: runs/inputs/mc-18-feature-request.md\n  producedBy: planner\n  agentVersion: 1.0.0\n  schemaVersion: 1.0.0\n  status: complete\n  inputDigest: sha256:3be564296ce7dfbb7c47644756a9d6c5\n  contextDigest: sha256:2de1c2c2ba837051eb22fa9c512b030c\n  upstreamArtifacts:\n    - \"scope-definition at runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md (sha256:0379ea41a66f31f30be2c251b71b0fa3), approved at the Scope Gate by the CEO as CEO-D-1314\"\n  gateDecisionsRestated:\n    - \"Scope Gate approved by the CEO (CEO-D-1314), restated by the orchestrator briefing because the runtime does not carry gate rationale downstream\"\n    - \"Image hosts: the read may fetch the supplied product's image files from Shopee image hosts outside shopee.vn, image files only, never a page (CEO-D-1314 item 1)\"\n    - \"Short links: s.shopee.vn redirects are followed only while every hop is an allowed host, at most five hops, stopping on any other host including affiliate.shopee.vn (CEO-D-1314 item 2)\"\n    - \"Live read: one real public product page, once, only on a link the CEO names in chat; done by the orchestrator after quality review, never by an agent task (CEO-D-1314 item 3)\"\n    - \"Scope approved with its 34 acceptance criteria; price and description shown not saved; the operator attaches a screenshot per fact; unsupplied fields stay for the operator; a blocked read never retries (CEO-D-1314 item 4)\"\n  citationConventions:\n    - \"S-001 to S-011 are the scope-definition's approved scope items, adopted as statements in that artifact's order; S-012 to S-015 are added below\"\n    - \"SC-01 to SC-34 cite the scope-definition's acceptance criteria 1 to 34, in that artifact's table order\"\n    - \"X-001 to X-012 cite the scope-definition's exclusions; SD-1 to SD-8 cite its scope decisions 1 to 8; its six questions are cited by their answers in CEO-D-1314 or by this plan's own questions\"\n  affectedAreas: \"security (S-007, S-008, S-012, S-013); database not affected (X-009, A-009); performance one bound only, the 1 s live warning of SC-10 (A-010)\"\n  repositoryContext: \"task context named no modules; the file lists of src/MediaCompany.Pilot.Web and tests/MediaCompany.Pilot.Web.Tests were read once to confirm the paths the briefing names; no wider scan\"\n```\n\n## Executive Summary\n\nMC-18 adds a read step to step 1 of the Vietnamese pilot web app: the operator pastes one Shopee product or short link, presses one button, and the fact sheet form is filled from that product's public page while the product's own images are saved for the video, with paste mode as the full fallback. Success is the done condition the CEO approved (SC-34): in the Browser pane against the local fixture, one read fills step 1 and saves images, and one blocked read falls back to paste mode and saves, with every filled fact confirmed by the operator and decided by the unchanged MC-16 check. The work is 25 tasks in 11 execution waves: two design-phase tasks, eleven implementation tasks, nine quality-review tasks and two closing tasks; verification is owned by dev-2-reviewer because qa owns no phase in implement-feature (A-012). Every outbound request stays inside the CEO's bounds: allowed hosts only, at most five redirect hops, no cookie, credential, proxy or imitated header, no retry, and one switch turns the read off. The highest-impact risk is R-001: an unmodified read of a script-rendered real page may return no readable product, making paste mode the common path; the security risk with the widest reach is R-016, a host-rule bypass, which T-017 prevents and T-018 verifies. The single live read on a CEO-named link is an orchestrator act after quality review, planned as an external dependency of T-024. Plan status is complete; no blocking question stands, and the four non-blocking questions Q-001 to Q-004 are owned.\n\n## Business Objectives\n\n- BO-1: The operator gets one product's facts and own images into step 1 from one link and one click. Receiver: the operator. Measured by SC-01 to SC-06 and the done condition SC-34. Traces S-001, S-002, S-011, S-012, S-013.\n- BO-2: Every fact a read or a paste supplies is reviewed by the operator and judged by the unchanged fact-sheet check before it is saved. Receiver: the CEO, who reviews each fact and approves each video. Measured by SC-07 to SC-11. Traces S-003, S-004.\n- BO-3: Step 1 stays completable whatever Shopee does and whatever the switch says: a block falls back to paste mode, and with the read off paste mode and hand typing still save. Receiver: the operator. Measured by SC-12 to SC-17 and SC-28 to SC-30. Traces S-005, S-006, S-009.\n- BO-4: The company's exposure under Shopee's terms stays inside the bounds the CEO accepted: one product per click, no sign-in, cookie or evasion, egress only to allowed hosts during a read, and live reads only on a CEO-named link. Receiver: the CEO, who carries the terms risk. Measured by SC-18 to SC-27, SC-31 to SC-33. Traces S-007, S-008, S-010, S-014.\n- BO-5: The CEO can review the delivered change and its evidence before any merge. Receiver: the CEO. Measured by the compare link and the release note citing 34 of 34 results. Traces S-015.\n\n## Technical Objectives\n\n- TO-1: A read returns name, classification and specification rows equal to the page's values after Unicode NFC normalisation, and a paste returns the same rows; price and description are shown and saved in no field. Verified by SC-01 to SC-03, SC-15. Traces BO-1.\n- TO-2: Only the supplied product's own image files, from allowed hosts or the allowed image hosts, are fetched and saved byte-equal, and only the three the operator picks enter the input set. Verified by SC-04 to SC-06. Traces BO-1.\n- TO-3: Saving is refused until every filled field is confirmed, the check result on filled values equals the result on typed values, and the MC-16 toolchain's files and 251 tests are unchanged. Verified by SC-07 to SC-11. Traces BO-2.\n- TO-4: Each of the nine stop signals ends the read with zero further requests and a Vietnamese reason, next step and paste-mode offer. Verified by SC-12 to SC-14. Traces BO-3.\n- TO-5: Read requests carry no cookie, authorization, proxy or imitating header, reach only allowed hosts within five hops, occur only between a click and its result, while the listener stays on 127.0.0.1 and toolchain jobs own zero sockets. Verified by SC-18 to SC-27. Traces BO-4.\n- TO-6: One persisted setting disables the read entirely while paste mode and hand typing still save. Verified by SC-28 to SC-30. Traces BO-3.\n- TO-7: The change's tests run offline against an in-process loopback fixture server generated in code, adding zero media files and zero package references. Verified by SC-31, SC-32. Traces BO-4.\n\n## Scope\n\n### In Scope\n\n- S-001: At step 1 the operator pastes one affiliate or product link and presses one button; the form is filled from that product's public page on shopee.vn (product name, classification, page address, read date, one fact row per specification); price and description are shown beside the form. Tasks: T-001, T-003, T-004, T-005.\n- S-002: The product's own images are saved for the video, the operator picks the three the sheet uses, and only those reach the input set. Tasks: T-005, T-006.\n- S-003: Every field filled from the page or a paste carries a visible source mark, and the sheet saves only after each filled field is confirmed. Tasks: T-007, T-008.\n- S-004: Filled facts meet the MC-16 fact-sheet check and the live banned-term warning exactly as typed facts do, and the check is unchanged. Tasks: T-009, T-010, T-011.\n- S-005: When Shopee refuses access, asks for sign-in, shows a CAPTCHA, gives no readable product, fails or does not answer, the read stops, says why in Vietnamese and offers paste mode. Tasks: T-012, T-013.\n- S-006: In paste mode the operator pastes page text from their own browser and the same fields are filled with no network connection; hand typing stays available. Tasks: T-013, T-014.\n- S-007: A read covers one product per click, with no sign-in, cookie or session, never on affiliate.shopee.vn, with no CAPTCHA solving, forged header, signature or user agent, IP rotation or proxy. Tasks: T-015, T-016.\n- S-008: The app connects off the machine only to the allowed hosts and only while a read runs; the MC-16 toolchain and video composition keep zero sockets; the listener stays on 127.0.0.1. Tasks: T-017, T-018.\n- S-009: One switch in one place turns the read off, and with it off paste mode and hand typing still complete step 1. Tasks: T-019, T-020.\n- S-010: Tests run offline against a code-generated local fixture server; no media file and no package is added; agents read no live shopee.vn page during development. Tasks: T-021, T-022.\n- S-011: The operator completes step 1 in the Browser pane against the local fixture: one read that fills and saves images, and one blocked read that falls back to paste mode and saves. Task: T-023.\n- S-012: The read may fetch the supplied product's image files from Shopee image hosts outside shopee.vn (for example the susercontent.com hosts), image files only, never a page (CEO-D-1314 item 1). Tasks: T-006, T-017.\n- S-013: Short links on s.shopee.vn are followed only while every hop is an allowed host, at most five hops, stopping on any other host including affiliate.shopee.vn (CEO-D-1314 item 2). Tasks: T-004, T-015, T-017.\n- S-014: One real public product page may be read once, only on a link the CEO names in chat, by the orchestrator after quality review; no agent reads shopee.vn otherwise (CEO-D-1314 item 3). Tasks: T-022, T-024.\n- S-015: The change is committed and pushed on the MC-18 session branch, and the CEO receives the compare link (feature request, done means). Tasks: T-024, T-025.\n\n### Out of Scope\n\n- X-001 reading any page other than the supplied product's, and batch, scheduled or background reads: CEO-D-1313 item 1.\n- X-002 sign-in, cookies or session of any kind, opening affiliate.shopee.vn, affiliate link generation, commission or account data: CEO-D-1313 item 2.\n- X-003 CAPTCHA solving, anti-bot evasion, IP rotation, proxies and repeated attempts past a block: CEO-D-1313 item 2; a retry is a further attempt to pass a block (SD-6).\n- X-004 downloading anything except the supplied product's own images (other products' images, videos, page scripts, style sheets, fonts): CEO-D-1313 item 3 relaxes the no-download rule for those images only.\n- X-005 a screenshot of the product page taken by the tool: the operator still attaches a screenshot per fact (CEO-D-1314 item 4).\n- X-006 changes to the MC-16 fact-sheet check, banned-term list, price rule, script rules or any toolchain behaviour: the check stays the authority.\n- X-007 monitoring Shopee's answer or account warnings and switching the read off automatically: the stop condition is the CEO's act.\n- X-008 reading any site other than shopee.vn, including Shopee sites of other countries: CEO-D-1313 names shopee.vn only.\n- X-009 publishing, accounts, sellers, buying; frozen MC-13 and MC-14 material and the mediacompany database: frozen by CEO decision.\n- X-010 changes to steps 2 to 7 beyond receiving the images of S-002: the ticket changes step 1 only.\n- X-011 a generative model, speech recognition, metered service, or any package, font or CDN script not approved by name: ticket hard constraint 8.\n- X-012 merging any branch into main and any release, readiness or closure decision: owned by gate owners and the CEO.\n\n### Deferred\n\n- A business success measure with a threshold, such as the share of reads that fill without paste mode: in scope when the CEO states such a measure (A-005).\n- A Vietnamese operator-guide update for the read step and paste mode: in scope on a product-owner decision.\n\n## Assumptions\n\n| ID | Assumption | Basis | Impact if false | Confirmed by |\n|---|---|---|---|---|\n| A-001 | The read, the parsers and the fixture server need only the installed .NET 10 base class library, with zero added package references | S-010 | A package needs the CEO's approval by name before implementation starts | architect |\n| A-002 | A public product page fetched by an unmodified request carries the product's facts in a parseable form for at least some products | S-001 | Real reads stop at no readable product and paste mode becomes the only working path; T-003 changes | architect |\n| A-003 | The allowed-host rule can be pointed at the loopback fixture server through a seam only test code can set, leaving the shipped rule unchanged | S-010 | Offline tests of host and redirect behaviour need a different route; T-021 is redesigned | architect |\n| A-004 | Text a browser copies from a product page carries labels enough to locate name, classification and specification rows, so the code-generated paste fixture is representative | S-006 | Real pastes fill fewer fields; T-014's parser changes | architect |\n| A-005 | The done condition SC-34 is the only success measure, as the CEO's Scope Gate approval added none | S-011 | An acceptance criterion and a verification task are added | product-owner |\n| A-006 | The off switch is held in the web app's own settings and persists across restarts with no MC-16 toolchain change | S-009 | A toolchain change conflicts with X-006; T-019 changes | architect |\n| A-007 | The MC-16 and MC-17 socket harness can record the app process's outbound connections with remote host and time, and its listeners | S-008 | SC-25 needs another evidence route; T-018 changes | architect |\n| A-008 | The page's product data distinguishes the product's own images from other products' images shown on the same page | S-002 | Own images cannot be selected safely; SC-04 fails; T-003 and T-006 change | architect |\n| A-009 | The triggered database area needs no work: the mediacompany database is untouched and step 1 keeps its existing file storage | plan-wide | Database design and gate work are added; X-009 conflict | architect |\n| A-010 | The existing MC-17 live banned-term check answers within 1 s for read-filled values as it does for typed values | S-004 | SC-10 fails; design work on the live check is added | architect |\n| A-011 | The live read on a CEO-named link is the orchestrator's act after quality review; no agent task reads shopee.vn | S-014 | An agent task with a live read is added, which CEO-D-1314 item 3 forbids for agents in this run | orchestrator |\n| A-012 | Verification tasks are owned by dev-2-reviewer, because qa owns no phase in implement-feature and a qa-owned task would never be dispatched | plan-wide | Verification tasks move to qa and are not dispatched unless a phase is given to qa | orchestrator |\n| A-013 | The installed headless browser the MC-17 tests drive can run the step 1 browser tests and supports the Browser-pane run with no package download | S-011 | SC-34 and the browser tests need a CEO decision or a manual run; T-023 changes | architect |\n| A-014 | Shopee short links resolve through ordinary redirect responses, so following hops needs no page script | S-013 | Real short links always stop at paste mode; SC-02 is met on the fixture only | architect |\n\n## Risks\n\n| ID | Class | Trigger | Impact | Likelihood | Affects | Mitigation | Owner |\n|---|---|---|---|---|---|---|---|\n| R-001 | requirement | Real product pages give an unmodified read no readable product (A-002 false) | The read rarely fills; BO-1 holds on the fixture only and paste mode is the common path | high | T-001, T-003, T-004 | T-001 records the expected yield (Q-004); T-014 makes paste mode a full path; the orchestrator's live read records one real outcome | architect |\n| R-002 | requirement | Real copied page text differs from the paste fixture (A-004 false) | Paste fills fewer fields and the operator types the rest | medium | T-014 | T-014 names every field not found; T-001 defines the parser's tolerance | architect |\n| R-003 | requirement | The CEO asks for a business measure beyond SC-34 (A-005 false) | A plan criterion and a verification task are added | low | T-023, T-024 | The orchestrator raises it at the Planning Gate | product-owner |\n| R-004 | technical | A needed capability is absent from the base class library (A-001 false) | Implementation waits on a CEO package approval | low | T-001, T-003, T-015 | T-001 records the no-package design or names the package | architect |\n| R-005 | technical | Own images cannot be told apart from other products' images (A-008 false) | Other images are fetched against X-004; SC-04 fails | medium | T-003, T-006 | T-001 defines own-image identification; T-005 verifies SC-04 | architect |\n| R-006 | technical | The socket harness records no host names or times (A-007 false) | SC-25 evidence is incomplete | medium | T-002, T-018 | T-002 names the evidence route for SC-25 | architect |\n| R-007 | technical | The switch cannot persist without a toolchain change (A-006 false) | X-006 conflict | low | T-019 | T-001 places the setting in the web app | architect |\n| R-008 | technical | The installed headless browser cannot run the browser tests or the Browser-pane run without a download (A-013 false) | SC-34 and browser-test evidence need a CEO decision or a manual run | low | T-002, T-023 | T-002 names the route; Q-003 settles who records the run | architect |\n| R-009 | technical | The live warning on filled values takes longer than 1 s (A-010 false) | SC-10 fails | low | T-009 | T-010 measures the time; T-001 designs the path | architect |\n| R-010 | technical | Real short links need page script to resolve (A-014 false) | Real short links always stop at paste mode | medium | T-015 | T-001 records it; SC-02 is still verified on the fixture | architect |\n| R-011 | technical | The design needs storage beyond step 1's files or touches the mediacompany database (A-009 false) | Database work and an X-009 conflict | low | T-001 | T-001 states the storage boundary | architect |\n| R-012 | dependency | The CEO's Design Gate decision is delayed or declines the design | All implementation waits or returns to design | low | T-017, T-021 | T-001 maps every SC to a design element for the decision | orchestrator |\n| R-013 | dependency | The unmerged MC-16 or MC-17 branch changes after this branch is cut | Rebase and a re-run of the 251 and 36 tests | low | plan-wide | T-010 re-runs both suites on the final branch base | orchestrator |\n| R-014 | dependency | The CEO names no link for the live read (A-011) | No real-page evidence; S-014 closes unexercised | medium | T-024 | T-024 records a live read count of zero | orchestrator |\n| R-015 | dependency | Shopee changes its page structure or blocks reads at any time | Reads stop and fall back to paste mode | high | plan-wide | T-012 stops cleanly; T-014 keeps step 1 usable | architect |\n| R-016 | security | A link or redirect hop passes the host rule through a look-alike host, an IP address, another country's site or a hop to a disallowed host | Egress beyond the CEO's bounds | medium | T-015, T-017 | T-017 refuses before connecting; T-018 verifies SC-24; T-011 reviews | architect |\n| R-017 | security | The test seam that points reads at the fixture server is reachable in the shipped app (A-003 false) | A read could be pointed at an arbitrary host | low | T-017, T-021 | T-021 confines the seam to test code; T-011 reviews | architect |\n| R-018 | security | The request sender keeps a cookie, honours a system proxy or adds a default header beyond the accepted list | Breach of CEO-D-1313 item 2 | medium | T-015 | T-015 criteria; T-016 verifies SC-20, SC-22, SC-23 | architect |\n| R-019 | security | A foreign web page in the same browser triggers a read through the loopback app | A read with no operator click, against SC-19 | medium | T-004 | T-004 puts the read under the MC-17 request guard; T-011 reviews | architect |\n| R-020 | security | A fetched image carries path segments in its name, is not an image, or is unbounded in size | A write outside the video folder or a non-image saved | medium | T-006 | T-006 criteria; T-011 reviews | architect |\n| R-021 | operational | Shopee answers adversely or warns the account while the read is on | The CEO's terms risk materialises; nothing switches off by itself (X-007) | low | T-019 | T-019 gives one setting on the settings screen; T-024 states the stop condition | product-owner |\n| R-022 | operational | The orchestrator's single live read meets a block, sign-in wall or CAPTCHA | No real fill is shown; no retry is allowed | medium | T-024 | Read once, stop, record the outcome in T-024 | orchestrator |\n| R-023 | delivery | A task is owned by a role with no phase in implement-feature (A-012 false, or Q-001) | The task is never dispatched and its evidence is missing | low | T-005, T-010, T-013, T-016, T-018, T-020, T-022, T-023, T-025 | Verification owned by dev-2-reviewer; T-025 is performed by the orchestrator at closure; Q-001, Q-002 | orchestrator |\n| R-024 | delivery | The compare link against main also shows the unmerged MC-16 and MC-17 commits | MC-18 review is confused with earlier work | high | T-025 | T-025 states the branch base in the message | orchestrator |\n\n## Task Breakdown\n\n### T-001 Produce the MC-18 technical design package\n\n- Owner: architect\n- Complexity: L (confidence: medium)\n- Depends on: none\n- Traces to: S-001, S-002, S-005, S-006, S-007, S-008, S-009, S-012, S-013\n- Status: ready\n- Description: A technical design exists stating, for the read step: how the host rule and the image-host rule apply to the link and to every redirect hop; the request header list proposed for acceptance at the Design Gate; how each of the nine stop signals is recognised; what the page parser and the paste parser take and return; how the product's own images are identified; where the one off switch lives; how tests reach the fixture server; the source marks and per-field confirmation; and the expected yield of an unmodified read on real pages.\n- Acceptance Criteria:\n  - A-001, A-002, A-003, A-004, A-006, A-008, A-009, A-010 and A-014 are each recorded as confirmed, or replaced by a decision record at status Proposed\n  - Each of SC-01 to SC-34 maps to at least one design element\n  - A request header list is proposed for the Design Gate with zero headers imitating another client and zero signatures (SC-22)\n  - The design adds zero package references and changes zero MC-16 toolchain files, or names each exception for a CEO decision\n  - Q-004 is answered, or recorded as open with paste mode stated as the expected common path\n- Gate: Design Gate\n\n### T-002 Map every acceptance criterion to a fixture case\n\n- Owner: architect\n- Complexity: M (confidence: medium)\n- Depends on: T-001\n- Traces to: S-001, S-002, S-003, S-004, S-005, S-006, S-007, S-008, S-009, S-010, S-011\n- Status: ready\n- Description: A validation map gives each of SC-01 to SC-34 one test level, one code-generated fixture case where one is needed, and one evidence item, so the build's tests and the quality-review verification bind to the same cases.\n- Acceptance Criteria:\n  - 34 of 34 criteria carry a test level and an evidence item\n  - Every named fixture case is produced by code at test time, and the cases SC-31 lists (those of SC-02, SC-04, SC-06, SC-12, SC-15, SC-21, SC-24) are all present\n  - The socket-harness evidence route for SC-16, SC-19, SC-25 to SC-28 and SC-31 is named, and A-007 is recorded as confirmed or not\n  - The browser-test route for SC-05, SC-07, SC-08, SC-28 and SC-34 needs no downloaded package, and A-013 is recorded as confirmed or not\n- Gate: Design Gate\n\n### T-003 Parse a product page into the read result\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-001, T-021\n- Traces to: S-001, S-002, A-002, A-008\n- Status: assumption-dependent\n- Description: Given the body of one product page, the parser returns the product name, classification, one row per specification (attribute, value as written, source section), price, description and the addresses of the product's own images, or reports that no readable product is present.\n- Acceptance Criteria:\n  - On the fixture product page the returned values equal the fixture's after Unicode NFC normalisation, zero differences (SC-01)\n  - On the fixture page with five own images and three other products' images, exactly the five own image addresses are returned (SC-04)\n  - On the fixture page with no readable product, the result is no readable product and no field is returned\n  - The parser opens zero network connections in the change's automated tests\n- Gate: Review Gate\n\n### T-004 Fill step 1 from one link on one click\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: medium)\n- Depends on: T-003, T-012\n- Traces to: S-001, S-007, S-013\n- Status: ready\n- Description: At step 1 one pasted link and one button press fill product name, classification, page address, read date and one fact row per specification; price and description are shown marked as read and held in no saved field; unsupplied fields stay empty; no read starts without the click.\n- Acceptance Criteria:\n  - SC-01 and SC-03 pass in the change's automated tests\n  - A full link and a short link to the same fixture product fill identical values (SC-02)\n  - After a read, the unsupplied fields SC-09 lists are empty and saving is refused naming the first of them\n  - A link field holding two links is refused naming the one-product rule, and an idle app with a link entered starts zero reads (SC-19)\n  - A read request is accepted only under the MC-17 request guard (R-019)\n- Gate: Review Gate\n\n### T-005 Verify the read, image and review criteria\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: medium)\n- Depends on: T-006, T-009\n- Traces to: S-001, S-002, S-003, S-012, S-013\n- Status: ready\n- Description: A verification record states pass or fail, with the evidence item T-002 names, for each of SC-01 to SC-09 on the built change.\n- Acceptance Criteria:\n  - 9 of 9 criteria carry a recorded result and its evidence item\n  - SC-04 records the fixture server request log and the five saved-file digests\n  - SC-08 records the refusal at N minus 1 confirmations and the acceptance at N\n  - Every fail names the task that owns the correction\n- Gate: Verification Gate\n\n### T-006 Save the product's own images for the operator's pick\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-004\n- Traces to: S-002, S-012, A-008\n- Status: assumption-dependent\n- Description: After a read, the product's own image files are fetched only from allowed hosts or the allowed image hosts, as image files only, and saved byte-equal into the video's folder; an image on any other host is named and not fetched; the operator picks three, and only those three reach step 2's input set.\n- Acceptance Criteria:\n  - 5 of 5 own images saved byte-equal, with zero requests for the three other images or any script, style sheet or font (SC-04)\n  - The input set holds exactly the three picked images and step 2 reports no image missing (SC-05)\n  - An image on a disallowed host receives zero requests, its name is shown, and the step 2 upload still accepts it (SC-06)\n  - A response that is not an image file, or an image whose name carries path segments, writes nothing outside the video's folder (R-020)\n- Gate: Review Gate\n\n### T-007 Mark the source of every filled field\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: medium)\n- Depends on: T-004, T-014\n- Traces to: S-003\n- Status: ready\n- Description: Each field filled by a read or a paste (product name, classification, page address, read date, each fact row) shows a Vietnamese mark naming its source, and typed fields show none.\n- Acceptance Criteria:\n  - On the read fixture, N of N filled fields carry the read-from-page mark (SC-07)\n  - On the paste fixture, N of N filled fields carry the from-paste mark (SC-07)\n  - Typed fields carry zero marks, and the mark texts meet the SC-14 language rule\n- Gate: Review Gate\n\n### T-008 Require confirmation of every filled field before save\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: medium)\n- Depends on: T-007\n- Traces to: S-003\n- Status: ready\n- Description: A sheet with N filled fields saves only after the operator has confirmed all N, one by one, and a refusal names an unconfirmed field.\n- Acceptance Criteria:\n  - With N minus 1 confirmed, saving is refused naming an unconfirmed field (SC-08)\n  - With N confirmed, saving is accepted (SC-08)\n  - A typed field needs no confirmation, and the confirmation labels meet the SC-14 language rule\n- Gate: Review Gate\n\n### T-009 Route filled facts through the unchanged fact-sheet check\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-008\n- Traces to: S-004, A-010\n- Status: assumption-dependent\n- Description: A sheet filled by a read or a paste is decided by the same MC-16 fact-sheet check and the same live banned-term warning as a typed sheet, with zero changes to the check, the banned-term list or the price rule.\n- Acceptance Criteria:\n  - For the eight fixtures of SC-10, read and typed results are equal in term, class and result, 8 of 8\n  - The live warning names term and class within 1 s for read-filled values (SC-10)\n  - Zero files of the MC-16 toolchain change against the branch base (SC-11)\n- Gate: Review Gate\n\n### T-010 Verify the check stays the authority\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: medium)\n- Depends on: T-009\n- Traces to: S-004, S-006\n- Status: ready\n- Description: A verification record states the result, with evidence, for SC-10, SC-11 and SC-17 on the final branch base.\n- Acceptance Criteria:\n  - SC-10: 8 of 8 comparisons recorded, with the measured warning time\n  - SC-11: zero toolchain file changes against the branch base, and 251 toolchain tests passing with none removed or weakened\n  - SC-17: 36 existing web tests passing with none removed or weakened, and the web test folder showing additions only\n- Gate: Verification Gate\n\n### T-011 Review the MC-18 change\n\n- Owner: dev-2-reviewer\n- Complexity: L (confidence: medium)\n- Depends on: T-006, T-009, T-019\n- Traces to: S-004, S-007, S-008, S-009\n- Status: ready\n- Description: A review package records severity-classified findings and a verdict for the whole change, including a security review of outbound reads, the host rule, redirect handling, request headers, the request guard on the read route, the test seam and image file writes.\n- Acceptance Criteria:\n  - Every changed file is covered by the review\n  - Every finding carries a severity and the task that owns its correction\n  - The review records the code inspections SC-22, SC-23 and SC-30 require: the header-setting code, the absence of any proxy list or address pool, and the single switch setting\n  - A verdict is recorded\n- Gate: Review Gate\n\n### T-012 Stop the read at the first stop signal\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: medium)\n- Depends on: T-015\n- Traces to: S-005\n- Status: ready\n- Description: On each of the nine stop signals SC-12 lists the read ends, sends no further request, shows in Vietnamese the reason and the next step, and offers paste mode.\n- Acceptance Criteria:\n  - 9 of 9 stop fixtures end the read with paste mode offered, and the no-answer case ends by 30 s (SC-12)\n  - Zero requests follow a stop response, and zero requests submit a CAPTCHA answer or a sign-in form (SC-13)\n  - Each stop message meets the SC-14 rule: Vietnamese, reason and next step, no English word outside bracketed codes, file names and web addresses\n- Gate: Review Gate\n\n### T-013 Verify the stop cases and paste mode\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: medium)\n- Depends on: T-009\n- Traces to: S-005, S-006\n- Status: ready\n- Description: A verification record states the result, with evidence, for SC-12 to SC-16.\n- Acceptance Criteria:\n  - SC-12 and SC-13: per-case request logs for the nine fixtures, 9 of 9 stopped, zero requests after each stop\n  - SC-14: the nine messages and the new step 1 labels read against the rule, zero English words outside the permitted items\n  - SC-15 and SC-16: paste-versus-read comparison with zero differences, and a socket harness record of zero outbound during a paste run\n- Gate: Verification Gate\n\n### T-014 Parse pasted page text into the read fields\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-003\n- Traces to: S-006, A-004\n- Status: assumption-dependent\n- Description: Text the operator pastes from their own browser fills product name, classification and each specification row as a read does, shows price and description, names each field it did not find, and opens no network connection.\n- Acceptance Criteria:\n  - The code-generated visible text of the fixture page fills the SC-15 fields with zero differences from the read of the same fixture\n  - Each field not found in the paste is named to the operator in Vietnamese (SC-15)\n  - Zero outbound connections occur during a paste fill and save (SC-16)\n- Gate: Review Gate\n\n### T-015 Send read requests within the CEO's bounds\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-001, T-017\n- Traces to: S-007, S-013, A-014\n- Status: assumption-dependent\n- Description: Every request of a read carries only the header list accepted at the Design Gate with the reading component's own unmodified user agent, carries no cookie or authorization of any origin, uses no proxy, leaves from one local address, follows redirects hop by hop through the host rule up to five hops, and is never retried.\n- Acceptance Criteria:\n  - Zero Cookie and zero Authorization headers across all read fixtures, including after a fixture response sets a cookie (SC-20)\n  - The header log equals the accepted list, with zero extra headers (SC-22)\n  - A proxy set in the process environment receives zero connections, and each read's requests leave from one local address (SC-23)\n  - A redirect chain longer than five hops stops with paste mode offered (SC-02)\n- Gate: Review Gate\n\n### T-016 Verify the request bounds of one read\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: medium)\n- Depends on: T-006\n- Traces to: S-007\n- Status: ready\n- Description: A verification record states the result, with evidence, for SC-18 to SC-23.\n- Acceptance Criteria:\n  - SC-18: the request log of one click lists only the link, its hops, the product page and its own images, and a second product is read only after a second click\n  - SC-19: a socket harness record over 10 idle minutes shows zero outbound, and the two-link fixture is refused\n  - SC-20 to SC-23: the header log, the affiliate-host fixtures, the proxy fixture and the source-address records are each attached with their counts\n- Gate: Verification Gate\n\n### T-017 Admit only links and hops on the allowed hosts\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: medium)\n- Depends on: T-001\n- Traces to: S-008, S-012, S-013\n- Status: ready\n- Description: A link or redirect hop is admitted only when its host is shopee.vn or one of its subdomains other than affiliate.shopee.vn, or, for an image file of the supplied product only, an allowed Shopee image host; every other host is refused before any connection, with paste mode offered.\n- Acceptance Criteria:\n  - The six links of SC-24 open zero connections and are refused, 6 of 6\n  - A link on affiliate.shopee.vn, or a redirect hop to it, opens zero connections to that host and offers paste mode (SC-21)\n  - An image host is admitted for image files only; a page address on an image host is refused\n- Gate: Review Gate\n\n### T-018 Verify the egress of the app\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: low)\n- Depends on: T-006, T-009, T-019\n- Traces to: S-008, S-012, S-013, A-007\n- Status: assumption-dependent\n- Description: A verification record states the result, with evidence, for SC-24 to SC-27 during a sample run that includes a read.\n- Acceptance Criteria:\n  - SC-24: 6 of 6 links refused with zero connections each\n  - SC-25: a socket harness record with connection times and remote host names, showing zero outbound while idle and during steps 2 to 7\n  - SC-26 and SC-27: zero sockets in the toolchain job processes with the sampling interval recorded, and one listener on 127.0.0.1\n- Gate: Verification Gate\n\n### T-019 Turn the read off with one setting\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: low)\n- Depends on: T-004\n- Traces to: S-009, A-006\n- Status: assumption-dependent\n- Description: One setting on the app's settings screen turns the read on and off without a file edit or a command and holds across a restart; with it off the read button is not offered, a direct read request is refused in Vietnamese, and paste mode and hand typing still save.\n- Acceptance Criteria:\n  - With the switch off, a direct read request is refused in Vietnamese and zero outbound connections occur (SC-28)\n  - With the switch off, paste mode and hand typing each save a sheet the check accepts (SC-29)\n  - Exactly one setting governs the read, and its off state holds across a restart (SC-30)\n- Gate: Review Gate\n\n### T-020 Verify the off switch\n\n- Owner: dev-2-reviewer\n- Complexity: S (confidence: medium)\n- Depends on: T-009, T-019\n- Traces to: S-009\n- Status: ready\n- Description: A verification record states the result, with evidence, for SC-28 to SC-30.\n- Acceptance Criteria:\n  - SC-28: browser run and direct request with the switch off, with a socket harness count of zero\n  - SC-29: two saves accepted with the switch off, one by paste and one by hand typing\n  - SC-30: code inspection finds one setting, and a browser run off, restart, still off is recorded\n- Gate: Verification Gate\n\n### T-021 Serve every read fixture from a code-generated loopback server\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-002\n- Traces to: S-010, A-003\n- Status: assumption-dependent\n- Description: Test code starts an in-process fixture server on 127.0.0.1 that serves, generated at test time, the product pages, redirect chains, stop answers, images and paste texts the validation map names, and the shipped app reaches it only through a seam that test code alone can set.\n- Acceptance Criteria:\n  - Every case SC-31 lists exists and is produced by test code\n  - Zero media files are added to the repository; fixture images are generated in code (SC-32)\n  - No setting reachable by the operator points the read at the fixture server, and the shipped host rule is unchanged by the seam (R-017)\n- Gate: Review Gate\n\n### T-022 Verify the offline test bounds\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: medium)\n- Depends on: T-006, T-009, T-019\n- Traces to: S-010, S-014\n- Status: ready\n- Description: A verification record states the result, with evidence, for SC-31 to SC-33.\n- Acceptance Criteria:\n  - SC-31: a socket harness record over the test run shows zero connections off 127.0.0.1\n  - SC-32: a scan of added files finds zero media files, and project and package files show zero added package references against the branch base\n  - SC-33: the implementation report and the review package each state their live reads of shopee.vn, count zero\n- Gate: Verification Gate\n\n### T-023 Record the Browser-pane run of step 1\n\n- Owner: dev-2-reviewer\n- Complexity: M (confidence: low)\n- Depends on: T-006, T-009, T-019\n- Traces to: S-011, A-005, A-013\n- Status: assumption-dependent\n- Description: A recorded Browser-pane run against the local fixture shows one read that fills step 1 and saves images, and one blocked read that offers paste mode, after which paste and per-field confirmation save a sheet the check accepts (SC-34).\n- Acceptance Criteria:\n  - Both paths are reached in the recorded run\n  - Two saves are accepted by the check\n  - Zero connections leave 127.0.0.1 during the run\n- Gate: Verification Gate\n\n### T-024 Write the MC-18 release note\n\n- Owner: documentation\n- Complexity: S (confidence: low)\n- Depends on: T-005, T-010, T-011, T-013, T-016, T-018, T-020, T-022, T-023\n- Traces to: S-014, S-015, A-011\n- Status: assumption-dependent\n- Description: A release note records each SC result with its evidence, the review verdict, the residual risks with owners, the live read outcome on the CEO-named link or that none was made, and the branch base.\n- Acceptance Criteria:\n  - 34 of 34 SC results are cited with their evidence\n  - The live read count is stated: zero, or one on the CEO-named link with its outcome and no retry\n  - Every open risk is listed with its owner, and the note states the branch is cut from the unmerged MC-17 branch\n- Gate: Closure Gate\n\n### T-025 Deliver the compare link to the CEO\n\n- Owner: orchestrator\n- Complexity: XS (confidence: high)\n- Depends on: T-024\n- Traces to: S-015\n- Status: ready\n- Description: The change is committed and pushed on the MC-18 session branch, and the CEO holds the compare link with the branch base stated; nothing is merged (X-012).\n- Acceptance Criteria:\n  - The compare link is delivered to the CEO\n  - The message states that the base is the unmerged MC-17 branch on the unmerged MC-16 branch\n  - The main branch is unchanged by this run\n- Gate: Closure Gate\n\n## Dependencies\n\n### 8.1 Dependency Edges\n\n| From | To | Type | Justification |\n|---|---|---|---|\n| CEO (owner of the unmerged MC-16 and MC-17 branches) | T-001 | external | The design binds to the delivered toolchain and web app as they stand on those branches |\n| T-001 | T-002 | produces-consumes | The validation map assigns the design's elements to fixture cases |\n| T-002 | T-021 | produces-consumes | The fixture server serves the cases the map names |\n| CEO (Design Gate decision) | T-021 | policy-gate | Implementation starts only after the Design Gate |\n| T-001 | T-017 | contract | The host rule is defined by the design |\n| CEO (Design Gate decision) | T-017 | policy-gate | Implementation starts only after the Design Gate |\n| T-017 | T-015 | contract | Every request and hop passes the host rule |\n| T-001 | T-015 | contract | The header list is the one accepted at the Design Gate |\n| T-015 | T-012 | produces-consumes | Stop signals are recognised in the sender's responses |\n| T-001 | T-003 | contract | The read result's fields are defined by the design |\n| T-021 | T-003 | produces-consumes | The parser is tested on the fixture pages |\n| T-003 | T-004 | produces-consumes | The form is filled from the read result |\n| T-012 | T-004 | contract | The fill step offers paste mode on a stop |\n| T-003 | T-014 | contract | Paste fills the same read result fields |\n| T-004 | T-006 | produces-consumes | Image saving takes the image addresses of the read |\n| T-004 | T-007 | produces-consumes | Marks apply to read-filled fields |\n| T-014 | T-007 | produces-consumes | Marks apply to paste-filled fields |\n| T-007 | T-008 | contract | Confirmation applies to the marked fields |\n| T-008 | T-009 | produces-consumes | The check receives the confirmed sheet |\n| T-004 | T-019 | contract | The switch governs the read button and route |\n| T-006 | T-005 | verification | SC-04 to SC-06 verify image saving |\n| T-009 | T-005 | verification | SC-07 to SC-09 verify marks, confirmation and save |\n| T-009 | T-010 | verification | SC-10 and SC-11 verify the check path |\n| T-006 | T-011 | verification | The review covers image writes |\n| T-009 | T-011 | verification | The review covers the fill-to-check path |\n| T-019 | T-011 | verification | The review covers the switch |\n| T-009 | T-013 | verification | SC-15 and SC-16 verify paste fill and save |\n| T-006 | T-016 | verification | SC-18 covers the image requests of one click |\n| T-006 | T-018 | verification | SC-24 to SC-27 run on the complete read |\n| T-009 | T-018 | verification | The sample run saves a sheet |\n| T-019 | T-018 | verification | The sample run passes the switch |\n| T-009 | T-020 | verification | SC-29 saves with the switch off |\n| T-019 | T-020 | verification | SC-28 to SC-30 verify the switch |\n| T-006 | T-022 | verification | SC-31 and SC-32 scan the complete change |\n| T-009 | T-022 | verification | SC-31 and SC-32 scan the complete change |\n| T-019 | T-022 | verification | SC-31 and SC-32 scan the complete change |\n| T-006 | T-023 | verification | The run saves images |\n| T-009 | T-023 | verification | The run saves two sheets through the check |\n| T-019 | T-023 | verification | The run uses the complete step 1 |\n| CEO (operator machine installs) | T-023 | external | The run uses the installed headless browser and .NET 10 SDK |\n| T-005 | T-024 | produces-consumes | The note cites SC-01 to SC-09 results |\n| T-010 | T-024 | produces-consumes | The note cites SC-10, SC-11, SC-17 results |\n| T-011 | T-024 | produces-consumes | The note cites the review verdict |\n| T-013 | T-024 | produces-consumes | The note cites SC-12 to SC-16 results |\n| T-016 | T-024 | produces-consumes | The note cites SC-18 to SC-23 results |\n| T-018 | T-024 | produces-consumes | The note cites SC-24 to SC-27 results |\n| T-020 | T-024 | produces-consumes | The note cites SC-28 to SC-30 results |\n| T-022 | T-024 | produces-consumes | The note cites SC-31 to SC-33 results |\n| T-023 | T-024 | produces-consumes | The note cites the SC-34 result |\n| CEO (names one link for the orchestrator's single live read) | T-024 | external | The note records the live read outcome, or that no link was named |\n| T-024 | T-025 | produces-consumes | The pushed branch carries the release note |\n\n### 8.2 External Dependencies\n\n| Responsible party | What is needed | Blocks |\n|---|---|---|\n| CEO (owner of the unmerged MC-16 and MC-17 branches) | The delivered toolchain and web app unchanged on those branches during MC-18 (R-013) | T-001 |\n| CEO (Design Gate decision) | Approval of the T-001 design, including the request header list (R-012) | T-017, T-021 |\n| CEO (operator machine installs) | As owner of the operator machine: the installed .NET 10 SDK and headless browser (R-008) | T-023 |\n| CEO (names one link for the orchestrator's single live read) | One named public product link; the orchestrator reads it once after quality review, with no retry (R-014, R-022) | T-024 |\n\n### 8.3 Implementation Order\n\nWaves are computed over the task-to-task edges of 8.1; an external or policy-gate edge holds its target task within that task's wave until the party in 8.2 delivers, and the live-read edge releases T-024 when the CEO names a link and it is read, or declines to name one.\n\n- Wave 1: T-001\n- Wave 2: T-002, T-017\n- Wave 3: T-015, T-021\n- Wave 4: T-003, T-012\n- Wave 5: T-004, T-014\n- Wave 6: T-006, T-007, T-019\n- Wave 7: T-008, T-016\n- Wave 8: T-009\n- Wave 9: T-005, T-010, T-011, T-013, T-018, T-020, T-022, T-023\n- Wave 10: T-024\n- Wave 11: T-025\n\n## Suggested Workflow\n\nSelected workflow: `implement-feature`\n\nSelected because: MC-18 is new functionality on step 1 of the delivered web app, routed as `/implement`; this plan recommends the workflow and does not start it.\n\n| Phase | Tasks |\n|---|---|\n| `solution-design-and-risk-assessment` | T-001, T-002 |\n| `implementation` | T-003, T-004, T-006, T-007, T-008, T-009, T-012, T-014, T-015, T-017, T-019, T-021 |\n| `quality-review` | T-005, T-010, T-011, T-013, T-016, T-018, T-020, T-022, T-023 |\n| `documentation-and-release-handoff` | T-024, T-025 (T-025 is the orchestrator's closing act, see Q-001) |\n\n| Gate | Required owners |\n|---|---|\n| Scope Gate | product-owner, business-analyst (decided: the CEO, CEO-D-1314) |\n| Planning Gate | tech-lead, orchestrator (this plan is its evidence) |\n| Design Gate | architect, tech-lead; producer exclusion leaves tech-lead; the CEO decides per the feature request |\n| Review Gate | dev-2-reviewer, qa; producer exclusion leaves qa for the review package |\n| Verification Gate | qa |\n| Closure Gate | orchestrator, documentation |\n\n## Required Capabilities\n\n### 10.1 Agent Capabilities\n\n| Capability | Tasks | Owning agent | Proficiency |\n|---|---|---|---|\n| technical-approach-definition | T-001 | architect | Primary |\n| architecture-decision-authoring | T-001 | architect | Primary |\n| validation-design | T-002 | architect | Secondary |\n| implementation-delivery | T-003, T-004, T-006, T-007, T-008, T-009, T-012, T-014, T-015, T-017, T-019, T-021 | dev-1-implement | Primary |\n| quality-verification | T-005, T-010, T-013, T-016, T-018, T-020, T-022, T-023 | dev-2-reviewer | Primary |\n| code-review | T-011 | dev-2-reviewer | Primary |\n| release-communication | T-024 | documentation | Primary |\n| run-coordination | T-025 | orchestrator | Primary |\n\n### 10.2 Required Skills\n\n| Skill | File | Tasks | Level |\n|---|---|---|---|\n| S01 | skills/architecture/clean-architecture-checklist.md | T-001, T-011 | Primary |\n| S02 | skills/business/domain-modeling.md | T-002 | Secondary |\n| S03 | skills/dotnet/engineering-playbook.md | T-001, T-003, T-004, T-006, T-007, T-008, T-009, T-012, T-014, T-015, T-017, T-019, T-021 | Primary |\n| S06 | skills/database/database-engineering.md | T-001 | Advisory |\n| S07 | skills/testing/testing-strategy.md | T-002, T-005, T-010, T-013, T-016, T-018, T-020, T-021, T-022, T-023 | Primary |\n| S08 | skills/performance/performance-engineering.md | T-010 | Advisory |\n| S09 | skills/security/secure-engineering.md | T-001, T-004, T-006, T-011, T-015, T-016, T-017, T-018, T-021 | Primary |\n| S10 | skills/git/git-collaboration.md | T-024, T-025 | Secondary |\n| S11 | skills/logging/observability-logging.md | T-012, T-024 | Advisory |\n| S12 | skills/error-handling/error-handling-strategy.md | T-012, T-015 | Secondary |\n\n## Acceptance Criteria\n\n1. BO-1 (the done condition, CEO-D-1314 item 4): in the Browser pane against the fixture, one read fills step 1 and saves images, and one blocked read offers paste mode, after which paste and per-field confirmation save a sheet the check accepts (SC-34). Evidence: the recorded Browser-pane run with two accepted saves.\n2. BO-1: a read fills the listed fields equal to the fixture and saves exactly the product's own images, of which the operator's three reach the input set (SC-01 to SC-06). Evidence: the read verification record with fixture comparisons, request logs and saved-file digests.\n3. BO-2: every filled field is marked and confirmed before save, and the check result on filled values equals the result on typed values with the toolchain unchanged and its 251 tests passing (SC-07 to SC-11). Evidence: browser runs at N minus 1 and N confirmations, the 8-fixture comparison, the toolchain diff and test output.\n4. BO-3: each of the nine stop signals ends the read and offers paste mode, paste fills the same fields offline, hand typing still works, and with the switch off paste and typing still save (SC-12 to SC-17, SC-28 to SC-30). Evidence: per-case request logs, paste comparison, socket harness records and the 36 web tests.\n5. BO-4: every request stays inside the CEO's bounds: one product per click, no cookie, authorization, proxy or imitating header, allowed hosts only within five hops, outbound only during a read, one listener on 127.0.0.1 and zero toolchain job sockets (SC-18 to SC-27). Evidence: header and request logs, the six refused-link fixtures and socket harness records.\n6. BO-4: the tests run offline with zero media files and zero added packages, and agents made zero live reads, with at most one live read on the CEO-named link made by the orchestrator (SC-31 to SC-33). Evidence: test-run socket record, added-file scan, package comparison and the live read statements in the reports and release note.\n7. BO-5: the CEO holds the compare link with the release note citing 34 of 34 results and the branch base stated. Evidence: the delivered message and the release note.\n\n## Definition of Done\n\n- [ ] Plan acceptance criteria 1 to 7 are verified with recorded evidence\n- [ ] Scope, Planning, Design, Review, Verification and Closure Gates are decided, with the deciding owner recorded for each\n- [ ] Every task's acceptance criteria are satisfied, or formally waived with the waiver recorded\n- [ ] A-001 to A-014 are each confirmed or converted to a recorded decision\n- [ ] R-001 to R-024 are each closed or accepted with a named owner\n- [ ] Q-001 to Q-004 are each closed or explicitly accepted with the owner recorded\n- [ ] The live read count is recorded in the release note: zero, or one on the CEO-named link\n- [ ] The release note is published in the run evidence\n- [ ] Durable outcomes are recorded to memory per `memory/memory-governance.md`\n\n## Open Questions\n\n| ID | Question | Blocking | Owner | Affects |\n|---|---|---|---|---|\n| Q-001 | Framework gap: orchestrator owns no phase in implement-feature, so T-025 and the single live read are closing acts the orchestrator performs rather than dispatched tasks; does the Planning Gate accept T-025 mapped to `documentation-and-release-handoff` on that basis? | non-blocking | orchestrator | T-024, T-025 |\n| Q-002 | Framework gap: qa owns no phase in implement-feature, so the verification tasks are owned by dev-2-reviewer (A-012) while qa decides the Verification Gate; does the Planning Gate confirm this assignment? | non-blocking | orchestrator | T-005, T-010, T-013, T-016, T-018, T-020, T-022, T-023 |\n| Q-003 | Can dev-2-reviewer record the Browser-pane run of SC-34 itself, or does the orchestrator record it in the Browser pane with the reviewer citing that record? | non-blocking | orchestrator | T-023 |\n| Q-004 | Without forged signatures, how much product data can an unmodified read obtain from a script-rendered real page, and is paste mode then the expected common path? | non-blocking | architect | T-001, T-003 |",
+        "digest": "sha256:f6fbc44a49b9672c020448adeeac04df",
+        "produced_by": "execution-planning"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the change this agent designs against: a change request, a feature request, or a business intent. Without one there is no requested change to design, and designing anyway would mean inventing the requirement."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "execution-plan",
+      "reference": "runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+      "produced_by": "execution-planning",
+      "artifact": "execution-plan.md",
+      "bytes": 53589,
+      "sections": {
+        "read_first": [
+          "Technical Objectives",
+          "Scope",
+          "Task Breakdown",
+          "Dependencies",
+          "Acceptance Criteria",
+          "Definition of Done",
+          "Open Questions"
+        ],
+        "on_demand": [
+          "Executive Summary",
+          "Business Objectives",
+          "Assumptions",
+          "Risks",
+          "Suggested Workflow",
+          "Required Capabilities",
+          "Traceability Matrix"
+        ]
+      }
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-6fa26c9657d3/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:34177b5c92b57f35628f7eb6743bd9ff",
+    "bytes": 36540,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database",
+        "performance",
+        "security"
+      ],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "solution-design-and-risk-assessment"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-27T13:17:34Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/technical-design.md",
+        "digest": "sha256:ef4bb02c7c6453013cf58a10b5c6f746",
+        "supplies": null,
+        "bytes": 6560,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/architecture-decision-record.md",
+        "digest": "sha256:0c041c91ada2562ca494714071fc3e87",
+        "supplies": null,
+        "bytes": 809,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "domain-model/agent-specification.md",
+        "digest": "sha256:ce2f6da48f89ce2732a3a198a6513205",
+        "supplies": null,
+        "bytes": 2277,
+        "read": "on-demand",
+        "read_reason": "the vocabulary and lifecycle the contracts are stated in; consult when a contract term is unclear"
+      },
+      {
+        "path": "memory/architecture.md",
+        "digest": "sha256:380aeb08f8d70c9ccaa2a75300182bf1",
+        "supplies": null,
+        "bytes": 1066,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "dependency-map.md",
+        "digest": "sha256:d6ec0efcde90f86e21a648f58af0f9d3",
+        "supplies": null,
+        "bytes": 3376,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:11b68469cf9e593c79e0dc76de8cb64f",
+    "input_digest": "sha256:48ec0e7500d6980dd0ecfd2228f760ae",
+    "inputs": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-18-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-18-feature-request.md",
+        "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-18-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-18-business-intent.md",
+        "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+      },
+      {
+        "type": "execution-plan",
+        "reference": "runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-18-shopee-read-link-27d13c/.claude/runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+        "digest": "sha256:f6fbc44a49b9672c020448adeeac04df"
+      }
+    ],
+    "unnarrowed": [
+      "dependency-map.md",
+      "domain-model/agent-specification.md",
+      "memory/architecture.md",
+      "runtime/README.md",
+      "templates/architecture-decision-record.md",
+      "templates/technical-design.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "dependency-map.md",
+      "memory/architecture.md",
+      "templates/architecture-decision-record.md",
+      "templates/technical-design.md"
+    ],
+    "read_on_demand": [
+      "domain-model/agent-specification.md",
+      "runtime/README.md",
+      "workflows/implement-feature.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 177472,
+    "bytes_required": 13360,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:5fe9140cf7a04677697495bacd975b6c",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+      "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/result-envelope.json",
+      "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-*.md",
+      "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/review-package-*.md"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": false
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution",
+      "external system, repository, or ticketing access",
+      "write production code, tests, migrations, scripts, or configuration",
+      "apply patches or edit application modules",
+      "accept or approve its own architecture decision records",
+      "approve product scope without product-owner authority",
+      "execute QA, review, or release activities",
+      "execute workflows or planned work",
+      "access external systems directly",
+      "produce the executable task breakdown owned by the planner"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "analyze the current architecture in relation to requested work",
+        "identify impacted modules, interfaces, dependencies, and integration points",
+        "define and justify the technical approach for a requested change",
+        "evaluate options against constraints and quality attributes",
+        "recommend reusable components and justify reuse or its rejection",
+        "author architecture decision records at status Proposed",
+        "define sequencing constraints and architectural prerequisites",
+        "identify structural, operational, security, performance, and migration risks",
+        "estimate effort at architecture and delivery-planning granularity"
+      ],
+      "prohibited": [
+        "write production code, tests, migrations, scripts, or configuration",
+        "apply patches or edit application modules",
+        "accept or approve its own architecture decision records",
+        "approve product scope without product-owner authority",
+        "execute QA, review, or release activities",
+        "execute workflows or planned work",
+        "access external systems directly",
+        "produce the executable task breakdown owned by the planner"
+      ]
+    },
+    "determinism": {
+      "contract": "Identical approved inputs and an identical architecture context snapshot must produce the same impacted-module set, the same option set, the same selected approach, and the same decision records.",
+      "identifierSchemes": {
+        "statements": "S-<zero-padded-sequence>",
+        "facts": "F-<zero-padded-sequence>",
+        "assumptions": "A-<zero-padded-sequence>",
+        "constraints": "C-<zero-padded-sequence>",
+        "modules": "M-<zero-padded-sequence>",
+        "options": "O-<zero-padded-sequence>",
+        "decisions": "D-<zero-padded-sequence>",
+        "risks": "R-<zero-padded-sequence>",
+        "planSteps": "P-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "selectionRule": "The selected option is the highest-scoring option under the recorded evaluation criteria; ties break toward the option with the smaller impact surface, then toward the lower option identifier.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied architecture context or inputs."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "technical-design.md",
+    "artifact_path": "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    "template_ref": "templates/technical-design.md",
+    "contract_ref": "agents/architect/output.md",
+    "quality_ref": "agents/architect/quality.md",
+    "validator": "design_validator",
+    "result_envelope_path": "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/result-envelope.json",
+    "conditional_artifacts": [
+      {
+        "artifact": "architecture-decision-record.md",
+        "template_ref": "templates/architecture-decision-record.md",
+        "contract_ref": "agents/architect/output.md",
+        "condition": "One record per architecture-significant decision, emitted at status Proposed. Acceptance belongs to the Design Gate owners, never to this agent.",
+        "artifact_path_glob": "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-*.md",
+        "naming": "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-<identifier>.md"
+      },
+      {
+        "artifact": "review-package.md",
+        "template_ref": "templates/review-package.md",
+        "contract_ref": "agents/architect/output.md",
+        "condition": "Emitted only for review-pull-request/structural-compliance, where this agent applies the structural and security lens and the findings are classified under the architecture and security categories. runtime/review_package_validator.py already contracts this agent as a permitted producer of review-package.md; the quality rules it applies to the structural lens are the ones in quality.md.",
+        "artifact_path_glob": "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/review-package-*.md",
+        "naming": "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/review-package-<identifier>.md"
+      }
+    ]
+  },
+  "built_at": "2026-10-27T13:17:34Z",
+  "model_tier": {
+    "tier": "deep",
+    "host_hint": "opus",
+    "basis": "declared deep for implement-feature/solution-design-and-risk-assessment in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 110065,
+    "modules_core_bytes": 51183,
+    "slice_all_bytes": 177472,
+    "slice_required_bytes": 13360,
+    "inputs_bytes": 11149,
+    "upstream_full_bytes": 53590,
+    "upstream_read_first_bytes": 36016,
+    "task_context_bytes": 36540,
+    "fixed_bytes": 13992,
+    "legacy_estimate_bytes": 366268,
+    "progressive_estimate_bytes": 162240,
+    "legacy_estimate_tokens": 91567,
+    "progressive_estimate_tokens": 40560,
+    "savings_pct": 55.7
+  }
+}

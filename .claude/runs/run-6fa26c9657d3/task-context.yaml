@@ -3,7 +3,7 @@ task_id: run-6fa26c9657d3
 command: implement
 workflow: implement-feature v1.0.0
 run_status: ExecutingState
-updated_at: '2026-10-27T07:55:06Z'
+updated_at: '2026-10-27T13:44:04Z'
 objective: 'Source: CEO-D-1313 (the CEO''s own decision, 2026-10-27); local://research/ceo-decision-record.md#ceo-d-1313 Issue
   type: Feature Priority: Highest Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, network-egress,
   vietnamese Routed as: /implement (implement-feature) Builds on: MC-17 (src/MediaCompany.Pilot.Web, run run-022d0492a75a,
@@ -26,14 +26,14 @@ relevant_agents:
   - S07
 - phase: execution-planning
   agent: planner
-  status: running
+  status: completed
   required_skills:
   - S02
   - S01
   - S07
 - phase: solution-design-and-risk-assessment
   agent: architect
-  status: pending
+  status: completed
   required_skills:
   - S01
   - S03
@@ -41,7 +41,7 @@ relevant_agents:
   - S09
 - phase: implementation
   agent: dev-1-implement
-  status: pending
+  status: running
   required_skills:
   - S03
   - S06
@@ -69,6 +69,18 @@ completed_phases:
   digest: sha256:0379ea41a66f31f30be2c251b71b0fa3
   validation: pass 33/33
   attempts: 2
+- phase: execution-planning
+  agent: planner
+  artifact: runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md
+  digest: sha256:e07b36b1b94d4b934905cfe7f1d722bb
+  validation: pass 45/45
+  attempts: 1
+- phase: solution-design-and-risk-assessment
+  agent: architect
+  artifact: runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md
+  digest: sha256:4194c7d2cc8f52157c86ea51657265ee
+  validation: pass 78/78
+  attempts: 1
 gates:
 - gate: Scope Gate
   closes: scope-and-acceptance
@@ -77,14 +89,14 @@ gates:
   decided_by: CEO
 - gate: Planning Gate
   closes: execution-planning
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: orchestrator
+  decided_by: orchestrator (MC-18 session), on the CEO's Scope Gate approval CEO-D-1314
 - gate: Design Gate
   closes: solution-design-and-risk-assessment
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: tech-lead
+  decided_by: CEO (vuhoangcao)
 - gate: Review Gate
   closes: quality-review
   decision: null
@@ -102,6 +114,8 @@ gates:
   decided_by: null
 artifacts:
   scope-and-acceptance: runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md
+  execution-planning: runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md
+  solution-design-and-risk-assessment: runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md
 parallel_groups:
 - - scope-and-acceptance
   - execution-planning
@@ -133,6 +147,36 @@ scope:
     | Ticket hard constraints 8 and 10; held by Q-003 | must-have'
   - 'S-011: The operator completes step 1 in the Browser pane against the local fixture: one read that fills and saves...
     | Ticket done means | must-have'
+  - 'S-001: At step 1 the operator pastes one affiliate or product link and presses one button; the form is filled from that
+    product''s public page on shopee.vn (p...'
+  - 'S-002: The product''s own images are saved for the video, the operator picks the three the sheet uses, and only those
+    reach the input set. Tasks: T-005, T-006.'
+  - 'S-003: Every field filled from the page or a paste carries a visible source mark, and the sheet saves only after each
+    filled field is confirmed. Tasks: T-007...'
+  - 'S-004: Filled facts meet the MC-16 fact-sheet check and the live banned-term warning exactly as typed facts do, and the
+    check is unchanged. Tasks: T-009, T-0...'
+  - 'S-005: When Shopee refuses access, asks for sign-in, shows a CAPTCHA, gives no readable product, fails or does not answer,
+    the read stops, says why in Vietna...'
+  - 'S-006: In paste mode the operator pastes page text from their own browser and the same fields are filled with no network
+    connection; hand typing stays availa...'
+  - 'S-007: A read covers one product per click, with no sign-in, cookie or session, never on affiliate.shopee.vn, with no
+    CAPTCHA solving, forged header, signatu...'
+  - 'S-008: The app connects off the machine only to the allowed hosts and only while a read runs; the MC-16 toolchain and
+    video composition keep zero sockets; th...'
+  - 'S-009: One switch in one place turns the read off, and with it off paste mode and hand typing still complete step 1.
+    Tasks: T-019, T-020.'
+  - 'S-010: Tests run offline against a code-generated local fixture server; no media file and no package is added; agents
+    read no live shopee.vn page during deve...'
+  - 'S-011: The operator completes step 1 in the Browser pane against the local fixture: one read that fills and saves images,
+    and one blocked read that falls bac...'
+  - 'S-012: The read may fetch the supplied product''s image files from Shopee image hosts outside shopee.vn (for example
+    the susercontent.com hosts), image files...'
+  - 'S-013: Short links on s.shopee.vn are followed only while every hop is an allowed host, at most five hops, stopping on
+    any other host including affiliate.sho...'
+  - 'S-014: One real public product page may be read once, only on a link the CEO names in chat, by the orchestrator after
+    quality review; no agent reads shopee.v...'
+  - 'S-015: The change is committed and pushed on the MC-18 session branch, and the CEO receives the compare link (feature
+    request, done means). Tasks: T-024, T-025.'
   out_of_scope:
   - 'X-001: Reading any page other than the supplied product''s: other products, the shop page, categories, search, reco...
     | CEO decision 1313 item 1 and ticket hard constraint 1 | A new CEO decision naming a wider read'
@@ -161,6 +205,27 @@ scope:
     | Ticket hard constraint 8 | A CEO approval naming the item'
   - 'X-012: Merging this branch or the MC-16 and MC-17 branches into main, and any release, readiness or closure decision
     | Gate and closure decisions belong to the gate owners | The Closure Gate, or a CEO decision'
+  - 'X-001 reading any page other than the supplied product''s, and batch, scheduled or background reads: CEO-D-1313 item
+    1.'
+  - 'X-002 sign-in, cookies or session of any kind, opening affiliate.shopee.vn, affiliate link generation, commission or
+    account data: CEO-D-1313 item 2.'
+  - 'X-003 CAPTCHA solving, anti-bot evasion, IP rotation, proxies and repeated attempts past a block: CEO-D-1313 item 2;
+    a retry is a further attempt to pass a b...'
+  - 'X-004 downloading anything except the supplied product''s own images (other products'' images, videos, page scripts,
+    style sheets, fonts): CEO-D-1313 item 3 re...'
+  - 'X-005 a screenshot of the product page taken by the tool: the operator still attaches a screenshot per fact (CEO-D-1314
+    item 4).'
+  - 'X-006 changes to the MC-16 fact-sheet check, banned-term list, price rule, script rules or any toolchain behaviour: the
+    check stays the authority.'
+  - 'X-007 monitoring Shopee''s answer or account warnings and switching the read off automatically: the stop condition is
+    the CEO''s act.'
+  - 'X-008 reading any site other than shopee.vn, including Shopee sites of other countries: CEO-D-1313 names shopee.vn only.'
+  - 'X-009 publishing, accounts, sellers, buying; frozen MC-13 and MC-14 material and the mediacompany database: frozen by
+    CEO decision.'
+  - 'X-010 changes to steps 2 to 7 beyond receiving the images of S-002: the ticket changes step 1 only.'
+  - 'X-011 a generative model, speech recognition, metered service, or any package, font or CDN script not approved by name:
+    ticket hard constraint 8.'
+  - 'X-012 merging any branch into main and any release, readiness or closure decision: owned by gate owners and the CEO.'
 validation_requirements:
   acceptance_criteria:
   - 'A-001: On a code-generated fixture product page, one click fills product name, classification, page address, read...
@@ -231,6 +296,42 @@ validation_requirements:
     | S-010 | Implementation and review reports state each live read; count zero, or one on the named link'
   - 'A-034: In the Browser pane against the fixture, one read fills step 1 and saves images, and one blocked read offer...
     | S-011 | Reviewer''s recorded Browser-pane run: both paths reached, two saves accepted'
+  test_focus:
+  - 'SC-01: D-008, M-003 | app | product page with structured block and labelled specifications'
+  - 'SC-02: D-006 | app | short link with two allowed hops; chain of six hops'
+  - 'SC-03: D-007, C-003 | app | product page with price and description'
+  - 'SC-04: D-005, D-009 | app | five own images declared, three other-product images on the page'
+  - 'SC-05: D-009 | browser | five-image product'
+  - 'SC-06: D-005 | app | one declared image on a disallowed host'
+  - 'SC-07: D-007, M-008 | browser | read fixture and paste fixture'
+  - 'SC-08: D-007 | app | read fixture'
+  - 'SC-09: D-008 | app | read fixture'
+  - 'SC-10: M-007, F-007 | app | eight pages, classes (a) to (g) and a money amount'
+  - 'SC-11: M-014, M-015 | inspection | none'
+  - 'SC-12: D-010 | app | 403; 429; sign-in redirect; sign-in wall; CAPTCHA page; no product; 5xx; closed port; silent server'
+  - 'SC-13: D-010, D-001 | app | the nine SC-12 cases'
+  - 'SC-14: D-010, M-008 | inspection | the nine SC-12 cases'
+  - 'SC-15: M-003, P-004 | component | visible text of the read fixture'
+  - 'SC-16: M-003, D-001 | harness | paste fixture'
+  - 'SC-17: M-007 | app | none'
+  - 'SC-18: D-005, D-015 | app | page carrying other product, shop, category and search links'
+  - 'SC-19: D-015 | harness | idle app with a link entered; two-link field'
+  - 'SC-20: D-002 | app | fixture that sets a cookie in its answer'
+  - 'SC-21: D-006 | app | affiliate link; hop to affiliate host'
+  - 'SC-22: D-002 | app and inspection | every read fixture'
+  - 'SC-23: D-002, D-001 | app and inspection | proxy set in the test host environment at a fixture listener'
+  - 'SC-24: D-006 | component and app | non-Shopee host; xshopee.vn; shopee.vn.example.test; IP address; another country''s
+    Shopee; hop to each'
+  - 'SC-25: D-011, M-018 | harness | sample run with a read'
+  - 'SC-26: M-014 | harness | sample run with a read and produce'
+  - 'SC-27: M-009, M-010 | harness | sample run'
+  - 'SC-28: D-003 | browser and harness | switch off'
+  - 'SC-29: D-003, M-003 | browser | switch off; paste and typed sheets'
+  - 'SC-30: D-003 | browser and inspection | switch off, app restarted'
+  - 'SC-31: M-017 | harness and inspection | all fixture cases above'
+  - 'SC-32: M-011, M-017 | inspection | none'
+  - 'SC-33: C-018 | inspection | none'
+  - 'SC-34: D-004 | record | fixture host with read fixture and blocked fixture'
 constraints:
 - 'Business constraints: The CEO carries the terms risk as the individual creator (CEO decision 1313 item 5: Shopee''s partner
   terms forbid partners collecting i...'
@@ -240,6 +341,77 @@ constraints:
   no package, font or script downloa...'
 - 'External dependencies: Shopee''s public product pages on shopee.vn and, if Q-001 allows, its image hosts; risk: Shopee
   product pages are largely rendered by s...'
+- 'Wave 1: T-001'
+- 'Wave 2: T-002, T-017'
+- 'Wave 3: T-015, T-021'
+- 'Wave 4: T-003, T-012'
+- 'Wave 5: T-004, T-014'
+- 'Wave 6: T-006, T-007, T-019'
+- 'Wave 7: T-008, T-016'
+- 'Wave 8: T-009'
+- 'Wave 9: T-005, T-010, T-011, T-013, T-018, T-020, T-022, T-023'
+- 'Wave 10: T-024'
+- 'Wave 11: T-025'
+- 'C-001: functional | One click fills product name, classification, page address, read date and specification rows equal
+  to the p... | hard'
+- 'C-002: functional | A full link and a short link to the same product fill identical values; more than five hops stops |
+  hard'
+- 'C-003: functional | Read price and description are shown marked as read and never placed in a saved sheet field by the
+  tool | hard'
+- 'C-004: functional | Only the product''s own images are fetched, saved byte-equal and picked; only the three picked enter
+  the inp... | hard'
+- 'C-005: functional | Every filled field shows a Vietnamese source mark; saving is refused until each is confirmed; unsupplied
+  fi... | hard'
+- 'C-006: functional | Filled values meet the unchanged check with the same result as typed values | hard'
+- 'C-007: functional | Each of the nine stop signals ends the read with zero further requests, no retry and paste mode offered
+  | hard'
+- 'C-008: functional | Paste fills the same fields as the read with no connection; hand typing still works and the 36 web
+  tests pass | hard'
+- 'C-009: security | One click requests only the link, its hops, the one page and its own images; nothing reads while idle;
+  two... | hard'
+- 'C-010: security | No request carries a Cookie or Authorization header; no cookie is kept | hard'
+- 'C-011: security | affiliate.shopee.vn and its subdomains are never connected | hard'
+- 'C-012: security | Every header is on the list accepted at the Design Gate; nothing imitates a browser or carries a signature
+  | hard'
+- 'C-013: security | No proxy, one local address per read, no address pool | hard'
+- 'C-014: security | The six link kinds of SC-24 open zero connections | hard'
+- 'C-015: security | Egress goes only to allowed hosts between a click and its result; toolchain processes own zero sockets;
+  one... | hard'
+- 'C-016: operability | One setting on a settings screen turns the read off and holds across restarts; off means no button,
+  a refus... | hard'
+- 'C-017: operability | Tests run offline against a code-generated fixture covering the SC-31 cases; zero media files and
+  zero pack... | hard'
+- 'C-018: compliance | No agent reads a live shopee.vn page; the one live read is the orchestrator''s | hard'
+- 'C-019: functional | Step 1 is shown working in the Browser pane against the fixture, read and blocked-to-paste | hard'
+- 'C-020: structural | The MC-16 toolchain is unchanged; steps 2 to 7 change only to receive the picked images | hard'
+- 'C-021: structural | The mediacompany database, MC-13 and MC-14 material are untouched; nothing publishes | hard'
+- 'C-022: security | The seam that points reads at the fixture is unreachable from the shipped app | hard'
+- 'C-023: security | A read is started only by a guarded request from the app''s own page | hard'
+- 'C-024: security | A fetched image name never becomes a path; only PNG or JPEG content is kept; size is bounded | hard'
+- 'C-025: quality-attribute | The live warning over filled values answers within 1 s | negotiable'
+- 'C-026: quality-attribute | Each request and each click have a time and size bound, with 30 s per request | negotiable'
+- 'C-027: operability | This phase writes only its staging artifacts | hard'
+- 'C-028: functional | Stop messages and new labels are Vietnamese with reason and next step | hard'
+- 'C-029: operability | The change lands on the MC-18 session branch and merges nowhere | hard'
+- 'C-030: quality-attribute | The request names the tool honestly, so the site can tell an automated reader from a person
+  | negotiable'
+- 'P-001: The Design Gate decision on D-001 to D-006 and the read-result shape (fields, source marks, stop codes) exi... |
+  M-001, M-003, M-005, M-007 | none'
+- 'P-002: The host and hop rule, the connect-time address check and the internal transport seam exist and pass agains... |
+  M-001, M-002, M-010, M-011, M-017 | P-001'
+- 'P-003: The read sender with the accepted header list, no cookie store, no proxy, no automatic redirect, bounds and... |
+  M-002 | P-002'
+- 'P-004: The shared text parser exists before both the page reader and the paste path use it | M-003 | P-001'
+- 'P-005: The image saver with generated names, signature check, size and count bounds and the waiting folder exists... |
+  M-004, M-016 | P-003'
+- 'P-006: The fill record, the confirm route and the facts-save refusal exist before the page shows marks and confirm... |
+  M-005, M-007, M-008 | P-001, P-004'
+- 'P-007: The read switch store and settings view exist before the read route is offered | M-006, M-007, M-008 | P-001'
+- 'P-008: The guarded read route composes the admitted link, sender, reader, image saver and fill record; the step-1... |
+  M-007, M-008, M-009 | P-003, P-004, P-005, P-006, P-007'
+- 'P-009: Fixture cases for SC-01 to SC-34, the address harness with the read log, the 251 toolchain and 36 web tests... |
+  M-014, M-015, M-017, M-018 | P-008'
+- 'P-010: The release note and compare link follow the evidence and state the toolchain unchanged | M-014, M-017 | P-009'
 decisions:
 - 'D-001: The allowed hosts are shopee.vn and its subdomains except affiliate.shopee.vn; image hosts outside shopee.v... |
   CEO decision 1313 item 3 names shopee.vn hosts only, and the narrowest reading is held until the CEO widens it | If Q-001
@@ -263,6 +435,59 @@ decisions:
 - 'D-008: Fields the page does not supply (video code, subject noun, shop name and Mall, niche, video number, video f... |
   CEO decision 1313 item 1 lists what the read takes; shop name and the operator''s choices are not in it | A-009; step 1
   is not fully automatic for these fields'
+- 'Selected: O-001 (where the read runs, D-001), the structural choice the other five families sit inside.'
+- 'Per-decision selections: D-002 O-006, D-003 O-009, D-004 O-012, D-005 O-015, D-006 O-018.'
+- 'Structural change: five new components inside the web app (M-001 to M-006), reached only through new guarded routes in
+  M-007 and new step-1 page parts in M-0...'
+- 'Expected yield on real pages (answer to the planner''s open question on yield; resting on A-002, unconfirmed until Q-006):'
+- The read sends one honest request and calls no signed product endpoint, runs no page script, forges no header.
+- 'Most likely outcome: a script shell with no product data, or a verify or sign-in page; both end the read with "no readable
+  product" or the matching stop, and...'
+- 'Best case: the server text carries a page title, description and image tag and a structured product block; the read then
+  fills product name, page address and...'
+- Classification and specification rows are rarely present in server text; they come from paste.
+- Paste mode is therefore expected to be the common path, and the read a best-effort shortcut; the page design leads with
+  the link field and keeps the paste ar...
+- 'Rationale: O-001 meets every hard constraint with the smallest impact surface, keeps every read behind the MC-17 guard
+  and answer wrapper, and reuses the wor...'
+- 'Highest-scoring rejected alternative and why it lost: O-005 ties O-001 on hard constraints and loses at impact surface
+  (3 against 2), because the helper adds...'
+- 'Tradeoffs accepted:'
+- Outbound HTTPS code runs inside the process that owns the loopback listener; the toolchain's guard is unaffected (F-022)
+  and the listener is unchanged (M-010).
+- The honest user agent lets Shopee recognise and refuse the tool; a refusal is a stop, and paste mode follows (D-002).
+- Specification rows beyond three are offered as candidates, not saved, because the unchanged check allows 1 to 3 rows (A-009,
+  D-013).
+- App-level and Browser-pane runs against the fixture use the test program's fixture host, not the shipped app (A-017).
+- 'D-001: The read runs inside the web app process as new components behind the MC-17 guard, one read at a time app-w... |
+  yes | architecture-decision-record-D-001.md'
+- 'D-002: Request identity in M-002: user agent "MediaCompanyPilot/1.0 (doc-trang-san-pham)"; Accept "text/html" for... |
+  yes | architecture-decision-record-D-002.md'
+- 'D-003: Off switch: one on/off value in its own file in the app folder at form version 1, set on a new settings vie... |
+  yes | architecture-decision-record-D-003.md'
+- 'D-004: Test seam: an internal transport seam (connect-target resolver and fixture certificate check) given to the... |
+  yes | architecture-decision-record-D-004.md'
+- 'D-005: Image hosts: image files only, from shopee.vn subdomains and hosts ending .susercontent.com, only the addre... |
+  yes | architecture-decision-record-D-005.md'
+- 'D-006: Host and hop rule: https only (a link without scheme or with http is rewritten to https before any connecti... |
+  yes | architecture-decision-record-D-006.md'
+- 'D-007: Fill record per video in the web folder at form version 1: source (read or paste), admitted link, final pag... |
+  no | inline'
+- 'D-008: Field filling: product name and page address from the structured block, page title or labelled text; page a... |
+  no | inline'
+- 'D-009: Read images are named by the app (anh-doc-01 onward, extension from the content''s own signature), wait in a...
+  | no | inline'
+- 'D-010: Stop recognition: the nine SC-12 signals (403; 429; a hop to a sign-in path; a sign-in wall page; a CAPTCHA... |
+  no | inline'
+- 'D-011: A read log in the web folder: one line per outbound request with time, host, path without query, status, by... |
+  no | inline'
+- 'D-012: Files only: no database, no new store; the mediacompany database is untouched (O-001) | no | inline'
+- 'D-013: Every specification found is offered as a candidate row; the operator keeps up to three, as the unchanged c... |
+  no | inline'
+- 'D-014: Bounds: 30 s per request; 120 s per click; page answer up to 5 MiB; up to 20 own images per read, each up t... |
+  no | inline'
+- 'D-015: Link admission refuses a field holding more than one link, naming the one-product rule; the page never star... |
+  no | inline'
 open_questions:
 - 'Q-001: Shopee serves product images from hosts outside shopee.vn (for example .susercontent.com); may the read fet... |
   yes | CEO'
@@ -276,6 +501,312 @@ open_questions:
   no | CEO'
 - 'Q-006: Without forged signatures, how much product data can an unmodified read obtain from a page that is rendered... |
   no | architect'
+- 'Q-001: Framework gap: orchestrator owns no phase in implement-feature, so T-025 and the single live read are closi... |
+  non-blocking | orchestrator'
+- 'Q-002: Framework gap: qa owns no phase in implement-feature, so the verification tasks are owned by dev-2-reviewer... |
+  non-blocking | orchestrator'
+- 'Q-003: Can dev-2-reviewer record the Browser-pane run of SC-34 itself, or does the orchestrator record it in the B... |
+  non-blocking | orchestrator'
+- 'Q-004: Without forged signatures, how much product data can an unmodified read obtain from a script-rendered real... |
+  non-blocking | architect'
+- 'Q-001: Should the read name itself honestly ("MediaCompanyPilot/1.0 (doc-trang-san-pham)", recommended) or send no... |
+  non-blocking | product-owner'
+- 'Q-002: Should the switch start off until the operator turns it on (recommended), or start on? The CEO answers. | non-blocking
+  | product-owner'
+- 'Q-003: Are image hosts ending .susercontent.com enough, or should the list name other Shopee image hosts? The CEO... |
+  non-blocking | product-owner'
+- 'Q-004: Is SC-01 met when every specification is offered and the operator keeps up to three rows, since the unchang... |
+  non-blocking | product-owner'
+- 'Q-005: Is the read log paired with the address harness accepted as SC-25 evidence (A-015)? | non-blocking | qa'
+- 'Q-006: Real-page yield, labels, markers and short links are confirmed only by the orchestrator''s single live read... |
+  non-blocking | orchestrator'
+- 'Q-007: May the SC-34 Browser-pane run use the test program''s fixture host (A-017)? | non-blocking | qa'
+- 'Q-008: Design Gate acceptance of D-001 to D-006, all at Proposed; tech-lead accepts under the producer exclusion r... |
+  non-blocking | tech-lead'
+objectives:
+- 'TO-1: A read returns name, classification and specification rows equal to the page''s values after Unicode NFC normalisation,
+  and a paste returns the same row...'
+- 'TO-2: Only the supplied product''s own image files, from allowed hosts or the allowed image hosts, are fetched and saved
+  byte-equal, and only the three the op...'
+- 'TO-3: Saving is refused until every filled field is confirmed, the check result on filled values equals the result on typed
+  values, and the MC-16 toolchain''s...'
+- 'TO-4: Each of the nine stop signals ends the read with zero further requests and a Vietnamese reason, next step and paste-mode
+  offer. Verified by SC-12 to SC...'
+- 'TO-5: Read requests carry no cookie, authorization, proxy or imitating header, reach only allowed hosts within five hops,
+  occur only between a click and its...'
+- 'TO-6: One persisted setting disables the read entirely while paste mode and hand typing still save. Verified by SC-28 to
+  SC-30. Traces BO-3.'
+- 'TO-7: The change''s tests run offline against an in-process loopback fixture server generated in code, adding zero media
+  files and zero package references. Ve...'
+- 'Desired outcome: at step 1 the operator pastes one link, presses one button, and gets a fact sheet form filled from that
+  product''s public shopee.vn page with...'
+- 'Architectural objectives:'
+- One new egress boundary inside the web app process, opened only by an operator's read click through the MC-17 request guard,
+  reaching only allowed hosts, clo...
+- A host-and-hop admission rule checked before every connection, independent of where the test fixture is (S-007, S-009, S-023).
+- A request identity with no cookie store, no proxy, no automatic redirect and a fixed header list that names the tool honestly
+  (S-007, S-008, S-026).
+- One text parser shared by the read path and the paste path, so both fill the same fields by construction (S-004, S-005).
+- A per-video fill record outside the fact sheet carrying source marks and confirmations, so the unchanged check still decides
+  (S-003, S-011, S-025).
+- One persisted switch outside the toolchain's files that removes the egress boundary while paste mode keeps working (S-012,
+  S-020).
+- A test transport seam reachable only from test code (S-015).
+- 'In scope: new read, parse, image, fill-record and switch components inside src/MediaCompany.Pilot.Web; new and changed
+  step-1 routes and page parts; a settin...'
+- 'Out of scope:'
+- Any change to src/MediaCompany.Pilot or tests/MediaCompany.Pilot.Tests, its fact-sheet check, banned-term list, price rule
+  or settings form (S-011, X-006).
+- Steps 2 to 7 beyond receiving the picked images (X-010).
+- Reading any other page, batch or background reads, sign-in, cookies, affiliate.shopee.vn, CAPTCHA solving, signed product
+  endpoints, proxies (S-006, S-007, S...
+- A screenshot taken by the tool (X-005); monitoring Shopee's answer or switching off automatically (S-020, X-007).
+- The mediacompany database, MC-13 and MC-14 material, publishing (S-014, X-009); merging any branch (S-017, X-012).
+- The single live read, which is the orchestrator's closing act (S-024).
+assumptions:
+- 'A-001: The read, the parsers and the fixture server need only the installed .NET 10 base class library, with zero... |
+  S-010 | A package needs the CEO''s approval by name before implementation starts'
+- 'A-002: A public product page fetched by an unmodified request carries the product''s facts in a parseable form for... |
+  S-001 | Real reads stop at no readable product and paste mode becomes the only working path; T-003 changes'
+- 'A-003: The allowed-host rule can be pointed at the loopback fixture server through a seam only test code can set,... |
+  S-010 | Offline tests of host and redirect behaviour need a different route; T-021 is redesigned'
+- 'A-004: Text a browser copies from a product page carries labels enough to locate name, classification and specific... |
+  S-006 | Real pastes fill fewer fields; T-014''s parser changes'
+- 'A-005: The done condition SC-34 is the only success measure, as the CEO''s Scope Gate approval added none | S-011 | An
+  acceptance criterion and a verification task are added'
+- 'A-006: The off switch is held in the web app''s own settings and persists across restarts with no MC-16 toolchain c...
+  | S-009 | A toolchain change conflicts with X-006; T-019 changes'
+- 'A-007: The MC-16 and MC-17 socket harness can record the app process''s outbound connections with remote host and t...
+  | S-008 | SC-25 needs another evidence route; T-018 changes'
+- 'A-008: The page''s product data distinguishes the product''s own images from other products'' images shown on the sam...
+  | S-002 | Own images cannot be selected safely; SC-04 fails; T-003 and T-006 change'
+- 'A-009: The triggered database area needs no work: the mediacompany database is untouched and step 1 keeps its exis... |
+  plan-wide | Database design and gate work are added; X-009 conflict'
+- 'A-010: The existing MC-17 live banned-term check answers within 1 s for read-filled values as it does for typed va... |
+  S-004 | SC-10 fails; design work on the live check is added'
+- 'A-011: The live read on a CEO-named link is the orchestrator''s act after quality review; no agent task reads shope...
+  | S-014 | An agent task with a live read is added, which CEO-D-1314 item 3 forbids for agents in this run'
+- 'A-012: Verification tasks are owned by dev-2-reviewer, because qa owns no phase in implement-feature and a qa-owne... |
+  plan-wide | Verification tasks move to qa and are not dispatched unless a phase is given to qa'
+- 'A-013: The installed headless browser the MC-17 tests drive can run the step 1 browser tests and supports the Brow... |
+  S-011 | SC-34 and the browser tests need a CEO decision or a manual run; T-023 changes'
+- 'A-014: Shopee short links resolve through ordinary redirect responses, so following hops needs no page script | S-013 |
+  Real short links always stop at paste mode; SC-02 is met on the fixture only'
+- 'A-001: The base class library holds what the read needs: HTTP client, URI and IDN parsing, JSON reading, TLS and i... |
+  C-017 for every option | A package needs the CEO''s approval by name (R-001)'
+- 'A-002: An unmodified request for a real product page most often returns a script shell or a verify or sign-in page... |
+  Sets the expected yield and the paste-first page design | More fields fill on real pages; no structural change (R-015)'
+- 'A-003: Text a browser copies from a product page carries Vietnamese section labels usable as anchors (plan assumpt... |
+  The shared parser locates fields by label | Paste fills fewer fields (R-016)'
+- 'A-004: A product''s own images are those its structured data or page image tag declares, distinct from images of ot...
+  | D-005 fetches declared images only | Own images are not found and are uploaded at step 2 (R-017)'
+- 'A-005: Shopee short links resolve through ordinary redirect answers (plan assumption 14) | D-006 follows hops without page
+  script | Real short links stop and paste mode follows (R-019)'
+- 'A-006: Shopee product image files are served from hosts ending in .susercontent.com (the example in CEO decision 1... |
+  D-005 names the image hosts | Real images are named for upload (R-018)'
+- 'A-007: With cookies, proxy, automatic redirects and decompression off, the platform HTTP stack sends only Host and... |
+  C-012 header list | An unlisted header leaves the machine (R-008)'
+- 'A-008: A transport seam held internal to the web assembly and visible only to the test assembly cannot be set by a... |
+  C-022 | A read could be pointed at any host (R-007)'
+- 'A-009: SC-01''s "one fact row per specification" is met when every specification is offered as a candidate row and... |
+  D-013 | The check would need a change, against X-006 (R-020)'
+- 'A-010: A switch that starts off until the operator turns it on, and reads as off when its file is missing or unrea... |
+  D-003 default | The default is set on; no structural change (R-021)'
+- 'A-011: The live banned-term check answers within 1 s for filled values as for typed ones (plan assumption 10) | C-025 |
+  Live check redesign (R-013)'
+- 'A-012: The installed headless shell can run the step-1 browser tests against the fixture host (plan assumption 13) | P-009
+  browser evidence | Browser evidence needs a CEO decision or a manual run (R-025)'
+- 'A-013: The read date the check accepts is the ISO calendar date the MC-16 fact sheets use | D-008 fills the read date |
+  Saving refuses the filled read date (R-022)'
+- 'A-014: A sign-in wall and a CAPTCHA page are recognisable by held path and page markers | D-010 stop recognition | Such
+  a page stops as "no readable product", with a less precise reason (R-023)'
+- 'A-015: SC-25 is evidenced by the read log''s host names and times paired with the harness''s remote addresses and sa...
+  | F-017 records no host names | SC-25 needs another evidence route (R-024)'
+- 'A-016: The test program can start the web app composed with the transport seam in a process it owns, through an in... |
+  D-004 for app-level and browser tests | The seam reaches component tests only (R-002)'
+- 'A-017: The SC-34 Browser-pane run may use the test program''s fixture host, since the shipped app cannot reach the... |
+  D-004 and SC-34 | SC-34 needs another route (R-026)'
+- 'A-018: A code-generated certificate can be trusted for the fixture only through the seam''s own certificate check,... |
+  D-004 | The fixture needs plain HTTP, which C-022 forbids (R-002)'
+risks:
+- 'R-001: requirement | Real product pages give an unmodified read no readable product (A-002 false) | The read rarely fills;
+  BO-1 holds on the fixture only and paste mode is the common path'
+- 'R-002: requirement | Real copied page text differs from the paste fixture (A-004 false) | Paste fills fewer fields and
+  the operator types the rest'
+- 'R-003: requirement | The CEO asks for a business measure beyond SC-34 (A-005 false) | A plan criterion and a verification
+  task are added'
+- 'R-004: technical | A needed capability is absent from the base class library (A-001 false) | Implementation waits on a
+  CEO package approval'
+- 'R-005: technical | Own images cannot be told apart from other products'' images (A-008 false) | Other images are fetched
+  against X-004; SC-04 fails'
+- 'R-006: technical | The socket harness records no host names or times (A-007 false) | SC-25 evidence is incomplete'
+- 'R-007: technical | The switch cannot persist without a toolchain change (A-006 false) | X-006 conflict'
+- 'R-008: technical | The installed headless browser cannot run the browser tests or the Browser-pane run without a download
+  (A-0... | SC-34 and browser-test evidence need a CEO decision or a manual run'
+- 'R-009: technical | The live warning on filled values takes longer than 1 s (A-010 false) | SC-10 fails'
+- 'R-010: technical | Real short links need page script to resolve (A-014 false) | Real short links always stop at paste mode'
+- 'R-011: technical | The design needs storage beyond step 1''s files or touches the mediacompany database (A-009 false) |
+  Database work and an X-009 conflict'
+- 'R-012: dependency | The CEO''s Design Gate decision is delayed or declines the design | All implementation waits or returns
+  to design'
+- 'R-013: dependency | The unmerged MC-16 or MC-17 branch changes after this branch is cut | Rebase and a re-run of the 251
+  and 36 tests'
+- 'R-014: dependency | The CEO names no link for the live read (A-011) | No real-page evidence; S-014 closes unexercised'
+- 'R-015: dependency | Shopee changes its page structure or blocks reads at any time | Reads stop and fall back to paste mode'
+- 'R-016: security | A link or redirect hop passes the host rule through a look-alike host, an IP address, another country''s
+  sit... | Egress beyond the CEO''s bounds'
+- 'R-017: security | The test seam that points reads at the fixture server is reachable in the shipped app (A-003 false) |
+  A read could be pointed at an arbitrary host'
+- 'R-018: security | The request sender keeps a cookie, honours a system proxy or adds a default header beyond the accepted
+  list | Breach of CEO-D-1313 item 2'
+- 'R-019: security | A foreign web page in the same browser triggers a read through the loopback app | A read with no operator
+  click, against SC-19'
+- 'R-020: security | A fetched image carries path segments in its name, is not an image, or is unbounded in size | A write
+  outside the video folder or a non-image saved'
+- 'R-021: operational | Shopee answers adversely or warns the account while the read is on | The CEO''s terms risk materialises;
+  nothing switches off by itself (X-007)'
+- 'R-022: operational | The orchestrator''s single live read meets a block, sign-in wall or CAPTCHA | No real fill is shown;
+  no retry is allowed'
+- 'R-023: delivery | A task is owned by a role with no phase in implement-feature (A-012 false, or Q-001) | The task is never
+  dispatched and its evidence is missing'
+- 'R-024: delivery | The compare link against main also shows the unmerged MC-16 and MC-17 commits | MC-18 review is confused
+  with earlier work'
+- 'R-001: structural | A needed capability is absent from the base class library (A-001 false) | A package needs the CEO''s
+  approval by name'
+- 'R-002: structural | The test program cannot start the seam-composed app, or the fixture certificate cannot be trusted through
+  t... | The seam reaches component tests only; app-level fixture runs need redesign'
+- 'R-003: contract | A page cached from MC-17 calls facts save after the upgrade | No harm: with no fill record the save is
+  unchanged'
+- 'R-004: contract | The facts-save refusal fires without a fill record | MC-17 hand typing breaks; SC-17 fails'
+- 'R-005: security | A link or hop passes the rule through a look-alike name, international form, trailing dot, user info,
+  port,... | Egress beyond the CEO''s bounds'
+- 'R-006: security | An allowed name resolves to a loopback or local-network address | A read reaches this computer or the
+  local network'
+- 'R-007: security | The seam is reachable from the shipped app (A-008 false) | A read could be pointed at any host'
+- 'R-008: security | The stack adds an unlisted header, keeps a cookie or honours a system proxy (A-007 false) | Breach of
+  CEO decision 1313 item 2'
+- 'R-009: security | A foreign web page posts a read to the loopback app (plan risk 19) | A read with no operator click'
+- 'R-010: security | A fetched image has a path in its name, is not an image, or is very large (plan risk 20) | A write outside
+  the folder or a non-image kept'
+- 'R-011: security | Page text carries markup or script | Script runs in the app page'
+- 'R-012: security | A hostile page is huge or deeply nested | Memory exhaustion'
+- 'R-013: performance | The live answer over filled values exceeds 1 s (A-011 false) | SC-10 fails'
+- 'R-014: performance | Five slow hops and many images reach the per-click bound | The read stops before all images'
+- 'R-015: operability | Real pages give no readable product (A-002) | The read rarely fills; paste is the common path'
+- 'R-016: operability | Real copied text lacks the expected labels (A-003 false) | Paste fills fewer fields'
+- 'R-017: operability | Real pages declare no own images in structured data (A-004 false) | No images saved; step 2 uploads'
+- 'R-018: operability | Real image hosts are not under .susercontent.com (A-006 false) | Images named for upload'
+- 'R-019: operability | Real short links need page script (A-005 false) | Short links stop at paste'
+- 'R-020: operability | The CEO reads SC-01 as all specifications saved as rows (A-009 false) | Conflicts with the unchanged
+  1-to-3 row check'
+- 'R-021: operability | Shopee warns the account while the read is on; nothing switches off by itself (X-007) | The CEO''s
+  terms risk materialises'
+- 'R-022: operability | The check refuses the filled read date (A-013 false) | Every read save is refused'
+- 'R-023: operability | A real sign-in or CAPTCHA page has unknown markers (A-014 false) | It stops as "no readable product"
+  with a less precise reason'
+- 'R-024: delivery | The read log paired with the harness is not accepted for SC-25 (A-015 false) | SC-25 evidence incomplete'
+- 'R-025: delivery | The headless shell cannot run the step-1 browser tests (A-012 false) | Browser evidence needs a CEO decision
+  or a manual run'
+- 'R-026: delivery | The Browser-pane run may not use the fixture host (A-017 false) | SC-34 has no route, since the shipped
+  app cannot reach the fixture'
+- 'R-027: delivery | The Design Gate decision is delayed or declines the design | Implementation waits or returns to design'
+- 'R-028: delivery | The unmerged MC-16 or MC-17 branch changes after the MC-18 session branch is cut | Rebase and re-run
+  of the 251 and 36 tests'
+plan_tasks:
+- 'T-001: Produce the MC-18 technical design package | depends on none'
+- 'T-002: Map every acceptance criterion to a fixture case | depends on T-001'
+- 'T-003: Parse a product page into the read result | depends on T-001, T-021'
+- 'T-004: Fill step 1 from one link on one click | depends on T-003, T-012'
+- 'T-005: Verify the read, image and review criteria | depends on T-006, T-009'
+- 'T-006: Save the product''s own images for the operator''s pick | depends on T-004'
+- 'T-007: Mark the source of every filled field | depends on T-004, T-014'
+- 'T-008: Require confirmation of every filled field before save | depends on T-007'
+- 'T-009: Route filled facts through the unchanged fact-sheet check | depends on T-008'
+- 'T-010: Verify the check stays the authority | depends on T-009'
+- 'T-011: Review the MC-18 change | depends on T-006, T-009, T-019'
+- 'T-012: Stop the read at the first stop signal | depends on T-015'
+- 'T-013: Verify the stop cases and paste mode | depends on T-009'
+- 'T-014: Parse pasted page text into the read fields | depends on T-003'
+- 'T-015: Send read requests within the CEO''s bounds | depends on T-001, T-017'
+- 'T-016: Verify the request bounds of one read | depends on T-006'
+- 'T-017: Admit only links and hops on the allowed hosts | depends on T-001'
+- 'T-018: Verify the egress of the app | depends on T-006, T-009, T-019'
+- 'T-019: Turn the read off with one setting | depends on T-004'
+- 'T-020: Verify the off switch | depends on T-009, T-019'
+- 'T-021: Serve every read fixture from a code-generated loopback server | depends on T-002'
+- 'T-022: Verify the offline test bounds | depends on T-006, T-009, T-019'
+- 'T-023: Record the Browser-pane run of step 1 | depends on T-006, T-009, T-019'
+- 'T-024: Write the MC-18 release note | depends on T-005, T-010, T-011, T-013, T-016, T-018, T-020, T-022, T...'
+- 'T-025: Deliver the compare link to the CEO | depends on T-024'
+facts:
+- 'F-001: The web project is an executable at net10.0 with no package reference, references only the toolchain projec... |
+  src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj, Directory.Build.props'
+- 'F-002: The web app listens on the IPv4 loopback address only, checks its bound addresses at start and exits otherw... |
+  src/MediaCompany.Pilot.Web/Program.cs'
+- 'F-003: The request guard requires a loopback peer and Host equal to 127.0.0.1 and the port, passes GET and HEAD, r... |
+  src/MediaCompany.Pilot.Web/RequestGuard.cs'
+- 'F-004: Every route runs through one answer wrapper that turns refusals into Vietnamese outcomes; JSON bodies are c... |
+  src/MediaCompany.Pilot.Web/Routes.cs'
+- 'F-005: Saving facts normalises to NFC, checks the sheet before images, places waiting screenshots, then writes ban... |
+  src/MediaCompany.Pilot.Web/Routes.cs, FactSteps.cs'
+- 'F-006: The image route accepts only the images the saved sheet names in its images-used field, with .png, .jpg or... |
+  src/MediaCompany.Pilot.Web/Routes.cs, FactSteps.cs'
+- 'F-007: The live check route answers with the toolchain''s held banned-term check | src/MediaCompany.Pilot.Web/FactSteps.cs'
+- 'F-008: The fact sheet holds formVersion, videoCode, productName, subjectNoun, classification, pagePath, shopNameAn... |
+  src/MediaCompany.Pilot/FactSheet.cs'
+- 'F-009: Every stored name passes the toolchain''s plain-name rule | src/MediaCompany.Pilot.Web/Names.cs'
+- 'F-010: The pilot folder holds inputs per video code, takes, web (uploads, screenshots per code, a per-video state... |
+  src/MediaCompany.Pilot.Web/Workspace.cs'
+- 'F-011: Screenshots wait under the web folder per code and are copied into the input folder when the sheet is saved | src/MediaCompany.Pilot.Web/FactSteps.cs'
+- 'F-012: The app record is form version 1 in the app folder; its reader refuses unmapped members and treats another... |
+  src/MediaCompany.Pilot.Web/AppRecord.cs'
+- 'F-013: Setup writes cai-dat.json, which the toolchain''s own settings reader validates and which refuses unknown me...
+  | src/MediaCompany.Pilot.Web/Setup.cs, MC-17 design facts on the settings form'
+- 'F-014: The setup view is shown only while the app is unconfigured; no settings view exists after configuration | src/MediaCompany.Pilot.Web/Pages/index.html,
+  Pages/app.js'
+- 'F-015: Step 1 shows a header grid, a call to action, 1 to 3 fact rows, the live result and a save button | src/MediaCompany.Pilot.Web/Pages/index.html'
+- 'F-016: The shipped executable accepts --port, --app-folder, --desktop-folder, --no-browser, --test-mode and --test... |
+  src/MediaCompany.Pilot.Web/WebContext.cs, Routes.cs'
+- 'F-017: The address harness samples the TCP and UDP tables about every 20 ms for tracked processes and records loca... |
+  tests/MediaCompany.Pilot.Web.Tests/AddressHarness.cs'
+- 'F-018: The web tests start the web executable as a separate process with --test-mode and their own app folder, and... |
+  tests/MediaCompany.Pilot.Web.Tests/Support.cs, BrowserCase.cs'
+- 'F-019: The headless browser shell is digest-checked and started with no-proxy and background-networking-off flags | tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs'
+- 'F-020: The web test project is a console executable with no package that references the web project | tests/MediaCompany.Pilot.Web.Tests/MediaCompany.Pilot.Web.Tests.csproj'
+- 'F-021: At the start of MC-18 the toolchain has 251 passing tests and the web app 36 | orchestrator briefing'
+- 'F-022: The toolchain''s network guard checks only the assembly closure below the toolchain, and its socket telemetr...
+  | MC-17 technical design (run-022d0492a75a), facts on the network guard and the process-boundary decision'
+repository_context:
+  relevant_modules:
+  - 'M-001: Link admission and host rule (new, in MediaCompany.Pilot.Web) | extension | F-001, A-005'
+  - 'M-002: Read sender (new, in MediaCompany.Pilot.Web): per-click HTTP stack, header list, bounds, stop recognition | dependency-change
+    | F-001, F-022, A-001, A-007'
+  - 'M-003: Page reader and shared text parser (new, in MediaCompany.Pilot.Web) | extension | F-008, A-002, A-003, A-013,
+    A-014'
+  - 'M-004: Read image saver (new, in MediaCompany.Pilot.Web) | extension | F-006, F-009, F-011, A-004, A-006'
+  - 'M-005: Fill record and confirmations (new, in MediaCompany.Pilot.Web) | extension | F-008, F-010'
+  - 'M-006: Read switch store (new, in MediaCompany.Pilot.Web) | extension | F-012, F-013, F-014, A-010'
+  - 'M-007: MediaCompany.Pilot.Web routes (Routes.cs, FactSteps.cs) | contract-change | F-004, F-005, F-011'
+  - 'M-008: MediaCompany.Pilot.Web page set (index.html, app.js, styles) | extension | F-014, F-015'
+  - 'M-009: MediaCompany.Pilot.Web request guard and content policy | no-change-verified | F-003'
+  - 'M-010: MediaCompany.Pilot.Web start-up (Program.cs, WebContext.cs) | extension | F-002, F-016, A-016'
+  - 'M-011: MediaCompany.Pilot.Web project file | extension | F-001, F-020'
+  - 'M-012: App record form (AppRecord.cs) | no-change-verified | F-012'
+  - 'M-013: Pilot settings file cai-dat.json | no-change-verified | F-013'
+  - 'M-014: MC-16 toolchain src/MediaCompany.Pilot (fact-sheet check, banned-term check, network guard) | no-change-verified
+    | F-008, F-022'
+  - 'M-015: MC-16 toolchain tests tests/MediaCompany.Pilot.Tests | no-change-verified | F-021'
+  - 'M-016: Pilot folder layout outside the repository | extension | F-010, F-011'
+  - 'M-017: MediaCompany.Pilot.Web.Tests (fixture server, seam use, fixture host mode, new cases) | extension | F-017 to F-020,
+    A-012, A-016, A-018'
+  - 'M-018: Address harness (AddressHarness.cs) | no-change-verified | F-017'
+  - 'M-019: Steps 2 to 7 routes and pages | no-change-verified | F-006'
+  - 'M-020: mediacompany database, MediaCompany.Persistence, MC-13 and MC-14 material | no-change-verified | F-010'
+  relevant_files: []
+  rescan_required_when:
+  - the scope or the accepted design changes
+  - a dependency this context does not name is discovered
+  - a named module or file no longer exists at the recorded path
 affected_areas:
   determinable: true
   declared: []
@@ -285,17 +816,29 @@ affected_areas:
       term: database
     - source: artifact:scope-and-acceptance
       term: database
+    - source: artifact:execution-planning
+      term: database
+    performance:
+    - source: artifact:execution-planning
+      term: performance
+    - source: artifact:solution-design-and-risk-assessment
+      term: performance
     security:
     - source: artifact:scope-and-acceptance
       term: authorization
+    - source: artifact:execution-planning
+      term: security
+    - source: artifact:solution-design-and-risk-assessment
+      term: security
   not_triggered:
   - avalonia-ui
-  - performance
   - react-frontend
   sources_scanned:
   - input:feature-request
   - input:business-intent
   - artifact:scope-and-acceptance
+  - artifact:execution-planning
+  - artifact:solution-design-and-risk-assessment
 relevant_skills:
   scope-and-acceptance:
     S02: required
@@ -318,15 +861,8 @@ relevant_skills:
   quality-review:
     S07: required
     S09: required
-    S08: not-triggered
+    S08: required
   documentation-and-release-handoff:
     S11: required
     S10: required
     S12: required
-repository_context:
-  relevant_modules: []
-  relevant_files: []
-  rescan_required_when:
-  - the scope or the accepted design changes
-  - a dependency this context does not name is discovered
-  - a named module or file no longer exists at the recorded path

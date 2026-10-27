@@ -2,7 +2,7 @@
   "run_id": "run-6fa26c9657d3",
   "slice": "vertical-slice-1-planner-execution",
   "runtime_version": "0.11.1",
-  "status": "running",
+  "status": "completed",
   "queue_status": "Executing",
   "command_id": "implement",
   "workflow_id": "implement-feature",
@@ -49,6 +49,27 @@
     "savings_pct": 44.3
   },
   "execution_started_at": "2026-10-27T07:55:06Z",
-  "execution_completed_at": null,
-  "validation": null
+  "execution_completed_at": "2026-10-27T13:16:57Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 45,
+    "checksPassed": 45,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 5,
+    "counts": {
+      "sections": 13,
+      "tasks": 25,
+      "assumptions": 14,
+      "risks": 24,
+      "edges": 51,
+      "waves": 11,
+      "openQuestions": 4,
+      "planStatus": "complete"
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:e07b36b1b94d4b934905cfe7f1d722bb",
+  "recovery": null
 }

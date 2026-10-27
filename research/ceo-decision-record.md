@@ -2746,3 +2746,26 @@ questions, within `CEO-D-1313`.
 seller, buy nothing and publish nothing.
 
 ---
+
+## CEO-D-1315 — MC-18 Design Gate approved: read inside the web app, honest tool name, switch off by default
+
+**The CEO's own decision, 2026-10-27**, at the Design Gate of run `run-6fa26c9657d3` (MC-18), choosing the recommended
+option on each question put in Vietnamese.
+
+1. **Design (Q-008).** Approved: the read runs inside the web app behind the MC-17 request guard (D-001, option
+   O-001), one read at a time; a block, sign-in wall, CAPTCHA or unreadable page stops with no retry and offers paste
+   mode; every specification found is offered and the operator keeps up to three rows, because the unchanged MC-16
+   check allows one to three (Q-004). Decision records D-001 to D-006 accepted.
+2. **Request identity (Q-001).** The read names itself honestly as "MediaCompanyPilot/1.0 (doc-trang-san-pham)"
+   (D-002). It never imitates a browser.
+3. **Off switch (Q-002).** The read starts switched off; the operator turns it on in the new settings view (D-003).
+   Paste mode and typing always work.
+4. **Image hosts (Q-003).** shopee.vn and hosts ending `.susercontent.com`, image files of the supplied product only
+   (D-005).
+5. **For qa, decided by the orchestrator (Q-005, Q-007).** The read log paired with the socket harness is accepted as
+   evidence that egress happens only during a read; the Browser-pane run uses the test program's local fixture host.
+
+**Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `D-002`, `D-018`. Agents create no account, sign in nowhere, contact no
+seller, buy nothing and publish nothing.
+
+---
