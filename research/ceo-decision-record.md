@@ -2679,3 +2679,50 @@ decisions and its six decision records D-001 to D-006.
 seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1312 — MC-17 review correction CR-001: step 4 may read the ledger to warn early
+
+**The CEO's own decision, 2026-10-27**, on correction request CR-001 of the quality review of run `run-022d0492a75a`
+(MC-17, finding F-001).
+
+1. **Early warning kept.** The CEO chose "Giữ báo sớm": at step 4 the web app may run the toolchain's recording
+   admission in its own process, which opens the ledger read-only, so a reused recording is reported when it is recorded
+   rather than at produce. The web app never writes the ledger. The produce verb still re-admits the recording in the
+   toolchain child and decides. This amends `CEO-D-1311` item 1 and decision record D-001 of the MC-17 design.
+2. **Serialised with produce.** Step 4 admission waits while a produce job holds the ledger, so it never reads the
+   ledger while the toolchain writes it.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1311` except as amended above.
+
+---
+
+## CEO-D-1313 — The bot reads the public Shopee product page to fill the fact sheet
+
+**The CEO's own decision, 2026-10-27.** The CEO's words: "Tôi chấp nhận rủi ro và muốn tự động hoàn toàn." (I accept
+the risk and want it fully automatic.) The CEO approved the Vietnamese text verbatim ("chấp nhận nguyên văn") in the
+MC-16 session and confirmed it directly in the MC-17 session, choosing to build it as a follow-up run after MC-17
+closes. This entry is the English form.
+
+1. **Allowed:** when the CEO supplies an affiliate link or product link, the tool opens the **public product page on
+   shopee.vn** that the link points to. It takes that product's own name, price, classification, specifications,
+   description and images, then fills the fact sheet and saves the images into the video folder. **One product at a
+   time, on the CEO's click.** No crawling of other pages, no category scanning, no batch runs.
+2. **Kept:** no sign-in, no use of the CEO's cookies or session, and affiliate.shopee.vn is not opened (it requires
+   sign-in). No CAPTCHA solving, no browser impersonation to evade anti-bot measures, no IP rotation. If Shopee blocks
+   the page or asks for sign-in, the tool stops and falls back to the semi-automatic mode: the CEO pastes the page
+   content and the tool fills the sheet.
+3. **Changed:** the "download no asset" rule (`CEO-D-1303`) is relaxed **only** for the product images of the product
+   the CEO supplies. The local-connections-only rule (`CEO-D-1308`) is relaxed **only** for the page-reading step, to
+   shopee.vn hosts. Video composition stays fully offline.
+4. **Checks unchanged:** the data the bot takes still passes the MC-16 fact-sheet check (banned terms, price
+   spellings, use claims). The CEO still reviews each fact, and still approves each video before it is published
+   (`D-002`).
+5. **Risk the CEO carries (`D-018`):** Shopee's terms (E-105) forbid partners from "collecting any information on the
+   e-commerce platform". A bot reading pages may be judged a breach, which can mean the affiliate account is locked and
+   commission is lost. E-107 sets a fine of up to 10 million dong for each unauthorised use of content.
+6. **Stop condition:** if Shopee answers Q-014 unfavourably or sends any account warning, the bot is switched off the
+   same day and the tool returns to the semi-automatic mode. Q-014 is still sent.
+
+**Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.
+
+---

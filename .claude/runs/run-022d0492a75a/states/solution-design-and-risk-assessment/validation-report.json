@@ -1,0 +1,732 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\mc-17-pilot-web-fffc59\\.claude\\runs\\run-022d0492a75a\\states\\solution-design-and-risk-assessment\\artifacts\\technical-design.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 78,
+  "checksPassed": 78,
+  "notMachineCheckable": 10,
+  "counts": {
+    "sections": 14,
+    "facts": 28,
+    "assumptions": 12,
+    "constraints": 30,
+    "modules": 17,
+    "options": 22,
+    "decisions": 15,
+    "reuseRows": 36,
+    "planSteps": 15,
+    "risks": 26,
+    "openDecisions": 5,
+    "decisionRecords": 6,
+    "designStatus": "complete"
+  },
+  "checks": [
+    {
+      "id": "D1.1",
+      "quality_ref": "A1.5",
+      "severity": "Blocking",
+      "description": "Metadata block present with all fields populated",
+      "result": "pass",
+      "detail": "11 of 11 fields populated"
+    },
+    {
+      "id": "D1.2",
+      "quality_ref": "A1.5",
+      "severity": "Blocking",
+      "description": "producedBy is architect",
+      "result": "pass",
+      "detail": "producedBy='architect'"
+    },
+    {
+      "id": "D1.3",
+      "quality_ref": "A1.5",
+      "severity": "Blocking",
+      "description": "agentVersion is 1.0.0 and schemaVersion is 1.0.0",
+      "result": "pass",
+      "detail": "agentVersion=1.0.0 schemaVersion=1.0.0"
+    },
+    {
+      "id": "D1.4",
+      "quality_ref": "A1.7",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='complete'"
+    },
+    {
+      "id": "D2.1",
+      "quality_ref": "A1.1",
+      "severity": "Blocking",
+      "description": "All thirteen mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "13 of 13 present, once each"
+    },
+    {
+      "id": "D2.2",
+      "quality_ref": "A1.1",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Objective', 'Requirements Summary', 'Current-State Assumptions and Constraints', 'Architecture and Component Design', 'API and Data Model Impact', 'Reusable Components and Reuse Rationale', 'Operational Considerations', 'Delivery Plan', 'Risks and Mitigations', 'Estimate and Confidence', 'Open Decisions and Escalations', 'Sign-off']"
+    },
+    {
+      "id": "D2.3",
+      "quality_ref": "A1.2",
+      "severity": "Blocking",
+      "description": "Section titles match output.md exactly",
+      "result": "pass",
+      "detail": "exact-title match"
+    },
+    {
+      "id": "D2.4",
+      "quality_ref": "A1.4",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 sections introduced; supplementary material is an appendix",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "D2.5",
+      "quality_ref": "A1.3",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty; an empty section reads None identified.",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "D2.6",
+      "quality_ref": "A1.6",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "D3.1",
+      "quality_ref": "A2.1",
+      "severity": "Blocking",
+      "description": "No code, pseudocode, or schema block other than the metadata block",
+      "result": "pass",
+      "detail": "1 fenced block(s); exactly 1 (metadata) is permitted"
+    },
+    {
+      "id": "D3.2",
+      "quality_ref": "A2.2",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "D3.3",
+      "quality_ref": "A2.4",
+      "severity": "Blocking",
+      "description": "Every referenced planner task exists in the supplied execution plan",
+      "result": "pass",
+      "detail": "28 of 28 supplied task(s) referenced"
+    },
+    {
+      "id": "D3.4",
+      "quality_ref": "A2.5",
+      "severity": "Blocking",
+      "description": "No decision record is referenced at a status other than Proposed",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "D3.5",
+      "quality_ref": "A2.6",
+      "severity": "Blocking",
+      "description": "No sign-off line is signed by the producing agent",
+      "result": "pass",
+      "detail": "all lines unsigned"
+    },
+    {
+      "id": "D3.6",
+      "quality_ref": "A4.1",
+      "severity": "Blocking",
+      "description": "No model, vendor, provider, or agent runtime named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "D4.1",
+      "quality_ref": "A5.1",
+      "severity": "Blocking",
+      "description": "Every architectural objective traces to a statement identifier",
+      "result": "pass",
+      "detail": "6 objective(s) traced"
+    },
+    {
+      "id": "D4.2",
+      "quality_ref": "A5.4",
+      "severity": "Correctable",
+      "description": "Structural out-of-scope is stated and non-empty",
+      "result": "pass",
+      "detail": "7 exclusion(s)"
+    },
+    {
+      "id": "D4.3",
+      "quality_ref": "A5.3",
+      "severity": "Blocking",
+      "description": "Every requirement traces to a statement identifier",
+      "result": "pass",
+      "detail": "14 requirement(s) traced"
+    },
+    {
+      "id": "D5.1",
+      "quality_ref": "A3.2",
+      "severity": "Blocking",
+      "description": "Every fact states the property and the supplied context that establishes it",
+      "result": "pass",
+      "detail": "28 fact(s) complete"
+    },
+    {
+      "id": "D5.2",
+      "quality_ref": "A3.3",
+      "severity": "Blocking",
+      "description": "Every assumption states need, impact-if-false, and a confirming role",
+      "result": "pass",
+      "detail": "12 assumption(s) complete"
+    },
+    {
+      "id": "D5.3",
+      "quality_ref": "A3.1",
+      "severity": "Blocking",
+      "description": "Facts and assumptions are disjoint",
+      "result": "pass",
+      "detail": "28 fact(s) and 12 assumption(s) are distinct"
+    },
+    {
+      "id": "D5.4",
+      "quality_ref": "A3.4",
+      "severity": "Blocking",
+      "description": "Every constraint states class, text, force, and source",
+      "result": "pass",
+      "detail": "30 constraint(s) complete"
+    },
+    {
+      "id": "D5.5",
+      "quality_ref": "A3.4",
+      "severity": "Correctable",
+      "description": "Constraint class and force use the declared vocabularies",
+      "result": "pass",
+      "detail": "invalid class: []; invalid force: []"
+    },
+    {
+      "id": "D6.1",
+      "quality_ref": "A6.1",
+      "severity": "Blocking",
+      "description": "Every impacted module states name, impact type, basis, and confidence",
+      "result": "pass",
+      "detail": "17 module(s) complete"
+    },
+    {
+      "id": "D6.2",
+      "quality_ref": "A6.1",
+      "severity": "Blocking",
+      "description": "Every impact type uses the declared vocabulary",
+      "result": "pass",
+      "detail": "17 type(s) valid"
+    },
+    {
+      "id": "D6.3",
+      "quality_ref": "A6.3",
+      "severity": "Blocking",
+      "description": "Every module basis resolves to an existing fact or assumption",
+      "result": "pass",
+      "detail": "17 basis reference(s) resolve"
+    },
+    {
+      "id": "D6.4",
+      "quality_ref": "A6.1",
+      "severity": "Blocking",
+      "description": "Every module confidence is confirmed or speculative",
+      "result": "pass",
+      "detail": "17 confidence value(s) valid"
+    },
+    {
+      "id": "D6.5",
+      "quality_ref": "A6.6",
+      "severity": "Blocking",
+      "description": "Every speculative impact has a matching risk",
+      "result": "pass",
+      "detail": "2 speculative module(s), all risked"
+    },
+    {
+      "id": "D7.1",
+      "quality_ref": "A7.2",
+      "severity": "Blocking",
+      "description": "Every reuse survey row states capability, candidate, outcome, and rationale",
+      "result": "pass",
+      "detail": "36 survey row(s) complete"
+    },
+    {
+      "id": "D7.2",
+      "quality_ref": "A7.2",
+      "severity": "Blocking",
+      "description": "Every reuse outcome uses the declared vocabulary",
+      "result": "pass",
+      "detail": "36 outcome(s) valid"
+    },
+    {
+      "id": "D7.3",
+      "quality_ref": "A7.3",
+      "severity": "Blocking",
+      "description": "Every none-found outcome states where the search looked",
+      "result": "pass",
+      "detail": "search basis stated for every none-found"
+    },
+    {
+      "id": "D7.4",
+      "quality_ref": "A7.5",
+      "severity": "Blocking",
+      "description": "Every rejected candidate states why it is unsuitable",
+      "result": "pass",
+      "detail": "rationale stated for every rejection"
+    },
+    {
+      "id": "D8.1",
+      "quality_ref": "A8.1",
+      "severity": "Blocking",
+      "description": "At least two materially different options, or a hard constraint named as forcing",
+      "result": "pass",
+      "detail": "22 option(s) recorded; forcing hard constraint(s): none"
+    },
+    {
+      "id": "D8.2",
+      "quality_ref": "A8.3",
+      "severity": "Blocking",
+      "description": "Every option is evaluated against every recorded criterion",
+      "result": "pass",
+      "detail": "22 option(s) x 9 criteria complete"
+    },
+    {
+      "id": "D8.3",
+      "quality_ref": "A8.4",
+      "severity": "Blocking",
+      "description": "Every eliminated option names the hard constraint it violates",
+      "result": "pass",
+      "detail": "16 eliminated option(s) cite a constraint"
+    },
+    {
+      "id": "D8.4",
+      "quality_ref": "A8.5",
+      "severity": "Blocking",
+      "description": "The recorded selection is the option the evaluation table marks selected",
+      "result": "pass",
+      "detail": "Selected names ['O-003']; evaluation table marks it selected: True"
+    },
+    {
+      "id": "D8.5",
+      "quality_ref": "A8.6",
+      "severity": "Blocking",
+      "description": "At least one rejected alternative is recorded with its rationale",
+      "result": "pass",
+      "detail": "value='O-004 ties O-003 on every criterion up to operability and loses there, because i'"
+    },
+    {
+      "id": "D8.6",
+      "quality_ref": "A8.7",
+      "severity": "Blocking",
+      "description": "Tradeoffs accepted by the selection are stated",
+      "result": "pass",
+      "detail": "4 tradeoff(s)"
+    },
+    {
+      "id": "D9.1",
+      "quality_ref": "A1.8",
+      "severity": "Blocking",
+      "description": "Every decision states the decision, its significance, and its record reference",
+      "result": "pass",
+      "detail": "15 decision(s) complete"
+    },
+    {
+      "id": "D9.2",
+      "quality_ref": "A1.8",
+      "severity": "Blocking",
+      "description": "decisionRecords lists exactly the architecture-significant decisions",
+      "result": "pass",
+      "detail": "metadata=['D-001', 'D-002', 'D-003', 'D-004', 'D-005', 'D-006'] significant in 5.4=['D-001', 'D-002', 'D-003', 'D-004', 'D-005', 'D-006']"
+    },
+    {
+      "id": "D9.3",
+      "quality_ref": "A15.3",
+      "severity": "Blocking",
+      "description": "Every decision traces to an option",
+      "result": "pass",
+      "detail": "15 decision(s) traced"
+    },
+    {
+      "id": "D10.1",
+      "quality_ref": "A9.1",
+      "severity": "Blocking",
+      "description": "Every contract-change module appears in the API and Data Model Impact section",
+      "result": "pass",
+      "detail": "0 contract-change module(s) present"
+    },
+    {
+      "id": "D10.2",
+      "quality_ref": "A9.2",
+      "severity": "Blocking",
+      "description": "Every contract change carries a transition strategy and a rollback position",
+      "result": "pass",
+      "detail": "no contract-change module declared"
+    },
+    {
+      "id": "D10.3",
+      "quality_ref": "A9.4",
+      "severity": "Blocking",
+      "description": "Every data migration states direction, reversibility, and transition behavior",
+      "result": "pass",
+      "detail": "direction stated=True, reversibility stated=True"
+    },
+    {
+      "id": "D11.1",
+      "quality_ref": "A10.1",
+      "severity": "Blocking",
+      "description": "Every sequencing constraint states modules, prerequisites, and a structural reason",
+      "result": "pass",
+      "detail": "15 constraint(s) complete"
+    },
+    {
+      "id": "D11.2",
+      "quality_ref": "A10.2",
+      "severity": "Blocking",
+      "description": "Every prerequisite references an existing plan step",
+      "result": "pass",
+      "detail": "all prerequisites resolve"
+    },
+    {
+      "id": "D11.3",
+      "quality_ref": "A10.3",
+      "severity": "Blocking",
+      "description": "The prerequisite graph is acyclic",
+      "result": "pass",
+      "detail": "acyclic; 12 wave(s)"
+    },
+    {
+      "id": "D11.4",
+      "quality_ref": "A15.4",
+      "severity": "Blocking",
+      "description": "Every sequencing constraint resolves to existing impacted modules",
+      "result": "pass",
+      "detail": "15 module reference set(s) resolve"
+    },
+    {
+      "id": "D11.5",
+      "quality_ref": "A10.7",
+      "severity": "Correctable",
+      "description": "No milestone, schedule, or resourcing commitment appears in the delivery plan",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "D11.6",
+      "quality_ref": "A1.3",
+      "severity": "Blocking",
+      "description": "Test strategy focus areas and the rollout and rollback strategy are stated",
+      "result": "pass",
+      "detail": "test focus present=True, rollout and rollback present=True"
+    },
+    {
+      "id": "D12.1",
+      "quality_ref": "A11.1",
+      "severity": "Blocking",
+      "description": "Every risk states class, trigger, impact, likelihood, attachment, mitigation, and owner",
+      "result": "pass",
+      "detail": "26 risk(s) complete"
+    },
+    {
+      "id": "D12.2",
+      "quality_ref": "A11.2",
+      "severity": "Blocking",
+      "description": "Every risk attaches to an existing module, decision, or plan step",
+      "result": "pass",
+      "detail": "26 risk(s) attached"
+    },
+    {
+      "id": "D12.3",
+      "quality_ref": "A11.1",
+      "severity": "Correctable",
+      "description": "Risk class and likelihood use the declared vocabularies",
+      "result": "pass",
+      "detail": "invalid class: []; invalid likelihood: []"
+    },
+    {
+      "id": "D12.4",
+      "quality_ref": "A14.2",
+      "severity": "Correctable",
+      "description": "Every risk owner resolves to a known agent",
+      "result": "pass",
+      "detail": "26 owner(s) resolve"
+    },
+    {
+      "id": "D12.5",
+      "quality_ref": "A11.5",
+      "severity": "Blocking",
+      "description": "Security and compliance impact is assessed, with a reason when none is identified",
+      "result": "pass",
+      "detail": "value='- Listener on 127.0.0.1 only, checked at start-up; any other bound address stops'"
+    },
+    {
+      "id": "D13.1",
+      "quality_ref": "A12.2",
+      "severity": "Blocking",
+      "description": "Overall effort is a complexity level carrying an explicit confidence qualifier",
+      "result": "pass",
+      "detail": "value='L (confidence: low), a cross-boundary change (browser, web process, toolchain ch'"
+    },
+    {
+      "id": "D13.2",
+      "quality_ref": "A12.1",
+      "severity": "Blocking",
+      "description": "Effort is never expressed as a duration",
+      "result": "pass",
+      "detail": "no duration language"
+    },
+    {
+      "id": "D13.3",
+      "quality_ref": "A12.5",
+      "severity": "Blocking",
+      "description": "The scope assumptions behind the estimate are stated",
+      "result": "pass",
+      "detail": "1 assumption(s)"
+    },
+    {
+      "id": "D13.4",
+      "quality_ref": "A12.4",
+      "severity": "Blocking",
+      "description": "An XL estimate carries a corresponding open decision",
+      "result": "pass",
+      "detail": "overall=L, open decisions=5"
+    },
+    {
+      "id": "D14.1",
+      "quality_ref": "A1.3",
+      "severity": "Blocking",
+      "description": "Every open decision states the question, blocking status, owner, attachment, and consequence",
+      "result": "pass",
+      "detail": "5 open decision(s) complete"
+    },
+    {
+      "id": "D14.2",
+      "quality_ref": "A1.7",
+      "severity": "Blocking",
+      "description": "A blocking open decision sets package status to blocked, and only then",
+      "result": "pass",
+      "detail": "status='complete', blocking entries=[]"
+    },
+    {
+      "id": "D14.3",
+      "quality_ref": "A14.2",
+      "severity": "Correctable",
+      "description": "Every open decision owner resolves to a known agent",
+      "result": "pass",
+      "detail": "5 owner(s) resolve"
+    },
+    {
+      "id": "D15.1",
+      "quality_ref": "A14.1",
+      "severity": "Blocking",
+      "description": "Every named gate exists in workflows/workflow-gate-matrix.md",
+      "result": "pass",
+      "detail": "2 gate name(s) resolve"
+    },
+    {
+      "id": "D15.2",
+      "quality_ref": "A14.2",
+      "severity": "Blocking",
+      "description": "Every referenced agent resolves in registry/agents.yaml or under agents/",
+      "result": "pass",
+      "detail": "9 agent reference(s) resolve"
+    },
+    {
+      "id": "D15.3",
+      "quality_ref": "A14.4",
+      "severity": "Blocking",
+      "description": "Every referenced skill identifier exists in skills/agent-skill-matrix.md",
+      "result": "pass",
+      "detail": "7 skill identifier(s) resolve"
+    },
+    {
+      "id": "D15.4",
+      "quality_ref": "A14.5",
+      "severity": "Blocking",
+      "description": "Every referenced template is registered, or is declared as an impacted module this design proposes",
+      "result": "pass",
+      "detail": "0 template reference(s) resolve (0 proposed as impacted module(s))"
+    },
+    {
+      "id": "D16.1",
+      "quality_ref": "A15.4",
+      "severity": "Blocking",
+      "description": "Lateral closure: every referenced identifier is defined in its own register",
+      "result": "pass",
+      "detail": "F=28; A=12; C=30; M=17; O=22; D=15; P=15; R=26; Q=5"
+    },
+    {
+      "id": "D16.2",
+      "quality_ref": "A16.3",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "D16.3",
+      "quality_ref": "A16.1",
+      "severity": "Correctable",
+      "description": "Identifiers are unique, zero-padded, and ascending without gaps",
+      "result": "pass",
+      "detail": "F=28; A=12; C=30; M=17; O=22; D=15; P=15; R=26; Q=5"
+    },
+    {
+      "id": "D16.4",
+      "quality_ref": "A15.5",
+      "severity": "Correctable",
+      "description": "No supplied planner task is left unaddressed by the sequencing constraints",
+      "result": "pass",
+      "detail": "28 supplied task(s) bound"
+    },
+    {
+      "id": "D17.1",
+      "quality_ref": "A13.1",
+      "severity": "Blocking",
+      "description": "Every architecture-significant decision has exactly one decision record",
+      "result": "pass",
+      "detail": "records=['D-001', 'D-002', 'D-003', 'D-004', 'D-005', 'D-006'] significant=['D-001', 'D-002', 'D-003', 'D-004', 'D-005', 'D-006']"
+    },
+    {
+      "id": "D17.2",
+      "quality_ref": "A13.4",
+      "severity": "Blocking",
+      "description": "Every decision record carries the seven template sections in order",
+      "result": "pass",
+      "detail": "6 record(s) conform"
+    },
+    {
+      "id": "D17.3",
+      "quality_ref": "A13.2",
+      "severity": "Blocking",
+      "description": "Every decision record is at status Proposed",
+      "result": "pass",
+      "detail": "6 record(s) at Proposed"
+    },
+    {
+      "id": "D17.4",
+      "quality_ref": "A13.4",
+      "severity": "Blocking",
+      "description": "Every decision record cites its constraints, baseline facts, and impacted modules",
+      "result": "pass",
+      "detail": "6 record(s) cite all three"
+    },
+    {
+      "id": "D17.5",
+      "quality_ref": "A13.5",
+      "severity": "Blocking",
+      "description": "Every decision record states a validation plan and a reversal condition",
+      "result": "pass",
+      "detail": "6 validation plan(s) complete"
+    },
+    {
+      "id": "D17.6",
+      "quality_ref": "A13.6",
+      "severity": "Blocking",
+      "description": "No decision record approval block is signed",
+      "result": "pass",
+      "detail": "6 approval block(s) unsigned"
+    },
+    {
+      "id": "D17.7",
+      "quality_ref": "A13.3",
+      "severity": "Blocking",
+      "description": "Every decision record's alternatives are carried from the package evaluation table",
+      "result": "pass",
+      "detail": "6 record(s) match the option set"
+    },
+    {
+      "id": "N1",
+      "quality_ref": "A2.7",
+      "severity": "Advisory",
+      "description": "No external system, repository, or ticketing access occurred",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N2",
+      "quality_ref": "A2.9",
+      "severity": "Advisory",
+      "description": "No product-scope decision was taken without product-owner authority",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N3",
+      "quality_ref": "A2.10",
+      "severity": "Advisory",
+      "description": "No claim is made that designed work was performed",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N4",
+      "quality_ref": "A3.5",
+      "severity": "Advisory",
+      "description": "No assumption was promoted to a fact without a new citation",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N5",
+      "quality_ref": "A6.2",
+      "severity": "Advisory",
+      "description": "Every module name is a named module, not a layer or generic grouping",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N6",
+      "quality_ref": "A6.4",
+      "severity": "Advisory",
+      "description": "Modules a reader would expect to be impacted appear, including no-change-verified",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N7",
+      "quality_ref": "A8.2",
+      "severity": "Advisory",
+      "description": "Options differ structurally, not only in naming or sequencing",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N8",
+      "quality_ref": "A10.6",
+      "severity": "Advisory",
+      "description": "No step is ordered by preference rather than structural necessity",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N9",
+      "quality_ref": "A15.1",
+      "severity": "Advisory",
+      "description": "Forward closure: every supplied statement reaches an objective, module, constraint, or question",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N10",
+      "quality_ref": "A4.2",
+      "severity": "Advisory",
+      "description": "Every technology named traces to the supplied context or an input statement",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    }
+  ]
+}

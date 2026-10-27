@@ -1,0 +1,307 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\mc-17-pilot-web-fffc59\\.claude\\runs\\run-022d0492a75a\\states\\quality-review\\artifacts\\review-package.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 31,
+  "checksPassed": 31,
+  "notMachineCheckable": 3,
+  "counts": {
+    "sections": 10,
+    "status": "complete",
+    "identifiers": {
+      "F": 6,
+      "CR": 6,
+      "Q": 3
+    },
+    "tableRows": {
+      "Findings": 6,
+      "Correction Requests": 6
+    },
+    "findings": 6,
+    "verdict": "approve-with-corrections",
+    "correctionRequests": 6,
+    "severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 3,
+      "low": 2
+    }
+  },
+  "checks": [
+    {
+      "id": "C1.1",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "Metadata block present with every declared field populated",
+      "result": "pass",
+      "detail": "10 of 10 fields populated"
+    },
+    {
+      "id": "C1.2",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "producedBy is an agent contracted to emit review-package.md",
+      "result": "pass",
+      "detail": "producedBy='dev-2-reviewer'; contracted producers: ['dev-2-reviewer', 'architect']"
+    },
+    {
+      "id": "C1.3",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "schemaVersion is 1.0.0 and agentVersion is semantic",
+      "result": "pass",
+      "detail": "schemaVersion=1.0.0 agentVersion=1.1.0"
+    },
+    {
+      "id": "C1.4",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='complete'"
+    },
+    {
+      "id": "C2.1",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "All 9 mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "9 of 9 present, once each"
+    },
+    {
+      "id": "C2.2",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Review Scope', 'Findings', 'Severity Summary', 'Standards and Architecture Conformance', 'Test Adequacy Assessment', 'Correction Requests', 'Residual Risk', 'Verdict']"
+    },
+    {
+      "id": "C2.3",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 section introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C2.4",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "C2.5",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Advisory",
+      "description": "No template authoring guidance remains in the emitted artifact",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C3.1",
+      "quality_ref": "config/execution-engine.md#agent-adapter",
+      "severity": "Blocking",
+      "description": "At most 12 fenced block(s), as the contract permits",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; 12 permitted"
+    },
+    {
+      "id": "C3.2",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "C4.1",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "Every declared field label is present in its section",
+      "result": "pass",
+      "detail": "25 declared field(s) present"
+    },
+    {
+      "id": "C4.2",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "No declared field is left unanswered",
+      "result": "pass",
+      "detail": "every declared field carries a value"
+    },
+    {
+      "id": "C4.3",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Correctable",
+      "description": "Fields with a declared substance floor carry more than a token answer",
+      "result": "pass",
+      "detail": "all fields meet their floor"
+    },
+    {
+      "id": "C5.1",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Fields bound to a vocabulary use a permitted value",
+      "result": "pass",
+      "detail": "all bounded fields valid"
+    },
+    {
+      "id": "C5.2",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Correctable",
+      "description": "Fields bound to a format match it",
+      "result": "pass",
+      "detail": "all formatted fields valid"
+    },
+    {
+      "id": "C4.4",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared minimum carry at least that many items",
+      "result": "pass",
+      "detail": "all list sections meet their minimum"
+    },
+    {
+      "id": "C4.5",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared table carry it, with the declared columns",
+      "result": "pass",
+      "detail": "row counts: {'Findings': 6, 'Correction Requests': 6}"
+    },
+    {
+      "id": "C4.6",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "No table row leaves a required cell empty",
+      "result": "pass",
+      "detail": "all rows complete"
+    },
+    {
+      "id": "C6.1",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "C6.2",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "Every referenced identifier is defined in its declaring section",
+      "result": "pass",
+      "detail": "defined: {'F': 6, 'CR': 6, 'Q': 3}"
+    },
+    {
+      "id": "C6.3",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "No identifier is defined twice",
+      "result": "pass",
+      "detail": "identifiers unique"
+    },
+    {
+      "id": "C6.4",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Correctable",
+      "description": "Identifiers ascend from 001 without gaps",
+      "result": "pass",
+      "detail": "contiguous: {'F': 6, 'CR': 6, 'Q': 3}"
+    },
+    {
+      "id": "C7.1",
+      "quality_ref": "config/execution-engine.md#context-loader",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "N1",
+      "quality_ref": "agents/dev-2-reviewer/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "Every high-risk issue in the change under review was actually found",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N2",
+      "quality_ref": "agents/dev-2-reviewer/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "No finding substitutes reviewer opinion for a policy-backed standard",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N3",
+      "quality_ref": "agents/dev-2-reviewer/quality.md#not-machine-checkable-obligations",
+      "severity": "Advisory",
+      "description": "No severity was downscaled without evidence",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "P1",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Blocking",
+      "description": "The metadata verdict and the recorded Decision are the same",
+      "result": "pass",
+      "detail": "metadata verdict='approve-with-corrections' section decision='approve-with-corrections'"
+    },
+    {
+      "id": "P2",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Every finding carries a severity, a category, and a status from the declared vocabularies",
+      "result": "pass",
+      "detail": "invalid severity=[] category=[] status=[]"
+    },
+    {
+      "id": "P3",
+      "quality_ref": "agents/dev-2-reviewer/quality.md#arithmetic-checks",
+      "severity": "Blocking",
+      "description": "The severity summary recomputes exactly from the findings table",
+      "result": "pass",
+      "detail": "summary equals the counted findings at every severity"
+    },
+    {
+      "id": "P4",
+      "quality_ref": "agents/dev-2-reviewer/identity.md#policy-constraints",
+      "severity": "Blocking",
+      "description": "An unqualified approval carries no unresolved critical or high finding",
+      "result": "pass",
+      "detail": "decision='approve-with-corrections', 1 unresolved critical/high finding(s)"
+    },
+    {
+      "id": "P5",
+      "quality_ref": "agents/dev-2-reviewer/output.md#7-correction-requests",
+      "severity": "Blocking",
+      "description": "Every open critical or high finding is addressed by a correction request",
+      "result": "pass",
+      "detail": "6 finding(s) addressed by 6 request(s)"
+    },
+    {
+      "id": "P6",
+      "quality_ref": "agents/dev-2-reviewer/identity.md#decision-rules",
+      "severity": "Blocking",
+      "description": "Approval is withheld when no test evidence was reviewed",
+      "result": "pass",
+      "detail": "test evidence recorded=True, decision='approve-with-corrections'"
+    },
+    {
+      "id": "P7",
+      "quality_ref": "templates/review-package.md",
+      "severity": "Correctable",
+      "description": "The outstanding blocking findings named in the verdict are exactly the open critical and high findings",
+      "result": "pass",
+      "detail": "verdict names ['F-001']; table carries ['F-001']"
+    }
+  ]
+}

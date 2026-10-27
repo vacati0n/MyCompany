@@ -1,0 +1,1000 @@
+schema: framework.runtime/task-context.v1
+task_id: run-022d0492a75a
+command: implement
+workflow: implement-feature v1.0.0
+run_status: Completed
+updated_at: '2026-10-27T04:09:13Z'
+objective: 'Source: the CEO''s request in chat, 2026-10-27; local://research/ceo-decision-record.md#ceo-d-1300 to #ceo-d-1309
+  Issue type: Feature Priority: Highest Labels: affiliate, shopee-video, pilot, operator-ux, web-app, recording, vietnamese
+  Routed as: /implement (implement-feature) Builds on: MC-16 (src/MediaCompany.Pilot, branch claude/mc-16-pilot-pipeline-a4df61,
+  run run-535f3f938f32), not yet merged to main The CEO''s request, verbatim: "người dùng là non tech user human vì vậy những
+  việc như trong hướng dẫn vận hành công cụ gây khó khăn. hãy viết một tool web app có UI,UX frendly cho user nhập dữ liệu
+  từng step bao gồm cả việc support ghi âm trực tiếp thay vì bắt user tải file." (The user is...'
+inputs:
+- type: feature-request
+  reference: runs/inputs/mc-17-feature-request.md
+  digest: sha256:a14fe9e6638fa76cbc0a7ce39f5550fd
+- type: business-intent
+  reference: runs/inputs/mc-17-business-intent.md
+  digest: sha256:5cdc471a170c1142945cad022920cdc5
+relevant_agents:
+- phase: scope-and-acceptance
+  agent: product-owner
+  status: completed
+  required_skills:
+  - S02
+  - S07
+- phase: execution-planning
+  agent: planner
+  status: completed
+  required_skills:
+  - S02
+  - S01
+  - S07
+- phase: solution-design-and-risk-assessment
+  agent: architect
+  status: completed
+  required_skills:
+  - S01
+  - S03
+  - S06
+  - S09
+- phase: implementation
+  agent: dev-1-implement
+  status: completed
+  required_skills:
+  - S03
+  - S06
+  - S10
+  - S11
+  - S12
+- phase: quality-review
+  agent: dev-2-reviewer
+  status: completed
+  required_skills:
+  - S07
+  - S09
+  - S08
+- phase: documentation-and-release-handoff
+  agent: documentation
+  status: completed
+  required_skills:
+  - S11
+  - S10
+  - S12
+completed_phases:
+- phase: scope-and-acceptance
+  agent: product-owner
+  artifact: runs/run-022d0492a75a/states/scope-and-acceptance/artifacts/scope-definition.md
+  digest: sha256:1df5443872bc4d8fa40dc575de03fe03
+  validation: pass 33/33
+  attempts: 1
+- phase: execution-planning
+  agent: planner
+  artifact: runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md
+  digest: sha256:248ec10f122dd71dc03e0dcc3c422fbc
+  validation: pass 45/45
+  attempts: 2
+- phase: solution-design-and-risk-assessment
+  agent: architect
+  artifact: runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md
+  digest: sha256:5b5d85bde477b3c5bdf1e06c97f0694a
+  validation: pass 78/78
+  attempts: 3
+- phase: implementation
+  agent: dev-1-implement
+  artifact: runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md
+  digest: sha256:fea169088253323495cdae760ccc23ed
+  validation: pass 32/32
+  attempts: 1
+- phase: quality-review
+  agent: dev-2-reviewer
+  artifact: runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md
+  digest: sha256:dcc821aace06484cf2910c45879fac41
+  validation: pass 31/31
+  attempts: 1
+- phase: documentation-and-release-handoff
+  agent: documentation
+  artifact: runs/run-022d0492a75a/states/documentation-and-release-handoff/artifacts/release-note.md
+  digest: sha256:f3705d8b41b3763f8516d9550863a2b9
+  validation: pass 34/34
+  attempts: 1
+gates:
+- gate: Scope Gate
+  closes: scope-and-acceptance
+  decision: approved
+  owner_role: business-analyst
+  decided_by: 'CEO vuhoangcao (owner), recorded by the MC-17 orchestrator session: decision record entry CEO-D-1310'
+- gate: Planning Gate
+  closes: execution-planning
+  decision: approved
+  owner_role: orchestrator
+  decided_by: orchestrator (MC-17 session), on the CEO's Scope Gate approval CEO-D-1310
+- gate: Design Gate
+  closes: solution-design-and-risk-assessment
+  decision: approved
+  owner_role: tech-lead
+  decided_by: CEO (vuhoangcao)
+- gate: Review Gate
+  closes: quality-review
+  decision: approved
+  owner_role: qa
+  decided_by: orchestrator
+- gate: Verification Gate
+  closes: quality-review
+  decision: approved
+  owner_role: qa
+  decided_by: orchestrator
+- gate: Closure Gate
+  closes: documentation-and-release-handoff
+  decision: approved
+  owner_role: orchestrator
+  decided_by: orchestrator
+artifacts:
+  scope-and-acceptance: runs/run-022d0492a75a/states/scope-and-acceptance/artifacts/scope-definition.md
+  execution-planning: runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md
+  solution-design-and-risk-assessment: runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md
+  implementation: runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md
+  quality-review: runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md
+  documentation-and-release-handoff: runs/run-022d0492a75a/states/documentation-and-release-handoff/artifacts/release-note.md
+parallel_groups:
+- - scope-and-acceptance
+  - execution-planning
+- - solution-design-and-risk-assessment
+- - implementation
+- - quality-review
+- - documentation-and-release-handoff
+scope:
+  in_scope:
+  - 'S-001: The operator enters the fact sheet''s header fields, including the video code, and per fact row the label, s...
+    | Ticket step 1 (fact sheet in a form); CEO request for step-by-step entry by a non-technical user | must-have'
+  - 'S-002: As the operator types, the form names any banned term in a fact value, an override or a script sentence, wi...
+    | Ticket step 1 (banned terms checked live); ticket constraint 4 (the check stays in the toolchain) | must-have'
+  - 'S-003: The operator attaches the three product images named in the fact sheet, and the form names any missing or u...
+    | Ticket step 2 (upload or pick the three images) | must-have'
+  - 'S-004: The operator sees the generated script sentence by sentence, each with its source line, and ticks each sour...
+    | Ticket step 3; CEO decision 1306 item 1 (the tool writes the script); the script''s source lines in the pilo... | must-have'
+  - 'S-005: The operator records the narration in the browser with a visible timer, playback of the take and re-recordi...
+    | Ticket step 4; CEO decision 1306 item 4 (60 s is a hard limit); ticket constraint 2 (no voice generation) | must-have'
+  - 'S-006: An uploaded recording reaches the toolchain unchanged, a recording made in the browser is converted once in...
+    | Ticket step 4 (upload stays an option; conversion by the installed media tool); digest-based reuse rule in... | must-have'
+  - 'S-007: The operator attaches the presenter clip, and the form shows the portrait check result and the length diffe...
+    | Ticket step 5; CEO decision 1308 item 3 (clip and recording tolerance) | must-have'
+  - 'S-008: The operator starts production, sees progress, and sees each outcome as the toolchain states it, in Vietnam...
+    | Ticket step 6 (progress, and each refusal shown in plain Vietnamese with what to do next) | must-have'
+  - 'S-009: When pause detection does not match the sentence count, the form opens a timing editor with one start and o...
+    | Ticket step 6 (manual timing editor); CEO decision 1306 item 3 | must-have'
+  - 'S-010: The operator previews the produced video and the kit checklist, which shows the one item the toolchain pre-...
+    | Ticket step 7 (preview the video and the kit 04 checklist); CEO decision 1309 item 2 | must-have'
+  - 'S-011: The operator ticks the 26 checklist items the toolchain leaves to the operator, and then approves the video...
+    | Ticket step 7 (approves by hash); per-publication approval rule of the decision record; D-005 | must-have'
+  - 'S-012: After approval the operator sees the verify result and the path of the video file to post by hand, and the...
+    | Ticket step 7 and constraint 5 (nothing publishes) | must-have'
+  - 'S-013: The home screen and the seven step screens, with their labels, buttons and messages, are in Vietnamese | Ticket
+    labels (vietnamese); the feature request asks for a friendly interface for a non-technical user | must-have'
+  - 'S-014: The app runs on the operator''s own computer, opens in the installed browser, and loads nothing from and sen...
+    | Ticket constraints 1 and 3 (no download; microphone access needs a secure context on localhost); D-002, hel... | must-have'
+  - 'S-015: A request that changes state (produce, timing save, approval) is accepted only from the app''s own page on t...
+    | Declared security area of the operator; D-006 | must-have'
+  - 'S-016: The app passes each produce, timing and approval request to the delivered pilot toolchain (MC-16), which de...
+    | Ticket constraint 4 (front end only); D-001 | must-have'
+  - 'S-017: The automated tests and the sample run need no microphone, no network connection and no media file in the r...
+    | Ticket constraint 7 (offline tests with code-generated fixtures) | must-have'
+  - 'S-018: The operator completes steps 1 to 7 end to end in the installed browser on a code-generated sample, and the...
+    | Ticket done means (shown working in the browser on a code-generated sample, including the record step) | must-have'
+  - 'S-001 to S-018: the scope-definition''s eighteen approved items (fact sheet form, live banned terms, images, script ticks,
+    browser recording, recording admiss...'
+  - 'S-019: On first run a Vietnamese screen asks for the pilot folder, finds ffmpeg, ffprobe and the typeface, computes their
+    SHA-256 and writes the settings fil...'
+  - 'S-020: An employee operator may press approve on the CEO''s written instruction, and the CEO''s name is recorded in the
+    approval (CEO-D-1310 item 3). Tasks: T-...'
+  - 'S-021: The change is committed and pushed on the session branch, and the CEO receives the compare link against main stating
+    that the branch is cut from the u...'
+  out_of_scope:
+  - 'X-001: Publishing, scheduling, posting, uploading to, and sign-in or account actions on Shopee, HeyGen, D-ID or an...
+    | Agents never publish or act on accounts; the CEO publishes each video by hand (ticket constraint 5; per-pub... | A separate
+    CEO decision naming a publishing scope'
+  - 'X-002: Generating the presenter clip, and calls from the app to a presenter, voice, speech-recognition, text-to-sp...
+    | Ticket constraint 2; CEO decisions 1304, 1305 and 1307 | A CEO decision naming the component and its download; no generative
+    model inside the pilot'
+  - 'X-003: Opening, fetching or reading a product page or platform data; facts come only from what the operator enters |
+    The pilot''s fact rows come from the operator''s reading of the page; the MC-16 scope excluded page access (k... | A counsel
+    answer and a CEO decision naming the permitted source'
+  - 'X-004: Writing or editing script sentences by hand in the app | CEO decision 1306 item 1: the tool writes the script;
+    the fact-row override the toolchain already accepts i... | A CEO decision'
+  - 'X-005: Accounts, sign-in, multiple users, and access from another computer, a phone or another network address | One
+    operator on one computer; the loopback proposal D-002 and the no-account constraint | A CEO decision naming remote or
+    multi-user access and its security review'
+  - 'X-006: Changes to the toolchain''s checks, limits, refusal rules, settings values, or fixes to MC-16 known issues K...
+    | Ticket constraint 4: the front end weakens no check and the toolchain keeps deciding | A separate change request naming
+    the check, limit or issue'
+  - 'X-007: Editing the CEO-approved settings numbers from the app: safe area, caption size, overlay size, clip toleran...
+    | The toolchain refuses settings looser than the CEO''s values (CEO decisions 1308 and 1309) | Q-002 answered, and a CEO
+    decision on the one-time set-up'
+  - 'X-008: Batch or multi-product production, more than one video in progress, more than one presenter, and captions o...
+    | Pilot scope: one product, one presenter, Vietnamese, one video at a time (MC-16 scope exclusion of batch an... | A CEO
+    decision after the day-30 reading of the pilot'
+  - 'X-009: Changes to frozen Wave 12 (MC-13) and Wave 13 (MC-14) material, to the company store database, or to Docker |
+    Ticket constraint 6 (frozen by CEO decision) | A CEO unfreeze decision'
+  - 'X-010: Merging the MC-16 branch or this change''s branch into main, and any release, readiness or closure decision |
+    Gate and closure decisions belong to the gate owners; the branch is cut from the MC-16 branch, which is not... | The Closure
+    Gate, or a CEO decision'
+  - 'X-011: Rewording kit 04 item B7 and accepting the kit 03 edits left open by MC-16 (K-011, K-014) | Kit text is outside
+    the app and not requested by the ticket | A separate product owner decision'
+  - 'X-001 publishing and account actions: agents never publish or act on accounts.'
+  - 'X-002 generating the presenter clip and any voice, speech, text-to-speech, cloning, language-model or metered service:
+    CEO-D-1304, CEO-D-1305, CEO-D-1307.'
+  - 'X-003 reading product pages or platform data: facts come only from the operator.'
+  - 'X-004 hand-editing script sentences: the tool writes the script (CEO-D-1306 item 1).'
+  - 'X-005 accounts, multiple users, access from another device or address: one operator on one computer.'
+  - 'X-006 changes to the toolchain''s checks, limits, refusal rules, settings values or MC-16 known issues: the front end
+    weakens nothing.'
+  - 'X-007 editing the CEO-fixed settings numbers from the app: CEO-D-1310 item 2 writes them as decided.'
+  - 'X-008 batch, multi-video, multi-presenter or non-Vietnamese production: pilot scope.'
+  - 'X-009 frozen Wave 12 and Wave 13 material, the company store database and its container host: frozen by CEO decision.'
+  - 'X-010 merging any branch into main and any release or closure decision: owned by gate owners and the CEO.'
+  - 'X-011 kit 04 item B7 rewording and the open kit 03 edits: outside the app.'
+validation_requirements:
+  acceptance_criteria:
+  - 'A-001: The form holds the eleven header fields and the six fact-row fields; with each header field blanked in turn...
+    | S-001 | Seventeen fixtures (11 header, 6 row), each refused naming its field; one complete fixture accepted'
+  - 'A-002: A fact row with no screenshot attached, or whose screenshot name matches no attached file, is refused namin...
+    | S-001 | Two fixtures, each refused naming the row and the file name'
+  - 'A-003: The stored text of each typed value equals the typed text after Unicode NFC normalization, with Vietnamese...
+    | S-001 | Entry of a fixture value with diacritics; comparison of stored and typed text, zero differences'
+  - 'A-004: Typing one example term from each banned class (a) to (g) into a fact value shows the term and its class le...
+    | S-002 | Browser run with the seven example terms; seven of seven shown with the term and class'
+  - 'A-005: For a fixture set of strings (the toolchain''s banned-term fixtures plus the seven class examples), the form...
+    | S-002 | Run the set through the form''s live check and the toolchain''s check; comparison of term, class and result,...'
+  - 'A-006: The image step accepts exactly the three files named in the fact sheet''s images-used field; with two files,...
+    | S-003 | Fixtures: two files, four files, one unnamed file (each blocked and named); the three named files (accepted)'
+  - 'A-007: The next step opens only when the number of ticked source lines equals the number of script sentences, and...
+    | S-004 | Browser run on a five-sentence fixture: four ticks keep the next step closed, five open it'
+  - 'A-008: The take stops by itself at 60.0 s, and a take longer than 60.0 s is refused naming its length | S-005 | Browser
+    run with a code-generated audio stream longer than 60 s: stop at 60.0 s, take length at most 60.0 s...'
+  - 'A-009: After a take the operator can play it from start to end, and a re-record leaves exactly one take held for t...
+    | S-005 | Browser run: record, play, re-record; one take held, with a different SHA-256 after the re-record'
+  - 'A-010: An uploaded recording reaches the toolchain with the SHA-256 it had when uploaded; an uploaded file in a fo...
+    | S-006 | Upload fixture: the package''s recorded input digest equals the upload''s digest; a fixture in a non-accepted...'
+  - 'A-011: A take recorded in the browser is converted once, the converted file''s SHA-256 is the one the toolchain adm...
+    | S-006 | Code-generated browser-format fixture converted; first video admitted; second video with the same file refu...'
+  - 'A-012: A presenter clip is accepted only when portrait and within 0.5 s of the recording''s length; a landscape cli...
+    | S-007 | Three fixtures: portrait within tolerance accepted; landscape refused with size; 0.6 s difference refused w...'
+  - 'A-013: Production shows progress until the toolchain ends, and shows the toolchain''s line unchanged for the succes...
+    | S-008 | One fixture per refusal code (14) and one success fixture; shown text equals printed text in 15 of 15 cases'
+  - 'A-014: When production stops for pauses not matching the sentence count, the timing editor opens with one start an...
+    | S-009 | Fixture with two sentences run together: editor opens; fixture with known pauses: correct timings produce s...'
+  - 'A-015: The checklist shows the 27 kit 04 items: B8 pre-ticked with the toolchain''s note, B3 and B5 unticked with t...
+    | S-010 | Inspection of the rendered checklist against the kit 04 item list: 27 items, 1 ticked, 26 unticked'
+  - 'A-016: The produced video plays in the page at 9:16 proportions from the package''s video file, and the package''s f...
+    | S-010 | Browser check: element aspect ratio 9:16; SHA-256 of the played file equals the package manifest''s value'
+  - 'A-017: Approval is offered only when 26 operator items are ticked: with 25 ticked it is not offered, with 26 it is |
+    S-011 | Browser run at 25 and at 26 ticks; the count reads "n of 26"'
+  - 'A-018: Approval sends the SHA-256 shown beside the preview with the approver''s name; a video changed by one byte a...
+    | S-011 | Browser run: approval accepted with the shown hash; one-byte-changed fixture refused; approval record count...'
+  - 'A-019: After approval the page runs verify and shows the verify line with the approved SHA-256 and the approver''s...
+    | S-012 | Comparison of displayed and approved SHA-256, zero differences; inspection of the page controls and the app...'
+  - 'A-020: The home screen, the seven step screens with their labels and buttons, and the fourteen refusal messages of...
+    | S-013 | Reviewer reads the eight screens and the fourteen messages against the rule; zero English words outside the...'
+  - 'A-021: The app listens only on the address 127.0.0.1, opens zero outbound connections during the sample run, and l...
+    | S-014 | Socket harness on the app process: listener address 127.0.0.1 only, outbound count zero; page resource list...'
+  - 'A-022: The toolchain job processes started by the app own zero sockets during the sample run | S-014 | The socket harness
+    of the pilot toolchain applied to the app''s job processes; count zero, with its sampling...'
+  - 'A-023: Nothing is downloaded: this change adds zero package references beyond the installed shared framework, and...
+    | S-014 | Comparison of project and package manifest files with the prior version, zero additions; scan of page resou...'
+  - 'A-024: Six state-changing requests (produce, timing save and approval, each from a foreign origin and from a forei...
+    | S-015 | Six requests of each kind sent as stated; each refused; file hashes of the pilot folder equal before and after'
+  - 'A-025: For the fourteen refusal fixtures and the approval fixtures of A-013 and A-018, the app''s result equals the...
+    | S-016 | Each fixture run through the toolchain directly and through the app; comparison of result line and exit sta...'
+  - 'A-026: The 251 existing toolchain tests pass after this change, and no toolchain test is removed or weakened | S-016
+    | Run of the existing test suite, 251 passing; inspection of the toolchain''s test folder shows additions only'
+  - 'A-027: This change adds zero media files to the repository, and the tests create their fixtures in code | S-017 | Scan
+    of files added by this change for media extensions, zero found; inspection that each fixture is produc...'
+  - 'A-028: The recording-flow test (record, stop at 60 s, playback, re-record) passes on a machine with no microphone...
+    | S-017 | Test run on a machine with no microphone; socket count zero; test passes'
+  - 'A-029: On a code-generated sample the operator reaches steps 1 to 7 in the installed browser, including the record...
+    | S-018 | Reviewer''s recorded browser run: seven of seven steps reached; approved and verified SHA-256 equal, zero di...'
+  - 'A-030: During the sample run the operator types no command line and edits no JSON file after the one-time set-up (...
+    | S-018 | Walkthrough log of the sample run: zero command lines typed and zero JSON files edited by the operator'
+  test_focus:
+  - 'Parity (SC-05, SC-25): the toolchain''s banned-term fixtures and the seven class examples through D-015 and through the
+    toolchain; the fourteen refusal fixtur...'
+  - 'Boundary (SC-21, SC-22): the harness tracks the app process; rows owned by the app must be the 127.0.0.1 listener and
+    loopback connections only; rows owned b...'
+  - 'Request guard (SC-24): produce, timing save and approval, each with a foreign Origin and with a foreign Host; pilot-folder
+    hashes equal before and after.'
+  - 'Recording (SC-08, SC-09, SC-11, SC-28): headless shell with a generated audio file longer than 60 s; stop at 60.0 s;
+    playback; re-record with a different len...'
+  - 'Setup (T-026): settings accepted by the toolchain; no input for any CEO number; a missing tool named in Vietnamese; a
+    pilot folder inside the repository refu...'
+  - 'Repository (SC-23, SC-26, SC-27): project and package files compared with the prior version; toolchain folders unchanged;
+    no media file added.'
+  evidence:
+  - 'T-001: Whole solution builds with warnings as errors: 0 warnings, 0 errors | static | C-001, C-002, C-003, C-004, C-005,
+    C-006, C-007, C-008, C-009, C-010, C-011, C-012, C-013, C-014, C-015, C-...'
+  - 'T-002: Program cases 001 to 008. Approver text has two forms; 5 bad names are refused for each role. All 14 guide...
+    | unit | C-004, C-006, C-009, C-011, C-012, C-016, C-021, C-022, C-023, C-024, C-029'
+  - 'T-003: Program cases 010 and 012 to 016. The app starts on 127.0.0.1 only; its one listener is 127.0.0.1. It sends...
+    | integration | C-002, C-003, C-004, C-005, C-006, C-007, C-008, C-010, C-011, C-020, C-030'
+  - 'T-004: Program cases 017 to 019. A 60.0 s upload is kept byte for byte. A 61.0 s upload is refused with produce''s...
+    | integration | C-005, C-012, C-030'
+  - 'T-005: Program case 020. A continuous tone gives pauses-not-found and opens the timing editor; the line equals pro...
+    | integration | C-005, C-013, C-014, C-015, C-016, C-022, C-030'
+  - 'T-006: Program cases 021 and 022. The checklist has 27 items in held order. B8 is the only tool-ticked item. 26 it...
+    | integration | C-005, C-009, C-017, C-022, C-030'
+  - 'T-007: Program cases 023 to 026; each line equals the toolchain verb''s line on the same files. A one-byte change g...
+    | integration | C-005, C-012, C-013, C-016, C-030'
+  - 'T-008: Program cases 011, 027 and 028. Six foreign requests are refused: POST without Origin (403), foreign Origin...
+    | integration | C-002, C-004, C-018, C-030'
+  - 'T-009: Program case 030. The headless shell''s SHA-256 c4d6a64a…e3c matches browser.sha256. The fake microphone is...
+    | end-to-end | C-002, C-012, C-020, C-021, C-022, C-024, C-028, C-031'
+  - 'T-010: Program cases 040 to 042. An emptied ledger gives ledger-entry-missing and a deleted ledger gives ledger-tr...
+    | integration | C-005, C-013, C-014, C-028, C-030'
+  - 'T-011: MC-16 pilot regression: 251 of 251, unchanged | regression | C-001, C-025, C-032'
+  - 'T-012: Architecture regression: 101 of 101 | regression | C-032'
+  - 'T-013: Capability regression: 90 of 90 | regression | C-032'
+  - 'T-014: Deterministic regression: 453 of 453 | regression | C-032'
+  - 'T-015: Domain regression: 48 of 48 | regression | C-032'
+  - 'T-016: Production regression: 132 passed and 1 skipped of 133, the same skip as the MC-16 baseline | regression | C-032'
+  - 'T-017: Persistence regression: 61 passed and 184 skipped of 245. The skipped tests need the company store database...
+    | regression | C-032'
+  verification:
+  - 'Verification method: The solution was built. The new test program ran end to end against the built app and the built
+    toolchain executable, with media fixture...'
+  - 'Commands executed: dotnet build MediaCompany.slnx; tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe;
+    dotnet test tests/M...'
+  - 'Result summary: 17 evidence entries executed, 17 passed, 0 failed. Build: 0 warnings, 0 errors. New web test program:
+    31 of 31 (8 unit cases, 22 flow cases,...'
+  - 'Unverified areas: none'
+constraints:
+- 'Business constraints: The CEO approves each publication individually and carries the legal position under the decision
+  record; one presenter on one account;...'
+- 'Regulatory or policy constraints: No text-to-speech, voice cloning or speech recognition, and a fresh real recording for
+  each video (CEO decisions 1304, 1305...'
+- 'Delivery constraints: The change is cut from the MC-16 branch, which is not merged to main (X-010); nothing is downloaded
+  (no package, font, script, CDN asse...'
+- 'External dependencies: The installed .NET 10 SDK and ASP.NET Core 10 shared framework; ffmpeg and ffprobe, which the delivered
+  toolchain checks against confi...'
+- 'Wave 1: T-001, T-014'
+- 'Wave 2: T-002'
+- 'Wave 3: T-017, T-023'
+- 'Wave 4: T-020, T-026'
+- 'Wave 5: T-018'
+- 'Wave 6: T-003'
+- 'Wave 7: T-005, T-006, T-007'
+- 'Wave 8: T-008'
+- 'Wave 9: T-009'
+- 'Wave 10: T-010'
+- 'Wave 11: T-011'
+- 'Wave 12: T-012, T-013'
+- 'Wave 13: T-015'
+- 'Wave 14: T-016'
+- 'Wave 15: T-004, T-019, T-021, T-022, T-024, T-025'
+- 'Wave 16: T-027'
+- 'Wave 17: T-028'
+- 'C-001: functional | Every fact sheet field in the form, rows with source section and screenshot, stored text equal to typed
+  tex... | hard'
+- 'C-002: functional | The live check names term and class using the toolchain''s own check; the page holds no copy; results
+  equal... | hard'
+- 'C-003: functional | The image step accepts exactly the three files named in the fact sheet | hard'
+- 'C-004: functional | The next step opens only when ticks equal script sentences | hard'
+- 'C-005: functional | The take stops at 60.0 s, plays back, and a re-record leaves exactly one take | hard'
+- 'C-006: functional | An upload reaches the toolchain unchanged; a browser take is converted once by the installed ffmpeg
+  and tha... | hard'
+- 'C-007: functional | A clip is accepted only when portrait and within 0.5 s of the recording | hard'
+- 'C-008: functional | Production shows progress and the toolchain''s line unchanged with a Vietnamese reason and next step;
+  a timi... | hard'
+- 'C-009: functional | 27 checklist items with B8 pre-ticked; approval only at 26 operator ticks, with the shown hash; verify
+  show... | hard'
+- 'C-010: functional | Screens and messages are Vietnamese | hard'
+- 'C-011: security | The app listens on 127.0.0.1 only, opens zero outbound connections, and its pages load zero external
+  resources | hard'
+- 'C-012: security | Every toolchain, ffmpeg and ffprobe process started under the app owns zero sockets | hard'
+- 'C-013: operability | Zero package references are added and nothing is downloaded | hard'
+- 'C-014: security | A state-changing request is accepted only from the app''s own page on this computer | hard'
+- 'C-015: structural | The toolchain decides; its source, checks, limits, settings values and tests are unchanged and its
+  251 test... | hard'
+- 'C-016: compliance | No generative, speech, text-to-speech, cloning or metered component | hard'
+- 'C-017: operability | Tests run offline with fixtures built in code, add no media file, and need no microphone | hard'
+- 'C-018: structural | The company store, frozen Wave 12 and Wave 13 material and the container host are untouched | hard'
+- 'C-019: functional | Nothing publishes; no account, sign-in or contact action | hard'
+- 'C-020: functional | A first-run Vietnamese screen writes the settings file; the CEO-fixed numbers are written as decided
+  and ar... | hard'
+- 'C-021: functional | The approval names the CEO; when an employee presses approve it also names the employee and the CEO''s
+  writt... | hard'
+- 'C-022: functional | Steps 1 to 7 run end to end in the browser on a code-built sample with no command line and no JSON
+  edit aft... | hard'
+- 'C-023: functional | One operator, one computer, one video at a time | hard'
+- 'C-024: security | An uploaded file name never becomes a path; every stored file resolves inside its per-video folder |
+  hard'
+- 'C-025: operability | The change lands on the session branch cut from the unmerged MC-16 branch and merges nowhere | hard'
+- 'C-026: operability | This phase writes only its staging artifacts, no repository file | hard'
+- 'C-027: quality-attribute | The live result arrives within 1 s of the last keystroke | negotiable'
+- 'C-028: quality-attribute | Every installed executable is checked against its digest before use | negotiable'
+- 'C-029: quality-attribute | The converted take''s digest is reproducible from the same take | negotiable'
+- 'C-030: security | No single browser-supplied request property alone decides acceptance of a state-changing request | negotiable'
+- 'P-001: The Design Gate decision on D-001 to D-006 precedes any module; M-001 then exists as its own project with z... |
+  M-001, M-005, M-011, M-012 | none'
+- 'P-002: The 127.0.0.1 listener, its start-up address check and the D-003 guard exist before any state-changing route | M-001,
+  M-002 | P-001'
+- 'P-003: Setup writes the app record and a settings file validated by the toolchain''s reader before any route reads... |
+  M-001, M-008, M-009, M-017 | P-002'
+- 'P-004: The toolchain child path (argument list, no shell, UTF-8 line, exit-status mapping, kill-on-close job, boun... |
+  M-001, M-004, M-005, M-006 | P-003'
+- 'P-005: The per-video folder layout and plain-name resolution exist before any file is stored | M-001, M-008 | P-004'
+- 'P-006: The fact sheet is saved and passes the check verb before the script verb runs | M-001, M-002 | P-005'
+- 'P-007: The three images and the screenshots are stored under their declared names before produce can run | M-001, M-002
+  | P-005'
+- 'P-008: The script exists and every sentence is ticked before recording opens | M-001, M-002 | P-006'
+- 'P-009: The conversion path exists with raw takes outside the input folder; a new take replaces the admitted one on... |
+  M-001, M-008, M-016 | P-008'
+- 'P-010: The clip check reads the admitted recording''s length | M-001, M-002 | P-009'
+- 'P-011: Produce, its refusal display and the timing editor exist after every input is stored | M-001, M-002 | P-007, P-010'
+- 'P-012: Checklist and preview read the produced package before approval is offered; D-005 wording and the 26-tick s... |
+  M-001, M-002, M-010 | P-011'
+- 'P-013: The address-recording harness variant and the D-006 browser route exist before the evidence of SC-21, SC-22... |
+  M-003, M-007, M-015 | P-002'
+- 'P-014: The code-built sample is generated in a temporary folder outside the repository before the end-to-end run | M-003
+  | P-001'
+- 'P-015: Parity fixtures, the unchanged 251 toolchain tests, the harness evidence and the browser sample run exist b... |
+  M-003, M-004, M-007 | P-012, P-013, P-014'
+decisions:
+- 'D-001: The app is a front end on the delivered pilot toolchain: each produce, timing entry and approval is decided... |
+  Ticket constraint 4 keeps the checks, limits and approval in the toolchain, which the CEO approved; a secon... | A-025 and
+  A-026 hold; the app may show a refusal the toolchain gives, never a pass i...'
+- 'D-002: Proposed default, not decided: the app listens on 127.0.0.1 only, opens no outbound connection, and the too... |
+  Browser microphone access needs a secure context, which localhost provides, and a web app must listen on a... | If the CEO
+  declines, S-005, S-014 and S-018 are held and the verdict stays partially-...'
+- 'D-003: A browser recording is converted once, by the installed media tool, into a format the toolchain accepts; an... |
+  The reuse check compares digests (K-015 of the MC-16 release note); re-encoding an upload would give a new... | A-010 and
+  A-011: the reuse check sees the operator''s own bytes, and the admitted dige...'
+- 'D-004: The live banned-term check in the form uses the toolchain''s own check and list; the page holds no copy of t...
+  | A second list would drift from the toolchain, and a page that disagrees with the toolchain would show a pas... | A-005
+  is the test of this decision'
+- 'D-005: Approval is offered only when the operator has ticked the 26 items the toolchain leaves to the operator; th... |
+  Ticket step 7 has the CEO tick B3, B5 and the other items, then approve by hash; a non-technical operator c... | A-017 and
+  A-018; the approval still fails for any changed byte'
+- 'D-006: A request that changes state (produce, timing save, approval) is accepted only from the app''s own page on t...
+  | The declared security area applies: a web page open in the same browser could otherwise call the loopback a... | A-024'
+- 'Selected: O-003 (the process boundary, D-001), the structural choice the other five sub-decisions sit inside.'
+- 'Per-decision selections: D-002 O-005, D-003 O-009, D-004 O-012, D-005 O-015, D-006 O-018.'
+- 'Structural change: a new web project M-001 serving the page set M-002 on 127.0.0.1 only; it references the toolchain project
+  for in-process pure checks, sett...'
+- 'Rationale: O-003 is the only process boundary that answers the live check from the toolchain''s own list (C-002) without
+  running produce inside the listener''s...'
+- 'Highest-scoring rejected alternative and why it lost: O-004 ties O-003 on every criterion up to operability and loses there,
+  because it adds a second residen...'
+- 'Tradeoffs accepted:'
+- Toolchain library code runs inside the process that owns the listener, for pure checks, probe and conversion only; produce,
+  approve and verify never do (A-002).
+- The recording reuse refusal is shown at produce, because only the toolchain child opens the ledger (D-008).
+- The test program does not use the repository's test framework (A-008, Q-002).
+- Progress shows elapsed time and running state only, because the toolchain prints at the end (D-009).
+- 'D-001: Process boundary: pure checks, settings validation, probe and conversion in process through the toolchain l... |
+  yes | architecture-decision-record-D-001.md'
+- 'D-002: Recording: the browser take is converted once, on acceptance, through MediaTool into mono 16-bit PCM WAV wi... |
+  yes | architecture-decision-record-D-002.md'
+- 'D-003: Request guard: listener on 127.0.0.1 only with a start-up check of the bound addresses; host allow-list on... |
+  yes | architecture-decision-record-D-003.md'
+- 'D-004: First-run setup: pilot folder as text with a proposed default; ffmpeg and ffprobe found in the WinGet links... |
+  yes | architecture-decision-record-D-004.md'
+- 'D-005: Approval wording: CEO presses: "[CEO name] (CEO)"; employee presses: "[CEO name] (CEO; nhân viên [employee... |
+  yes | architecture-decision-record-D-005.md'
+- 'D-006: Recording test: installed headless shell, digest-checked, with fake capture from a code-generated audio fil... |
+  yes | architecture-decision-record-D-006.md'
+- 'D-007: M-001 uses the web SDK at net10.0 with no package, and turns invariant globalization off in its own project... |
+  no | inline'
+- 'D-008: Files only: the per-video input folder is the pilot folder''s inputs folder plus the video code, which must... |
+  no | inline'
+- 'D-009: Produce runs as one background job at a time; the page polls a read-only progress route showing elapsed tim... |
+  no | inline'
+- 'D-010: Outcome display: the toolchain''s line unchanged; for the fourteen codes of F-020 the guide''s Vietnamese rea...
+  | no | inline'
+- 'D-011: Timing editor: opens on pauses-not-found and timing-file-invalid, is offered on caption-page-too-short, hol... |
+  no | inline'
+- 'D-012: Checklist and approval: the checklist is read from the package''s checklist.md and approval is not offered i...
+  | no | inline'
+- 'D-013: Launcher: setup creates a desktop shortcut on the operator''s confirmation; a named single-instance lock mak...
+  | no | inline'
+- 'D-014: Log: a local file in the web folder records route, refusal code, exit status and duration, never file conte... |
+  no | inline'
+- 'D-015: Live check: the page sends each typed field after a short pause in typing; M-001 answers with BannedTermChe... |
+  no | inline'
+- 'V-001: The recording-test driver runs inside the real page and is injected only when the app starts with --test-mo... |
+  D-006 recording test | Driving the real page tests the operator''s recorder, not a copy of it. The browser cannot turn test
+  mode on...'
+- 'V-002: Recording admission runs at step 4: length, the 300 s upload ceiling and reuse against the ledger, through... |
+  D-001 process boundary; D-002 recording | The operator learns at once that a recording is too long or already used, not
+  after producing. The decision...'
+- 'V-003: Replacing a recording also deletes that video''s timing.txt (C-012) | D-011 timing editor | Windows typed for an
+  old recording would be wrong for the new one, and produce would use them without warning'
+- 'V-004: Added GET /api/input/recording so the timing editor can play the stored recording (C-005) | D-011 timing editor
+  | The operator needs to hear the recording to type its windows; the route reads only that video''s stored reco...'
+- 'V-005: The approve route requires all 26 approver items ticked, a presser choice and the shown digest before it ru... |
+  D-012 checklist and approval | Stricter than the toolchain, which does not see ticks. The toolchain still decides by hash'
+- 'V-006: The toolchain''s digest is recorded at setup; a rebuilt toolchain is refused (toolchain-changed) until setup...
+  | D-004 first-run setup | The app never starts an executable that differs from the one set up'
+- 'V-007: The live check covers only the fields the check verb scans: the header subject and classification, and each... |
+  D-015 live check | The check verb does not scan product name, shop, niche or source fields. Checking them live would warn
+  abou...'
+- 'V-008: Besides the three decided capture flags, the headless shell gets a temporary profile and flags that turn it... |
+  D-006 recording test | One run showed the shell binding a UDP socket on the any-address with no remote, which the table
+  cannot att...'
+open_questions:
+- 'Q-001: Do you accept that the app listens on 127.0.0.1 only, opens no outbound connection, and that the toolchain''...
+  | yes | CEO'
+- 'Q-002: Who prepares the one-time settings (paths and SHA-256 of the media tools and the typeface, and the pilot fo... |
+  yes | CEO'
+- 'Q-003: Who may press approve? The per-publication approval rule says the CEO approves each publication, but the to... |
+  no | CEO'
+- 'Q-004: Is the done condition (A-029) the only success measure for this change? Options: (a) yes, the done conditio... |
+  no | CEO'
+- 'Q-001: When an employee presses approve on the CEO''s written instruction, does the approval record carry only the... |
+  non-blocking | product-owner (the CEO answers)'
+- 'Q-002: If the no-microphone recording-flow test (SC-28) cannot run without a downloaded browser-automation package... |
+  non-blocking | product-owner (the CEO answers)'
+- 'Q-003: Framework gap: the implement-feature Verification Gate names qa as its only owner, while qa produces the ve... |
+  non-blocking | orchestrator'
+- 'Q-001: Does "the MC-16 tool keeps zero sockets" allow the web app to run the toolchain''s word check and conversion...
+  | non-blocking | product-owner'
+- 'Q-002: Does SC-23 forbid a new test project that references the test packages already installed (A-008)? The CEO a... |
+  non-blocking | product-owner'
+- 'Q-003: Does SC-28''s "socket count zero" exclude the test browser''s loopback connection to the app (A-011)? | non-blocking
+  | qa'
+- 'Q-004: Is a desktop shortcut made once by the setup screen part of the one-time set-up of SC-30 (A-009)? The CEO a... |
+  non-blocking | product-owner'
+- 'Q-005: Design Gate acceptance of D-001 to D-006, all at Proposed; tech-lead accepts under the producer exclusion r... |
+  non-blocking | tech-lead'
+- 'Q-001: Is the live check''s field set accepted: exactly the fields the check verb scans, not every typed field (V-0...
+  | non-blocking | architect'
+- 'Q-002: Is reporting, rather than asserting, the test browser''s UDP rows accepted, given that the system UDP table... |
+  non-blocking | qa'
+- 'Q-003: Should the MC-16 operator guide gain a section that points the operator to the web app? | non-blocking | product-owner'
+- 'Q-001: Is in-process recording admission with a ledger read (V-002) accepted as an amendment to D-001 and the reus... |
+  yes | architect'
+- 'Q-002: Does A-008''s clause "a take longer than 60.0 s is refused naming its length" apply to browser takes? Today... |
+  no | qa'
+- 'Q-003: Is it accepted that the "CEO tự bấm" option is selectable by whoever operates, and that the CEO name can be... |
+  no | product-owner'
+objectives:
+- 'TO-1: Every outcome the front end shows (fact sheet check, banned terms, script, admission, production, timing, approval,
+  verify) equals the toolchain''s resu...'
+- 'TO-2: The front end listens on 127.0.0.1 only and opens no outbound connection; the toolchain and the media tool processes
+  it starts own zero sockets. Verifi...'
+- 'TO-3: A state-changing request (produce, timing save, approval) is accepted only from the app''s own page on this computer.
+  Verified by SC-24. Traces BO-4, BO-2.'
+- 'TO-4: The change adds zero package references and the pages reference zero external resources. Verified by SC-23. Traces
+  BO-4.'
+- 'TO-5: The toolchain''s source, checks, limits, settings values and tests are unchanged, and its 251 tests pass. Verified
+  by SC-26. Traces BO-3.'
+- 'TO-6: Every screen and refusal message is Vietnamese under the SC-20 rule. Verified by SC-20. Traces BO-1.'
+- 'TO-7: The automated tests and the sample run need no microphone, no network and no media file in the repository. Verified
+  by SC-27, SC-28. Traces BO-1, BO-3.'
+- 'TO-8: The first-run set-up writes a settings file the toolchain accepts, with the CEO-fixed numbers written as decided
+  and not editable. Verified by T-026 ac...'
+- 'Desired outcome: a non-technical operator takes one pilot video from fact sheet to verified approval in a Vietnamese page
+  on their own computer, recording th...'
+- 'Architectural objectives:'
+- A new front-end boundary, its own project outside the toolchain's guarded assembly closure, that reaches the toolchain's
+  decisions only through its command-l...
+- One listening socket, on the IPv4 loopback address only, owned by the front-end process, and zero sockets owned by every
+  toolchain, ffmpeg or ffprobe process...
+- A request boundary that accepts a state-changing request only from the app's own page on this computer (S-039).
+- A conversion boundary at which a browser take becomes, once, a file in a recording format the toolchain already admits,
+  with the raw take kept outside the to...
+- A first-run boundary that produces a settings file the toolchain itself validates, with the CEO-fixed numbers sourced, not
+  typed (S-034).
+- A test boundary that exercises the recording flow with no microphone, no network and no download (S-016, S-022, S-038).
+- 'In scope: the new web project and its page set, its new test program, the solution entry, the pilot-folder layout the app
+  adds, the app''s own record file, an...'
+- 'Out of scope:'
+- Any change to src/MediaCompany.Pilot or tests/MediaCompany.Pilot.Tests, their checks, limits, refusal codes, settings form
+  or approval form (S-019, X-006).
+- Editing the CEO-fixed settings numbers (S-034, X-007).
+- The company store, MediaCompany.Persistence, MediaCompany.Host, MediaCompany.Production, frozen Wave 12 and Wave 13 material
+  and the container host (S-021, X...
+- Publishing, sign-in, accounts, remote or multi-user access, and more than one video at a time (S-020, X-001, X-005, X-008).
+- Generating the presenter clip and any voice, speech, cloning or metered component (S-017, X-002).
+- Hand-editing script sentences, reading product pages, kit text edits and fixes to MC-16 known issues (X-003, X-004, X-006,
+  X-011).
+- Merging any branch into main (S-025, X-010).
+assumptions:
+- 'A-001: The front end builds and runs on the installed .NET 10 SDK and ASP.NET Core 10 shared framework with zero a... |
+  S-014 | A package needs the CEO''s approval by name before T-017 can start'
+- 'A-002: The installed ffmpeg converts a browser take into a toolchain-accepted format deterministically (the orches... |
+  S-006 | The admitted digest is unstable, SC-11 fails, and T-009 is redesigned'
+- 'A-003: The front end sits in its own assembly outside the toolchain''s network-guarded assembly closure, so the too...
+  | S-016 | The guard or tests must change, which X-006 excludes; a CEO change request is needed'
+- 'A-004: The first-run set-up writes the settings file in the format the toolchain already reads, and the toolchain''...
+  | S-019 | A toolchain settings change is needed, which X-006 excludes; T-026 changes'
+- 'A-005: An approval pressed by an employee records the CEO''s name through the toolchain''s existing approver-name fi...
+  | S-020 | The approval record changes, possibly inside the toolchain (X-006); T-015 changes'
+- 'A-006: Starting the app needs no typed command line; any launcher is prepared within the one-time set-up | S-018 | SC-30
+  fails; a start-up task is added'
+- 'A-007: The recording flow can be tested with a code-generated audio stream and no microphone, using the installed... |
+  S-017 | SC-28 needs a CEO-approved download or a manual evidence route (Q-002); T-024 changes'
+- 'A-008: A complete one-video sample (fact sheet entries, three images, screenshots, a narration take with sentence... |
+  S-018 | The sample run needs external media; T-023 is redesigned'
+- 'A-009: The Vietnamese reason and next step for each of the fourteen refusal codes come from the MC-16 operator gui... |
+  S-008 | A wording task for product-owner is added before T-011'
+- 'A-010: The triggered database and performance areas need no work beyond the SC-04 bound: the company store is unto... |
+  plan-wide | Database or performance design and test tasks are added'
+- 'A-011: The toolchain''s banned-term check, reached from the front end, answers within 1 s of the last keystroke | S-002
+  | Design work on the live check is added; SC-04 fails'
+- 'A-001: The shared framework holds the web server, routing, static files, form uploads and host filtering the desig... |
+  C-013 for every option | A package needs the CEO''s approval by name (R-002)'
+- 'A-002: "The MC-16 tool keeps zero sockets" (CEO decision 1310 item 1) means the toolchain program and the processe... |
+  Decides between O-003 and O-004 | O-003 is eliminated and O-004 selected (R-001)'
+- 'A-003: Sockets the platform creates are not inheritable, so a child started with redirected streams holds no handl... |
+  C-012 for O-003 and O-004 | A child silently holds a listener handle (R-008)'
+- 'A-004: The solution build leaves the toolchain executable with its dependency file in its own build output, where... |
+  The child runs exactly as MC-16 runs | Setup refuses and names the missing file (R-003)'
+- 'A-005: The operator''s browser treats the page at the loopback address 127.0.0.1 as a secure context and allows mic...
+  | D-003 binds by address | Recording is blocked (R-010)'
+- 'A-006: A browser folder picker does not reveal an absolute path to the page | Setup takes the pilot folder as text with
+  a proposed default | A picker may be used; no structural change'
+- 'A-007: The headless shell, with fake capture from a code-generated audio file, records through MediaRecorder in a... |
+  D-006 route | SC-28 needs another route and a CEO decision (R-017)'
+- 'A-008: SC-23''s "zero package references" applies to every project this change adds, test projects included | Eliminates
+  O-019 | O-019 becomes the preferred test host (R-023)'
+- 'A-009: A desktop shortcut created once by the setup screen satisfies "no command line after the one-time set-up" (... |
+  D-013 launcher | A start-up task is added (R-020)'
+- 'A-010: The in-process banned-term check answers within 1 s of the last keystroke over loopback (plan assumption 11) | C-027
+  for O-003 and O-004 | Live check redesign (R-013)'
+- 'A-011: SC-28''s "socket count zero" excludes the test browser''s own loopback connection to the app under test | D-006
+  can pass SC-28 | SC-28 cannot pass with any browser route (R-018)'
+- 'A-012: The operator''s default browser is the Chromium-based browser with MediaRecorder the feature request names | D-002
+  relies on WebM/Opus takes (F-024) | Recording falls back to upload (R-019)'
+risks:
+- 'R-001: requirement | The CEO''s answer to Q-001 is pending at T-015 or asks for more than the CEO''s name in the approval
+  | T-015 rework; a toolchain record change would need a CEO change request (X-006)'
+- 'R-002: requirement | Starting the app requires a typed command (A-006 false) | SC-30 fails and BO-1 is unmet'
+- 'R-003: requirement | The refusal table lacks a Vietnamese reason or next step for one of the fourteen codes (A-009 false)
+  | T-011 waits on new wording'
+- 'R-004: technical | A needed capability is absent from the installed shared framework (A-001 false) | T-017 waits on a CEO
+  package approval'
+- 'R-005: technical | Browser-take conversion is not deterministic or not accepted by the toolchain (A-002 false) | Reuse
+  refusal by digest is unreliable; SC-11 fails'
+- 'R-006: technical | The front end enters the toolchain''s guarded closure or needs a toolchain change (A-003 or A-004 false)
+  | X-006 conflict; toolchain tests at risk'
+- 'R-007: technical | The live banned-term result arrives later than 1 s after the last keystroke (A-011 false) | SC-04 fails'
+- 'R-008: technical | The no-microphone recording test needs a downloaded automation package (A-007 false) | SC-28 cannot
+  be met without a CEO decision'
+- 'R-009: technical | Part of the sample cannot be generated by code (A-008 false) | The sample run and SC-29 are held'
+- 'R-010: technical | The design needs persistence beyond pilot-folder files or touches the company store (A-010 false) |
+  Database design and gate work added; X-009 conflict'
+- 'R-011: dependency | The unmerged MC-16 branch changes after this branch is cut | Rebase and a re-run of the toolchain tests'
+- 'R-012: dependency | The CEO''s Design Gate decision is delayed or declines the design | All implementation waits or returns
+  to design'
+- 'R-013: dependency | A required installed tool (ffmpeg, ffprobe, typeface, browser with MediaRecorder) is missing or its
+  digest... | Set-up or the sample run stops'
+- 'R-014: security | A foreign page open in the same browser sends a produce, timing or approval request to the loopback app
+  | An unapproved production or approval, against D-002 of the decision record'
+- 'R-015: security | The listener binds beyond 127.0.0.1, or the app or a job process opens an outbound connection | CEO-D-1310
+  item 1 breached'
+- 'R-016: security | An uploaded file name carries path segments | A write outside the pilot folder'
+- 'R-017: operational | An employee approves without the CEO''s written instruction | A publication without the CEO''s approval'
+- 'R-018: delivery | The compare link against main also shows the unmerged MC-16 commits | Review of MC-17 is confused with
+  MC-16'
+- 'R-001: structural | The CEO reads CEO decision 1310 item 1 as covering toolchain library code (A-002 false) | O-003 is
+  eliminated; a helper process is added'
+- 'R-002: structural | A needed capability is absent from the shared framework (A-001 false) | A package needs the CEO''s
+  approval by name'
+- 'R-003: structural | The toolchain executable or its dependency file is not in its build output (A-004 false) | The child
+  cannot start or its guard reads nothing'
+- 'R-004: contract | The toolchain''s produce or verify line changes on the unmerged MC-16 branch | The app misreads the package
+  folder or verify result'
+- 'R-005: contract | An operator''s name contains "(", ")", ";" or a control character | The app refuses the name'
+- 'R-006: security | A foreign page sends a produce, timing or approval request to the loopback app | An unapproved production
+  or approval'
+- 'R-007: security | The listener binds beyond 127.0.0.1 through an environment or configuration override | CEO decision 1310
+  item 1 breached'
+- 'R-008: security | A toolchain child inherits the listener handle (A-003 false) | A socket handle outside the owner tables'
+- 'R-009: security | An uploaded file name carries path segments | A write outside the per-video folder'
+- 'R-010: security | 127.0.0.1 is not a secure context in the operator''s browser (A-005 false) | Microphone blocked'
+- 'R-011: security | An employee approves without the CEO''s written instruction | A publication without the CEO''s approval'
+- 'R-012: security | A program already on the computer reads the page token and forges a request | A forged approval'
+- 'R-013: performance | The live result arrives later than 1 s (A-010 false) | SC-04 fails'
+- 'R-014: performance | Produce runs long with no intermediate output | The operator thinks the app hung'
+- 'R-015: operability | A full-length take converts to slightly over 60.000 s | The toolchain refuses a correct take'
+- 'R-016: operability | Conversion gives a different digest on another ffmpeg build | Test evidence differs; admission unaffected
+  (converted once)'
+- 'R-017: operability | The headless shell cannot drive capture in a page served by the app (A-007 false) | SC-28 not automated'
+- 'R-018: operability | SC-28''s socket count includes the browser''s loopback connection (A-011 false) | SC-28 cannot pass'
+- 'R-019: operability | The default browser lacks WebM/Opus MediaRecorder (A-012 false) | Recording unavailable'
+- 'R-020: operability | A desktop shortcut does not satisfy SC-30 (A-009 false) | A start-up task is added'
+- 'R-021: operability | An older package of the same code is approved (F-021) | The wrong video is approved'
+- 'R-022: operability | A raw take lands in the input folder | The toolchain counts it as a second clip (F-009)'
+- 'R-023: delivery | The CEO reads SC-23 as "nothing downloaded" (A-008 false) | The conventional test project is preferred'
+- 'R-024: delivery | The MC-16 branch changes after this branch is cut | Rebase and toolchain re-test'
+- 'R-025: delivery | The compare link against main also shows the MC-16 commits | MC-17 review confused with MC-16'
+- 'R-026: delivery | The Design Gate decision is delayed or declines the design | Implementation waits or returns to design'
+- 'R-001: The recording test uses the headless shell''s fake capture device, not a real microphone or the operator''s o...
+  | medium | A real browser could produce a container the conversion has not seen in a test'
+- 'R-002: The socket harness samples every 20 ms and can miss a socket that opens and closes between samples | low | A brief
+  connection by a child process could go unseen'
+- 'R-003: A UDP socket owned by the test browser cannot be attributed to a destination, because the system UDP table... |
+  low | The browser evidence covers TCP only'
+- 'R-004: Another local program could read the page over loopback and obtain the per-start token | low | It could post as
+  the page; such a program can already read the pilot folder directly'
+- 'R-005: Produce progress shows elapsed time only, so a long real recording shows no percentage | medium | The operator may
+  think the app has stalled'
+- 'R-006: The desktop shortcut uses the Windows shell link interface; a locked-down machine may refuse it | low | No shortcut
+  is created'
+- 'Accepted risk: None identified. No finding has a recorded acceptance by its owning role.'
+- 'Unmitigated risk:'
+- An employee can choose either "CEO tự bấm" or the employee option. The approval record carries whichever text is chosen,
+  and the app cannot verify a written...
+- The CEO name used in every approver text can be changed by re-running setup.
+- A browser take longer than 60.0 s is shortened to 60.000 s at conversion rather than refused, as D-002 and R-015 designed.
+  Whether this meets A-008 is for qa.
+- An environment endpoint override would bind briefly before the start-up check stops the app.
+- If F-001 is amended rather than removed, a step-4 ledger read can run concurrently with a produce child.
+- 'Monitoring required: the app log''s produce-busy and app-fault lines (F-004); any ledger refusal raised at step 4 rather
+  than at produce (F-001); the approval...'
+plan_tasks:
+- 'T-001: Produce the MC-17 technical design package | depends on none'
+- 'T-002: Produce the MC-17 validation plan | depends on T-001'
+- 'T-003: Build the fact-sheet form step | depends on T-018'
+- 'T-004: Verify the step-screen acceptance criteria | depends on T-005, T-012, T-016'
+- 'T-005: Show banned terms live in the form | depends on T-003'
+- 'T-006: Build the product images step | depends on T-003'
+- 'T-007: Build the script review step | depends on T-003'
+- 'T-008: Build the in-browser narration recording step | depends on T-007'
+- 'T-009: Admit the narration recording to the toolchain | depends on T-008'
+- 'T-010: Build the presenter clip step | depends on T-009'
+- 'T-011: Run production with Vietnamese outcomes | depends on T-006, T-010, T-020'
+- 'T-012: Build the manual timing editor | depends on T-011'
+- 'T-013: Build the preview and kit checklist step | depends on T-011'
+- 'T-014: Obtain the CEO''s answer on the approval record content | depends on none'
+- 'T-015: Build approval by hash | depends on T-013, T-014'
+- 'T-016: Show the verify result and the file to post | depends on T-015'
+- 'T-017: Stand up the loopback-only front end | depends on T-001, T-002'
+- 'T-018: Connect the front end to the delivered toolchain | depends on T-026'
+- 'T-019: Verify network exposure and request-origin refusal | depends on T-012, T-016, T-023'
+- 'T-020: Refuse state-changing requests from other origins | depends on T-017'
+- 'T-021: Review the MC-17 change | depends on T-005, T-012, T-016, T-023'
+- 'T-022: Verify the toolchain keeps deciding | depends on T-016'
+- 'T-023: Generate the code-built pilot sample | depends on T-002'
+- 'T-024: Verify the tests run offline without a microphone | depends on T-005, T-012, T-016, T-023'
+- 'T-025: Run the sample end to end in the browser | depends on T-005, T-012, T-016, T-023'
+- 'T-026: Build the first-run setup screen | depends on T-017'
+- 'T-027: Write the MC-17 release note | depends on T-004, T-019, T-021, T-022, T-024, T-025'
+- 'T-028: Deliver the compare link to the CEO | depends on T-027'
+facts:
+- 'F-001: The toolchain has verbs check, script and produce taking a settings path and a fact sheet path, approve tak... |
+  src/MediaCompany.Pilot/Program.cs'
+- 'F-002: The script verb writes script.json and script.md into the fact sheet''s folder, and produce requires script....
+  | src/MediaCompany.Pilot/Program.cs, Producer.cs'
+- 'F-003: MediaCompany.Pilot is an executable project referencing only MediaCompany.Deterministic, with no package, a... |
+  src/MediaCompany.Pilot/MediaCompany.Pilot.csproj'
+- 'F-004: The repository builds net10.0 with warnings as errors and invariant globalization on by default | Directory.Build.props'
+- 'F-005: NetworkGuard checks the closure from the toolchain assembly downward against four allowed own assemblies an... |
+  src/MediaCompany.Pilot/NetworkGuard.cs'
+- 'F-006: SocketTelemetry is a process-wide listener for socket and name-resolution events, created only by Producer;... |
+  src/MediaCompany.Pilot/NetworkGuard.cs, Producer.cs'
+- 'F-007: BannedTermCheck is public: Find returns each finding with place, class id, class name and term; FirstPerson... |
+  src/MediaCompany.Pilot/BannedTermCheck.cs, VietnameseText.cs'
+- 'F-008: FactSheetCheck.Check takes fact sheet bytes and an input folder and refuses at the first error; the header... |
+  src/MediaCompany.Pilot/FactSheet.cs'
+- 'F-009: Admission accepts recordings ending .wav, .mp3, .m4a, .aac, .flac or .ogg and clips ending .mp4, .mov, .m4v... |
+  src/MediaCompany.Pilot/Admission.cs'
+- 'F-010: CaptionTiming reads timing.txt (one start and end line per sentence), refuses pauses-not-found and timing-f... |
+  src/MediaCompany.Pilot/Admission.cs'
+- 'F-011: MediaTool is public: its constructor checks the configured ffmpeg and ffprobe digests and version; each run... |
+  src/MediaCompany.Pilot/MediaTool.cs, JobObject.cs'
+- 'F-012: PilotSettings form version 1 requires every member and refuses unknown ones; Validate refuses settings-loos... |
+  src/MediaCompany.Pilot/PilotSettings.cs'
+- 'F-013: Produce writes a package folder under the pilot folder''s runs folder named by video code and time, writes r...
+  | src/MediaCompany.Pilot/Producer.cs'
+- 'F-014: The approval record holds form version, video code, video SHA-256, approver text and date; Approve refuses... |
+  src/MediaCompany.Pilot/Package.cs'
+- 'F-015: Held data holds 27 checklist items, B8 ticked by the tool, B3 and B5 noted and unticked, and the 60.0 s rec... |
+  src/MediaCompany.Pilot/HeldData.cs'
+- 'F-016: The ledger lives in the pilot folder with its previous generation and is opened by produce and by approve | src/MediaCompany.Pilot/Ledger.cs,
+  Producer.cs, Package.cs'
+- 'F-017: SocketTableHarness is internal to the toolchain tests, observes processes by job membership, samples the TC... |
+  tests/MediaCompany.Pilot.Tests/SocketTableHarness.cs'
+- 'F-018: The toolchain test project uses the xunit, test SDK and runner packages at central versions | tests/MediaCompany.Pilot.Tests
+  project file, Directory.Packages.props'
+- 'F-019: The example settings file holds a pilot folder outside the repository, ffmpeg and ffprobe in the WinGet lin... |
+  pilot-affiliate-vn/mc-16/vi-du-cai-dat.json'
+- 'F-020: The operator guide lists fourteen refusal codes with a Vietnamese reason and remedy: banned-term, override-... |
+  pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md'
+- 'F-021: MC-16 known issue K-003: an older package of the same video code remains approvable; K-015: reuse is detect... |
+  MC-16 release note, run run-535f3f938f32'
+- 'F-022: A web-SDK net10.0 app builds here with zero packages; ASP.NET Core 10.0.12 shared framework is installed | orchestrator
+  briefing, measurement'
+- 'F-023: The installed ffmpeg converts WebM/Opus to mono 16-bit PCM WAV with the same SHA-256 on two conversions | orchestrator
+  briefing, measurement'
+- 'F-024: Chromium MediaRecorder emits WebM/Opus | orchestrator briefing, measurement'
+- 'F-025: The installed headless browser shell under the MediaCompanyRun graphics folder is approved (CEO decision 10... |
+  orchestrator briefing, answer to planner open question 2'
+- 'F-026: The solution file lists the src and tests projects, including MediaCompany.Pilot and MediaCompany.Pilot.Tests |
+  MediaCompany.slnx'
+- 'F-027: The toolchain has 251 tests | feature request, reuse section'
+- 'F-028: Face.Admit checks the configured face''s SHA-256 against its font manifest line | src/MediaCompany.Pilot/Face.cs'
+repository_context:
+  relevant_modules:
+  - 'M-001: MediaCompany.Pilot.Web (new web project under src/) | extension | F-003, F-005, F-022, A-001'
+  - 'M-002: MediaCompany.Pilot.Web page set (Vietnamese pages, styles and page scripts served by M-001) | extension | F-022,
+    F-024, A-005'
+  - 'M-003: MediaCompany.Pilot.Web.Tests (new zero-package test program under tests/) | extension | F-017, F-018, F-025, A-007,
+    A-008'
+  - 'M-004: MediaCompany.Pilot command-line contract (verbs, exit statuses, result lines) | no-change-verified | F-001, F-002'
+  - 'M-005: MediaCompany.Pilot library surface (BannedTermCheck, FactSheetCheck, InputFiles, VietnameseText, PilotSetti...
+    | no-change-verified | F-007 to F-012, F-015, F-028'
+  - 'M-006: MediaCompany.Pilot NetworkGuard and SocketTelemetry | no-change-verified | F-005, F-006'
+  - 'M-007: MediaCompany.Pilot.Tests, including SocketTableHarness | no-change-verified | F-017, F-027'
+  - 'M-008: Pilot folder layout outside the repository | extension | F-013, F-016, F-019'
+  - 'M-009: Pilot settings file form version 1 | no-change-verified | F-012, F-019'
+  - 'M-010: Package approval record form | no-change-verified | F-014'
+  - 'M-011: MediaCompany.slnx | extension | F-026'
+  - 'M-012: Directory.Build.props and Directory.Packages.props | no-change-verified | F-004, F-018'
+  - 'M-013: Company store with MediaCompany.Persistence, MediaCompany.Host, MediaCompany.Production and frozen Wave 12...
+    | no-change-verified | F-003, F-026'
+  - 'M-014: MC-16 operator guide and kit files under pilot-affiliate-vn | no-change-verified | F-020'
+  - 'M-015: Installed headless browser shell | operational-impact | F-025, A-007'
+  - 'M-016: Installed ffmpeg and ffprobe | no-change-verified | F-011, F-023'
+  - 'M-017: App record file in the user''s local application-data folder (new) | extension | A-006, F-012'
+  relevant_files:
+  - src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj (added)
+  - src/MediaCompany.Pilot.Web/Program.cs (added)
+  - src/MediaCompany.Pilot.Web/WebContext.cs (added)
+  - src/MediaCompany.Pilot.Web/RequestGuard.cs (added)
+  - src/MediaCompany.Pilot.Web/Routes.cs (added)
+  - src/MediaCompany.Pilot.Web/Setup.cs (added)
+  - src/MediaCompany.Pilot.Web/AppRecord.cs (added)
+  - src/MediaCompany.Pilot.Web/Shortcut.cs (added)
+  - src/MediaCompany.Pilot.Web/Names.cs (added)
+  - src/MediaCompany.Pilot.Web/Workspace.cs (added)
+  - src/MediaCompany.Pilot.Web/FactSteps.cs (added)
+  - src/MediaCompany.Pilot.Web/MediaSteps.cs (added)
+  - src/MediaCompany.Pilot.Web/ToolchainRunner.cs (added)
+  - src/MediaCompany.Pilot.Web/ChildJob.cs (added)
+  - src/MediaCompany.Pilot.Web/ProduceJobs.cs (added)
+  - src/MediaCompany.Pilot.Web/Outcomes.cs (added)
+  - src/MediaCompany.Pilot.Web/ChecklistView.cs (added)
+  - src/MediaCompany.Pilot.Web/WebLog.cs (added)
+  - src/MediaCompany.Pilot.Web/WebRefusal.cs (added)
+  - src/MediaCompany.Pilot.Web/PageAssets.cs (added)
+  - src/MediaCompany.Pilot.Web/Pages/index.html (added)
+  - src/MediaCompany.Pilot.Web/Pages/app.js (added)
+  - src/MediaCompany.Pilot.Web/Pages/app.css (added)
+  - src/MediaCompany.Pilot.Web/Pages/test-driver.js (added)
+  - tests/MediaCompany.Pilot.Web.Tests/MediaCompany.Pilot.Web.Tests.csproj (added)
+  - tests/MediaCompany.Pilot.Web.Tests/Runner.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/Support.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/AddressHarness.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/FlowCases.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs (added)
+  - MediaCompany.slnx (modified)
+  rescan_required_when:
+  - the scope or the accepted design changes
+  - a dependency this context does not name is discovered
+  - a named module or file no longer exists at the recorded path
+changed_files:
+- src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj (added)
+- src/MediaCompany.Pilot.Web/Program.cs (added)
+- src/MediaCompany.Pilot.Web/WebContext.cs (added)
+- src/MediaCompany.Pilot.Web/RequestGuard.cs (added)
+- src/MediaCompany.Pilot.Web/Routes.cs (added)
+- src/MediaCompany.Pilot.Web/Setup.cs (added)
+- src/MediaCompany.Pilot.Web/AppRecord.cs (added)
+- src/MediaCompany.Pilot.Web/Shortcut.cs (added)
+- src/MediaCompany.Pilot.Web/Names.cs (added)
+- src/MediaCompany.Pilot.Web/Workspace.cs (added)
+- src/MediaCompany.Pilot.Web/FactSteps.cs (added)
+- src/MediaCompany.Pilot.Web/MediaSteps.cs (added)
+- src/MediaCompany.Pilot.Web/ToolchainRunner.cs (added)
+- src/MediaCompany.Pilot.Web/ChildJob.cs (added)
+- src/MediaCompany.Pilot.Web/ProduceJobs.cs (added)
+- src/MediaCompany.Pilot.Web/Outcomes.cs (added)
+- src/MediaCompany.Pilot.Web/ChecklistView.cs (added)
+- src/MediaCompany.Pilot.Web/WebLog.cs (added)
+- src/MediaCompany.Pilot.Web/WebRefusal.cs (added)
+- src/MediaCompany.Pilot.Web/PageAssets.cs (added)
+- src/MediaCompany.Pilot.Web/Pages/index.html (added)
+- src/MediaCompany.Pilot.Web/Pages/app.js (added)
+- src/MediaCompany.Pilot.Web/Pages/app.css (added)
+- src/MediaCompany.Pilot.Web/Pages/test-driver.js (added)
+- tests/MediaCompany.Pilot.Web.Tests/MediaCompany.Pilot.Web.Tests.csproj (added)
+- tests/MediaCompany.Pilot.Web.Tests/Runner.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/Support.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/AddressHarness.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/FlowCases.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs (added)
+- MediaCompany.slnx (modified)
+findings:
+- 'F-001: high | architecture | src/MediaCompany.Pilot.Web/MediaSteps.cs:63 and :93'
+- 'F-002: medium | standards | src/MediaCompany.Pilot.Web/FactSteps.cs:29'
+- 'F-003: medium | standards | src/MediaCompany.Pilot.Web/Routes.cs:441'
+- 'F-004: medium | correctness | src/MediaCompany.Pilot.Web/Routes.cs:750'
+- 'F-005: low | maintainability | src/MediaCompany.Pilot.Web/Routes.cs:968'
+- 'F-006: low | test-adequacy | tests/MediaCompany.Pilot.Web.Tests/FlowCases.cs'
+- 'CR-001: F-001 | The process boundary in the code and the approved boundary agree. Either recording admission against the
+  le... | yes'
+- 'CR-002: F-002 | The live check''s field set and the design text agree, through the architect''s decision on V-007 being
+  recor... | no'
+- 'CR-003: F-003 | A screenshot name can be stored only if it is declared for a fact row, or the architect records the departu...
+  | no'
+- 'CR-004: F-004 | Every exception raised by a background produce job ends that job with a shown category and a log line,
+  so a... | no'
+- 'CR-005: F-005 | Every route that shows the package video path takes it from the same source. | no'
+- 'CR-006: F-006 | An executed check exists for each of the three uncovered behaviours named in the finding. | no'
+verdicts:
+- 'Decision: approve-with-corrections'
+- 'Rationale: The Stage 8 table yields approve-with-corrections because one high finding is open (F-001). The change departs
+  from the CEO-approved process bound...'
+- 'Blocking findings outstanding: F-001'
+- 'Readiness recommendation: Recommended to qa, as the Review Gate owner, that the change not advance to release until CR-001
+  is closed by the architect, and th...'
+affected_areas:
+  determinable: true
+  declared:
+  - security
+  triggered:
+    react-frontend:
+    - source: artifact:solution-design-and-risk-assessment
+      term: front-end
+    database:
+    - source: input:feature-request
+      term: database
+    - source: artifact:scope-and-acceptance
+      term: database
+    - source: artifact:execution-planning
+      term: database
+    performance:
+    - source: input:business-intent
+      term: slow
+    - source: artifact:scope-and-acceptance
+      term: performance
+    - source: artifact:execution-planning
+      term: performance
+    security:
+    - source: artifact:scope-and-acceptance
+      term: security
+    - source: artifact:execution-planning
+      term: security
+    - source: artifact:solution-design-and-risk-assessment
+      term: security
+  not_triggered:
+  - avalonia-ui
+  sources_scanned:
+  - input:feature-request
+  - input:business-intent
+  - artifact:scope-and-acceptance
+  - artifact:execution-planning
+  - artifact:solution-design-and-risk-assessment
+  - artifact:implementation
+  - artifact:quality-review
+  - artifact:documentation-and-release-handoff
+relevant_skills:
+  scope-and-acceptance:
+    S02: required
+    S07: required
+  execution-planning:
+    S02: required
+    S01: required
+    S07: required
+  solution-design-and-risk-assessment:
+    S01: required
+    S03: required
+    S06: required
+    S09: required
+  implementation:
+    S03: required
+    S06: required
+    S10: required
+    S11: required
+    S12: required
+  quality-review:
+    S07: required
+    S09: required
+    S08: required
+  documentation-and-release-handoff:
+    S11: required
+    S10: required
+    S12: required

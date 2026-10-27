@@ -7,9 +7,10 @@ tags:
   - "execution-plan.md"
   - "execution-planning"
 sources:
+  - resource: "../../runs/run-022d0492a75a/events.jsonl"
   - resource: "../../runs/run-535f3f938f32/events.jsonl"
 generated:
-  at: "2026-10-26T15:26:06Z"
+  at: "2026-10-26T21:10:33Z"
   by: "knowledge-loop/1.0.0"
 status: "draft"
 lesson_record:
@@ -23,11 +24,12 @@ lesson_record:
   artifact_type: "execution-plan.md"
   phases:
     - "execution-planning"
-  occurrences: 1
-  distinct_runs: 1
+  occurrences: 2
+  distinct_runs: 2
   first_seen: "2026-10-26T15:26:06Z"
-  last_seen: "2026-10-26T15:26:06Z"
+  last_seen: "2026-10-26T21:10:33Z"
   evidence:
+    - "runs/run-022d0492a75a/events.jsonl#E-0025"
     - "runs/run-535f3f938f32/events.jsonl#E-0037"
   evidence_state: "current"
   status: "candidate"

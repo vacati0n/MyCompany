@@ -1,0 +1,89 @@
+{
+  "invocation_id": "inv-022d0492a75a-03-003",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-004.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-006.md"
+  ],
+  "structured_output": {
+    "package_status": "complete",
+    "attempt": 3,
+    "repair_scope": "four validator findings: D2.6, D4.3, D6.5, D8.3 (mechanical, no redesign)",
+    "counts": {
+      "statements": 39,
+      "facts": 28,
+      "assumptions": 12,
+      "constraints": 30,
+      "impacted_modules": 17,
+      "options": 22,
+      "decisions": 15,
+      "architecture_significant_decisions": 6,
+      "risks": 26,
+      "sequencing_constraints": 15,
+      "open_questions": 5,
+      "reuse_rows": 36
+    },
+    "selected_option": "O-003",
+    "selected_options": {
+      "D-001_process_boundary": "O-003",
+      "D-002_recording_conversion": "O-005",
+      "D-003_request_guard": "O-009",
+      "D-004_first_run_setup": "O-012",
+      "D-005_approval_wording": "O-015",
+      "D-006_recording_test": "O-018"
+    },
+    "recomputed_option_ranking": {
+      "D-001": ["O-003", "O-004", "O-001", "O-002"],
+      "D-002": ["O-005", "O-006", "O-007", "O-008"],
+      "D-003": ["O-009", "O-010", "O-011"],
+      "D-004": ["O-012", "O-013", "O-014"],
+      "D-005": ["O-015", "O-016", "O-017"],
+      "D-006": ["O-018", "O-020", "O-019", "O-021", "O-022"]
+    },
+    "selection_follows_from_evaluation": true,
+    "repairs": [
+      "D2.6: every 'CEO-D-nnnn' in technical-design.md (25 occurrences) rewritten as 'CEO decision nnnn'; none remain; ADR files left unchanged",
+      "D4.3: Requirements Summary acceptance criteria line now carries '(CEO decision 1310 item 4; S-001, S-036)'; the criteria are a table, not nested bullets, so no other bullet needed an S-id",
+      "D6.5: R-017 Affects cell changed from 'D-006, P-013' to 'D-006, P-013, M-003, M-015' so both speculative modules are named",
+      "D8.3: O-020 outcome cell now 'rejected at reuse leverage (C-028: 1 of 1 met, less reuse than O-018)'; the 5.2 reuse-leverage column cites no C-id, so C-028, the D-006 quality attribute shown in the row, is cited; O-004, O-006, O-010, O-013 already cite C-ids (C-027, C-028, C-030, C-028) in their rows"
+    ],
+    "conditional_selections": {
+      "D-001": "O-004 if the CEO answers Q-001 no (A-002 false)",
+      "D-006": "O-019 if the CEO answers Q-002 no (A-008 false)"
+    },
+    "acceptance_criteria_mapped": "SC-01 to SC-30, 30 of 30",
+    "planner_tasks_bound": "T-001 to T-028, 28 of 28",
+    "package_references_added": 0,
+    "toolchain_files_changed": 0,
+    "escalations": ["Q-001", "Q-002", "Q-003", "Q-004", "Q-005"],
+    "decision_records_status": "all six Proposed",
+    "implementation_performed": false,
+    "external_access": false,
+    "quality_checks": {
+      "run": 98,
+      "passed": 98,
+      "note": "Self-checked by inspection; the validator was not run (no command execution). The four repaired findings are expected to clear but are confirmed only by the orchestrator's validator run."
+    }
+  },
+  "evidence_refs": [
+    ".claude/agents/architect/manifest.yaml",
+    ".claude/agents/architect/system.md",
+    ".claude/agents/architect/reasoning.md",
+    ".claude/agents/architect/output.md",
+    ".claude/agents/architect/quality.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/invocation-envelope.json",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/validation-report.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-022d0492a75a/states/solution-design-and-risk-assessment/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

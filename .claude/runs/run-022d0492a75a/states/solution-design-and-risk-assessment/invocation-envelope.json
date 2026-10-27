@@ -1,0 +1,700 @@
+{
+  "invocation_id": "inv-022d0492a75a-03-003",
+  "run_id": "run-022d0492a75a",
+  "work_item_id": "run-022d0492a75a::solution-design-and-risk-assessment",
+  "idempotency_key": "sha256:e19aa2ed578303cba574943684688734",
+  "state_id": "solution-design-and-risk-assessment",
+  "phase_index": 3,
+  "agent_id": "architect",
+  "agent_version": "1.0.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/architect.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/architect/manifest.yaml",
+    "load_order": [
+      "agents/architect/system.md",
+      "agents/architect/identity.md",
+      "agents/architect/reasoning.md",
+      "agents/architect/execution.md",
+      "agents/architect/output.md",
+      "agents/architect/quality.md",
+      "agents/architect/examples.md"
+    ],
+    "module_digests": {
+      "agents/architect/system.md": "sha256:c168589dc2f7d21c5904b04eabac3bcb",
+      "agents/architect/identity.md": "sha256:261f5905d1bd778d6ab5f56f0f542762",
+      "agents/architect/reasoning.md": "sha256:41610cfdb31cf831427216f91c3cab67",
+      "agents/architect/execution.md": "sha256:506d978c15d875e9228206f6ca63ec1c",
+      "agents/architect/output.md": "sha256:bf440b99fb1db7d4750ad563bb2c2ea4",
+      "agents/architect/quality.md": "sha256:ce1c8f09d9d185400063ec43b073d0c7",
+      "agents/architect/examples.md": "sha256:3ec7bba43b60810b9a05d73f42cc1c02"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/architect/system.md",
+        "agents/architect/reasoning.md",
+        "agents/architect/output.md",
+        "agents/architect/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/architect/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/architect/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/architect/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 51183,
+      "full_bytes": 110065
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "architecture-analysis",
+      "impact-analysis",
+      "technical-approach-definition",
+      "reuse-assessment",
+      "option-evaluation",
+      "architecture-decision-authoring",
+      "sequencing-guidance",
+      "structural-risk-analysis",
+      "architecture-estimation"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S01",
+        "proficiency": "Primary",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S02",
+        "proficiency": "Secondary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S06",
+        "proficiency": "Secondary",
+        "registryIdentifier": "database-engineering",
+        "specificationPath": "skills/database/database-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S08",
+        "proficiency": "Secondary",
+        "registryIdentifier": "performance-engineering",
+        "specificationPath": "skills/performance/performance-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Secondary",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S01",
+        "registryIdentifier": "clean-architecture-checklist",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S03",
+        "registryIdentifier": "engineering-playbook",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S06",
+        "registryIdentifier": "database-engineering",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S09",
+        "registryIdentifier": "secure-engineering",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S06",
+      "displayName": "Database Engineering",
+      "specificationPath": "skills/database/database-engineering.md",
+      "status": "required",
+      "area": "database",
+      "basis": "area database triggered by 'database' in input:feature-request",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "area security triggered by 'security' in artifact:scope-and-acceptance",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S08",
+      "displayName": "Performance Engineering",
+      "specificationPath": "skills/performance/performance-engineering.md",
+      "status": "required",
+      "area": "performance",
+      "basis": "area performance triggered by 'slow' in input:business-intent",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "change-request",
+      "feature-request",
+      "business-intent",
+      "architecture-context",
+      "execution-plan",
+      "architecture-decision-records",
+      "dependency-inventory",
+      "module-boundaries",
+      "non-functional-requirements",
+      "operability-security-compliance-constraints",
+      "incident-history",
+      "known-issues"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-17-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-17-feature-request.md",
+        "text": "# MC-17: A friendly local web app in Vietnamese that walks a non-technical operator through one pilot video, with in-browser recording\n\n- Source: the CEO's request in chat, 2026-10-27; local://research/ceo-decision-record.md#ceo-d-1300 to #ceo-d-1309\n- Issue type: Feature   Priority: Highest\n- Labels: affiliate, shopee-video, pilot, operator-ux, web-app, recording, vietnamese\n- Routed as: /implement (implement-feature)\n- Builds on: MC-16 (`src/MediaCompany.Pilot`, branch `claude/mc-16-pilot-pipeline-a4df61`, run `run-535f3f938f32`), not yet merged to `main`\n\n## Description\n\n### WHY\n\nThe CEO's request, verbatim: \"ng\u01b0\u1eddi d\u00f9ng l\u00e0 non tech user human v\u00ec v\u1eady nh\u1eefng vi\u1ec7c nh\u01b0 trong h\u01b0\u1edbng d\u1eabn v\u1eadn h\u00e0nh c\u00f4ng c\u1ee5\ng\u00e2y kh\u00f3 kh\u0103n. h\u00e3y vi\u1ebft m\u1ed9t tool web app c\u00f3 UI,UX frendly cho user nh\u1eadp d\u1eef li\u1ec7u t\u1eebng step bao g\u1ed3m c\u1ea3 vi\u1ec7c support ghi \u00e2m\ntr\u1ef1c ti\u1ebfp thay v\u00ec b\u1eaft user t\u1ea3i file.\"\n\n(The user is a non-technical human, so the tasks in the operator guide are hard. Write a web app tool with a friendly\nUI/UX where the user enters data step by step, including direct recording support instead of making the user upload a\nfile.)\n\nMC-16 delivered `src/MediaCompany.Pilot`, an offline .NET 10 console tool with five verbs (check, script, produce,\napprove, verify). Its operator guide `pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md` asks the operator to hand-edit\na JSON fact sheet, lay out an input folder, type command lines with paths and copy a 64-character hash. The operator is\nthe CEO now and a human employee later (`CEO-D-1306` item 1, `CEO-D-1307` item 2). MC-17 puts a friendly local web\nfront end on top of the MC-16 tool so the operator never edits JSON or types a command line.\n\n### THE STEPS THE OPERATOR WALKS THROUGH, ONE VIDEO AT A TIME\n\n1. **Fact sheet in a form.** Every field of the MC-16 fact sheet, each fact row with its source section and its\n   screenshot. Banned terms are checked live as the operator types, naming the term and why it is banned (its class).\n2. **Product images.** Upload or pick the three images.\n3. **Script.** See the generated script and tick each sentence's Part E source line.\n4. **Record the narration in the browser.** No file upload is required, though upload stays an option. A timer with a\n   hard stop at 60 s, playback, re-record. The recording is converted with the installed ffmpeg. Never text-to-speech,\n   never voice cloning, and a reused recording is refused.\n5. **Presenter clip.** Upload the AI-presenter clip the operator made in HeyGen or D-ID; the app checks it is portrait\n   and that its length matches the recording within 0.5 s (`CEO-D-1308` item 3).\n6. **Produce the package.** Show progress and every refusal in plain Vietnamese with what to do next; offer a manual\n   timing editor when pause detection does not match the sentence count.\n7. **Preview and approve.** Preview the video and the kit 04 checklist; the CEO ticks B3, B5 and the other items and\n   approves the video by its hash (`D-002`, `CEO-D-1309` item 2).\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 REUSE IT\n\n- `src/MediaCompany.Pilot` and its 251 tests in `tests/MediaCompany.Pilot.Tests`: the fact sheet check, the banned-term\n  check, the script generator, admission of recording and clip, pause timing and `timing.txt`, ffmpeg 9:16 composition,\n  the package, the hash-chained ledger, approval by hash and verify.\n- The MC-16 run evidence `.claude/runs/run-535f3f938f32/` (technical design, ADRs D-001 to D-005, release note with\n  known issues K-001 to K-016).\n- Installed on this machine: the .NET 10 SDK with the ASP.NET Core 10 shared framework, ffmpeg and ffprobe through\n  WinGet (`C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/`), a Chromium-based browser with MediaRecorder.\n\n### HARD CONSTRAINTS\n\n1. Download nothing (no npm, NuGet or pip package, no CDN script, no font) unless the CEO approves it by name.\n2. The app calls no generative model, no speech recognition and no metered service. No text-to-speech, no voice\n   cloning (`CEO-D-1304`, `CEO-D-1305`, `CEO-D-1307`).\n3. **Socket conflict, for the Scope Gate.** `CEO-D-1308` keeps the MC-16 toolchain at zero sockets. A web app must\n   listen on a socket, and microphone access needs a secure context, which `localhost` provides. The proposal for the\n   CEO: the web app binds 127.0.0.1 only, opens no outbound connection, and the MC-16 tool itself stays at zero sockets.\n   The CEO decides this explicitly before design.\n4. The web app is a front end only. It weakens no MC-16 check: the hash approval, the 60 s limit, refusal of a reused\n   recording, the safe area, the banned-term checks, the 0.5 s clip tolerance and the 1.2 s caption page all stay in the\n   tool, which keeps deciding.\n5. Agents never sign in anywhere, create accounts, contact sellers, buy anything or publish anything. Nothing publishes.\n6. Frozen Wave 12 (MC-13) and Wave 13 (MC-14) are not touched. The `mediacompany` database is not touched; Docker is down.\n7. Tests run offline with fixtures generated by code. No media file is added to the repository. The recording flow is\n   covered by a test that needs no real microphone.\n8. Every publication is approved by the CEO individually (`D-002`); the CEO carries the legal position (`D-018`).\n\n### DONE MEANS\n\n- MC-17 runs through every phase and gate of `implement-feature`; the CEO decides at the Scope and Design gates.\n- The app has been run and shown working in the Browser pane on a code-generated sample, including the record step.\n- Committed and pushed on the session branch; the CEO gets the compare link against `main`, noting that the branch is\n  cut from the unmerged MC-16 branch.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no\nrepository file; an agent claiming a finding covers \"every\" case lists the cases; a `failure-envelope.json` of class\n`gate-approval-required` in a phase folder is stale once that phase's dispatch prompt exists (Finding 11).\n\n## Acceptance criteria\n\n_To be defined by the scope phase and approved at the Scope Gate._",
+        "digest": "sha256:a14fe9e6638fa76cbc0a7ce39f5550fd"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-17-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-17-business-intent.md",
+        "text": "# Business intent for MC-17 (the owner's request and decisions, verbatim)\n\n## The CEO's request, 2026-10-27, in chat\n\n\"ng\u01b0\u1eddi d\u00f9ng l\u00e0 non tech user human v\u00ec v\u1eady nh\u1eefng vi\u1ec7c nh\u01b0 trong h\u01b0\u1edbng d\u1eabn v\u1eadn h\u00e0nh c\u00f4ng c\u1ee5 g\u00e2y kh\u00f3 kh\u0103n. h\u00e3y vi\u1ebft m\u1ed9t tool web app c\u00f3 UI,UX frendly cho user nh\u1eadp d\u1eef li\u1ec7u t\u1eebng step bao g\u1ed3m c\u1ea3 vi\u1ec7c support ghi \u00e2m tr\u1ef1c ti\u1ebfp thay v\u00ec b\u1eaft user t\u1ea3i file.\"\n\n---\n\n## CEO-D-1304 \u2014 The AI presenter lip-syncs to the CEO's own recorded voice\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the orchestrator session, on the presenter form of\n`CEO-D-1301` item 4 and the tool choice `OD12` of `CEO-D-1302`.\n\nThe CEO's words: \"anh m\u1edf t\u00e0i kho\u1ea3n shopee r\u1ed3i . v\u1ec1 ti\u1ebfng vi\u1ec7t l\u00e0 ti\u1ebfng m\u1eb9 \u0111\u1ebb c\u00f3 th\u1ec3 d\u00f9ng b\u1ea3n ghi \u00e2m c\u1ee7a anh \u0111\u01b0\u1ee3c\" (I\nhave opened the Shopee account. As for Vietnamese, it is my native language, so my own recordings can be used). Asked\nwhether an AI face is still needed with a real voice, the CEO chose \"M\u1eb7t AI + gi\u1ecdng anh\" (AI face plus my voice) over\ndropping the avatar.\n\n1. **Voice.** The narration of every video is the CEO's own recorded voice, in Vietnamese. The AI face lip-syncs to\n   that recording. No text-to-speech is used in the pilot, and Vbee is dropped.\n2. **Proposed default, not the CEO's words: no voice cloning.** Each video uses a fresh real recording of its own\n   approved script; no tool is given the CEO's voice to clone. This is the orchestrator's proposed default and stands\n   only when the CEO confirms it.\n3. **Tool (`OD12` revised, a proposal for the CEO).** Whichever of HeyGen and D-ID passes the lip-sync test (file\n   `pilot-affiliate-vn/pilot-kit/07-kich-ban-thu-va-mo-ta-nguoi-dan.md`) driven by the CEO's own uploaded recording is\n   bought, billed monthly at USD 29 (HeyGen Creator or D-ID Pro), from the USD 42.99 fixed line of `OD13`. The D-ID\n   Pro plus Vbee path (about USD 35.43, ESTIMATE) falls away. What the evidence says\n   (`pilot-affiliate-vn/evidence/ai-presenter-pricing-2026-10-26.md`):\n   - D-ID Studio accepts uploaded audio, MP3 or WAV up to 5 minutes. The quote (\"upload an audio file for your avatar to\n     speak\") comes from a D-ID help search result, not a fetched page. D-ID Pro keeps a visible generic \"AI\" mark in\n     the bottom left corner (D3).\n   - HeyGen's acceptance of uploaded audio is not quoted anywhere in the evidence: **UNVERIFIED**, settled by the test.\n   - Whether either free tier or trial accepts uploaded audio is **UNVERIFIED**, settled by the test.\n4. **Everything else stands.** The \"Video t\u1ea1o b\u1edfi AI\" label is still turned on for every video, because the face is AI.\n   Scripts use only sourced facts and never claim use of the product. The disclosure is spoken at the start and the\n   end. The Article 15a(3) stop rule (`OD14`), `D-002`, and one presenter on one account (`OD18`) are unchanged.\n5. **Fact reported, not verified:** the CEO reports opening \"the Shopee account\" on 2026-10-26. No agent has seen it;\n   agents never sign in. Whether it is the Shopee Affiliate registration as an individual KOC, and so whether day 1 of\n   the plan is 2026-10-26, is for the CEO to state in the measurement sheet. If it is, the \"before day 1\" steps\n   (counsel pack sent, eligibility checked) are already due.\n6. **Effect on the open questions, an inference for counsel and not a finding:** the presenter now speaks in the\n   CEO's real voice, which may bear on whether the CEO is presenting the product personally under Article 15a(3)\n   (`Q-002`, `Q-016`). The counsel pack asks this.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1305 \u2014 No voice cloning: every video uses a fresh real recording\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session, on the proposed default of\n`CEO-D-1304` item 2.\n\nAsked \"Kh\u00f4ng nh\u00e2n b\u1ea3n gi\u1ecdng: m\u1ed7i video d\u00f9ng m\u1ed9t b\u1ea3n ghi \u00e2m th\u1eadt, ghi m\u1edbi. CEO x\u00e1c nh\u1eadn hay b\u00e1c b\u1ecf?\", the CEO chose\n\"X\u00e1c nh\u1eadn\".\n\n1. **Confirmed.** No tool is given the CEO's voice to clone, and no voice-generation or \"voice clone\" feature is turned\n   on in the presenter tool. Each video uses a fresh real recording of its own approved script, made after that script\n   is approved; sentences are never spliced from another video's recording. `CEO-D-1304` item 2 stands as a decision,\n   no longer as a proposal.\n2. **Effect on the kit and on MC-16.** Part F of `pilot-affiliate-vn/pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md` drops\n   its \"awaiting confirmation\" note. The MC-16 toolchain refuses to package a video whose recording is not new for that\n   video: a recording whose digest was already used by another video is rejected.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` item 1 (no text-to-speech); agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1306 \u2014 MC-16 scope answers: the tool writes the script, a call to action without price, pause-detected captions, 60 seconds is a hard limit\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session on the four blocking questions of the\nMC-16 scope phase (run `run-535f3f938f32`).\n\n1. **The tool writes the script for the CEO to record.** Asked how each fact row becomes a spoken sentence when the\n   toolchain may use no language model, the CEO's words: \"vi\u1ebft k\u1ecbch b\u1ea3n cho CEO thu \u00e2m. sau n\u00e0y s\u1ebd handover l\u1ea1i cho\n   nh\u00e2n vi\u00ean l\u00e0 human.\" (write the script for the CEO to record; later this will be handed over to a human employee).\n   The orchestrator reads this as: the script generator produces every spoken sentence itself, deterministically, from\n   the fact sheet; the CEO does not write sentences. The person who runs the tool and records is the operator (the CEO\n   now, a human employee later); the per-publication approval stays the CEO's under `D-002`. Whether the employee may\n   also record the voice is not decided here: `CEO-D-1304` names the CEO's voice, and a change needs a CEO decision.\n2. **The call to action carries no price.** Asked about the template's guidance sentence, which says \"gi\u00e1\", the CEO's\n   words: \"h\u00e3y d\u00f9ng c\u00e2u d\u1ec5 d\u1eabn d\u1eaft kh\u00e1ch h\u00e0ng b\u1eb1ng c\u00e1ch b\u1ea5m v\u00e0o gi\u1ecf h\u00e0ng, b\u1ea5m link \u0111\u1ec3 xem chi ti\u1ebft....\" (use a sentence\n   that leads the customer to tap the cart or the link to see details). Part B row 6 of the script template is\n   replaced by a call to tap the cart or the product link for details, with no price, discount or urgency wording.\n   The bare word \"gi\u00e1\" is not a banned term (it would refuse products such as \"gi\u00e1 \u0111\u1ee1 \u0111i\u1ec7n tho\u1ea1i\"); money amounts,\n   discounts, promotions, sold counts and ratings stay banned.\n3. **Caption timing by pause detection.** The CEO chose the proposed default: the tool finds the pauses between\n   sentences in the recording by signal processing (no speech recognition); the operator reads with a clear pause\n   between sentences; when the pauses found do not match the sentence count, the tool stops and the operator writes the\n   timings by hand.\n4. **Sixty seconds is a hard limit.** The CEO chose \"Ch\u1eb7n tr\u00ean 60 gi\u00e2y\": a recording longer than 60 seconds is refused;\n   the operator drops the optional third fact and records again. The 5-minute upload ceiling is moot below it.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304`, `CEO-D-1305`; agents create no account, sign in nowhere, contact no\nseller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1307 \u2014 MC-16 Scope Gate approved; an employee operator may record in their own real voice\n\n**The CEO's own decision, 2026-10-26**, at the Scope Gate of run `run-535f3f938f32` (MC-16).\n\n1. **Scope approved** as the scope phase's third attempt states it, with the defaults it carries: captions in white on\n   a dark band in the lower third, one per sentence; a presenter clip that is not portrait is refused; product images\n   move by a slow pan or zoom; recording reuse is detected by the file's digest only; banned class (f) is \"so v\u1edbi\",\n   \"h\u01a1n h\u1eb3n\" and naming another shop or brand as better, not the bare word \"h\u01a1n\".\n2. **Employee voice.** Asked whether a human employee who later operates the tool may record the narration, the CEO\n   chose \"\u0110\u01b0\u1ee3c, gi\u1ecdng th\u1eadt\" (yes, in their real voice). This amends `CEO-D-1304` item 1: the narration is the real\n   recorded voice of the CEO or of the employee operating the tool. Still no text-to-speech, no voice cloning, and a\n   fresh recording for every video (`CEO-D-1305`). The presenter stays one presenter on one account (`OD18`). Whether\n   a different human voice behind the same AI face bears on counsel questions Q-002 and Q-016 is an inference for\n   counsel, not a finding.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1308 \u2014 MC-16 Design Gate approved, with phone-screen safe areas\n\n**The CEO's own decision, 2026-10-26**, at the Design Gate of run `run-535f3f938f32` (MC-16).\n\n1. **Design approved with safe areas.** The design composes the 1080x1920 (9:16) video with the installed ffmpeg only,\n   with no browser and no socket, in a separate .NET tool that never touches the company store; the pilot ledger is a\n   hash-chained file outside the repository. Asked first, the CEO answered \"khung hinh dien thoai di dong vi da so\n   nguoi dung xem reels hoac youtube short\" (a mobile phone frame, because most people watch Reels or YouTube Shorts).\n   Asked again with the design restated as that frame plus safe areas, the CEO chose \"Duy\u1ec7t k\u00e8m v\u00f9ng an to\u00e0n\".\n   - Captions and the overlay \"Video t\u1ea1o b\u1edfi AI \u00b7 C\u00f3 li\u00ean k\u1ebft ti\u1ebfp th\u1ecb\" sit inside a safe area, clear of the\n     right-hand action buttons (like, comment, cart) and the caption and description text at the bottom of the Shopee\n     Video, Reels and Shorts players.\n   - The text is large enough to read on a small screen.\n   The tool still publishes nowhere.\n2. **Fallback for Vietnamese marks.** If the proof frame shows ffmpeg drawing a Vietnamese mark wrongly, the CEO allows\n   ahead of time (\"Cho ph\u00e9p n\u1ed9i b\u1ed9\") the fallback: the installed browser renderer draws only the caption plates as\n   transparent images. It may open loopback sockets on 127.0.0.1 only, never a connection off the machine, and the\n   package states it.\n3. **Clip and recording tolerance.** The presenter clip and the recording start together, and their lengths may differ\n   by at most 0.5 s (\"0,5 gi\u00e2y\"). Beyond that, the tool refuses and names the difference in seconds.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1307`; agents create no account, sign in nowhere, contact no\nseller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1309 \u2014 MC-16 quality review: long captions page in two-line pages; B3 and B5 stay for the CEO to tick\n\n**The CEO's own decision, 2026-10-27**, on the quality review of run `run-535f3f938f32` (MC-16).\n\n1. **Caption paging.** At 56 px inside the safe area of `CEO-D-1308`, the fixed disclosure sentence needs four lines.\n   The CEO chose \"Chia trang 2 d\u00f2ng\": a sentence too long for two lines is shown as consecutive two-line pages\n   within the time window in which it is spoken. Each page stays on screen for at least 1.2 s. Where the window is\n   too short for that, the tool refuses and names the sentence. This amends the scope rule of one caption, of at most\n   two lines, per sentence.\n2. **B3 and B5 are not pre-ticked.** The price and claim-of-use checks are closed word lists. They are widened (for\n   example \"VN\u0110\", \"ngh\u00ecn\", \"tri\u1ec7u\", and first-person wording in an operator's override), but cannot catch every\n   phrasing. The CEO chose \"CEO t\u1ef1 t\u00edch\": the package states that the tool's check found nothing, and leaves B3 (\"no\n   claim of use\") and B5 (\"no price\") unticked for the CEO, who reads the script. Only B8 (the \"Video t\u1ea1o b\u1edfi AI\"\n   overlay for the whole video) is pre-ticked. This amends the scope rule that pre-ticked exactly B3, B5 and B8.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1308`; agents create no account, sign in nowhere, contact no\nseller, buy nothing, download no asset and publish nothing.\n\n---",
+        "digest": "sha256:5cdc471a170c1142945cad022920cdc5"
+      },
+      {
+        "type": "execution-plan",
+        "reference": "runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-17-pilot-web-fffc59/.claude/runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md",
+        "text": "```yaml\nplan:\n  planId: PLAN-run-022d0492a75a-MC-17\n  sourceInputs:\n    - type: feature-request\n      reference: runs/inputs/mc-17-feature-request.md\n  producedBy: planner\n  agentVersion: 1.0.0\n  schemaVersion: 1.0.0\n  status: complete\n  inputDigest: sha256:a14fe9e6638fa76cbc0a7ce39f5550fd\n  contextDigest: sha256:2de1c2c2ba837051eb22fa9c512b030c\n  upstreamArtifacts:\n    - scope-definition: runs/run-022d0492a75a/states/scope-and-acceptance/artifacts/scope-definition.md (sha256:1df5443872bc4d8fa40dc575de03fe03), approved at the Scope Gate as CEO-D-1310\n  citationConventions:\n    - S-001 to S-018 are the scope-definition's approved scope items, adopted verbatim as statements; S-019 to S-021 are added below\n    - SC-01 to SC-30 cite the scope-definition's acceptance criteria 1 to 30, in that artifact's table order\n    - X-001 to X-011 cite the scope-definition's exclusions; the scope phase's four questions are cited by their answers, CEO-D-1310 items 1 to 4\n  affectedAreas: security (declared; S-014, S-015); performance (one bound only, the 1 s live check of SC-04, A-011); database (not affected, X-009, A-010)\n  repositoryContext: task context named no modules; the orchestrator briefing named src/MediaCompany.Pilot, so its file list was read once to confirm the path exists; no wider scan\n```\n\n## Executive Summary\n\nMC-17 puts a Vietnamese local web front end on the delivered MC-16 pilot toolchain so that a non-technical operator (the CEO now, an employee later) can make one pilot video step by step, record the narration in the browser, and have the CEO approve it by hash, without editing a data file or typing a command. Success is measured by one condition only (CEO-D-1310 item 4): on a code-generated sample the operator reaches steps 1 to 7 in the installed browser, including the record step, and the verify line shows the approved SHA-256. The work is 28 tasks in 17 execution waves: three design-phase tasks, seventeen implementation tasks, six quality-review tasks and two handoff tasks. The toolchain keeps every decision; the front end adds no pass path and the toolchain's source, checks, settings values and 251 tests stay unchanged. The highest-impact risk is R-014: a foreign web page open in the same browser could drive a production or an approval through the loopback address, which T-020 prevents and T-019 verifies. Plan status is complete; no blocking question stands, and the three non-blocking questions Q-001 to Q-003 are owned.\n\n## Business Objectives\n\n- BO-1: A non-technical operator produces one pilot video end to end through guided Vietnamese steps, with no data file edited and no command typed after the one-time set-up. Receiver: the operator. Measured by SC-29 (the success measure) and SC-30. Traces S-001 to S-013, S-018, S-019.\n- BO-2: Every video stays the CEO's individual approval, given in person or by written instruction, and nothing is published by the app. Receiver: the CEO. Measured by SC-18 and SC-19. Traces S-011, S-012, S-020.\n- BO-3: The pilot's compliance checks (banned terms, 60 s limit, recording reuse, clip tolerance, safe area, caption page, approval by hash) keep deciding each video exactly as delivered. Receiver: the CEO, who carries the legal position. Measured by SC-25 and SC-26. Traces S-002, S-006, S-016.\n- BO-4: The operator's computer gains no exposure beyond one loopback listener: nothing downloaded, nothing sent off the machine, no request from another page acted on. Receiver: the CEO. Measured by SC-21 to SC-24. Traces S-014, S-015.\n\n## Technical Objectives\n\n- TO-1: Every outcome the front end shows (fact sheet check, banned terms, script, admission, production, timing, approval, verify) equals the toolchain's result on the same input. Verified by SC-25. Traces BO-3.\n- TO-2: The front end listens on 127.0.0.1 only and opens no outbound connection; the toolchain and the media tool processes it starts own zero sockets. Verified by SC-21, SC-22. Traces BO-4.\n- TO-3: A state-changing request (produce, timing save, approval) is accepted only from the app's own page on this computer. Verified by SC-24. Traces BO-4, BO-2.\n- TO-4: The change adds zero package references and the pages reference zero external resources. Verified by SC-23. Traces BO-4.\n- TO-5: The toolchain's source, checks, limits, settings values and tests are unchanged, and its 251 tests pass. Verified by SC-26. Traces BO-3.\n- TO-6: Every screen and refusal message is Vietnamese under the SC-20 rule. Verified by SC-20. Traces BO-1.\n- TO-7: The automated tests and the sample run need no microphone, no network and no media file in the repository. Verified by SC-27, SC-28. Traces BO-1, BO-3.\n- TO-8: The first-run set-up writes a settings file the toolchain accepts, with the CEO-fixed numbers written as decided and not editable. Verified by T-026 acceptance and SC-30. Traces BO-1, BO-3.\n\n## Scope\n\n### In Scope\n\n- S-001 to S-018: the scope-definition's eighteen approved items (fact sheet form, live banned terms, images, script ticks, browser recording, recording admission, presenter clip, production, timing editor, preview and checklist, approval by hash, verify and post path, Vietnamese screens, local-only operation, origin-restricted state changes, toolchain decides, offline tests, end-to-end sample run). Tasks: see Task Breakdown traces.\n- S-019: On first run a Vietnamese screen asks for the pilot folder, finds ffmpeg, ffprobe and the typeface, computes their SHA-256 and writes the settings file; the CEO-D-1308 and CEO-D-1309 numbers are written as decided and are not editable (CEO-D-1310 item 2). Task: T-026.\n- S-020: An employee operator may press approve on the CEO's written instruction, and the CEO's name is recorded in the approval (CEO-D-1310 item 3). Tasks: T-014, T-015.\n- S-021: The change is committed and pushed on the session branch, and the CEO receives the compare link against main stating that the branch is cut from the unmerged MC-16 branch (feature request, done means). Tasks: T-027, T-028.\n\n### Out of Scope\n\n- X-001 publishing and account actions: agents never publish or act on accounts.\n- X-002 generating the presenter clip and any voice, speech, text-to-speech, cloning, language-model or metered service: CEO-D-1304, CEO-D-1305, CEO-D-1307.\n- X-003 reading product pages or platform data: facts come only from the operator.\n- X-004 hand-editing script sentences: the tool writes the script (CEO-D-1306 item 1).\n- X-005 accounts, multiple users, access from another device or address: one operator on one computer.\n- X-006 changes to the toolchain's checks, limits, refusal rules, settings values or MC-16 known issues: the front end weakens nothing.\n- X-007 editing the CEO-fixed settings numbers from the app: CEO-D-1310 item 2 writes them as decided.\n- X-008 batch, multi-video, multi-presenter or non-Vietnamese production: pilot scope.\n- X-009 frozen Wave 12 and Wave 13 material, the company store database and its container host: frozen by CEO decision.\n- X-010 merging any branch into main and any release or closure decision: owned by gate owners and the CEO.\n- X-011 kit 04 item B7 rewording and the open kit 03 edits: outside the app.\n\n### Deferred\n\n- Recording the employee's own name or a reference to the CEO's written instruction in the approval record: in scope when Q-001 is answered asking for it.\n- A Vietnamese operator guide for the web app replacing the command-line steps of the MC-16 guide: in scope on a product-owner decision.\n- A business measure beyond SC-29, such as minutes from fact sheet to approved video: in scope when the CEO states a measure with a threshold.\n\n## Assumptions\n\n| ID | Assumption | Basis | Impact if false | Confirmed by |\n|---|---|---|---|---|\n| A-001 | The front end builds and runs on the installed .NET 10 SDK and ASP.NET Core 10 shared framework with zero added package references (an orchestrator build on this machine used zero packages) | S-014 | A package needs the CEO's approval by name before T-017 can start | architect |\n| A-002 | The installed ffmpeg converts a browser take into a toolchain-accepted format deterministically (the orchestrator measured identical SHA-256 over two conversions) | S-006 | The admitted digest is unstable, SC-11 fails, and T-009 is redesigned | architect |\n| A-003 | The front end sits in its own assembly outside the toolchain's network-guarded assembly closure, so the toolchain's guard, source and 251 tests stay unchanged | S-016 | The guard or tests must change, which X-006 excludes; a CEO change request is needed | architect |\n| A-004 | The first-run set-up writes the settings file in the format the toolchain already reads, and the toolchain's own validation still refuses values looser than the CEO's | S-019 | A toolchain settings change is needed, which X-006 excludes; T-026 changes | architect |\n| A-005 | An approval pressed by an employee records the CEO's name through the toolchain's existing approver-name field; the app records no further identity unless Q-001 asks for it | S-020 | The approval record changes, possibly inside the toolchain (X-006); T-015 changes | product-owner |\n| A-006 | Starting the app needs no typed command line; any launcher is prepared within the one-time set-up | S-018 | SC-30 fails; a start-up task is added | architect |\n| A-007 | The recording flow can be tested with a code-generated audio stream and no microphone, using the installed browser only, with no package downloaded and no network connection | S-017 | SC-28 needs a CEO-approved download or a manual evidence route (Q-002); T-024 changes | qa |\n| A-008 | A complete one-video sample (fact sheet entries, three images, screenshots, a narration take with sentence pauses, a portrait clip) can be generated by code with installed tools, adding no media file to the repository | S-018 | The sample run needs external media; T-023 is redesigned | qa |\n| A-009 | The Vietnamese reason and next step for each of the fourteen refusal codes come from the MC-16 operator guide's refusal table, with the toolchain's line shown unchanged beside them | S-008 | A wording task for product-owner is added before T-011 | product-owner |\n| A-010 | The triggered database and performance areas need no work beyond the SC-04 bound: the company store is untouched and no other performance expectation is stated | plan-wide | Database or performance design and test tasks are added | architect |\n| A-011 | The toolchain's banned-term check, reached from the front end, answers within 1 s of the last keystroke | S-002 | Design work on the live check is added; SC-04 fails | architect |\n\n## Risks\n\n| ID | Class | Trigger | Impact | Likelihood | Affects | Mitigation | Owner |\n|---|---|---|---|---|---|---|---|\n| R-001 | requirement | The CEO's answer to Q-001 is pending at T-015 or asks for more than the CEO's name in the approval | T-015 rework; a toolchain record change would need a CEO change request (X-006) | medium | T-014, T-015 | T-014 obtains the answer before T-015 | product-owner |\n| R-002 | requirement | Starting the app requires a typed command (A-006 false) | SC-30 fails and BO-1 is unmet | medium | T-001, T-017, T-025 | T-001 designs start-up; T-025 verifies it | architect |\n| R-003 | requirement | The refusal table lacks a Vietnamese reason or next step for one of the fourteen codes (A-009 false) | T-011 waits on new wording | low | T-011 | T-001 maps each code to its table row; gaps go to product-owner | product-owner |\n| R-004 | technical | A needed capability is absent from the installed shared framework (A-001 false) | T-017 waits on a CEO package approval | low | T-001, T-017 | T-001 records the no-package design | architect |\n| R-005 | technical | Browser-take conversion is not deterministic or not accepted by the toolchain (A-002 false) | Reuse refusal by digest is unreliable; SC-11 fails | low | T-009 | T-001 confirms A-002; T-004 verifies SC-11 | architect |\n| R-006 | technical | The front end enters the toolchain's guarded closure or needs a toolchain change (A-003 or A-004 false) | X-006 conflict; toolchain tests at risk | low | T-001, T-018, T-026, T-022 | T-001 confirms the boundary; T-022 verifies SC-26 | architect |\n| R-007 | technical | The live banned-term result arrives later than 1 s after the last keystroke (A-011 false) | SC-04 fails | medium | T-005 | T-001 designs the live check path; T-004 measures it | architect |\n| R-008 | technical | The no-microphone recording test needs a downloaded automation package (A-007 false) | SC-28 cannot be met without a CEO decision | medium | T-002, T-024 | T-002 names the approach or raises Q-002 | qa |\n| R-009 | technical | Part of the sample cannot be generated by code (A-008 false) | The sample run and SC-29 are held | low | T-023, T-025 | T-002 names every fixture and its generator | qa |\n| R-010 | technical | The design needs persistence beyond pilot-folder files or touches the company store (A-010 false) | Database design and gate work added; X-009 conflict | low | T-001 | T-001 states the persistence boundary | architect |\n| R-011 | dependency | The unmerged MC-16 branch changes after this branch is cut | Rebase and a re-run of the toolchain tests | low | plan-wide | T-022 re-runs the 251 tests on the final base; T-028 states the base | orchestrator |\n| R-012 | dependency | The CEO's Design Gate decision is delayed or declines the design | All implementation waits or returns to design | low | T-017, T-023 | T-001 maps every SC to a design element for the decision | orchestrator |\n| R-013 | dependency | A required installed tool (ffmpeg, ffprobe, typeface, browser with MediaRecorder) is missing or its digest changes | Set-up or the sample run stops | low | T-026, T-025 | T-026 names a missing tool in Vietnamese | architect |\n| R-014 | security | A foreign page open in the same browser sends a produce, timing or approval request to the loopback app | An unapproved production or approval, against D-002 of the decision record | medium | T-020, T-011, T-012, T-015 | T-020 refuses foreign origins; T-019 verifies SC-24 | architect |\n| R-015 | security | The listener binds beyond 127.0.0.1, or the app or a job process opens an outbound connection | CEO-D-1310 item 1 breached | low | T-017, T-018 | T-019 verifies SC-21, SC-22 | architect |\n| R-016 | security | An uploaded file name carries path segments | A write outside the pilot folder | medium | T-003, T-006, T-009, T-010 | T-001 defines the upload trust boundary; T-019 and T-021 check it | architect |\n| R-017 | operational | An employee approves without the CEO's written instruction | A publication without the CEO's approval | low | T-015 | T-015 states the rule on the approval screen; residual risk accepted by the CEO | product-owner |\n| R-018 | delivery | The compare link against main also shows the unmerged MC-16 commits | Review of MC-17 is confused with MC-16 | high | T-028 | T-028 states the branch base in the message | orchestrator |\n\n## Task Breakdown\n\n### T-001 Produce the MC-17 technical design package\n\n- Owner: architect\n- Complexity: L (confidence: medium)\n- Depends on: none\n- Traces to: S-001, S-005, S-006, S-014, S-015, S-016, S-019, S-020\n- Status: ready\n- Description: A technical design exists that states the front end's boundary with the delivered toolchain, its network exposure, its request-origin rule, the browser recording capture and its one conversion, the first-run set-up, start-up without a typed command, the upload trust boundary, the persistence boundary and the approval record content.\n- Acceptance Criteria:\n  - A-001, A-002, A-003, A-004, A-006, A-010 and A-011 are each recorded as confirmed, or replaced by a decision record at status Proposed\n  - Each of SC-01 to SC-30 maps to at least one design element\n  - The design adds zero package references, or names each one for a CEO decision\n  - The design changes no toolchain source, check, limit, settings value or test (X-006)\n- Gate: Design Gate\n\n### T-002 Produce the MC-17 validation plan\n\n- Owner: qa\n- Complexity: M (confidence: medium)\n- Depends on: T-001\n- Traces to: S-001, S-002, S-003, S-004, S-005, S-006, S-007, S-008, S-009, S-010, S-011, S-012, S-013, S-014, S-015, S-016, S-017, S-018\n- Status: ready\n- Description: A validation plan maps each of SC-01 to SC-30 to one test level and one evidence item, with every fixture produced by code.\n- Acceptance Criteria:\n  - 30 of 30 criteria carry a test level and an evidence item\n  - The recording-flow test needs no microphone, no network connection and no downloaded package (A-007 confirmed), or Q-002 is raised naming the package\n  - Every fixture the plan names is produced by code, and A-008 is recorded as confirmed or not\n- Gate: Design Gate\n\n### T-003 Build the fact-sheet form step\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: medium)\n- Depends on: T-018\n- Traces to: S-001, S-013\n- Status: ready\n- Description: The operator enters every header and per-row field of the fact sheet and attaches each row's screenshot in a Vietnamese form, the toolchain's fact sheet check decides, and no data file is edited by hand.\n- Acceptance Criteria:\n  - SC-01, SC-02 and SC-03 pass in the change's automated tests\n  - Labels and messages of the step meet the SC-20 rule\n- Gate: Review Gate\n\n### T-004 Verify the step-screen acceptance criteria\n\n- Owner: qa\n- Complexity: L (confidence: medium)\n- Depends on: T-005, T-012, T-016\n- Traces to: S-001, S-002, S-003, S-004, S-005, S-006, S-007, S-008, S-009, S-010, S-011, S-012, S-013\n- Status: ready\n- Description: A verification record states pass or fail, with evidence, for each of SC-01 to SC-20 on the built app.\n- Acceptance Criteria:\n  - 20 of 20 criteria have a recorded result and the evidence item T-002 names\n  - SC-04 records the measured time from last keystroke to the shown term\n  - Every fail names the task that owns the correction\n- Gate: Verification Gate\n\n### T-005 Show banned terms live in the form\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-003\n- Traces to: S-002, A-011\n- Status: assumption-dependent\n- Description: As the operator types a fact value or an override, and on each script sentence, the form names every banned term with its class as the toolchain's own check and list decide, and the page holds no copy of the list.\n- Acceptance Criteria:\n  - SC-04 and SC-05 pass in the change's automated tests\n  - The resources the app serves contain no copy of the banned-term list\n- Gate: Review Gate\n\n### T-006 Build the product images step\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: high)\n- Depends on: T-003\n- Traces to: S-003, S-013\n- Status: ready\n- Description: The operator attaches exactly the three images named in the fact sheet, and the step names any missing or unnamed file before production is offered.\n- Acceptance Criteria:\n  - SC-06 passes in the change's automated tests\n  - Labels and messages of the step, including the missing-file and unnamed-file messages, meet the SC-20 rule\n- Gate: Review Gate\n\n### T-007 Build the script review step\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: medium)\n- Depends on: T-003\n- Traces to: S-004, S-013\n- Status: ready\n- Description: The toolchain's generated script appears sentence by sentence in its order with each source line, and the next step opens only when every source line is ticked; no sentence is editable (X-004).\n- Acceptance Criteria:\n  - SC-07 passes in the change's automated tests\n  - The step offers zero controls that edit a sentence\n- Gate: Review Gate\n\n### T-008 Build the in-browser narration recording step\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: medium)\n- Depends on: T-007\n- Traces to: S-005, S-013\n- Status: ready\n- Description: The operator records the narration in the installed browser with a visible timer; the take stops by itself at 60.0 s, plays back from start to end, and a re-record replaces it; upload stays an option, and no voice is generated.\n- Acceptance Criteria:\n  - SC-08 and SC-09 pass in the change's automated tests\n  - The change contains zero calls to a speech, voice or generative service (X-002)\n- Gate: Review Gate\n\n### T-009 Admit the narration recording to the toolchain\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-008\n- Traces to: S-006, A-002\n- Status: assumption-dependent\n- Description: An uploaded recording reaches the toolchain byte for byte; a browser take is converted once into a toolchain-accepted format; the toolchain's reuse check decides on the admitted file's digest.\n- Acceptance Criteria:\n  - SC-10 and SC-11 pass in the change's automated tests\n  - No uploaded file is converted in any test case\n- Gate: Review Gate\n\n### T-010 Build the presenter clip step\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: medium)\n- Depends on: T-009\n- Traces to: S-007, S-013\n- Status: ready\n- Description: The operator attaches the presenter clip, and the step shows the toolchain's portrait result and the length difference from the admitted recording in seconds.\n- Acceptance Criteria:\n  - SC-12 passes in the change's automated tests\n  - The tolerance applied is the toolchain's 0.5 s setting; the app holds no tolerance value of its own\n- Gate: Review Gate\n\n### T-011 Run production with Vietnamese outcomes\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-006, T-010, T-020\n- Traces to: S-008, S-013, A-009\n- Status: assumption-dependent\n- Description: The operator starts production, sees progress until the toolchain ends, and sees the toolchain's line unchanged with a Vietnamese reason and next step, for success and for each of the fourteen refusal codes.\n- Acceptance Criteria:\n  - SC-13 passes in 15 of 15 cases\n  - A produce request is accepted only under T-020's rule\n- Gate: Review Gate\n\n### T-012 Build the manual timing editor\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: medium)\n- Depends on: T-011\n- Traces to: S-009, S-013\n- Status: ready\n- Description: When production stops for pauses not matching the sentence count, an editor with one start and one end per sentence opens, and the toolchain checks what the operator enters.\n- Acceptance Criteria:\n  - SC-14 passes in the change's automated tests\n  - A timing save is accepted only under T-020's rule\n- Gate: Review Gate\n\n### T-013 Build the preview and kit checklist step\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: medium)\n- Depends on: T-011\n- Traces to: S-010, S-013\n- Status: ready\n- Description: The produced video plays at 9:16 from the package's video file beside its frame image and SHA-256, with the 27-item kit 04 checklist showing B8 pre-ticked and B3, B5 and the other 24 items unticked.\n- Acceptance Criteria:\n  - SC-15 and SC-16 pass\n  - Labels and messages of the step, including the checklist item texts, meet the SC-20 rule\n- Gate: Review Gate\n\n### T-014 Obtain the CEO's answer on the approval record content\n\n- Owner: product-owner\n- Complexity: XS (confidence: high)\n- Depends on: none\n- Traces to: S-011, S-020\n- Status: ready\n- Description: Q-001 is closed by a recorded CEO answer, or is recorded as accepted with A-005 standing.\n- Acceptance Criteria:\n  - The answer states which names and references an employee-pressed approval records\n  - The answer is cited by its decision record entry identifier\n- Gate: Design Gate\n\n### T-015 Build approval by hash\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-013, T-014\n- Traces to: S-011, S-020, A-005\n- Status: assumption-dependent\n- Description: Approval is offered only with 26 of 26 operator items ticked; it sends the SHA-256 shown beside the preview with the CEO's name as approver, also when an employee presses approve on the CEO's written instruction; the toolchain recomputes and decides.\n- Acceptance Criteria:\n  - SC-17 and SC-18 pass\n  - Every approval record the tests produce names the CEO\n  - The approval screen states in Vietnamese that approval is the CEO's, in person or by written instruction\n- Gate: Review Gate\n\n### T-016 Show the verify result and the file to post\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: high)\n- Depends on: T-015\n- Traces to: S-012, S-013\n- Status: ready\n- Description: After approval the page shows the toolchain's verify line with the approved SHA-256 and approver, and the path of the video file to post by hand, with no action that sends the file anywhere.\n- Acceptance Criteria:\n  - SC-19 passes, with zero send controls and zero send routes\n  - Labels and messages of the step meet the SC-20 rule, with the toolchain's verify line shown unchanged beside its Vietnamese label\n- Gate: Review Gate\n\n### T-017 Stand up the loopback-only front end\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-001, T-002\n- Traces to: S-013, S-014, A-001, A-003, A-006\n- Status: assumption-dependent\n- Description: The front end starts on the operator's computer without a typed command, listens on 127.0.0.1 only, opens in the installed browser on a Vietnamese home screen, loads nothing from another address, and adds no package reference.\n- Acceptance Criteria:\n  - The listener address list contains 127.0.0.1 only\n  - Zero package references added against the prior version (SC-23)\n  - Zero external resource addresses in the served pages\n  - The toolchain's network guard and assembly closure are unchanged\n- Gate: Review Gate\n\n### T-018 Connect the front end to the delivered toolchain\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-026\n- Traces to: S-014, S-016, A-003\n- Status: assumption-dependent\n- Description: Each decision the front end shows comes from the delivered toolchain's check, script, produce, approve and verify verbs or its banned-term and admission checks, with result line and exit status passed through unchanged, and the processes it starts own zero sockets.\n- Acceptance Criteria:\n  - Zero toolchain source or test files changed in the diff\n  - Socket count of the started job processes is zero under the toolchain's socket harness (SC-22)\n  - For each verb, the shown result line equals the printed line\n- Gate: Review Gate\n\n### T-019 Verify network exposure and request-origin refusal\n\n- Owner: qa\n- Complexity: M (confidence: medium)\n- Depends on: T-012, T-016, T-023\n- Traces to: S-014, S-015\n- Status: ready\n- Description: A verification record states the result, with evidence, for SC-21 to SC-24 during the sample run.\n- Acceptance Criteria:\n  - SC-21 to SC-24 each have a recorded result: socket harness record with its sampling interval, manifest comparison, request log, pilot-folder hashes before and after\n  - An upload whose name carries path segments writes nothing outside the pilot folder (R-016)\n- Gate: Verification Gate\n\n### T-020 Refuse state-changing requests from other origins\n\n- Owner: dev-1-implement\n- Complexity: S (confidence: medium)\n- Depends on: T-017\n- Traces to: S-015\n- Status: ready\n- Description: Produce, timing save and approval requests are accepted only from the app's own page on this computer; any other is refused and changes no file.\n- Acceptance Criteria:\n  - The six foreign requests of SC-24 per kind are refused in the change's automated tests\n  - Pilot-folder file hashes are equal before and after the refused requests\n- Gate: Review Gate\n\n### T-021 Review the MC-17 change\n\n- Owner: dev-2-reviewer\n- Complexity: L (confidence: medium)\n- Depends on: T-005, T-012, T-016, T-023\n- Traces to: S-014, S-015, S-016\n- Status: ready\n- Description: A review package records severity-classified findings and a verdict for the whole change, including the security review of the loopback exposure and the upload trust boundary.\n- Acceptance Criteria:\n  - Every changed file is covered by the review\n  - Every finding carries a severity\n  - The review records whether any toolchain check, limit or setting is weakened\n  - A verdict is recorded\n- Gate: Review Gate\n\n### T-022 Verify the toolchain keeps deciding\n\n- Owner: qa\n- Complexity: M (confidence: medium)\n- Depends on: T-016\n- Traces to: S-016\n- Status: ready\n- Description: A verification record shows the app's result equals the toolchain's on every refusal and approval fixture, and the toolchain's tests pass unchanged on the final branch base.\n- Acceptance Criteria:\n  - SC-25 shows zero differences\n  - SC-26 shows 251 passing, and the toolchain test folder shows additions only\n- Gate: Verification Gate\n\n### T-023 Generate the code-built pilot sample\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-002\n- Traces to: S-017, S-018, A-008\n- Status: assumption-dependent\n- Description: Code produces a complete one-video sample outside the repository: fact sheet entries, three images, screenshots, a narration take with sentence pauses and a portrait clip within tolerance.\n- Acceptance Criteria:\n  - The sample is produced by code on a machine with no network connection\n  - Zero media files are added to the repository (SC-27)\n- Gate: Review Gate\n\n### T-024 Verify the tests run offline without a microphone\n\n- Owner: qa\n- Complexity: M (confidence: low)\n- Depends on: T-005, T-012, T-016, T-023\n- Traces to: S-017, A-007\n- Status: assumption-dependent\n- Description: A verification record states the result, with evidence, for SC-27 and SC-28.\n- Acceptance Criteria:\n  - SC-27: scan of added files finds zero media files, and each fixture is produced by test code\n  - SC-28: the recording-flow test passes on a machine with no microphone, with socket count zero\n- Gate: Verification Gate\n\n### T-025 Run the sample end to end in the browser\n\n- Owner: qa\n- Complexity: M (confidence: low)\n- Depends on: T-005, T-012, T-016, T-023\n- Traces to: S-018, A-006\n- Status: assumption-dependent\n- Description: A recorded browser run on the code-built sample reaches steps 1 to 7, including the record step and the first-run set-up, and the verify line shows the approved SHA-256.\n- Acceptance Criteria:\n  - SC-29: seven of seven steps reached; approved and verified SHA-256 equal\n  - SC-30: the walkthrough log shows zero command lines typed and zero JSON files edited, start-up included\n- Gate: Verification Gate\n\n### T-026 Build the first-run setup screen\n\n- Owner: dev-1-implement\n- Complexity: M (confidence: low)\n- Depends on: T-017\n- Traces to: S-019, A-004\n- Status: assumption-dependent\n- Description: On first run a Vietnamese screen takes the pilot folder, finds ffmpeg, ffprobe and the typeface, computes their SHA-256 and writes a settings file the toolchain accepts, with the CEO-fixed numbers written as decided.\n- Acceptance Criteria:\n  - The written settings file passes the toolchain's own settings validation\n  - The screen has zero input controls for safe area, caption size, overlay size, clip tolerance or caption page minimum (X-007)\n  - A missing tool is named in Vietnamese\n  - A pilot folder inside the repository is refused\n- Gate: Review Gate\n\n### T-027 Write the MC-17 release note\n\n- Owner: documentation\n- Complexity: S (confidence: high)\n- Depends on: T-004, T-019, T-021, T-022, T-024, T-025\n- Traces to: S-021\n- Status: ready\n- Description: A release note records each SC result with its evidence, the known issues, the residual risks with owners, and the branch base.\n- Acceptance Criteria:\n  - 30 of 30 SC results are cited with their evidence\n  - Every open risk is listed with its owner\n  - The note states that the branch is cut from the unmerged MC-16 branch\n- Gate: Closure Gate\n\n### T-028 Deliver the compare link to the CEO\n\n- Owner: orchestrator\n- Complexity: XS (confidence: high)\n- Depends on: T-027\n- Traces to: S-021\n- Status: ready\n- Description: The change is pushed on the session branch, and the CEO holds the compare link against main with the branch base stated; nothing is merged (X-010).\n- Acceptance Criteria:\n  - The compare link is delivered to the CEO\n  - The message states that the base is the unmerged MC-16 branch\n  - The main branch is unchanged by this run\n- Gate: Closure Gate\n\n## Dependencies\n\n### 8.1 Dependency Edges\n\n| From | To | Type | Justification |\n|---|---|---|---|\n| CEO (owner of the unmerged MC-16 branch) | T-001 | external | The design binds to the delivered toolchain as it stands on that branch |\n| T-001 | T-002 | produces-consumes | The validation plan maps the design's elements to tests |\n| T-001 | T-017 | produces-consumes | The front end realizes the design |\n| T-002 | T-017 | contract | The build's tests bind to the validation plan |\n| CEO (Design Gate decision) | T-017 | policy-gate | Implementation starts only after the Design Gate |\n| T-002 | T-023 | produces-consumes | The sample realizes the fixtures the plan names |\n| CEO (Design Gate decision) | T-023 | policy-gate | Implementation starts only after the Design Gate |\n| CEO (answer to Q-001) | T-014 | external | Only the CEO can answer Q-001 |\n| T-017 | T-020 | contract | The origin rule guards the front end's requests |\n| T-017 | T-026 | produces-consumes | The set-up screen is served by the front end |\n| CEO (operator machine installs) | T-026 | external | The set-up finds the installed media tools and typeface |\n| T-026 | T-018 | produces-consumes | The toolchain reads the settings file the set-up writes |\n| T-018 | T-003 | contract | The form's check is the toolchain's fact sheet check |\n| T-003 | T-005 | produces-consumes | The live check runs on values typed in the form |\n| T-003 | T-006 | produces-consumes | The image step reads the fact sheet's images-used field |\n| T-003 | T-007 | produces-consumes | The script is generated from the entered fact sheet |\n| T-007 | T-008 | produces-consumes | The operator records the ticked script |\n| T-008 | T-009 | produces-consumes | Admission takes the browser take |\n| T-009 | T-010 | produces-consumes | The clip check needs the admitted recording's length |\n| T-006 | T-011 | produces-consumes | Production needs the three images |\n| T-010 | T-011 | produces-consumes | Production needs the admitted clip |\n| T-020 | T-011 | contract | The produce request is guarded by the origin rule |\n| T-011 | T-012 | produces-consumes | The editor opens on production's pause-mismatch stop |\n| T-011 | T-013 | produces-consumes | Preview shows the produced package |\n| T-013 | T-015 | produces-consumes | Approval sends the SHA-256 shown beside the preview |\n| T-014 | T-015 | decision-gate | The approval record content depends on the CEO's answer |\n| T-015 | T-016 | produces-consumes | Verify runs on the approved video |\n| T-005 | T-004 | verification | T-004 verifies SC-04 and SC-05 |\n| T-012 | T-004 | verification | T-004 verifies SC-14 |\n| T-016 | T-004 | verification | T-004 verifies SC-19 and the steps before it |\n| T-012 | T-019 | verification | SC-24 covers timing save |\n| T-016 | T-019 | verification | SC-21 to SC-24 run on the complete app |\n| T-023 | T-019 | produces-consumes | SC-21 and SC-22 are measured during the sample run |\n| T-005 | T-021 | verification | The review covers the live check |\n| T-012 | T-021 | verification | The review covers the timing editor |\n| T-016 | T-021 | verification | The review covers the complete step flow |\n| T-023 | T-021 | verification | The review covers the sample generator |\n| T-016 | T-022 | verification | SC-25 runs refusal and approval fixtures through the complete app |\n| T-005 | T-024 | verification | SC-27 scans the complete change |\n| T-012 | T-024 | verification | SC-27 scans the complete change |\n| T-016 | T-024 | verification | SC-28 tests the record flow within the complete app |\n| T-023 | T-024 | produces-consumes | SC-27 inspects the code-built fixtures |\n| T-005 | T-025 | verification | The sample run passes through step 1's live check |\n| T-012 | T-025 | verification | The sample run may stop at the timing editor |\n| T-016 | T-025 | verification | The sample run ends at verify |\n| T-023 | T-025 | produces-consumes | The run uses the code-built sample |\n| CEO (operator machine installs) | T-025 | external | The run uses the installed browser and media tools |\n| T-004 | T-027 | produces-consumes | The note cites SC-01 to SC-20 results |\n| T-019 | T-027 | produces-consumes | The note cites SC-21 to SC-24 results |\n| T-021 | T-027 | produces-consumes | The note cites the review verdict |\n| T-022 | T-027 | produces-consumes | The note cites SC-25 and SC-26 results |\n| T-024 | T-027 | produces-consumes | The note cites SC-27 and SC-28 results |\n| T-025 | T-027 | produces-consumes | The note cites SC-29 and SC-30 results |\n| T-027 | T-028 | produces-consumes | The pushed branch carries the release note |\n\n### 8.2 External Dependencies\n\n| Responsible party | What is needed | Blocks |\n|---|---|---|\n| CEO (owner of the unmerged MC-16 branch) | The delivered toolchain unchanged on that branch during MC-17 (R-011) | T-001 |\n| CEO (Design Gate decision) | Approval of the T-001 design (R-012) | T-017, T-023 |\n| CEO (answer to Q-001) | Approval record content for an employee-pressed approval (R-001) | T-014 |\n| CEO (operator machine installs) | As owner of the operator machine: installed .NET 10 SDK with ASP.NET Core 10, ffmpeg, ffprobe, the typeface and a browser with MediaRecorder (R-013) | T-026, T-025 |\n\n### 8.3 Implementation Order\n\nWaves are computed over the task-to-task edges of 8.1; an external edge holds its target task within that task's wave until the party in 8.2 delivers.\n\n- Wave 1: T-001, T-014\n- Wave 2: T-002\n- Wave 3: T-017, T-023\n- Wave 4: T-020, T-026\n- Wave 5: T-018\n- Wave 6: T-003\n- Wave 7: T-005, T-006, T-007\n- Wave 8: T-008\n- Wave 9: T-009\n- Wave 10: T-010\n- Wave 11: T-011\n- Wave 12: T-012, T-013\n- Wave 13: T-015\n- Wave 14: T-016\n- Wave 15: T-004, T-019, T-021, T-022, T-024, T-025\n- Wave 16: T-027\n- Wave 17: T-028\n\n## Suggested Workflow\n\nSelected workflow: `implement-feature`\n\nSelected because: MC-17 is new functionality (a front end on the delivered toolchain), routed as `/implement`; this plan recommends the workflow and does not start it.\n\n| Phase | Tasks |\n|---|---|\n| `solution-design-and-risk-assessment` | T-001, T-002, T-014 |\n| `implementation` | T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-015, T-016, T-017, T-018, T-020, T-023, T-026 |\n| `quality-review` | T-004, T-019, T-021, T-022, T-024, T-025 |\n| `documentation-and-release-handoff` | T-027, T-028 |\n\n| Gate | Required owners |\n|---|---|\n| Scope Gate | product-owner, business-analyst (decided: CEO-D-1310) |\n| Planning Gate | tech-lead, orchestrator (this plan is its evidence) |\n| Design Gate | architect, tech-lead; producer exclusion leaves tech-lead; the CEO decides per the feature request |\n| Review Gate | dev-2-reviewer, qa |\n| Verification Gate | qa (see Q-003) |\n| Closure Gate | orchestrator, documentation |\n\n## Required Capabilities\n\n### 10.1 Agent Capabilities\n\n| Capability | Tasks | Owning agent | Proficiency |\n|---|---|---|---|\n| technical-approach-definition | T-001 | architect | Primary |\n| architecture-decision-authoring | T-001 | architect | Primary |\n| validation-design | T-002 | qa | Primary |\n| acceptance-authority | T-014 | product-owner | Primary |\n| implementation-delivery | T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-015, T-016, T-017, T-018, T-020, T-023, T-026 | dev-1-implement | Primary |\n| quality-verification | T-004, T-019, T-022, T-024, T-025 | qa | Primary |\n| code-review | T-021 | dev-2-reviewer | Primary |\n| release-communication | T-027 | documentation | Primary |\n| run-coordination | T-028 | orchestrator | Primary |\n\n### 10.2 Required Skills\n\n| Skill | File | Tasks | Level |\n|---|---|---|---|\n| S01 | skills/architecture/clean-architecture-checklist.md | T-001, T-021 | Primary |\n| S02 | skills/business/domain-modeling.md | T-014 | Secondary |\n| S03 | skills/dotnet/engineering-playbook.md | T-001, T-003, T-005, T-006, T-007, T-008, T-009, T-010, T-011, T-012, T-013, T-015, T-016, T-017, T-018, T-020, T-023, T-026 | Primary |\n| S06 | skills/database/database-engineering.md | T-001 | Advisory |\n| S07 | skills/testing/testing-strategy.md | T-002, T-004, T-019, T-022, T-024, T-025 | Primary |\n| S08 | skills/performance/performance-engineering.md | T-004 | Advisory |\n| S09 | skills/security/secure-engineering.md | T-001, T-017, T-018, T-019, T-020, T-021 | Primary |\n| S10 | skills/git/git-collaboration.md | T-027, T-028 | Secondary |\n| S11 | skills/logging/observability-logging.md | T-011, T-027 | Advisory |\n| S12 | skills/error-handling/error-handling-strategy.md | T-011, T-012 | Secondary |\n\n## Acceptance Criteria\n\n1. BO-1 (success measure, CEO-D-1310 item 4): on a code-generated sample the operator reaches steps 1 to 7 in the installed browser, including the record step, and the verify line shows the approved SHA-256 (SC-29). Evidence: the reviewer's recorded browser run with equal hashes.\n2. BO-1: during the sample run the operator types no command line and edits no JSON file after the first-run set-up, start-up included (SC-30). Evidence: the walkthrough log.\n3. BO-1: SC-01 to SC-20 each pass on the built app. Evidence: the step verification record with one evidence item per criterion.\n4. BO-2: every approval names the CEO and is decided by the toolchain on the shown SHA-256; a one-byte change is refused; the app has no send control or route (SC-18, SC-19). Evidence: browser run, approval record count, route inspection.\n5. BO-3: zero cases where the app shows a pass the toolchain refuses, and the 251 toolchain tests pass unchanged (SC-25, SC-26). Evidence: fixture comparison log and test run output.\n6. BO-3: the tests run offline on code-built fixtures without a microphone, and no media file is added (SC-27, SC-28). Evidence: file scan and test run on a machine with no microphone.\n7. BO-4: listener on 127.0.0.1 only, zero outbound connections, zero sockets in job processes, zero added packages and external resources, and foreign state-changing requests refused with the pilot folder unchanged (SC-21 to SC-24). Evidence: socket harness record, manifest comparison, request log and folder hashes.\n\n## Definition of Done\n\n- [ ] Plan acceptance criteria 1 to 7 are verified with recorded evidence\n- [ ] Scope, Planning, Design, Review, Verification and Closure Gates are decided, with the deciding owner recorded for each\n- [ ] Every task's acceptance criteria are satisfied, or formally waived with the waiver recorded\n- [ ] A-001 to A-011 are each confirmed or converted to a recorded decision\n- [ ] R-001 to R-018 are each closed or accepted with a named owner\n- [ ] Q-001 to Q-003 are each closed or explicitly accepted with the owner recorded\n- [ ] The release note is published in the run evidence\n- [ ] Durable outcomes are recorded to memory per `memory/memory-governance.md`\n\n## Open Questions\n\n| ID | Question | Blocking | Owner | Affects |\n|---|---|---|---|---|\n| Q-001 | When an employee presses approve on the CEO's written instruction, does the approval record carry only the CEO's name, or also the employee's name and a reference to the instruction? | non-blocking | product-owner (the CEO answers) | T-014, T-015 |\n| Q-002 | If the no-microphone recording-flow test (SC-28) cannot run without a downloaded browser-automation package, does the CEO approve that package by name, or accept a recorded manual run as the evidence? | non-blocking | product-owner (the CEO answers) | T-002, T-024 |\n| Q-003 | Framework gap: the implement-feature Verification Gate names qa as its only owner, while qa produces the verification evidence (T-004, T-019, T-022, T-024, T-025); under the Producer Exclusion Rule, who decides it? | non-blocking | orchestrator | T-004, T-019, T-022, T-024, T-025 |",
+        "digest": "sha256:b274397f103803e9b8edf9a8cd5ad4e6",
+        "produced_by": "execution-planning"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the change this agent designs against: a change request, a feature request, or a business intent. Without one there is no requested change to design, and designing anyway would mean inventing the requirement."
+  },
+  "prior_validation": {
+    "attempt": 2,
+    "report": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/validation-report.json",
+    "result": "fail",
+    "existing_artifacts": [
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-004.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-006.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md"
+    ],
+    "failures": [
+      {
+        "id": "D2.6",
+        "severity": "Correctable",
+        "quality_ref": "A1.6",
+        "requirement": "Identifiers use the zero-padded three-digit scheme",
+        "detail": "malformed: ['D-1001', 'D-1304', 'D-1305', 'D-1306', 'D-1307', 'D-1308', 'D-1309', 'D-1310']"
+      },
+      {
+        "id": "D4.3",
+        "severity": "Blocking",
+        "quality_ref": "A5.3",
+        "requirement": "Every requirement traces to a statement identifier",
+        "detail": "untraced: ['Acceptance criteria: SC-01 to SC-30 as set by product-owner and approved at the S']"
+      },
+      {
+        "id": "D6.5",
+        "severity": "Blocking",
+        "quality_ref": "A6.6",
+        "requirement": "Every speculative impact has a matching risk",
+        "detail": "speculative without risk: ['M-003', 'M-015']"
+      },
+      {
+        "id": "D8.3",
+        "severity": "Blocking",
+        "quality_ref": "A8.4",
+        "requirement": "Every eliminated option names the hard constraint it violates",
+        "detail": "no constraint cited: ['O-020']"
+      }
+    ]
+  },
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "execution-plan",
+      "reference": "runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md",
+      "produced_by": "execution-planning",
+      "artifact": "execution-plan.md",
+      "bytes": 43621,
+      "sections": {
+        "read_first": [
+          "Technical Objectives",
+          "Scope",
+          "Task Breakdown",
+          "Dependencies",
+          "Acceptance Criteria",
+          "Definition of Done",
+          "Open Questions"
+        ],
+        "on_demand": [
+          "Executive Summary",
+          "Business Objectives",
+          "Assumptions",
+          "Risks",
+          "Suggested Workflow",
+          "Required Capabilities",
+          "Traceability Matrix"
+        ]
+      }
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-022d0492a75a/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:3fa3e025ddce02c0664375f9ad4a7050",
+    "bytes": 33557,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database",
+        "performance",
+        "security"
+      ],
+      "declared": [
+        "security"
+      ]
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "solution-design-and-risk-assessment"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-27T01:23:38Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/technical-design.md",
+        "digest": "sha256:ef4bb02c7c6453013cf58a10b5c6f746",
+        "supplies": null,
+        "bytes": 6560,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/architecture-decision-record.md",
+        "digest": "sha256:0c041c91ada2562ca494714071fc3e87",
+        "supplies": null,
+        "bytes": 809,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "domain-model/agent-specification.md",
+        "digest": "sha256:ce2f6da48f89ce2732a3a198a6513205",
+        "supplies": null,
+        "bytes": 2277,
+        "read": "on-demand",
+        "read_reason": "the vocabulary and lifecycle the contracts are stated in; consult when a contract term is unclear"
+      },
+      {
+        "path": "memory/architecture.md",
+        "digest": "sha256:380aeb08f8d70c9ccaa2a75300182bf1",
+        "supplies": null,
+        "bytes": 1066,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "dependency-map.md",
+        "digest": "sha256:d6ec0efcde90f86e21a648f58af0f9d3",
+        "supplies": null,
+        "bytes": 3376,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:11b68469cf9e593c79e0dc76de8cb64f",
+    "input_digest": "sha256:774300c5fff552255888b80292d4a999",
+    "inputs": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-17-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-17-feature-request.md",
+        "digest": "sha256:a14fe9e6638fa76cbc0a7ce39f5550fd"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-17-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-17-business-intent.md",
+        "digest": "sha256:5cdc471a170c1142945cad022920cdc5"
+      },
+      {
+        "type": "execution-plan",
+        "reference": "runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-17-pilot-web-fffc59/.claude/runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md",
+        "digest": "sha256:b274397f103803e9b8edf9a8cd5ad4e6"
+      }
+    ],
+    "unnarrowed": [
+      "dependency-map.md",
+      "domain-model/agent-specification.md",
+      "memory/architecture.md",
+      "runtime/README.md",
+      "templates/architecture-decision-record.md",
+      "templates/technical-design.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "dependency-map.md",
+      "memory/architecture.md",
+      "templates/architecture-decision-record.md",
+      "templates/technical-design.md"
+    ],
+    "read_on_demand": [
+      "domain-model/agent-specification.md",
+      "runtime/README.md",
+      "workflows/implement-feature.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 177472,
+    "bytes_required": 13360,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:cba3dbd49343567cfbb43daf1c85a200",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/result-envelope.json",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-*.md",
+      "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/review-package-*.md"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": false
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution",
+      "external system, repository, or ticketing access",
+      "write production code, tests, migrations, scripts, or configuration",
+      "apply patches or edit application modules",
+      "accept or approve its own architecture decision records",
+      "approve product scope without product-owner authority",
+      "execute QA, review, or release activities",
+      "execute workflows or planned work",
+      "access external systems directly",
+      "produce the executable task breakdown owned by the planner"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "analyze the current architecture in relation to requested work",
+        "identify impacted modules, interfaces, dependencies, and integration points",
+        "define and justify the technical approach for a requested change",
+        "evaluate options against constraints and quality attributes",
+        "recommend reusable components and justify reuse or its rejection",
+        "author architecture decision records at status Proposed",
+        "define sequencing constraints and architectural prerequisites",
+        "identify structural, operational, security, performance, and migration risks",
+        "estimate effort at architecture and delivery-planning granularity"
+      ],
+      "prohibited": [
+        "write production code, tests, migrations, scripts, or configuration",
+        "apply patches or edit application modules",
+        "accept or approve its own architecture decision records",
+        "approve product scope without product-owner authority",
+        "execute QA, review, or release activities",
+        "execute workflows or planned work",
+        "access external systems directly",
+        "produce the executable task breakdown owned by the planner"
+      ]
+    },
+    "determinism": {
+      "contract": "Identical approved inputs and an identical architecture context snapshot must produce the same impacted-module set, the same option set, the same selected approach, and the same decision records.",
+      "identifierSchemes": {
+        "statements": "S-<zero-padded-sequence>",
+        "facts": "F-<zero-padded-sequence>",
+        "assumptions": "A-<zero-padded-sequence>",
+        "constraints": "C-<zero-padded-sequence>",
+        "modules": "M-<zero-padded-sequence>",
+        "options": "O-<zero-padded-sequence>",
+        "decisions": "D-<zero-padded-sequence>",
+        "risks": "R-<zero-padded-sequence>",
+        "planSteps": "P-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "selectionRule": "The selected option is the highest-scoring option under the recorded evaluation criteria; ties break toward the option with the smaller impact surface, then toward the lower option identifier.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied architecture context or inputs."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 3,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "technical-design.md",
+    "artifact_path": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    "template_ref": "templates/technical-design.md",
+    "contract_ref": "agents/architect/output.md",
+    "quality_ref": "agents/architect/quality.md",
+    "validator": "design_validator",
+    "result_envelope_path": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/result-envelope.json",
+    "conditional_artifacts": [
+      {
+        "artifact": "architecture-decision-record.md",
+        "template_ref": "templates/architecture-decision-record.md",
+        "contract_ref": "agents/architect/output.md",
+        "condition": "One record per architecture-significant decision, emitted at status Proposed. Acceptance belongs to the Design Gate owners, never to this agent.",
+        "artifact_path_glob": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-*.md",
+        "naming": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-<identifier>.md"
+      },
+      {
+        "artifact": "review-package.md",
+        "template_ref": "templates/review-package.md",
+        "contract_ref": "agents/architect/output.md",
+        "condition": "Emitted only for review-pull-request/structural-compliance, where this agent applies the structural and security lens and the findings are classified under the architecture and security categories. runtime/review_package_validator.py already contracts this agent as a permitted producer of review-package.md; the quality rules it applies to the structural lens are the ones in quality.md.",
+        "artifact_path_glob": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/review-package-*.md",
+        "naming": "runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/review-package-<identifier>.md"
+      }
+    ]
+  },
+  "built_at": "2026-10-27T01:23:39Z",
+  "model_tier": {
+    "tier": "deep",
+    "host_hint": "opus",
+    "basis": "declared deep for implement-feature/solution-design-and-risk-assessment in config/model-tier-policy.json; deep is the ceiling, so 2 recorded rejection(s) do not raise it",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 110065,
+    "modules_core_bytes": 51183,
+    "slice_all_bytes": 177472,
+    "slice_required_bytes": 13360,
+    "inputs_bytes": 18657,
+    "upstream_full_bytes": 43622,
+    "upstream_read_first_bytes": 29840,
+    "task_context_bytes": 33557,
+    "fixed_bytes": 121357,
+    "legacy_estimate_bytes": 471173,
+    "progressive_estimate_bytes": 267954,
+    "legacy_estimate_tokens": 117793,
+    "progressive_estimate_tokens": 66988,
+    "savings_pct": 43.1
+  }
+}
