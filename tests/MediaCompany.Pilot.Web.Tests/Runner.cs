@@ -126,6 +126,7 @@ public static class Program
         Console.OutputEncoding = new UTF8Encoding(false);
         var runner = new Runner();
         UnitCases.Add(runner);
+        CorrectionCases.Add(runner);
         var flow = new FlowCases(runner);
         flow.Add();
         BrowserCase.Add(runner);

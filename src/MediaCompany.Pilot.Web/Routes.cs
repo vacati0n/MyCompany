@@ -429,12 +429,18 @@ public static class Routes
         }
 
         var folder = workspace.InputFolder(code);
-        var sheet = FactSteps.CheckBeforeImages(normalised, folder, workspace.UploadFolder);
+        var screenshots = workspace.ScreenshotFolder(code);
+        var sheet = FactSteps.CheckBeforeImages(normalised, folder, screenshots, workspace.UploadFolder);
+        var refused = FactSteps.PlaceScreenshots(sheet, screenshots, folder);
         File.WriteAllBytes(workspace.FactSheetPath(code), normalised);
+        var saved = $"Đã lưu bảng thông tin {sheet.VideoCode}: {sheet.Facts.Count} dòng thông tin, {sheet.ImagesUsed.Count} ảnh cần tải ở bước 2.";
         return new Reply(new
         {
             ok = true,
-            message = $"Đã lưu bảng thông tin {sheet.VideoCode}: {sheet.Facts.Count} dòng thông tin, {sheet.ImagesUsed.Count} ảnh cần tải ở bước 2.",
+            refusedScreenshots = refused,
+            message = refused.Count == 0
+                ? saved
+                : $"{saved} Không nhận ảnh chụp {string.Join(", ", refused)}: bảng thông tin không ghi tên này ở dòng nào, nên ảnh đã bị bỏ. Nếu cần ảnh đó, ghi đúng tên ở ô ảnh chụp của dòng thông tin, tải ảnh lên lại rồi bấm lưu.",
         });
     }
 
@@ -442,12 +448,19 @@ public static class Routes
     {
         var workspace = web.Workspace();
         var code = CodeOf(http, workspace);
-        var folder = workspace.InputFolder(code);
-        var name = PlainName.Require(Query(http, "name"), "Ảnh chụp màn hình", folder);
+        // The screenshot waits outside the input folder; only a saved sheet that declares it for a fact row moves it in (CR-003).
+        var waiting = workspace.ScreenshotFolder(code);
+        Directory.CreateDirectory(waiting);
+        var name = PlainName.Require(Query(http, "name"), "Ảnh chụp màn hình", waiting);
         RequireImageExtension(name);
         var upload = await SaveUpload(http, workspace, Path.GetExtension(name), ImageBody);
-        File.Move(upload, Path.Combine(folder, name), overwrite: true);
-        return new Reply(new { ok = true, name, message = $"Đã nhận ảnh chụp {name}." });
+        File.Move(upload, Path.Combine(waiting, name), overwrite: true);
+        return new Reply(new
+        {
+            ok = true,
+            name,
+            message = $"Đã nhận ảnh chụp {name}. Ảnh được dùng khi bạn bấm lưu bảng thông tin, nếu một dòng thông tin ghi đúng tên này.",
+        });
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -635,7 +648,8 @@ public static class Routes
         var take = workspace.TakePath(code)
             ?? throw new WebRefusal("take-needed", "Chưa có bản ghi nào được thu cho video này. Bấm \"Bắt đầu ghi\" trước.");
         var tool = new MediaTool(web.Settings());
-        var recording = MediaSteps.Convert(tool, take, Target(workspace, code), HeldData.Current);
+        // CEO-D-1312: the admission reads the ledger in this process, between produce jobs only (it waits for a running one).
+        var recording = MediaSteps.Convert(tool, take, Target(workspace, code), HeldData.Current, web.Jobs, ProduceJobs.LedgerWait);
         return new Reply(new
         {
             ok = true,
@@ -666,7 +680,8 @@ public static class Routes
         var upload = await SaveUpload(http, workspace, extension, RecordingBody);
         try
         {
-            var recording = MediaSteps.AcceptUploadedRecording(tool, upload, extension, Target(workspace, code), HeldData.Current);
+            // CEO-D-1312: the admission reads the ledger in this process, between produce jobs only (it waits for a running one).
+            var recording = MediaSteps.AcceptUploadedRecording(tool, upload, extension, Target(workspace, code), HeldData.Current, web.Jobs, ProduceJobs.LedgerWait);
             return new Reply(new
             {
                 ok = true,
@@ -749,34 +764,54 @@ public static class Routes
         var facts = workspace.FactSheetPath(code);
         var job = web.Jobs.Start(code, job =>
         {
-            ToolchainRun? run = null;
-            OutcomeView view;
-            string? package = null;
-            try
-            {
-                run = runner.Run("produce", ["--settings", settings, "--facts", facts], WebContext.ProduceBound);
-                view = Outcomes.FromToolchain(run);
-                package = PackageOf(run.Output, workspace);
-                if (package is not null)
-                {
-                    workspace.SaveState(code, workspace.LoadState(code) with { LastPackage = package, ChecklistTicks = [] });
-                }
-            }
-            catch (WebRefusal refusal)
-            {
-                view = Outcomes.FromWeb(refusal);
-            }
-            catch (Exception error) when (error is IOException or InvalidOperationException or System.ComponentModel.Win32Exception)
-            {
-                view = new OutcomeView(Outcomes.AppFault, null, "app-fault", $"LỖI ỨNG DỤNG [app-fault]: {error.Message}\n",
-                    "Ứng dụng không chạy được bộ công cụ.", Outcomes.TechnicalNext);
-            }
-
-            ProduceJobs.Finish(job, run, view, package);
-            web.Log.Write("JOB", "/api/produce", 200, view.Code.Length == 0 ? null : view.Code, run?.ExitCode, (run?.Seconds ?? 0) * 1000);
+            ProduceWork(job, () => runner.Run("produce", ["--settings", settings, "--facts", facts], WebContext.ProduceBound), workspace, code, web.Log);
             return Task.CompletedTask;
         });
         return new Reply(new { ok = true, started = true, message = $"Đang tạo video {job.Code}. Trang sẽ báo khi xong." });
+    }
+
+    /// <summary>
+    /// The background produce work (design decision D-009): runs the produce verb, records the package it wrote as the video's last
+    /// package, then ends the job and writes its log line. Every exception ends the job with a shown category and a log line (review
+    /// correction CR-004): a step refusal as a refusal, any other exception as an app fault; a package the toolchain wrote is still
+    /// shown when recording it failed.
+    /// </summary>
+    public static void ProduceWork(ProduceJob job, Func<ToolchainRun> produce, Workspace workspace, string code, WebLog log)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+        ArgumentNullException.ThrowIfNull(produce);
+        ArgumentNullException.ThrowIfNull(workspace);
+        ArgumentNullException.ThrowIfNull(log);
+        ToolchainRun? run = null;
+        OutcomeView view;
+        string? package = null;
+        var status = 200;
+        try
+        {
+            run = produce();
+            view = Outcomes.FromToolchain(run);
+            package = PackageOf(run.Output, workspace);
+            if (package is not null)
+            {
+                workspace.SaveState(code, workspace.LoadState(code) with { LastPackage = package, ChecklistTicks = [] });
+            }
+        }
+        catch (WebRefusal refusal)
+        {
+            view = Outcomes.FromWeb(refusal);
+        }
+        catch (Exception error)
+        {
+            view = new OutcomeView(Outcomes.AppFault, null, "app-fault", $"LỖI ỨNG DỤNG [app-fault]: {error.GetType().Name}: {error.Message}\n",
+                package is null
+                    ? "Ứng dụng không chạy được bộ công cụ, hoặc không ghi được kết quả."
+                    : $"Bộ công cụ đã tạo gói {package}, nhưng ứng dụng không ghi được trạng thái của video này.",
+                Outcomes.TechnicalNext);
+            status = 500;
+        }
+
+        ProduceJobs.Finish(job, run, view, package);
+        log.Write("JOB", "/api/produce", status, view.Code.Length == 0 ? null : view.Code, run?.ExitCode, (run?.Seconds ?? 0) * 1000);
     }
 
     /// <summary>The package folder named by the produce output's video line, when it is a folder of the pilot folder's runs.</summary>
@@ -883,7 +918,7 @@ public static class Routes
         {
             ok = true,
             package,
-            videoPath = Path.Combine(package, manifest.VideoFile),
+            videoPath = ShownVideoPath(package, manifest),
             status = manifest.Status,
             heldReasons = manifest.HeldReasons,
             sha256 = manifest.VideoSha256,
@@ -949,7 +984,7 @@ public static class Routes
         var runner = web.Runner();
         var approve = runner.Run("approve", ["--package", package, "--name", approver, "--sha256", (request.Sha256 ?? string.Empty).Trim()], WebContext.VerbBound);
         var manifest = PackageFiles.ReadJson<PackageManifest>(Path.Combine(package, PackageFiles.Manifest), "package-unreadable", "tệp kê của gói");
-        var videoPath = Path.Combine(package, manifest.VideoFile);
+        var videoPath = ShownVideoPath(package, manifest);
         if (approve.ExitCode != PilotExit.Done)
         {
             return FromRun(approve, new { videoPath });
@@ -965,8 +1000,25 @@ public static class Routes
         var code = CodeOf(http, workspace);
         var package = RequirePackage(workspace, code);
         var verify = web.Runner().Run("verify", ["--package", package], WebContext.VerbBound);
-        return FromRun(verify, new { videoPath = Path.Combine(package, PackageFiles.Video) });
+
+        // The shown path comes from the package manifest, as on the checklist and approve routes (review correction CR-005). A manifest
+        // the app cannot read, or one naming more than a file name, shows no path; the verify verb's own line already names what is wrong.
+        string? videoPath;
+        try
+        {
+            var manifest = PackageFiles.ReadJson<PackageManifest>(Path.Combine(package, PackageFiles.Manifest), "package-unreadable", "tệp kê của gói");
+            videoPath = Path.GetFileName(manifest.VideoFile) == manifest.VideoFile ? ShownVideoPath(package, manifest) : null;
+        }
+        catch (PilotRefusal)
+        {
+            videoPath = null;
+        }
+
+        return FromRun(verify, new { videoPath });
     }
+
+    /// <summary>The package video path every route shows: the package folder and the video file its manifest names.</summary>
+    private static string ShownVideoPath(string package, PackageManifest manifest) => Path.Combine(package, manifest.VideoFile);
 
     /// <summary>The video's admitted recording, played back in the timing editor; read only.</summary>
     private static IResult RecordingFile(HttpContext http, WebContext web)

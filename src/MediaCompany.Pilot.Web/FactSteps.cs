@@ -20,6 +20,7 @@ public sealed record LiveField(string Where, string Text, bool IsOverride);
 /// accepts it. The images named in the sheet arrive at step 2, so for this check each image name is first held to the plain-name rule
 /// and then stands in as an empty placeholder; the screenshots must already be attached. The check verb decides again before the
 /// script is written, with the real images.</item>
+/// <item>Screenshots wait outside the input folder until a saved sheet declares them (<see cref="PlaceScreenshots"/>).</item>
 /// </list>
 /// </summary>
 public static class FactSteps
@@ -70,9 +71,10 @@ public static class FactSteps
 
     /// <summary>
     /// Checks the sheet with the toolchain's fact sheet check against the input folder, with the declared image names standing in as
-    /// placeholders when they are not yet attached; returns the accepted sheet.
+    /// placeholders when they are not yet attached; returns the accepted sheet. A row's screenshot counts as attached when it is in the
+    /// input folder or waits in the video's screenshot folder.
     /// </summary>
-    public static FactSheet CheckBeforeImages(byte[] json, string inputFolder, string scratchFolder)
+    public static FactSheet CheckBeforeImages(byte[] json, string inputFolder, string screenshotFolder, string scratchFolder)
     {
         var check = Path.Combine(scratchFolder, $"kiem-bang-{Guid.NewGuid():N}");
         Directory.CreateDirectory(check);
@@ -85,7 +87,7 @@ public static class FactSteps
                 {
                     foreach (var image in images.EnumerateArray().Where(i => i.ValueKind == JsonValueKind.String))
                     {
-                        Placeholder(check, image.GetString()!, "Ảnh dùng trong video", inputFolder: null);
+                        Placeholder(check, image.GetString()!, "Ảnh dùng trong video", attachedFolders: null);
                     }
                 }
 
@@ -97,7 +99,7 @@ public static class FactSteps
                         index++;
                         if (row.ValueKind == JsonValueKind.Object && row.TryGetProperty("screenshot", out var shot) && shot.ValueKind == JsonValueKind.String)
                         {
-                            Placeholder(check, shot.GetString()!, $"Dòng F{index}", inputFolder);
+                            Placeholder(check, shot.GetString()!, $"Dòng F{index}", [inputFolder, screenshotFolder]);
                         }
                     }
                 }
@@ -126,7 +128,41 @@ public static class FactSteps
             .Select(n => (n, File.Exists(Path.Combine(folder, n)))).ToList();
     }
 
-    private static void Placeholder(string checkFolder, string raw, string where, string? inputFolder)
+    /// <summary>
+    /// UPLOADED SCREENSHOTS ARE MATCHED AGAINST THE SHEET (technical design, security considerations; review correction CR-003). A
+    /// screenshot upload waits in the video's screenshot folder, outside the input folder, because it arrives before the sheet that
+    /// names it can be saved. When the toolchain's check accepts the sheet, each screenshot a fact row declares moves into the input
+    /// folder; every other waiting screenshot is refused and removed, and its name is returned so the page can say so. No upload
+    /// reaches the input folder under a name the saved sheet does not declare for a fact row.
+    /// </summary>
+    public static IReadOnlyList<string> PlaceScreenshots(FactSheet sheet, string screenshotFolder, string inputFolder)
+    {
+        ArgumentNullException.ThrowIfNull(sheet);
+        if (!Directory.Exists(screenshotFolder))
+        {
+            return [];
+        }
+
+        var declared = sheet.Facts.Select(f => f.Screenshot).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var refused = new List<string>();
+        foreach (var waiting in Directory.EnumerateFiles(screenshotFolder).Order(StringComparer.Ordinal).ToList())
+        {
+            var name = Path.GetFileName(waiting);
+            if (declared.TryGetValue(name, out var declaredName))
+            {
+                File.Move(waiting, Path.Combine(inputFolder, declaredName), overwrite: true);
+            }
+            else
+            {
+                File.Delete(waiting);
+                refused.Add(name);
+            }
+        }
+
+        return refused;
+    }
+
+    private static void Placeholder(string checkFolder, string raw, string where, IReadOnlyList<string>? attachedFolders)
     {
         var name = VietnameseText.Nfc(raw.Trim());
         try
@@ -144,7 +180,7 @@ public static class FactSteps
             return;
         }
 
-        if (inputFolder is null || File.Exists(Path.Combine(inputFolder, name)))
+        if (attachedFolders is null || attachedFolders.Any(folder => File.Exists(Path.Combine(folder, name))))
         {
             File.WriteAllBytes(Path.Combine(checkFolder, name), []);
         }

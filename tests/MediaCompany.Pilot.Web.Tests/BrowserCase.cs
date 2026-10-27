@@ -122,6 +122,18 @@ internal static class BrowserCase
                 Expect.True(Math.Abs(probe.DurationSeconds - secondSeconds) < 0.05, $"stored recording is the second take ({probe.DurationSeconds})");
                 r.Note($"first take {firstSeconds:0.000} s stopped by the page; second take {secondSeconds:0.000} s stopped by hand; stored {probe.DurationSeconds:0.000} s");
 
+                // Review UX (a): the "recording in use" line changes as soon as a take is accepted, to that take.
+                foreach (var (accept, current) in new[] { ("firstAccept", "firstCurrent"), ("secondAccept", "secondCurrent") })
+                {
+                    var shown = root0.GetProperty(current).GetString() ?? "";
+                    var sha = root0.GetProperty(accept).GetProperty("sha256").GetString() ?? "";
+                    Expect.True(sha.Length == 64 && shown.Contains(sha, StringComparison.Ordinal), $"{current} after accept names the accepted take: \"{shown}\"");
+                    Expect.True(!shown.Contains("chưa có bản ghi", StringComparison.Ordinal), $"{current} still says no recording: \"{shown}\"");
+                }
+
+                // Review UX (b): **bold** renders as <b> built from text; markup in the data stays text; an unclosed marker is dropped.
+                Expect.Equal("Kiểm <b>giá</b> và &lt;b&gt;x&lt;/b&gt; đậm", root0.GetProperty("richSample").GetString(), "checklist bold rendering");
+
                 var appRows = harness.Rows;
                 var foreign = appRows.Where(row => row.Owner != app.Process.Id).ToList();
                 Expect.Equal(0, foreign.Count, $"toolchain or tool rows: {string.Join("; ", foreign)}");
@@ -133,7 +145,7 @@ internal static class BrowserCase
                 Expect.Equal(0, outside.Count, $"browser TCP rows off loopback: {string.Join("; ", outside)}");
                 var udp = browserRows.Where(row => row.Protocol.StartsWith("udp", StringComparison.Ordinal)).ToList();
                 r.Note($"browser UDP rows (no remote column, reported only): {(udp.Count == 0 ? "none" : string.Join("; ", udp))}");
-                r.Note($"app harness: {harness.Members.Count} members, {appRows.Count} rows, all owned by the app and on loopback; ffmpeg runs {harness.Members.Values.Count(n => n == "ffmpeg")}");
+                r.Note($"app harness: {harness.Members.Count} members, {appRows.Count} rows, all owned by the app and on loopback; ffmpeg runs {harness.Members.Count(m => m.Name == "ffmpeg")}");
                 r.Note($"browser harness (kept apart, Q-003): {browserHarness.Members.Count} processes, {browserRows.Count} distinct rows, TCP all loopback: {string.Join("; ", browserRows.Select(x => $"{x.Protocol} {x.Local}:{x.LocalPort}->{x.Remote}:{x.RemotePort}").Distinct().Take(6))}");
             }
             finally

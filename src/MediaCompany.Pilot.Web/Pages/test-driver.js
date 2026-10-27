@@ -61,6 +61,7 @@
       await until(() => MC17.state === "accepted" || MC17.state === "ready", 60000, "first accept");
       await until(() => MC17.state !== "accepting", 60000, "first accept end");
       result.firstAccept = MC17.lastAccept;
+      result.firstCurrent = $("rec-current").textContent;
 
       // Re-record: about three seconds, stopped by hand.
       MC17.lastAccept = null;
@@ -74,6 +75,12 @@
       $("rec-accept").click();
       await until(() => MC17.state === "accepted", 60000, "second accept");
       result.secondAccept = MC17.lastAccept;
+      result.secondCurrent = $("rec-current").textContent;
+
+      // The step-7 bold rendering, on a sample that also carries markup the page must show as text.
+      const sample = document.createElement("div");
+      sample.append(...MC17.richText("Kiểm **giá** và <b>x</b> **đậm"));
+      result.richSample = sample.innerHTML;
       result.ok = true;
     } catch (error) {
       result.error = String(error && error.message || error);

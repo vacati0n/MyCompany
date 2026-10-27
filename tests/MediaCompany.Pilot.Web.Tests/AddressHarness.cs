@@ -24,7 +24,14 @@ internal sealed record SocketRow(int Owner, string OwnerName, string Protocol, I
 /// and every process that one starts is a member from its creation (nested jobs included). Every 20 ms it reads the job's process list,
 /// then the machine's TCP and UDP tables (IPv4 and IPv6) with their address columns, and keeps every distinct row owned by a member.
 /// Processes are never matched by name. Residual: a socket opened and closed between two samples is not seen.
+/// A row is kept only when its owner is in the job's process list read in the same sample (just before or just after the tables), never
+/// because the id was a member once: Windows reuses process ids, and a process outside the job that is given the id of a member that has
+/// ended (the headless browser, say) is not a member. Each member is recorded once per incarnation (id and start time), so a reused id
+/// inside the job is counted as the new process it is.
 /// </summary>
+/// <summary>One process observed in the harness job: its id, its start time (the incarnation of the id) and its name.</summary>
+internal sealed record JobMember(int Id, DateTime Started, string Name);
+
 internal sealed class AddressHarness : IDisposable
 {
     private const int InterNetwork = 2;
@@ -34,8 +41,8 @@ internal sealed class AddressHarness : IDisposable
     private const int BasicProcessIdList = 3;
     private const int ListCapacity = 4096;
 
-    private readonly HashSet<int> _members = [];
-    private readonly Dictionary<int, string> _names = [];
+    private readonly List<JobMember> _members = [];
+    private readonly Dictionary<int, JobMember> _current = [];
     private readonly HashSet<string> _seen = [];
     private readonly List<SocketRow> _rows = [];
     private readonly CancellationTokenSource _stop = new();
@@ -68,14 +75,33 @@ internal sealed class AddressHarness : IDisposable
         }
     }
 
-    public IReadOnlyDictionary<int, string> Members
+    /// <summary>Every process observed in the job, one entry per incarnation (a reused id appears once per process that held it).</summary>
+    public IReadOnlyList<JobMember> Members
     {
         get
         {
             lock (_members)
             {
-                return new Dictionary<int, string>(_names);
+                return [.. _members];
             }
+        }
+    }
+
+    /// <summary>
+    /// The rows a sample keeps: those whose owner is in the job's process list read just before or just after the tables. An id that was
+    /// a member earlier but is in neither list belongs to some other process now and is not kept.
+    /// </summary>
+    internal static IEnumerable<SocketRow> OwnedByMembers(IEnumerable<SocketRow> rows, IReadOnlyCollection<int> before, IReadOnlyCollection<int> after) =>
+        rows.Where(row => before.Contains(row.Owner) || after.Contains(row.Owner));
+
+    /// <summary>Test hook for the id-reuse case: records <paramref name="id"/> as a member that has ended, without adding it to the job.</summary>
+    internal void RecordEndedMember(int id, string name)
+    {
+        lock (_members)
+        {
+            var member = new JobMember(id, DateTime.MinValue, name);
+            _members.Add(member);
+            _current[id] = member;
         }
     }
 
@@ -106,20 +132,31 @@ internal sealed class AddressHarness : IDisposable
 
     private void Add(int id)
     {
+        DateTime started;
+        string name;
+        try
+        {
+            using var process = Process.GetProcessById(id);
+            name = process.ProcessName;
+            started = process.StartTime;
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            name = "(ended before its name was read)";
+            started = DateTime.MinValue;
+        }
+
         lock (_members)
         {
-            if (_members.Add(id))
+            // An id still listed by the job after its process ended cannot be looked up; that is the member already recorded, not a new one.
+            if (_current.TryGetValue(id, out var known) && (known.Started == started || started == DateTime.MinValue))
             {
-                try
-                {
-                    using var process = Process.GetProcessById(id);
-                    _names[id] = process.ProcessName;
-                }
-                catch (Exception error) when (error is ArgumentException or InvalidOperationException)
-                {
-                    _names[id] = "(ended before its name was read)";
-                }
+                return;
             }
+
+            var member = new JobMember(id, started, name);
+            _members.Add(member);
+            _current[id] = member;
         }
     }
 
@@ -127,7 +164,7 @@ internal sealed class AddressHarness : IDisposable
     {
         lock (_members)
         {
-            return _names.TryGetValue(id, out var name) ? name : "?";
+            return _current.TryGetValue(id, out var member) ? member.Name : "?";
         }
     }
 
@@ -135,29 +172,28 @@ internal sealed class AddressHarness : IDisposable
     {
         while (!_stop.IsCancellationRequested)
         {
-            foreach (var id in JobMembers())
+            var before = JobMembers();
+            foreach (var id in before)
             {
                 Add(id);
             }
 
-            int[] members;
-            lock (_members)
+            var table = Tables().ToList();
+            var after = JobMembers();
+            foreach (var id in after)
             {
-                members = [.. _members];
+                Add(id);
             }
 
-            foreach (var row in Tables())
+            foreach (var row in OwnedByMembers(table, before.ToHashSet(), after.ToHashSet()))
             {
-                if (members.Contains(row.Owner))
+                var named = row with { OwnerName = NameOf(row.Owner) };
+                var key = named.ToString();
+                lock (_rows)
                 {
-                    var named = row with { OwnerName = NameOf(row.Owner) };
-                    var key = named.ToString();
-                    lock (_rows)
+                    if (_seen.Add(key))
                     {
-                        if (_seen.Add(key))
-                        {
-                            _rows.Add(named);
-                        }
+                        _rows.Add(named);
                     }
                 }
             }

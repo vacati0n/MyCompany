@@ -167,8 +167,17 @@ internal sealed class FlowCases(Runner r) : IDisposable
             Expect.Equal("video-code-differs", other.Code, "a sheet for another code");
             var nfc = Fixtures.Sheet("V-01");
             nfc["productName"] = "Bi\u0300nh giu\u031B\u0303 nhie\u0323\u0302t mẫu 500 ml";
+
+            // CR-003: a screenshot no fact row names is not placed in the input folder; it is refused, by name, when the sheet is saved.
+            Expect.True(App.PostFile("/api/screenshot?code=V-01&name=khac.png", Path.Combine(Stills, "chup-1.png")).Ok, "undeclared screenshot staged");
+            Expect.True(!File.Exists(Path.Combine(Input("V-01"), "khac.png")), "an upload is not placed before the sheet declares it");
             var saved = App.Post("/api/facts?code=V-01", nfc);
             Expect.True(saved.Ok, $"sheet saved: {saved}");
+            var refusedShots = saved["refusedScreenshots"].EnumerateArray().Select(e => e.GetString()).ToList();
+            Expect.Equal("khac.png", string.Join(",", refusedShots), "the undeclared screenshot is refused by name");
+            Expect.Contains("Không nhận ảnh chụp khac.png".Normalize(), saved["message"].GetString()?.Normalize(), "the refusal is said in Vietnamese");
+            Expect.True(!File.Exists(Path.Combine(Input("V-01"), "khac.png")), "the undeclared screenshot is not in the input folder");
+            Expect.True(File.Exists(Path.Combine(Input("V-01"), "chup-1.png")), "the declared screenshot is in the input folder");
             var stored = File.ReadAllText(Path.Combine(Input("V-01"), Workspace.FactSheetFileName));
             Expect.Contains("Bình giữ nhiệt mẫu 500 ml", stored, "NFC stored");
             Expect.True(stored.IsNormalized(NormalizationForm.FormC), "the whole file is NFC");
@@ -317,6 +326,12 @@ internal sealed class FlowCases(Runner r) : IDisposable
             var busy = App.Post("/api/produce?code=V-01");
             Expect.Equal(409, busy.Status, "second produce status");
             Expect.Equal("produce-busy", busy.Code, "second produce");
+
+            // CR-001 (CEO-D-1312): a step-4 admission sent while the produce runs reads the ledger only after the produce has ended.
+            Expect.True(App.Get("/api/progress?code=V-01")["running"].GetBoolean(), "the produce is running when the admission is sent");
+            var admitted = App.Post("/api/take-accept?code=V-02");
+            Expect.True(admitted.Ok, $"admission during produce: {admitted}");
+            Expect.True(!App.Get("/api/progress?code=V-01")["running"].GetBoolean(), "the admission answered only after the produce ended");
             var watch = Stopwatch.StartNew();
             Answer done;
             do
@@ -418,8 +433,22 @@ internal sealed class FlowCases(Runner r) : IDisposable
                 r.Note(Direct.FirstLine(answer.Line));
             }
 
+            // CR-005: the shown path is the one the manifest names, as on the checklist and approve routes; a path-like name shows none.
+            var renamed = CopyPackage("ten-video-khac", n => n != PackageFiles.LedgerEntry);
+            File.Move(Path.Combine(renamed, PackageFiles.Video), Path.Combine(renamed, "video-khac.mp4"));
+            var renamedManifest = JsonNode.Parse(File.ReadAllText(Path.Combine(renamed, PackageFiles.Manifest)))!.AsObject();
+            renamedManifest["videoFile"] = "video-khac.mp4";
+            File.WriteAllText(Path.Combine(renamed, PackageFiles.Manifest), renamedManifest.ToJsonString(), new UTF8Encoding(false));
+            UsePackage(renamed);
+            var shown = App.Post("/api/verify?code=V-01");
+            Expect.Equal(Path.Combine(renamed, "video-khac.mp4"), shown["extra"].GetProperty("videoPath").GetString(), $"verify shows the manifest's video ({shown})");
+            UsePackage(notPlain);
+            Expect.Equal(JsonValueKind.Null, App.Post("/api/verify?code=V-01")["extra"].GetProperty("videoPath").ValueKind, "a path-like video name shows no path");
+
             UsePackage(Package);
-            Expect.True(App.Post("/api/verify?code=V-01").Ok, "the real package still verifies");
+            var real = App.Post("/api/verify?code=V-01");
+            Expect.True(real.Ok, "the real package still verifies");
+            Expect.Equal(Path.Combine(Package, PackageFiles.Video), real["extra"].GetProperty("videoPath").GetString(), "the real package's video path");
         });
 
         r.Add("T-025", "a recording already used by another video is refused at step 4 as produce refuses it (recording-reused)", () =>
@@ -573,7 +602,7 @@ internal sealed class FlowCases(Runner r) : IDisposable
             var members = _harness.Members;
             var rows = _harness.Rows;
             var app = App.Process.Id;
-            var names = members.Where(m => m.Key != app).Select(m => m.Value).ToList();
+            var names = members.Where(m => m.Id != app).Select(m => m.Name).ToList();
             Expect.True(names.Contains("MediaCompany.Pilot"), $"toolchain runs observed: {string.Join(", ", names.Distinct())}");
             Expect.True(names.Contains("ffmpeg") && names.Contains("ffprobe"), "ffmpeg and ffprobe observed");
             var foreign = rows.Where(row => row.Owner != app).ToList();

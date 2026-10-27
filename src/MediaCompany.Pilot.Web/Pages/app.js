@@ -13,6 +13,19 @@
   };
   const seconds = (s) => Number(s).toFixed(1).replace(".", ",");
 
+  // Chữ đậm kiểu **...** trong chữ của mẫu 04: phần giữa hai dấu ** thành chữ đậm, đặt bằng textContent; dấu ** lẻ bị bỏ.
+  // Không có HTML nào được dựng từ dữ liệu.
+  function richText(text) {
+    const parts = String(text === undefined || text === null ? "" : text).split("**");
+    const nodes = [];
+    parts.forEach((part, i) => {
+      if (part.length === 0) return;
+      const bold = i % 2 === 1 && i < parts.length - 1;
+      nodes.push(bold ? el("b", { textContent: part }) : document.createTextNode(part));
+    });
+    return nodes;
+  }
+
   const MC17 = {
     ready: false,
     code: null,
@@ -563,6 +576,7 @@
       return;
     }
     MC17.lastAccept = reply.recording;
+    showCurrentRecording(reply.recording);
     setRecState("accepted", "Đã dùng bản ghi này.");
     showMessage("rec-outcome", reply.message);
     const status = await refreshStatus();
@@ -575,15 +589,20 @@
     $("rec-outcome").replaceChildren(el("p", { className: "status", textContent: "Đang tải bản ghi lên..." }));
     const reply = await api("POST", q("/api/recording") + "&name=" + encodeURIComponent(file.name), file, "application/octet-stream");
     MC17.lastUpload = reply;
+    if (reply.ok && reply.recording) showCurrentRecording(reply.recording);
     showReply("rec-outcome", reply);
     $("rec-upload").value = "";
     const status = await refreshStatus();
     if (status.ok) renderRecording(status);
   }
 
-  function renderRecording(status) {
-    const r = status.recording;
+  // Dòng "bản ghi đang dùng" đổi ngay khi ứng dụng nhận bản ghi, theo chính câu trả lời đó, rồi theo trạng thái video đọc lại.
+  function showCurrentRecording(r) {
     $("rec-current").textContent = r ? "Bản ghi đang dùng: " + r.name + ", dài " + seconds(r.seconds) + " giây, SHA-256 " + r.sha256 + "." : "Video này chưa có bản ghi giọng.";
+  }
+
+  function renderRecording(status) {
+    showCurrentRecording(status.recording);
     if (MC17.state === "idle" || MC17.state === "error") setRecState(MC17.state, $("rec-status").textContent);
   }
 
@@ -728,8 +747,8 @@
         box.checked = row.toolTicked;
         box.disabled = true;
       }
-      const wording = el("td", { textContent: row.wording });
-      if (row.note) wording.append(el("div", { className: "note", textContent: "Ghi chú: " + row.note }));
+      const wording = el("td", {}, richText(row.wording));
+      if (row.note) wording.append(el("div", { className: "note" }, [document.createTextNode("Ghi chú: "), ...richText(row.note)]));
       const tr = el("tr", { className: row.operatorItem ? "" : "tool" }, [
         el("td", {}, [box]),
         el("td", { textContent: row.id }),
@@ -833,6 +852,7 @@
   }
 
   MC17.openVideo = openVideo;
+  MC17.richText = richText;
   MC17.showStep = showStep;
   MC17.loadHome = loadHome;
 

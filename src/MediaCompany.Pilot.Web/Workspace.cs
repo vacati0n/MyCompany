@@ -15,7 +15,7 @@ public sealed record VideoState
 /// <summary>
 /// THE PILOT FOLDER LAYOUT (design decision D-008). Beside the toolchain's own runs, refused and ledger files the app adds: inputs/[video
 /// code]/ (the per-video input folder the toolchain reads), takes/ (raw browser takes), web/ (tick state, the last package, the log,
-/// uploads in progress). The video code must pass the toolchain's plain-name rule. The app never writes the ledger, a package folder or
+/// uploads in progress, screenshots waiting for a saved sheet to declare them). The video code must pass the toolchain's plain-name rule. The app never writes the ledger, a package folder or
 /// the refused folder.
 /// </summary>
 public sealed class Workspace(AppRecord record)
@@ -38,6 +38,9 @@ public sealed class Workspace(AppRecord record)
     public string UploadFolder => Path.Combine(WebFolder, "uploads");
 
     public string RunsFolder => Path.Combine(PilotFolder, "runs");
+
+    /// <summary>Where a video's uploaded screenshots wait until a saved fact sheet declares them (review correction CR-003).</summary>
+    public string ScreenshotFolder(string code) => Path.Combine(WebFolder, "screenshots", Code(code));
 
     /// <summary>The video code, NFC and trimmed, refused unless it is a plain name.</summary>
     public string Code(string? raw) => PlainName.Require(raw, "Mã video", InputsRoot);
