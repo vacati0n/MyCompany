@@ -1,0 +1,279 @@
+{
+  "run_id": "run-6fa26c9657d3",
+  "runtime_version": "0.11.1",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "status": "ExecutingState",
+  "input_digest": "sha256:cdd6a3089565e711536549f31b6982a6",
+  "created_at": "2026-10-27T04:12:08Z",
+  "updated_at": "2026-10-27T07:55:06Z",
+  "states": {
+    "scope-and-acceptance": {
+      "status": "completed",
+      "queue_status": "Completed",
+      "owner_agent_id": "product-owner",
+      "attempt": 2,
+      "attempts_lost": 0,
+      "attempts_charged": 2,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:279c2cb3aad5dba9f39488fb4bb27411",
+      "artifact_path": "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md",
+      "blocked_reason": null,
+      "failure_class": "output-schema-failure",
+      "state_ledger": "runs/run-6fa26c9657d3/states/scope-and-acceptance/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 33,
+        "checksPassed": 33,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 9,
+          "status": "provisional",
+          "identifiers": {
+            "S": 11,
+            "X": 12,
+            "A": 34,
+            "D": 8,
+            "Q": 6
+          },
+          "tableRows": {
+            "In Scope": 11,
+            "Out of Scope": 12,
+            "Acceptance Criteria": 34,
+            "Scope Decisions": 8,
+            "Open Questions": 6
+          },
+          "scopeVerdict": "partially-bounded",
+          "scopeItems": 11,
+          "exclusions": 12,
+          "acceptanceCriteria": 34,
+          "scopeDecisions": 8,
+          "openQuestions": 6,
+          "blockingOpenQuestions": 2
+        },
+        "undeclaredSideEffects": []
+      },
+      "attempts_superseded": 0
+    },
+    "execution-planning": {
+      "status": "running",
+      "queue_status": "Executing",
+      "owner_agent_id": "planner",
+      "attempt": 1,
+      "attempts_lost": 0,
+      "attempts_charged": 1,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": "sha256:5ce49814ebb1cd5432b4260eaeda8ab9",
+      "artifact_path": "runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-6fa26c9657d3/states/execution-planning/state-ledger.json",
+      "validation": null,
+      "attempts_superseded": 0
+    },
+    "solution-design-and-risk-assessment": {
+      "status": "pending",
+      "queue_status": "Waiting",
+      "owner_agent_id": "architect",
+      "attempt": 0,
+      "attempts_lost": 0,
+      "attempts_charged": 0,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": null,
+      "artifact_path": null,
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": null,
+      "validation": null,
+      "attempts_superseded": 0
+    },
+    "implementation": {
+      "status": "pending",
+      "queue_status": "Waiting",
+      "owner_agent_id": "dev-1-implement",
+      "attempt": 0,
+      "attempts_lost": 0,
+      "attempts_charged": 0,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": null,
+      "artifact_path": null,
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": null,
+      "validation": null,
+      "attempts_superseded": 0
+    },
+    "quality-review": {
+      "status": "pending",
+      "queue_status": "Waiting",
+      "owner_agent_id": "dev-2-reviewer",
+      "attempt": 0,
+      "attempts_lost": 0,
+      "attempts_charged": 0,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": null,
+      "artifact_path": null,
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": null,
+      "validation": null,
+      "attempts_superseded": 0
+    },
+    "documentation-and-release-handoff": {
+      "status": "pending",
+      "queue_status": "Waiting",
+      "owner_agent_id": "documentation",
+      "attempt": 0,
+      "attempts_lost": 0,
+      "attempts_charged": 0,
+      "max_attempts": 3,
+      "available_at": null,
+      "idempotency_key": null,
+      "artifact_path": null,
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": null,
+      "validation": null,
+      "attempts_superseded": 0
+    }
+  },
+  "gates": {
+    "Scope Gate": {
+      "gate": "Scope Gate",
+      "closes_state": "scope-and-acceptance",
+      "owner_roles": [
+        "product-owner",
+        "business-analyst"
+      ],
+      "producer_agent": "product-owner",
+      "decision": "approved",
+      "owner_role": "business-analyst",
+      "decided_by": "CEO",
+      "rationale": "CEO decided at the Scope Gate (CEO-D-1314): image hosts for product image files only; short links bounded to allowed hosts, max 5 hops; one live read on a CEO-named link; scope A-001..A-034 approved.",
+      "evidence_ref": "research/ceo-decision-record.md",
+      "decided_at": "2026-10-27T07:54:55Z",
+      "decision_history": []
+    },
+    "Planning Gate": {
+      "gate": "Planning Gate",
+      "closes_state": "execution-planning",
+      "owner_roles": [
+        "tech-lead",
+        "orchestrator"
+      ],
+      "producer_agent": "planner",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Design Gate": {
+      "gate": "Design Gate",
+      "closes_state": "solution-design-and-risk-assessment",
+      "owner_roles": [
+        "architect",
+        "tech-lead"
+      ],
+      "producer_agent": "architect",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Review Gate": {
+      "gate": "Review Gate",
+      "closes_state": "quality-review",
+      "owner_roles": [
+        "dev-2-reviewer",
+        "qa"
+      ],
+      "producer_agent": "dev-2-reviewer",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Verification Gate": {
+      "gate": "Verification Gate",
+      "closes_state": "quality-review",
+      "owner_roles": [
+        "qa"
+      ],
+      "producer_agent": "dev-2-reviewer",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Closure Gate": {
+      "gate": "Closure Gate",
+      "closes_state": "documentation-and-release-handoff",
+      "owner_roles": [
+        "orchestrator",
+        "documentation"
+      ],
+      "producer_agent": "documentation",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    }
+  },
+  "summary": {
+    "run_id": "run-6fa26c9657d3",
+    "run_status": "ExecutingState",
+    "phases": 6,
+    "completed": 1,
+    "blocked": 0,
+    "failed": 0,
+    "pending": 4,
+    "retrying": 0,
+    "active": 1,
+    "transitions": 11,
+    "replays_suppressed": 0
+  },
+  "recovery": {
+    "ledger": "runs/run-6fa26c9657d3/recovery-ledger.json",
+    "classifications": 2,
+    "open": 0,
+    "resolved": 2,
+    "retries_scheduled": 1,
+    "by_failure_class": {
+      "output-schema-failure": 1,
+      "gate-approval-required": 1
+    },
+    "retry_profile": {
+      "max_attempts": 3,
+      "backoff_strategy": "exponential",
+      "base_delay_seconds": 2,
+      "multiplier": 2,
+      "max_delay_seconds": 60,
+      "jitter_ratio": 0.2,
+      "circuit_breaker_threshold": 3,
+      "policy_ref": "config/runtime.md#retry-policy"
+    }
+  }
+}

@@ -1,0 +1,326 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\mc-17-pilot-web-fffc59\\.claude\\runs\\run-6fa26c9657d3\\states\\scope-and-acceptance\\artifacts\\scope-definition.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 33,
+  "checksPassed": 33,
+  "notMachineCheckable": 3,
+  "counts": {
+    "sections": 9,
+    "status": "provisional",
+    "identifiers": {
+      "S": 11,
+      "X": 12,
+      "A": 34,
+      "D": 8,
+      "Q": 6
+    },
+    "tableRows": {
+      "In Scope": 11,
+      "Out of Scope": 12,
+      "Acceptance Criteria": 34,
+      "Scope Decisions": 8,
+      "Open Questions": 6
+    },
+    "scopeVerdict": "partially-bounded",
+    "scopeItems": 11,
+    "exclusions": 12,
+    "acceptanceCriteria": 34,
+    "scopeDecisions": 8,
+    "openQuestions": 6,
+    "blockingOpenQuestions": 2
+  },
+  "checks": [
+    {
+      "id": "C1.1",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "Metadata block present with every declared field populated",
+      "result": "pass",
+      "detail": "11 of 11 fields populated"
+    },
+    {
+      "id": "C1.2",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "producedBy is an agent contracted to emit scope-definition.md",
+      "result": "pass",
+      "detail": "producedBy='product-owner'; contracted producers: ['product-owner']"
+    },
+    {
+      "id": "C1.3",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "schemaVersion is 1.0.0 and agentVersion is semantic",
+      "result": "pass",
+      "detail": "schemaVersion=1.0.0 agentVersion=1.0.0"
+    },
+    {
+      "id": "C1.4",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='provisional'"
+    },
+    {
+      "id": "C2.1",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "All 9 mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "9 of 9 present, once each"
+    },
+    {
+      "id": "C2.2",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Business Context', 'In Scope', 'Out of Scope', 'Acceptance Criteria', 'Constraints and Dependencies', 'Scope Decisions', 'Open Questions', 'Handoff']"
+    },
+    {
+      "id": "C2.3",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 section introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C2.4",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "C2.5",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Advisory",
+      "description": "No template authoring guidance remains in the emitted artifact",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C3.1",
+      "quality_ref": "config/execution-engine.md#agent-adapter",
+      "severity": "Blocking",
+      "description": "At most 1 fenced block(s), as the contract permits",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; 1 permitted"
+    },
+    {
+      "id": "C3.2",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "C3.3",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "C4.1",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "Every declared field label is present in its section",
+      "result": "pass",
+      "detail": "17 declared field(s) present"
+    },
+    {
+      "id": "C4.2",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "No declared field is left unanswered",
+      "result": "pass",
+      "detail": "every declared field carries a value"
+    },
+    {
+      "id": "C4.3",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Correctable",
+      "description": "Fields with a declared substance floor carry more than a token answer",
+      "result": "pass",
+      "detail": "all fields meet their floor"
+    },
+    {
+      "id": "C5.1",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Fields bound to a vocabulary use a permitted value",
+      "result": "pass",
+      "detail": "all bounded fields valid"
+    },
+    {
+      "id": "C5.2",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Correctable",
+      "description": "Fields bound to a format match it",
+      "result": "pass",
+      "detail": "all formatted fields valid"
+    },
+    {
+      "id": "C4.4",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared minimum carry at least that many items",
+      "result": "pass",
+      "detail": "all list sections meet their minimum"
+    },
+    {
+      "id": "C4.5",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared table carry it, with the declared columns",
+      "result": "pass",
+      "detail": "row counts: {'In Scope': 11, 'Out of Scope': 12, 'Acceptance Criteria': 34, 'Scope Decisions': 8, 'Open Questions': 6}"
+    },
+    {
+      "id": "C4.6",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "No table row leaves a required cell empty",
+      "result": "pass",
+      "detail": "all rows complete"
+    },
+    {
+      "id": "C6.1",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "C6.2",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "Every referenced identifier is defined in its declaring section",
+      "result": "pass",
+      "detail": "defined: {'S': 11, 'X': 12, 'A': 34, 'D': 8, 'Q': 6}"
+    },
+    {
+      "id": "C6.3",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "No identifier is defined twice",
+      "result": "pass",
+      "detail": "identifiers unique"
+    },
+    {
+      "id": "C6.4",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Correctable",
+      "description": "Identifiers ascend from 001 without gaps",
+      "result": "pass",
+      "detail": "contiguous: {'S': 11, 'X': 12, 'A': 34, 'D': 8, 'Q': 6}"
+    },
+    {
+      "id": "C7.1",
+      "quality_ref": "config/execution-engine.md#context-loader",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "SN1",
+      "quality_ref": "agents/product-owner/output.md#acceptance-criteria",
+      "severity": "Advisory",
+      "description": "Each acceptance criterion states a threshold the business would actually accept",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "SN2",
+      "quality_ref": "agents/product-owner/quality.md#scope-integrity",
+      "severity": "Advisory",
+      "description": "The recorded scope matches what the requester asked for, with no silent widening",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "SN3",
+      "quality_ref": "agents/product-owner/quality.md#value-alignment",
+      "severity": "Advisory",
+      "description": "The stated business goal is the goal the requester holds, not one inferred for them",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "SD1",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "scopeVerdict is one of bounded, partially-bounded, blocked",
+      "result": "pass",
+      "detail": "scopeVerdict='partially-bounded'"
+    },
+    {
+      "id": "SD2",
+      "quality_ref": "templates/scope-definition.md",
+      "severity": "Blocking",
+      "description": "acceptanceCriteriaCount equals the number of acceptance criteria recorded",
+      "result": "pass",
+      "detail": "metadata=34 table=34 row(s)"
+    },
+    {
+      "id": "SD3",
+      "quality_ref": "agents/product-owner/output.md#acceptance-criteria",
+      "severity": "Blocking",
+      "description": "Every acceptance criterion names the method that verifies it",
+      "result": "pass",
+      "detail": "34 criterion(s), each with a verification method"
+    },
+    {
+      "id": "SD4",
+      "quality_ref": "agents/product-owner/output.md#traceability",
+      "severity": "Blocking",
+      "description": "Every acceptance criterion names the in-scope item it bounds",
+      "result": "pass",
+      "detail": "34 criterion(s) trace to a declared scope item"
+    },
+    {
+      "id": "SD5",
+      "quality_ref": "agents/product-owner/quality.md#scope-integrity",
+      "severity": "Blocking",
+      "description": "A partially-bounded or blocked scope records at least one open question",
+      "result": "pass",
+      "detail": "scopeVerdict='partially-bounded', 6 open question(s)"
+    },
+    {
+      "id": "SD6",
+      "quality_ref": "agents/product-owner/output.md#scope-decisions",
+      "severity": "Blocking",
+      "description": "Every scope decision carries a rationale a reviewer can assess",
+      "result": "pass",
+      "detail": "8 decision(s), each with a rationale"
+    },
+    {
+      "id": "SD7",
+      "quality_ref": "agents/product-owner/quality.md#authority-boundary",
+      "severity": "Blocking",
+      "description": "The artifact issues no task, change, or design identifier owned downstream",
+      "result": "pass",
+      "detail": "no downstream identifier scheme used"
+    },
+    {
+      "id": "SD8",
+      "quality_ref": "agents/product-owner/output.md#out-of-scope",
+      "severity": "Correctable",
+      "description": "A bounded scope names at least one explicit exclusion",
+      "result": "pass",
+      "detail": "12 exclusion(s) recorded"
+    }
+  ]
+}

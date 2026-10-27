@@ -1,0 +1,225 @@
+{
+  "schema": "framework.runtime/execution-metrics.v1",
+  "task_id": "run-6fa26c9657d3",
+  "workflow": "implement-feature v1.0.0",
+  "runtime_version": "0.11.1",
+  "computed_at": "2026-10-27T04:24:51Z",
+  "total_duration": {
+    "wall_clock_seconds": 762.0,
+    "wall_clock": "12m42s",
+    "agent_active_seconds": 611.0,
+    "agent_active": "10m11s"
+  },
+  "phases_executed": {
+    "declared": 6,
+    "completed": 1,
+    "blocked": 0
+  },
+  "agents_executed": {
+    "invocations": 2,
+    "distinct": 1,
+    "by_agent": {
+      "product-owner": 2
+    }
+  },
+  "skills_executed": {
+    "required_reads": 2,
+    "not_triggered": 1
+  },
+  "parallel_groups": {
+    "count": 5,
+    "max_width": 2,
+    "groups": [
+      [
+        "scope-and-acceptance",
+        "execution-planning"
+      ],
+      [
+        "solution-design-and-risk-assessment"
+      ],
+      [
+        "implementation"
+      ],
+      [
+        "quality-review"
+      ],
+      [
+        "documentation-and-release-handoff"
+      ]
+    ]
+  },
+  "context_loads": {
+    "members_declared": 13,
+    "members_required": 5
+  },
+  "repeated_context_loads": {
+    "files": 5,
+    "by_path": {
+      "workflows/workflow-gate-matrix.md": 2,
+      "context/product-context.md": 2,
+      "context/technical-context.md": 2,
+      "context/release-context.md": 2,
+      "templates/scope-definition.md": 2
+    }
+  },
+  "validation_runs": {
+    "passed": 1,
+    "failed": 1
+  },
+  "gate_decisions": {
+    "decided": 0,
+    "auto_policy": 0,
+    "rejected": 0
+  },
+  "tokens_or_context_estimate": {
+    "basis": "4 bytes per token; bytes the dispatch asked the agent to read, per envelope",
+    "legacy_bytes": 237195,
+    "progressive_bytes": 131984,
+    "legacy_tokens": 59298,
+    "progressive_tokens": 32996,
+    "savings_pct": 44.4
+  },
+  "model_tiers": {
+    "by_tier": {
+      "light": {
+        "invocations": 1,
+        "estimated_bytes": 0
+      },
+      "standard": {
+        "invocations": 1,
+        "estimated_bytes": 131984
+      },
+      "deep": {
+        "invocations": 0,
+        "estimated_bytes": 0
+      },
+      "untiered": {
+        "invocations": 0,
+        "estimated_bytes": 0
+      }
+    },
+    "invocations_total": 2,
+    "estimated_bytes_total": 131984,
+    "non_deep_share": 1.0
+  },
+  "lessons_hydrated_total": 0,
+  "per_phase": [
+    {
+      "phase": "scope-and-acceptance",
+      "agent": "product-owner",
+      "status": "completed",
+      "dispatches": 2,
+      "attempts_charged": 2,
+      "agent_active_seconds": 611.0,
+      "context_members_declared": 13,
+      "context_members_required": 5,
+      "skills": {
+        "required": 2,
+        "not_triggered": 1
+      },
+      "model_tier": "standard",
+      "context_estimate": {
+        "modules_full_bytes": 65474,
+        "modules_core_bytes": 33274,
+        "slice_all_bytes": 106610,
+        "slice_required_bytes": 12129,
+        "inputs_bytes": 11067,
+        "upstream_full_bytes": 0,
+        "upstream_read_first_bytes": 0,
+        "task_context_bytes": 21470,
+        "fixed_bytes": 54044,
+        "legacy_estimate_bytes": 237195,
+        "progressive_estimate_bytes": 131984,
+        "legacy_estimate_tokens": 59298,
+        "progressive_estimate_tokens": 32996,
+        "savings_pct": 44.4
+      },
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-01-001",
+          "lessons": 0
+        },
+        {
+          "invocation_id": "inv-6fa26c9657d3-01-002",
+          "lessons": 0
+        }
+      ]
+    },
+    {
+      "phase": "execution-planning",
+      "agent": "planner",
+      "status": "pending",
+      "dispatches": 0,
+      "attempts_charged": 0,
+      "agent_active_seconds": null,
+      "context_members_declared": 0,
+      "context_members_required": 0,
+      "skills": null,
+      "model_tier": null,
+      "context_estimate": null,
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": []
+    },
+    {
+      "phase": "solution-design-and-risk-assessment",
+      "agent": "architect",
+      "status": "pending",
+      "dispatches": 0,
+      "attempts_charged": 0,
+      "agent_active_seconds": null,
+      "context_members_declared": 0,
+      "context_members_required": 0,
+      "skills": null,
+      "model_tier": null,
+      "context_estimate": null,
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": []
+    },
+    {
+      "phase": "implementation",
+      "agent": "dev-1-implement",
+      "status": "pending",
+      "dispatches": 0,
+      "attempts_charged": 0,
+      "agent_active_seconds": null,
+      "context_members_declared": 0,
+      "context_members_required": 0,
+      "skills": null,
+      "model_tier": null,
+      "context_estimate": null,
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": []
+    },
+    {
+      "phase": "quality-review",
+      "agent": "dev-2-reviewer",
+      "status": "pending",
+      "dispatches": 0,
+      "attempts_charged": 0,
+      "agent_active_seconds": null,
+      "context_members_declared": 0,
+      "context_members_required": 0,
+      "skills": null,
+      "model_tier": null,
+      "context_estimate": null,
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": []
+    },
+    {
+      "phase": "documentation-and-release-handoff",
+      "agent": "documentation",
+      "status": "pending",
+      "dispatches": 0,
+      "attempts_charged": 0,
+      "agent_active_seconds": null,
+      "context_members_declared": 0,
+      "context_members_required": 0,
+      "skills": null,
+      "model_tier": null,
+      "context_estimate": null,
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": []
+    }
+  ]
+}

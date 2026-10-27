@@ -2726,3 +2726,23 @@ closes. This entry is the English form.
 **Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.
 
 ---
+
+## CEO-D-1314 — MC-18 Scope Gate approved: product image hosts, bounded short links, one live read for the demo
+
+**The CEO's own decision, 2026-10-27**, at the Scope Gate of run `run-6fa26c9657d3` (MC-18), on the scope's open
+questions, within `CEO-D-1313`.
+
+1. **Image hosts (Q-001).** The CEO chose "Được, chỉ ảnh": the read may fetch the image files of the supplied product
+   from Shopee's image hosts outside shopee.vn (for example `*.susercontent.com`), image files only, never a page.
+2. **Short links (Q-002).** The CEO chose "Được, có giới hạn": the read may follow `s.shopee.vn` redirects only while
+   every hop is an allowed host, at most five hops, and stops on any other host, affiliate.shopee.vn included.
+3. **Live read (Q-003).** The CEO chose "Được, một lần": an agent may read one real public product page once, on a link
+   the CEO names, without sign-in, to show the step working. Without a named link no agent reads shopee.vn.
+4. **Scope (Q-004 to Q-006).** Scope approved with acceptance criteria A-001 to A-034: the read price and description
+   are shown for reference and not saved in the fact sheet; the operator still attaches a screenshot per fact; fields
+   the page does not supply stay for the operator; a blocked read never retries and falls back to paste mode.
+
+**Unchanged:** `CEO-D-1313` and its bounds, `D-002`, `D-018`. Agents create no account, sign in nowhere, contact no
+seller, buy nothing and publish nothing.
+
+---
