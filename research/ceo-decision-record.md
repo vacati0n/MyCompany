@@ -2633,3 +2633,49 @@ seller, buy nothing, download no asset and publish nothing.
 seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1310 — MC-17 Scope Gate approved: the web app listens on 127.0.0.1 only; a first-run setup screen; an employee may approve on the CEO's written instruction
+
+**The CEO's own decision, 2026-10-27**, at the Scope Gate of run `run-022d0492a75a` (MC-17), on the four open questions
+of the scope phase.
+
+1. **Socket (Q-001).** Asked whether the MC-17 web app may listen on 127.0.0.1 only, with no outbound connection, while
+   the MC-16 toolchain keeps zero sockets, the CEO chose "Đồng ý 127.0.0.1". This amends `CEO-D-1308` item 1 for the
+   front end only: the web app opens one listening socket on the loopback address and no other socket; the MC-16 tool
+   and the ffmpeg and ffprobe processes it starts keep zero sockets.
+2. **One-time settings (Q-002).** The CEO chose "Màn hình lần đầu": on first run the app shows a Vietnamese screen that
+   asks for the pilot folder, finds ffmpeg, ffprobe and the typeface, computes their SHA-256 and writes the settings
+   file. The numbers the CEO fixed in `CEO-D-1308` and `CEO-D-1309` are written as decided and are not editable there.
+3. **Who approves (Q-003).** The CEO chose "Nhân viên, nếu CEO cho phép": an employee operator may press approve on the
+   CEO's written instruction, and the CEO's name is recorded in the approval. `D-002` stands: each publication is the
+   CEO's approval, given in person or by written instruction.
+4. **Scope (Q-004 and the gate).** Scope approved as the scope phase states it (S-001 to S-018, X-001 to X-011, A-001
+   to A-030); the success measure is the done condition A-029 only.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1309`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---
+
+## CEO-D-1311 — MC-17 Design Gate approved: pure checks in the web process, a zero-package recording test, a desktop shortcut
+
+**The CEO's own decision, 2026-10-27**, at the Design Gate of run `run-022d0492a75a` (MC-17), on the design's open
+decisions and its six decision records D-001 to D-006.
+
+1. **Process boundary (Q-001, D-001).** The CEO chose "Được phép" (O-003): the web app may call the toolchain's pure
+   checks in its own process: the live banned-term check, settings validation, probe and conversion of the recording.
+   Check, script, produce, approve and verify still run as the MC-16 tool in a separate child process with zero
+   sockets. This reads `CEO-D-1310` item 1 as covering the toolchain program and the processes it starts.
+2. **Recording test (Q-002, D-006).** The CEO chose "Không thêm gói" (O-018): the no-microphone recording test drives
+   the installed headless browser with fake capture from a code-generated sound, in a test program that adds zero
+   package references. Scope criterion SC-23 stands unchanged.
+3. **Launcher (Q-004).** The CEO chose "Có, tạo lối tắt": the first-run screen creates a desktop shortcut on the
+   operator's confirmation; a double-click starts the app and opens the browser, or reopens the page if it is running.
+4. **Design (Q-005).** Design approved, D-001 to D-006 accepted. The approver text is "[CEO name] (CEO)" when the CEO
+   presses approve, and "[CEO name] (CEO; nhân viên [employee name] bấm duyệt theo chỉ thị bằng văn bản của CEO)" when
+   an employee presses it.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1310`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---

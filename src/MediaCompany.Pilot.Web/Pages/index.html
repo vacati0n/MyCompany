@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="mc-token" content="{{TOKEN}}">
+<title>Thí điểm video MediaCompany</title>
+<link rel="stylesheet" href="/app.css">
+<script src="/app.js" defer></script>
+<!--TEST-DRIVER-->
+</head>
+<body>
+<header class="top">
+  <h1>Thí điểm video MediaCompany</h1>
+  <p class="small">Ứng dụng chạy trên máy này (127.0.0.1). Không gửi gì ra ngoài, không đăng, không mua.</p>
+  <nav id="top-nav" hidden>
+    <button type="button" id="nav-home" class="link">Danh sách video</button>
+    <span id="nav-video"></span>
+  </nav>
+</header>
+
+<main>
+  <div id="global-outcome"></div>
+
+  <!-- CÀI ĐẶT LẦN ĐẦU -->
+  <section id="view-setup" class="view" hidden>
+    <h2>Cài đặt lần đầu</h2>
+    <p>Điền hai mục dưới đây rồi bấm <b>Lưu cài đặt</b>. Các số khác do CEO quyết và không sửa ở đây.</p>
+    <div id="setup-problem"></div>
+    <label>Thư mục thí điểm (nơi chứa ảnh, bản ghi, video):
+      <input type="text" id="setup-folder" class="wide" autocomplete="off">
+    </label>
+    <label>Tên CEO (dùng trong dòng người duyệt):
+      <input type="text" id="setup-ceo" class="wide" autocomplete="off">
+    </label>
+    <label class="check"><input type="checkbox" id="setup-shortcut"> Tạo biểu tượng mở ứng dụng trên màn hình nền</label>
+    <h3>Các số CEO đã chốt (chỉ để xem)</h3>
+    <ul id="setup-numbers" class="numbers"></ul>
+    <button type="button" id="setup-save" class="primary">Lưu cài đặt</button>
+    <div id="setup-outcome"></div>
+  </section>
+
+  <!-- DANH SÁCH VIDEO -->
+  <section id="view-home" class="view" hidden>
+    <h2>Danh sách video</h2>
+    <ul id="video-list" class="video-list"></ul>
+    <div class="row">
+      <label>Mã video mới (ví dụ V-01):
+        <input type="text" id="new-code" autocomplete="off">
+      </label>
+      <button type="button" id="new-open" class="primary">Mở video này</button>
+    </div>
+    <p class="small">Mã video là tên thư mục của video: chỉ dùng chữ, số, dấu gạch ngang; không dấu cách, không dấu gạch chéo.</p>
+    <p class="small" id="home-shortcut-line"><button type="button" id="home-shortcut" class="link">Tạo biểu tượng trên màn hình nền</button></p>
+  </section>
+
+  <!-- MỘT VIDEO: 7 BƯỚC -->
+  <section id="view-video" class="view" hidden>
+    <ol class="steps" id="step-tabs">
+      <li><button type="button" data-step="1">1. Bảng thông tin</button></li>
+      <li><button type="button" data-step="2">2. Ảnh</button></li>
+      <li><button type="button" data-step="3">3. Kịch bản</button></li>
+      <li><button type="button" data-step="4">4. Ghi âm</button></li>
+      <li><button type="button" data-step="5">5. Phim người dẫn</button></li>
+      <li><button type="button" data-step="6">6. Tạo video</button></li>
+      <li><button type="button" data-step="7">7. Xem và duyệt</button></li>
+    </ol>
+
+    <!-- BƯỚC 1 -->
+    <div class="step" id="step-1" hidden>
+      <h2>Bước 1. Bảng thông tin sản phẩm</h2>
+      <p>Chép đúng từ trang sản phẩm. Khi gõ, ứng dụng báo ngay từ bị cấm (nêu từ và nhóm). Bấm <b>Lưu bảng thông tin</b> khi xong.</p>
+      <div id="facts-header" class="grid"></div>
+      <label>Câu kêu gọi cuối video:
+        <select id="facts-cta"></select>
+      </label>
+      <h3>Dòng thông tin (1 đến 3 dòng)</h3>
+      <div id="facts-rows"></div>
+      <button type="button" id="facts-add-row">Thêm dòng</button>
+      <div id="facts-live" class="live" aria-live="polite"></div>
+      <button type="button" id="facts-save" class="primary">Lưu bảng thông tin</button>
+      <div id="facts-outcome"></div>
+    </div>
+
+    <!-- BƯỚC 2 -->
+    <div class="step" id="step-2" hidden>
+      <h2>Bước 2. Ảnh sản phẩm</h2>
+      <p>Tải lên đúng các ảnh đã ghi ở bước 1. Mỗi ảnh một nút.</p>
+      <ul id="images-list" class="files"></ul>
+      <div id="images-outcome"></div>
+    </div>
+
+    <!-- BƯỚC 3 -->
+    <div class="step" id="step-3" hidden>
+      <h2>Bước 3. Kịch bản</h2>
+      <p>Bấm <b>Viết kịch bản</b>. Bộ công cụ kiểm bảng thông tin rồi viết kịch bản. Đọc từng câu, đối chiếu với dòng nguồn, rồi tích.</p>
+      <button type="button" id="script-run" class="primary">Viết kịch bản</button>
+      <div id="script-outcome"></div>
+      <ol id="script-sentences" class="sentences"></ol>
+      <p id="script-count" class="count"></p>
+    </div>
+
+    <!-- BƯỚC 4 -->
+    <div class="step" id="step-4" hidden>
+      <h2>Bước 4. Ghi âm giọng đọc</h2>
+      <p>Đọc kịch bản ở bước 3. Ứng dụng tự dừng ở <b id="rec-limit">60</b> giây. Nghe lại; nếu chưa ổn, ghi lại.</p>
+      <div class="recorder">
+        <button type="button" id="rec-start" class="primary">Bắt đầu ghi</button>
+        <button type="button" id="rec-stop" disabled>Dừng</button>
+        <span id="rec-timer" class="timer">0,0 giây</span>
+      </div>
+      <p id="rec-status" class="status"></p>
+      <audio id="rec-audio" controls hidden></audio>
+      <div>
+        <button type="button" id="rec-accept" disabled>Dùng bản ghi này</button>
+      </div>
+      <div id="rec-outcome"></div>
+      <details>
+        <summary>Hoặc tải lên bản ghi có sẵn</summary>
+        <p class="small">Dạng được nhận: .wav .mp3 .m4a .aac .flac .ogg, không quá 60 giây. Tệp được giữ nguyên, không chuyển.</p>
+        <input type="file" id="rec-upload" accept=".wav,.mp3,.m4a,.aac,.flac,.ogg">
+      </details>
+      <p id="rec-current" class="small"></p>
+    </div>
+
+    <!-- BƯỚC 5 -->
+    <div class="step" id="step-5" hidden>
+      <h2>Bước 5. Đoạn phim người dẫn</h2>
+      <p>Tải lên đoạn phim quay dọc, dài bằng bản ghi giọng (lệch không quá 0,5 giây).</p>
+      <input type="file" id="clip-upload" accept=".mp4,.mov,.m4v,.mkv,.webm">
+      <div id="clip-outcome"></div>
+      <p id="clip-current" class="small"></p>
+    </div>
+
+    <!-- BƯỚC 6 -->
+    <div class="step" id="step-6" hidden>
+      <h2>Bước 6. Tạo video</h2>
+      <p>Bấm <b>Tạo video</b>. Việc này mất vài phút; giữ trang mở.</p>
+      <button type="button" id="produce-run" class="primary">Tạo video</button>
+      <p id="produce-progress" class="status"></p>
+      <div id="produce-outcome"></div>
+      <pre id="produce-output" hidden></pre>
+      <div id="timing-editor" hidden>
+        <h3>Chỉnh thời gian từng câu</h3>
+        <p id="timing-hint"></p>
+        <audio id="timing-audio" controls></audio>
+        <p class="small">Nghe bản ghi; ghi giây bắt đầu và giây kết thúc của từng câu (dùng dấu chấm, ví dụ 3.20). Câu sau bắt đầu sau khi câu trước kết thúc.</p>
+        <table class="timing"><thead><tr><th>Câu</th><th>Nội dung</th><th>Bắt đầu (giây)</th><th>Kết thúc (giây)</th></tr></thead><tbody id="timing-rows"></tbody></table>
+        <button type="button" id="timing-save" class="primary">Lưu thời gian</button>
+        <div id="timing-outcome"></div>
+      </div>
+    </div>
+
+    <!-- BƯỚC 7 -->
+    <div class="step" id="step-7" hidden>
+      <h2>Bước 7. Xem video, kiểm danh sách, duyệt</h2>
+      <div id="review-outcome"></div>
+      <div id="review-body" hidden>
+        <div class="preview">
+          <video id="review-video" controls playsinline></video>
+          <img id="review-frame" alt="Khung hình mẫu của video">
+        </div>
+        <p>Trạng thái gói: <b id="review-status"></b></p>
+        <p class="small">Gói: <span id="review-package"></span></p>
+        <h3>Danh sách kiểm (mẫu 04)</h3>
+        <table class="checklist"><thead><tr><th>Đã kiểm</th><th>Mục</th><th>Nội dung</th><th>Ai kiểm</th></tr></thead><tbody id="checklist-rows"></tbody></table>
+        <p id="checklist-count" class="count"></p>
+        <h3>Duyệt bằng mã băm</h3>
+        <label>Mã SHA-256 của video đang xem:
+          <input type="text" id="approve-sha" class="wide mono" autocomplete="off">
+        </label>
+        <fieldset>
+          <legend>Ai bấm duyệt?</legend>
+          <label class="check"><input type="radio" name="pressed-by" value="ceo" id="pressed-ceo"> CEO tự bấm</label>
+          <label class="check"><input type="radio" name="pressed-by" value="nhan-vien" id="pressed-employee"> Nhân viên bấm theo chỉ thị bằng văn bản của CEO</label>
+          <label id="employee-line" hidden>Tên nhân viên: <input type="text" id="employee-name" autocomplete="off"></label>
+        </fieldset>
+        <p>Dòng người duyệt sẽ ghi: <b id="approver-preview"></b></p>
+        <button type="button" id="approve-run" class="primary" disabled>Duyệt video này</button>
+        <button type="button" id="verify-run">Kiểm lại video</button>
+        <div id="approve-outcome"></div>
+        <p id="approve-path" class="small"></p>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The MC-17 web app's test program. A console program with no package reference at all (no test framework, no browser driver):
+    each case prints PASS or FAIL and the exit code is the number of failures. Media fixtures are drawn by the installed media tool
+    into temporary folders at test time; the recording case drives the installed headless browser shell with its fake microphone.
+    The fixture helpers and the MC-16 harness layout are linked from the MC-16 test project unchanged.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\MediaCompany.Pilot.Tests\PilotTestEnvironment.cs" Link="Linked\PilotTestEnvironment.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MediaCompany.Pilot.Web\MediaCompany.Pilot.Web.csproj" />
+  </ItemGroup>
+</Project>

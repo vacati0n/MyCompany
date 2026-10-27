@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    The MC-17 local web app (technical design module M-001): a Vietnamese front end on the MC-16 pilot toolchain. It uses the web SDK
+    and the installed ASP.NET Core shared framework only, with no package reference. It references the toolchain project for the pure
+    checks, settings validation, probe and recording conversion it runs in process; check, script, produce, approve and verify run as
+    the toolchain executable, started from the toolchain's own build output as a child process. The toolchain never references this
+    assembly, so the toolchain's closure check is unchanged.
+  -->
+  <PropertyGroup>
+    <!-- NFC normalization must be live, as in the toolchain: the live banned-term check and every stored text depend on it. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>MediaCompany.Pilot.Web</AssemblyName>
+    <RootNamespace>MediaCompany.Pilot.Web</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MediaCompany.Pilot\MediaCompany.Pilot.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The page set (module M-002) is embedded and served from memory: no content folder, no static-asset manifest, nothing fetched. -->
+    <None Remove="Pages\**" />
+    <Content Remove="Pages\**" />
+    <EmbeddedResource Include="Pages\**" LogicalName="page:%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,86 @@
+# MC-17: A friendly local web app in Vietnamese that walks a non-technical operator through one pilot video, with in-browser recording
+
+- Source: the CEO's request in chat, 2026-10-27; local://research/ceo-decision-record.md#ceo-d-1300 to #ceo-d-1309
+- Issue type: Feature   Priority: Highest
+- Labels: affiliate, shopee-video, pilot, operator-ux, web-app, recording, vietnamese
+- Routed as: /implement (implement-feature)
+- Builds on: MC-16 (`src/MediaCompany.Pilot`, branch `claude/mc-16-pilot-pipeline-a4df61`, run `run-535f3f938f32`), not yet merged to `main`
+
+## Description
+
+### WHY
+
+The CEO's request, verbatim: "người dùng là non tech user human vì vậy những việc như trong hướng dẫn vận hành công cụ
+gây khó khăn. hãy viết một tool web app có UI,UX frendly cho user nhập dữ liệu từng step bao gồm cả việc support ghi âm
+trực tiếp thay vì bắt user tải file."
+
+(The user is a non-technical human, so the tasks in the operator guide are hard. Write a web app tool with a friendly
+UI/UX where the user enters data step by step, including direct recording support instead of making the user upload a
+file.)
+
+MC-16 delivered `src/MediaCompany.Pilot`, an offline .NET 10 console tool with five verbs (check, script, produce,
+approve, verify). Its operator guide `pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md` asks the operator to hand-edit
+a JSON fact sheet, lay out an input folder, type command lines with paths and copy a 64-character hash. The operator is
+the CEO now and a human employee later (`CEO-D-1306` item 1, `CEO-D-1307` item 2). MC-17 puts a friendly local web
+front end on top of the MC-16 tool so the operator never edits JSON or types a command line.
+
+### THE STEPS THE OPERATOR WALKS THROUGH, ONE VIDEO AT A TIME
+
+1. **Fact sheet in a form.** Every field of the MC-16 fact sheet, each fact row with its source section and its
+   screenshot. Banned terms are checked live as the operator types, naming the term and why it is banned (its class).
+2. **Product images.** Upload or pick the three images.
+3. **Script.** See the generated script and tick each sentence's Part E source line.
+4. **Record the narration in the browser.** No file upload is required, though upload stays an option. A timer with a
+   hard stop at 60 s, playback, re-record. The recording is converted with the installed ffmpeg. Never text-to-speech,
+   never voice cloning, and a reused recording is refused.
+5. **Presenter clip.** Upload the AI-presenter clip the operator made in HeyGen or D-ID; the app checks it is portrait
+   and that its length matches the recording within 0.5 s (`CEO-D-1308` item 3).
+6. **Produce the package.** Show progress and every refusal in plain Vietnamese with what to do next; offer a manual
+   timing editor when pause detection does not match the sentence count.
+7. **Preview and approve.** Preview the video and the kit 04 checklist; the CEO ticks B3, B5 and the other items and
+   approves the video by its hash (`D-002`, `CEO-D-1309` item 2).
+
+### WHAT THE COMPANY ALREADY HOLDS — REUSE IT
+
+- `src/MediaCompany.Pilot` and its 251 tests in `tests/MediaCompany.Pilot.Tests`: the fact sheet check, the banned-term
+  check, the script generator, admission of recording and clip, pause timing and `timing.txt`, ffmpeg 9:16 composition,
+  the package, the hash-chained ledger, approval by hash and verify.
+- The MC-16 run evidence `.claude/runs/run-535f3f938f32/` (technical design, ADRs D-001 to D-005, release note with
+  known issues K-001 to K-016).
+- Installed on this machine: the .NET 10 SDK with the ASP.NET Core 10 shared framework, ffmpeg and ffprobe through
+  WinGet (`C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/`), a Chromium-based browser with MediaRecorder.
+
+### HARD CONSTRAINTS
+
+1. Download nothing (no npm, NuGet or pip package, no CDN script, no font) unless the CEO approves it by name.
+2. The app calls no generative model, no speech recognition and no metered service. No text-to-speech, no voice
+   cloning (`CEO-D-1304`, `CEO-D-1305`, `CEO-D-1307`).
+3. **Socket conflict, for the Scope Gate.** `CEO-D-1308` keeps the MC-16 toolchain at zero sockets. A web app must
+   listen on a socket, and microphone access needs a secure context, which `localhost` provides. The proposal for the
+   CEO: the web app binds 127.0.0.1 only, opens no outbound connection, and the MC-16 tool itself stays at zero sockets.
+   The CEO decides this explicitly before design.
+4. The web app is a front end only. It weakens no MC-16 check: the hash approval, the 60 s limit, refusal of a reused
+   recording, the safe area, the banned-term checks, the 0.5 s clip tolerance and the 1.2 s caption page all stay in the
+   tool, which keeps deciding.
+5. Agents never sign in anywhere, create accounts, contact sellers, buy anything or publish anything. Nothing publishes.
+6. Frozen Wave 12 (MC-13) and Wave 13 (MC-14) are not touched. The `mediacompany` database is not touched; Docker is down.
+7. Tests run offline with fixtures generated by code. No media file is added to the repository. The recording flow is
+   covered by a test that needs no real microphone.
+8. Every publication is approved by the CEO individually (`D-002`); the CEO carries the legal position (`D-018`).
+
+### DONE MEANS
+
+- MC-17 runs through every phase and gate of `implement-feature`; the CEO decides at the Scope and Design gates.
+- The app has been run and shown working in the Browser pane on a code-generated sample, including the record step.
+- Committed and pushed on the session branch; the CEO gets the compare link against `main`, noting that the branch is
+  cut from the unmerged MC-16 branch.
+
+### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON
+
+All in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no
+repository file; an agent claiming a finding covers "every" case lists the cases; a `failure-envelope.json` of class
+`gate-approval-required` in a phase folder is stale once that phase's dispatch prompt exists (Finding 11).
+
+## Acceptance criteria
+
+_To be defined by the scope phase and approved at the Scope Gate._

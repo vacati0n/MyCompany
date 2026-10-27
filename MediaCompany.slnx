@@ -8,6 +8,7 @@
     <Project Path="src/MediaCompany.Host/MediaCompany.Host.csproj" />
     <Project Path="src/MediaCompany.Persistence/MediaCompany.Persistence.csproj" />
     <Project Path="src/MediaCompany.Pilot/MediaCompany.Pilot.csproj" />
+    <Project Path="src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj" />
     <Project Path="src/MediaCompany.Production/MediaCompany.Production.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -18,6 +19,7 @@
     <Project Path="tests/MediaCompany.GraphicsStandIn/MediaCompany.GraphicsStandIn.csproj" />
     <Project Path="tests/MediaCompany.Persistence.Tests/MediaCompany.Persistence.Tests.csproj" />
     <Project Path="tests/MediaCompany.Pilot.Tests/MediaCompany.Pilot.Tests.csproj" />
+    <Project Path="tests/MediaCompany.Pilot.Web.Tests/MediaCompany.Pilot.Web.Tests.csproj" />
     <Project Path="tests/MediaCompany.Production.Tests/MediaCompany.Production.Tests.csproj" />
     <Project Path="tests/MediaCompany.VoiceStandIn/MediaCompany.VoiceStandIn.csproj" />
   </Folder>
