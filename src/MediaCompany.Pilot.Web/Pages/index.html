@@ -50,6 +50,20 @@
     <label class="check"><input type="checkbox" id="settings-read"> Bật đọc trang sản phẩm</label>
     <p class="small" id="settings-file"></p>
     <div id="settings-outcome"></div>
+    <h3>Nút "Đọc trang Shopee"</h3>
+    <p>Nút này nằm trên thanh dấu trang của Chrome và chạy trên trang sản phẩm shopee.vn bạn đang mở. Bấm nút: nó chép tên sản phẩm, phân loại đang chọn, tên shop và Mall, các dòng CHI TIẾT SẢN PHẨM, giá, mô tả và địa chỉ ảnh mà trang đang hiện; rồi bạn dán một lần ở bước 1. Nút không gửi gì đi, không bấm gì trên trang, không đọc tài khoản, cookie hay dữ liệu lưu của trang. Ứng dụng chỉ nhận khi đọc trang sản phẩm đang bật.</p>
+    <ol>
+      <li>Nhấn <b>Ctrl+Shift+B</b> để hiện thanh dấu trang của Chrome.</li>
+      <li>Kéo nút <b>Đọc trang Shopee</b> ở dưới lên thanh dấu trang.</li>
+      <li>Mở trang của một sản phẩm trên shopee.vn và bấm nút trên thanh dấu trang. Sau đó mở ứng dụng, mở video, và dán (Ctrl+V) ở bước 1.</li>
+    </ol>
+    <p><a id="button-link" class="button-link" href="#" draggable="true">Đọc trang Shopee</a></p>
+    <p class="small">Bấm nút ở đây sẽ không chạy (ứng dụng chặn mã lạ trên trang của mình). Hãy kéo nút lên thanh dấu trang.</p>
+    <label>Hoặc tự tạo dấu trang mới và dán địa chỉ này vào ô URL:
+      <textarea id="button-address" class="wide" rows="3" readonly spellcheck="false"></textarea>
+    </label>
+    <p class="small" id="button-version"></p>
+    <div id="button-outcome"></div>
   </section>
 
   <!-- DANH SÁCH VIDEO -->
@@ -98,6 +112,13 @@
           <textarea id="paste-text" rows="8" class="wide"></textarea>
           <button type="button" id="paste-run">Điền từ chữ đã dán</button>
         </details>
+        <p class="small" id="button-note">Đã bấm nút <b>Đọc trang Shopee</b> trên trang sản phẩm? Dán (Ctrl+V) ở bất kỳ chỗ nào trên trang này: ứng dụng điền ngay. Nút có ở mục <b>Cài đặt</b>.</p>
+        <div id="button-shot" hidden>
+          <label>Một ảnh chụp cho mọi dòng từ nút:
+            <input type="file" id="button-shot-file" accept=".png,.jpg,.jpeg">
+          </label>
+          <p class="small">Chụp màn hình phần CHI TIẾT SẢN PHẨM của trang rồi chọn tệp ở đây: ảnh được ghi vào mọi dòng thông tin điền từ nút còn trống ảnh chụp.</p>
+        </div>
         <div id="read-outcome"></div>
         <div id="read-found" hidden>
           <h4>Dòng thông tin tìm thấy</h4>

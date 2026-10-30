@@ -17,7 +17,7 @@ internal sealed record SkippedImage(string Address, string Reason);
 
 /// <summary>
 /// THE FILL RECORD (MC-18 design decision D-007): one per video in the web folder, beside the video's tick state, never inside the fact
-/// sheet. It holds where the values came from (read or paste), the admitted link and the final page address, the time, each filled
+/// sheet. It holds where the values came from (read or paste; from MC-19 also the button, D-009), the admitted link and the final page address, the time, each filled
 /// field with its value and confirmation, the candidate rows, the price and description shown for reference only, the saved images
 /// with their source address, the images not fetched with the reason, and the fields not found. A record that cannot be read, or of
 /// another form version, is treated as absent: it blocks nothing the MC-17 save allows.
@@ -27,6 +27,7 @@ internal sealed record FillRecord
     public const int KnownFormVersion = 1;
     public const string FromRead = "read";
     public const string FromPaste = "paste";
+    public const string FromButton = "button";
 
     public int FormVersion { get; init; } = KnownFormVersion;
     public required string Source { get; init; }
@@ -47,6 +48,13 @@ internal static class FillStore
 {
     /// <summary>The fields the page never supplies (scope decision 8); the operator fills them, and the check names the first missing one.</summary>
     public static readonly IReadOnlyList<string> OperatorMembers = ["videoCode", "subjectNoun", "shopNameAndMall", "niche", "imagesUsed", "productVideoNumber", "videoFocus"];
+
+    /// <summary>The operator-only fields for a source: for the button (MC-19 D-009) the shop and Mall field comes from the page.</summary>
+    public static IReadOnlyList<string> OperatorMembersFor(string source) =>
+        source == FillRecord.FromButton ? [.. OperatorMembers.Where(m => m != "shopNameAndMall")] : OperatorMembers;
+
+    public const string Mall = "Mall";
+    public const string NotMall = "không phải Mall";
 
     public const string SpecsLabel = "Chi tiết sản phẩm (dòng thông tin)";
     public const string PriceLabel = "Giá";
@@ -96,6 +104,45 @@ internal static class FillStore
             Price = text.Price,
             Description = text.Description,
             NotFound = NotFound(fields, text.Specs, text.Price, text.Description, imagesFound: null),
+        };
+    }
+
+    /// <summary>
+    /// The record of an accepted button block (MC-19 D-009): name, classification, page address (no query or fragment), the shop and
+    /// Mall field as "shop, Mall" or "shop, không phải Mall" only when the button found the shop block, and the read date from the
+    /// press date when that is a valid date not after today (otherwise the field stays for the operator); rows as candidates; price
+    /// and description for reference only; the images fetched after the paste and those not fetched.
+    /// </summary>
+    public static FillRecord FromButtonBlock(ButtonBlock block, DateTimeOffset now, IReadOnlyList<SavedImage> images, IReadOnlyList<SkippedImage> skipped)
+    {
+        ArgumentNullException.ThrowIfNull(block);
+        var fields = new List<FilledField>();
+        Add(fields, "productName", block.ProductName);
+        Add(fields, "classification", block.Classification);
+        Add(fields, "pagePath", LinkRule.PagePath(block.Page));
+        if (block.ShopName is not null && block.Mall is { } mall)
+        {
+            Add(fields, "shopNameAndMall", $"{block.ShopName}, {(mall ? Mall : NotMall)}");
+        }
+
+        if (DateOnly.TryParseExact(block.PressedAt, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var pressed)
+            && pressed <= DateOnly.FromDateTime(now.LocalDateTime))
+        {
+            Add(fields, "readDate", block.PressedAt);
+        }
+
+        return new FillRecord
+        {
+            Source = FillRecord.FromButton,
+            FinalAddress = block.Page.ToString(),
+            FilledAt = now.ToString("O", CultureInfo.InvariantCulture),
+            Fields = fields,
+            Candidates = Candidates(block.Specs),
+            Price = block.Price,
+            Description = block.Description,
+            Images = images,
+            NotFetched = skipped,
+            NotFound = NotFound(fields, block.Specs, block.Price, block.Description, images.Count > 0 || skipped.Count > 0),
         };
     }
 
@@ -154,7 +201,12 @@ internal static class FillStore
             return;
         }
 
-        var source = record.Source == FillRecord.FromRead ? "trang sản phẩm" : "chữ đã dán";
+        var source = record.Source switch
+        {
+            FillRecord.FromRead => "trang sản phẩm",
+            FillRecord.FromButton => "nút đọc trang",
+            _ => "chữ đã dán",
+        };
         using var document = JsonDocument.Parse(normalisedSheet);
         var root = document.RootElement;
         foreach (var (member, label) in FactSheetCheck.HeaderFields)

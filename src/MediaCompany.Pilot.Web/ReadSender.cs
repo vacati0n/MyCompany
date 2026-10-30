@@ -13,8 +13,11 @@ namespace MediaCompany.Pilot.Web;
 /// It is internal to this assembly and is passed only through the internal start path (<see cref="Program.Start"/>), which only the
 /// test assembly can see. The shipped entry point never passes it, and no argument, environment variable, file or route can set it, so
 /// the shipped read always resolves the real name, refuses addresses that are not public, and trusts only the system's certificates.
+/// MC-19 design decision D-004 adds the exact fixture origin (scheme, 127.0.0.1 and port of the test program's plain-HTTP fixture page
+/// server): the button builder adds it to the button's host list and the block's page-address rule accepts exactly it. The shipped
+/// entry point passes no transport, so the shipped app has no fixture origin and accepts shopee.vn page addresses only.
 /// </summary>
-internal sealed record ReadTransport(Func<string, int, IPEndPoint> ConnectTo, Func<X509Certificate2, bool> Trust);
+internal sealed record ReadTransport(Func<string, int, IPEndPoint> ConnectTo, Func<X509Certificate2, bool> Trust, string? FixtureOrigin = null);
 
 /// <summary>One answer of the read: status, the redirect address, the media type, the body (empty for a redirect) and its source address.</summary>
 internal sealed record ReadAnswer(int Status, string? Location, string? MediaType, byte[] Body);

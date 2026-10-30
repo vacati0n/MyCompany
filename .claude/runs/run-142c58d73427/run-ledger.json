@@ -7,7 +7,7 @@
   "status": "Dispatching",
   "input_digest": "sha256:a52f39513574219a33d4e4ecf83b5ff6",
   "created_at": "2026-10-30T03:39:20Z",
-  "updated_at": "2026-10-30T05:03:32Z",
+  "updated_at": "2026-10-30T06:17:54Z",
   "states": {
     "scope-and-acceptance": {
       "status": "completed",
@@ -135,25 +135,50 @@
       "attempts_superseded": 0
     },
     "implementation": {
-      "status": "pending",
-      "queue_status": "Ready",
+      "status": "completed",
+      "queue_status": "Completed",
       "owner_agent_id": "dev-1-implement",
-      "attempt": 0,
+      "attempt": 1,
       "attempts_lost": 0,
-      "attempts_charged": 0,
+      "attempts_charged": 1,
       "max_attempts": 3,
       "available_at": null,
-      "idempotency_key": null,
-      "artifact_path": null,
+      "idempotency_key": "sha256:630039917f7d1629f9df1dcc11c5c623",
+      "artifact_path": "runs/run-142c58d73427/states/implementation/artifacts/implementation-report.md",
       "blocked_reason": null,
       "failure_class": null,
-      "state_ledger": null,
-      "validation": null,
+      "state_ledger": "runs/run-142c58d73427/states/implementation/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 32,
+        "checksPassed": 32,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 10,
+          "status": "complete",
+          "identifiers": {
+            "C": 17,
+            "T": 16,
+            "V": 6,
+            "R": 6,
+            "Q": 1
+          },
+          "tableRows": {
+            "Change Set": 17,
+            "Test Evidence": 16,
+            "Deviations and Tradeoffs": 6,
+            "Residual Risk": 6
+          }
+        },
+        "undeclaredSideEffects": []
+      },
       "attempts_superseded": 0
     },
     "quality-review": {
       "status": "pending",
-      "queue_status": "Waiting",
+      "queue_status": "Ready",
       "owner_agent_id": "dev-2-reviewer",
       "attempt": 0,
       "attempts_lost": 0,
@@ -287,13 +312,13 @@
     "run_id": "run-142c58d73427",
     "run_status": "Dispatching",
     "phases": 6,
-    "completed": 3,
+    "completed": 4,
     "blocked": 0,
     "failed": 0,
-    "pending": 3,
+    "pending": 2,
     "retrying": 0,
     "active": 0,
-    "transitions": 23,
+    "transitions": 26,
     "replays_suppressed": 0
   },
   "recovery": {

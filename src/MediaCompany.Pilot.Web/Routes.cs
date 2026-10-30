@@ -106,6 +106,7 @@ public static class Routes
         app.MapPost("/api/read-switch", Answer(web, http => SetSwitch(http, web)));
         app.MapPost("/api/read", Answer(web, http => ReadProduct(http, web)));
         app.MapPost("/api/paste", Answer(web, http => PasteProduct(http, web)));
+        app.MapGet("/api/button", Answer(web, http => Task.FromResult(ButtonStatus(web))));
         app.MapPost("/api/read-confirm", Answer(web, http => ConfirmFill(http, web)));
         app.MapGet("/api/read-image", (HttpContext http) => ReadImageFile(http, web));
         app.MapPost("/api/facts", Answer(web, http => SaveFacts(http, web)));
@@ -597,12 +598,20 @@ public static class Routes
         }
     }
 
-    /// <summary>Paste mode (D-012): the same parser over the pasted text; nothing is sent; any earlier read images are cleared.</summary>
+    /// <summary>
+    /// Paste mode (D-012): the same parser over the pasted text; nothing is sent; any earlier read images are cleared. From MC-19 (D-001)
+    /// a text that begins with the button's marker takes the block path instead; any other text keeps this path unchanged.
+    /// </summary>
     private static async Task<Reply> PasteProduct(HttpContext http, WebContext web)
     {
+        var request = await Body<PasteRequest>(http);
+        if (BlockReader.IsBlock(request.Text))
+        {
+            return await PasteBlock(http, web, request.Text);
+        }
+
         var workspace = web.Workspace();
         var code = CodeOf(http, workspace);
-        var request = await Body<PasteRequest>(http);
         if (string.IsNullOrWhiteSpace(request.Text))
         {
             throw new WebRefusal("paste-empty", "Ô dán chữ đang trống. Trên trang sản phẩm, bôi đen và chép phần tên, giá, phân loại và CHI TIẾT SẢN PHẨM, dán vào ô rồi bấm lại.");
@@ -632,6 +641,77 @@ public static class Routes
             fill,
             message = $"Đã điền từ chữ đã dán: {fill.Fields.Count} ô, {fill.Candidates.Count} dòng thông tin gợi ý. Đối chiếu từng ô rồi bấm \"Xác nhận\"; đường dẫn trang và ngày đọc thì gõ tay.",
         });
+    }
+
+    /// <summary>
+    /// THE BUTTON BLOCK PATH (MC-19 D-001, D-005, D-010). In this order, each refusal filling nothing: more than one marker (one product
+    /// per paste); the switch off (naming "Cài đặt"); no video open; then the block reader (size, JSON, version and button mark,
+    /// members and types, bounds, name, page address). An accepted block replaces the video's fill record, and its image addresses go
+    /// through the MC-18 image phase at once under the app-wide read gate. No page is requested.
+    /// </summary>
+    private static async Task<Reply> PasteBlock(HttpContext http, WebContext web, string text)
+    {
+        if (BlockReader.Markers(text) > 1)
+        {
+            throw new WebRefusal("block-two-products",
+                "Chữ đã dán có hơn một khối thông tin của nút \"Đọc trang Shopee\". Mỗi lần dán chỉ điền một sản phẩm. Ứng dụng không điền ô nào. "
+                + "Việc cần làm: bấm nút trên trang của đúng một sản phẩm rồi dán một lần.");
+        }
+
+        if (!ReadSwitch.IsOn(web.Options.AppFolder))
+        {
+            throw new WebRefusal("block-read-off",
+                "Đọc trang sản phẩm đang tắt, nên ứng dụng không nhận khối thông tin của nút đọc trang và không gửi gì ra ngoài. Ứng dụng không điền ô nào. "
+                + "Việc cần làm: bật ở mục \"Cài đặt\" rồi dán lại; hoặc dán chữ của trang, hoặc gõ tay.", 409);
+        }
+
+        if (string.IsNullOrWhiteSpace(Query(http, "code")))
+        {
+            throw new WebRefusal("block-no-video",
+                "Chưa mở video nào, nên ứng dụng không biết điền thông tin vào video nào. Ứng dụng không điền ô nào. "
+                + "Việc cần làm: ở \"Danh sách video\", mở hoặc tạo một video, vào bước 1 rồi dán lại.", 409);
+        }
+
+        var workspace = web.Workspace();
+        var code = CodeOf(http, workspace);
+        var block = BlockReader.Read(text, web.Transport?.FixtureOrigin);
+        if (!web.ReadGate.Wait(0))
+        {
+            throw new WebRefusal("read-busy", "Ứng dụng đang lấy ảnh hoặc đọc một trang. Chờ việc đó xong rồi dán lại.", 409);
+        }
+
+        try
+        {
+            var result = await ProductRead.FromBlock(block, web.Transport, new ReadLog(workspace.WebFolder), workspace.ReadImageFolder(code), DateTimeOffset.Now);
+            var fill = result.Fill!;
+            FillStore.Save(workspace, code, fill);
+            if (result.Stop is { } stop)
+            {
+                return new Reply(new { ok = false, outcome = stop.View(), fill, requests = result.Requests }, 200, stop.Code);
+            }
+
+            return new Reply(new
+            {
+                ok = true,
+                fill,
+                requests = result.Requests,
+                message = $"Đã điền từ nút đọc trang: {fill.Fields.Count} ô, {fill.Candidates.Count} dòng thông tin gợi ý, lấy {fill.Images.Count} ảnh. Đối chiếu từng ô với trang rồi bấm \"Xác nhận\".",
+            });
+        }
+        finally
+        {
+            web.ReadGate.Release();
+        }
+    }
+
+    /// <summary>
+    /// The button for "Cài đặt" (MC-19 D-012): the bookmark address, its size, the format version and the button mark. The shipped app
+    /// builds it with no fixture origin; only the internal test seam adds one.
+    /// </summary>
+    private static Reply ButtonStatus(WebContext web)
+    {
+        var button = ButtonBuilder.Build(web.Transport?.FixtureOrigin);
+        return new Reply(new { ok = true, address = button.Address, bytes = button.Bytes, formVersion = button.FormVersion, mark = button.Mark });
     }
 
     private static async Task<Reply> ConfirmFill(HttpContext http, WebContext web)

@@ -3,7 +3,7 @@ task_id: run-142c58d73427
 command: implement
 workflow: implement-feature v1.0.0
 run_status: Dispatching
-updated_at: '2026-10-30T05:03:32Z'
+updated_at: '2026-10-30T06:17:54Z'
 objective: 'Source: CEO-D-1318 (the CEO''s own decision, 2026-10-30); local://research/ceo-decision-record.md#ceo-d-1318 Issue
   type: Feature Priority: Highest Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, bookmarklet, vietnamese
   Routed as: /implement (implement-feature) Builds on: MC-18 (src/MediaCompany.Pilot.Web read-from-link and paste mode, run
@@ -41,7 +41,7 @@ relevant_agents:
   - S09
 - phase: implementation
   agent: dev-1-implement
-  status: pending
+  status: completed
   required_skills:
   - S03
   - S06
@@ -81,6 +81,12 @@ completed_phases:
   digest: sha256:03c265f5e092232926766d2d92fe1e0e
   validation: pass 78/78
   attempts: 2
+- phase: implementation
+  agent: dev-1-implement
+  artifact: runs/run-142c58d73427/states/implementation/artifacts/implementation-report.md
+  digest: sha256:335c234a81553b45e93ff5cfcf80dfe1
+  validation: pass 32/32
+  attempts: 1
 gates:
 - gate: Scope Gate
   closes: scope-and-acceptance
@@ -116,6 +122,7 @@ artifacts:
   scope-and-acceptance: runs/run-142c58d73427/states/scope-and-acceptance/artifacts/scope-definition.md
   execution-planning: runs/run-142c58d73427/states/execution-planning/artifacts/execution-plan.md
   solution-design-and-risk-assessment: runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/technical-design.md
+  implementation: runs/run-142c58d73427/states/implementation/artifacts/implementation-report.md
 parallel_groups:
 - - scope-and-acceptance
   - execution-planning
@@ -363,6 +370,58 @@ validation_requirements:
   - 'SC-38: M-013 | harness and inspection | the fixtures of SC-01, SC-04, SC-06, SC-14, SC-18, SC-22, SC-23, SC-24, SC-25'
   - 'SC-39: M-018, M-013 | inspection | none'
   - 'SC-40: C-023 | inspection | none'
+  evidence:
+  - 'T-001: The web app and its test program build: 0 warnings, 0 errors | static | C-001, C-002, C-003, C-004, C-005, C-006,
+    C-007, C-011, C-012, C-013, C-014, C-015, C-016, C-017'
+  - 'T-002: Program cases 001 to 008. Case 008''s page scan (no external address, no @import, no CSS url) passes over th...
+    | unit | C-001, C-004, C-008, C-009, C-010'
+  - 'T-003: The 36 MC-17 cases pass unchanged with the paste route, settings view and step 1 changed | regression | C-007,
+    C-008, C-009, C-010, C-017'
+  - 'T-004: MC-18 program cases 050 to 066 pass unchanged: the read, the paste of page text (case 056 fills exactly wha...
+    | regression | C-004, C-005, C-006, C-007, C-016'
+  - 'T-005: Program case 067, the clipboard measurement on the fixture product page in the headless shell (D-007 and th...
+    | end-to-end | C-001, C-002, C-011, C-012, C-013'
+  - 'T-006: Program case 068, builder. The mark equals the first 12 hexadecimal digits of the script''s SHA-256; the shi...
+    | unit | C-001, C-002'
+  - 'T-007: Program case 069, reader alone: 59 cases, 59 as expected.<br>- The 256 KiB bound at the byte (255 KiB, exac...
+    | unit | C-003'
+  - 'T-008: Program cases 070 and 071.<br>- Case 070, route order in 7 combinations: two blocks give block-two-products...
+    | integration | C-003, C-005, C-006, C-007'
+  - 'T-009: Program case 072, image addresses.<br>- Of seven addresses, the two own images are fetched. The other five...
+    | integration | C-006, C-007'
+  - 'T-010: Program cases 073 and 074.<br>- Case 073: an empty operator field is refused by name. With N = 8 marks (pro...
+    | integration | C-005, C-007'
+  - 'T-011: Program case 075, the guard on /api/paste with a block. Nine forms are refused 403 with nothing filled and...
+    | integration | C-007'
+  - 'T-012: Program case 076, the shipped executable started as a child process: /api/button carries no fixture origin...
+    | integration | C-002, C-003, C-004, C-007'
+  - 'T-013: Program case 077, the whole flow in the headless shell.<br>- The button is taken from "Cài đặt"; a click on...
+    | end-to-end | C-001, C-002, C-005, C-006, C-007, C-008, C-009, C-010, C-011, C-012, C-015'
+  - 'T-014: Program case 078, the other pages in the headless shell:<br>- The non-Mall page copies 697 characters.<br>-...
+    | end-to-end | C-001, C-003, C-009, C-012, C-015'
+  - 'T-015: MC-16 pilot regression: 251 of 251, unchanged | regression | C-004, C-016'
+  - 'T-016: Toolchain unchanged: no diff under src/MediaCompany.Pilot or tests/MediaCompany.Pilot.Tests. The eight new...
+    | static | C-001, C-002, C-003, C-011, C-012, C-013, C-014, C-015'
+  verification:
+  - 'Verification method: The web app and its test program were built. The whole test program then ran end to end:'
+  - The MC-17 cases ran against the built app.
+  - The MC-18 read cases ran against the loopback TLS fixture.
+  - The new button cases ran against code-generated fixture pages on a plain-HTTP page server on 127.0.0.1. The button ran
+    in the digest-checked headless shell,...
+  - Program case 076 ran the shipped executable.
+  - 'Commands executed: dotnet build tests/MediaCompany.Pilot.Web.Tests; dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests
+    (twice, before and aft...'
+  - 'Result summary:'
+  - 'Evidence entries: 16 executed, 16 passed, 0 failed.'
+  - 'Build: 0 warnings, 0 errors.'
+  - 'Web test program: 65 of 65 in 485 s on the second run (the 36 MC-17 cases, MC-18 program cases 050 to 066, and program
+    cases 067 to 078). The baseline before...'
+  - 'MC-16 pilot: 251 of 251, both before V-006 (3 min 6 s) and after it (6 min 34 s).'
+  - 'Toolchain diff: empty.'
+  - 'Clipboard measurement: the five runs A0, A, B, C and D each ended with the block on the clipboard.'
+  - 'Button mark on this checkout: 419110b95aab. Shipped bookmark address: 17782 bytes of 32768.'
+  - 'Connections off 127.0.0.1 in any run: 0. Live presses or reads: 0.'
+  - 'Unverified areas: none'
 constraints:
 - 'Business constraints: The CEO carries the terms risk as the individual creator (CEO decision 1313 item 5: Shopee''s partner
   terms forbid partners collecting i...'
@@ -538,6 +597,19 @@ decisions:
   no | inline'
 - 'D-016: Image address rule at paste: the MC-18 link rule''s image check against the block''s page address (https, all...
   | no | inline'
+- 'V-001: Besides the unchanged content policy that blocks a javascript: address, app.js cancels a click on the butto... |
+  D-012 | D-012 says the policy blocks a click and the view tells the operator to drag. Cancelling the click shows th...'
+- 'V-002: The MC-18 image phase was extracted from ProductRead.Run as FetchImages, so the read and the block path sha... |
+  D-005 | Two copies of the image rules could drift. MC-18 program cases 050 to 066 pass unchanged after the extracti...'
+- 'V-003: The browser cases drive the headless shell over its DevTools protocol on the loopback debugging port (--rem... |
+  D-004 test seam | A press needs real user activation, clipboard access and key chords, which the MC-17 command-line browser
+  c...'
+- 'V-004: Program case 076 checks the shipped surface by starting the shipped executable as a child process, not thro... |
+  D-004 | Only the shipped executable proves the shipped app carries no fixture origin'
+- 'V-005: In the measurement and the whole-flow case, the test grants the clipboard write permission that desktop Chr... |
+  D-007 | The grant is the documented desktop behaviour; A0 shows the chain also works without it. Real Chrome on sho...'
+- 'V-006: The script resolves a relative image address through a detached anchor element instead of the URL construct... |
+  D-003; D-016 | The MC-17 page scan in program case 008 forbids the text "url(" in any page file. A detached anchor resolve...'
 open_questions:
 - 'Q-001: May the button be pressed on a page where the operator is signed in to Shopee? Options: (a) yes, bounded by... |
   yes | CEO'
@@ -580,6 +652,8 @@ open_questions:
 - 'Q-006: Is the read log paired with the address harness accepted as SC-21 evidence (A-013)? | non-blocking | qa'
 - 'Q-007: Design Gate acceptance of D-001 to D-006, each at Proposed. tech-lead accepts under the producer exclusion... |
   non-blocking | tech-lead'
+- 'Q-001: Does the headless-shell measurement (T-005), which grants the clipboard permission desktop Chrome gives and... |
+  non-blocking | qa'
 objectives:
 - 'TO-1: A press on a product page places on the clipboard one versioned block holding only the listed kinds, equal to the
   page''s values after Unicode NFC norma...'
@@ -785,6 +859,18 @@ risks:
   re-run of the 251 and 53 tests'
 - 'R-028: operability | Shopee changes its layout later (plan risk 15) | The button finds fewer fields'
 - 'R-029: delivery | The compare link shows earlier unmerged commits (plan risk 30) | MC-19 review confused with earlier work'
+- 'R-001: The browser cases write to and clear the Windows clipboard of the machine that runs them | high | Text the person
+  running the tests had copied is lost'
+- 'R-002: Chrome''s clipboard behaviour on a real shopee.vn page is not measured. The page''s own policies or a refused...
+  | medium | The press may end at the visible box and need the operator''s Ctrl+C'
+- 'R-003: The fixture page is a model of the real page, grounded on the CEO''s screenshot, not a copy. Real anchors or...
+  | medium | Fields could be missed or the page read as not a product page'
+- 'R-004: The button mark is the hash of the script''s bytes as checked out. A checkout that converts line endings dif...
+  | low | Buttons made from another checkout are refused as old (block-old-button)'
+- 'R-005: The image-host rule accepts any host ending .susercontent.com, as in MC-18 | low | An image could come from any
+  host with that suffix that the page shows'
+- 'R-006: The operator could paste a block taken from another product into the wrong video | low | Wrong facts would be offered
+  for the open video'
 plan_tasks:
 - 'T-001: Produce the MC-19 technical design package | depends on none'
 - 'T-002: Map every applicable acceptance criterion to a fixture case | depends on T-001'
@@ -885,11 +971,46 @@ repository_context:
   - 'M-016: Steps 2 to 7 routes and pages | no-change-verified | F-011, F-013'
   - 'M-017: mediacompany database, MediaCompany.Persistence, MC-13 and MC-14 material | no-change-verified | F-007'
   - 'M-018: Web project file | no-change-verified | F-001'
-  relevant_files: []
+  relevant_files:
+  - src/MediaCompany.Pilot.Web/Pages/nut-doc-trang.js (added)
+  - src/MediaCompany.Pilot.Web/ButtonBuilder.cs (added)
+  - src/MediaCompany.Pilot.Web/BlockReader.cs (added)
+  - src/MediaCompany.Pilot.Web/ReadSender.cs (modified)
+  - src/MediaCompany.Pilot.Web/FillRecord.cs (modified)
+  - src/MediaCompany.Pilot.Web/ProductRead.cs (modified)
+  - src/MediaCompany.Pilot.Web/Routes.cs (modified)
+  - src/MediaCompany.Pilot.Web/Pages/index.html (modified)
+  - src/MediaCompany.Pilot.Web/Pages/app.js (modified)
+  - src/MediaCompany.Pilot.Web/Pages/app.css (modified)
+  - tests/MediaCompany.Pilot.Web.Tests/Cdp.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ButtonFixture.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ButtonCases.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ButtonServerCases.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ButtonBrowserCases.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ReadHost.cs (modified)
+  - tests/MediaCompany.Pilot.Web.Tests/Runner.cs (modified)
   rescan_required_when:
   - the scope or the accepted design changes
   - a dependency this context does not name is discovered
   - a named module or file no longer exists at the recorded path
+changed_files:
+- src/MediaCompany.Pilot.Web/Pages/nut-doc-trang.js (added)
+- src/MediaCompany.Pilot.Web/ButtonBuilder.cs (added)
+- src/MediaCompany.Pilot.Web/BlockReader.cs (added)
+- src/MediaCompany.Pilot.Web/ReadSender.cs (modified)
+- src/MediaCompany.Pilot.Web/FillRecord.cs (modified)
+- src/MediaCompany.Pilot.Web/ProductRead.cs (modified)
+- src/MediaCompany.Pilot.Web/Routes.cs (modified)
+- src/MediaCompany.Pilot.Web/Pages/index.html (modified)
+- src/MediaCompany.Pilot.Web/Pages/app.js (modified)
+- src/MediaCompany.Pilot.Web/Pages/app.css (modified)
+- tests/MediaCompany.Pilot.Web.Tests/Cdp.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ButtonFixture.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ButtonCases.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ButtonServerCases.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ButtonBrowserCases.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ReadHost.cs (modified)
+- tests/MediaCompany.Pilot.Web.Tests/Runner.cs (modified)
 affected_areas:
   determinable: true
   declared: []
@@ -922,6 +1043,7 @@ affected_areas:
   - artifact:scope-and-acceptance
   - artifact:execution-planning
   - artifact:solution-design-and-risk-assessment
+  - artifact:implementation
 relevant_skills:
   scope-and-acceptance:
     S02: required

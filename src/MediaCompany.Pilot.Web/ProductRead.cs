@@ -47,6 +47,47 @@ internal static class ProductRead
             return new ReadResult(null, stop, sender.Requests, sender.LocalAddresses);
         }
 
+        var (saved, skipped, imageStop) = await FetchImages(sender, final, page.Images, imageFolder, refuse: null);
+        var fill = FillStore.FromRead(link, final, page, now, saved, skipped);
+        var stopped = imageStop is null ? null : new ReadStop(imageStop.Code,
+            $"Đã điền thông tin từ trang và lưu {saved.Count} ảnh, rồi dừng khi lấy ảnh: {imageStop.Reason}",
+            "Xác nhận các ô đã điền. Các ảnh chưa lấy được ghi tên ở dưới: tải chúng lên ở bước 2. "
+            + "Muốn điền lại từ đầu thì mở trang trong trình duyệt của bạn, chép chữ trang rồi dán vào ô \"Dán chữ của trang sản phẩm\"; hoặc gõ tay các ô. "
+            + "Ứng dụng không thử đọc lại.");
+        return new ReadResult(fill, stopped, sender.Requests, sender.LocalAddresses);
+    }
+
+    /// <summary>
+    /// A BUTTON BLOCK'S IMAGES (MC-19 D-005, D-016): after a block is accepted, the image phase of the read, unchanged, over the image
+    /// addresses the block carries, checked against the pressed page's address; an address whose path is the pressed page's own path is
+    /// refused (it would be a page request), named, and not requested. No page is ever requested. The caller holds the app-wide read gate.
+    /// </summary>
+    public static async Task<ReadResult> FromBlock(ButtonBlock block, ReadTransport? transport, ReadLog log, string imageFolder, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(block);
+        using var click = new CancellationTokenSource(ReadSender.ClickBound);
+        using var sender = new ReadSender(transport, log, click.Token);
+        var pagePath = block.Page.AbsolutePath;
+        var (saved, skipped, imageStop) = await FetchImages(sender, block.Page, block.Images, imageFolder,
+            address => string.Equals(address.AbsolutePath, pagePath, StringComparison.Ordinal) ? "địa chỉ ảnh trùng địa chỉ trang sản phẩm; ứng dụng không mở trang" : null);
+        var fill = FillStore.FromButtonBlock(block, now, saved, skipped);
+        var stopped = imageStop is null ? null : new ReadStop(imageStop.Code,
+            $"Đã điền thông tin từ nút đọc trang và lưu {saved.Count} ảnh, rồi dừng khi lấy ảnh: {imageStop.Reason}",
+            "Xác nhận các ô đã điền. Các ảnh chưa lấy được ghi tên ở dưới: tải chúng lên ở bước 2. Ứng dụng không thử lấy lại.");
+        return new ReadResult(fill, stopped, sender.Requests, sender.LocalAddresses);
+    }
+
+    /// <summary>
+    /// THE IMAGE PHASE (MC-18 D-005, D-010; shared with the button from MC-19): the folder is cleared, then each declared address is
+    /// checked by the link rule against the page (and by the caller's own refusal, if any) before it is requested, at most 20, one
+    /// request each with no redirect followed, kept only with a PNG or JPEG signature under anh-doc-NN; the first stop ends the phase
+    /// with no further request and names this and every later image for upload at step 2.
+    /// </summary>
+    public static async Task<(List<SavedImage> Saved, List<SkippedImage> Skipped, ReadStop? Stop)> FetchImages(
+        ReadSender sender, Uri page, IReadOnlyList<string> declared, string imageFolder, Func<Uri, string?>? refuse)
+    {
+        ArgumentNullException.ThrowIfNull(sender);
+        ArgumentNullException.ThrowIfNull(declared);
         Directory.CreateDirectory(imageFolder);
         foreach (var old in Directory.EnumerateFiles(imageFolder))
         {
@@ -56,9 +97,9 @@ internal static class ProductRead
         var saved = new List<SavedImage>();
         var skipped = new List<SkippedImage>();
         ReadStop? imageStop = null;
-        for (var i = 0; i < page.Images.Count; i++)
+        for (var i = 0; i < declared.Count; i++)
         {
-            var raw = page.Images[i];
+            var raw = declared[i];
             if (imageStop is not null)
             {
                 skipped.Add(new SkippedImage(raw, "lần đọc đã dừng trước ảnh này"));
@@ -71,7 +112,12 @@ internal static class ProductRead
                 continue;
             }
 
-            var (address, reason) = LinkRule.Image(final, raw);
+            var (address, reason) = LinkRule.Image(page, raw);
+            if (address is not null && refuse?.Invoke(address) is { } refused)
+            {
+                (address, reason) = (null, refused);
+            }
+
             if (address is null)
             {
                 skipped.Add(new SkippedImage(raw, reason!));
@@ -98,13 +144,7 @@ internal static class ProductRead
             }
         }
 
-        var fill = FillStore.FromRead(link, final, page, now, saved, skipped);
-        var stopped = imageStop is null ? null : new ReadStop(imageStop.Code,
-            $"Đã điền thông tin từ trang và lưu {saved.Count} ảnh, rồi dừng khi lấy ảnh: {imageStop.Reason}",
-            "Xác nhận các ô đã điền. Các ảnh chưa lấy được ghi tên ở dưới: tải chúng lên ở bước 2. "
-            + "Muốn điền lại từ đầu thì mở trang trong trình duyệt của bạn, chép chữ trang rồi dán vào ô \"Dán chữ của trang sản phẩm\"; hoặc gõ tay các ô. "
-            + "Ứng dụng không thử đọc lại.");
-        return new ReadResult(fill, stopped, sender.Requests, sender.LocalAddresses);
+        return (saved, skipped, imageStop);
     }
 
     /// <summary>

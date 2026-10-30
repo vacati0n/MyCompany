@@ -417,7 +417,8 @@
   // ---------------------------------------------------------------------------------------------
 
   const same = (a, b) => String(a || "").trim().normalize("NFC") === String(b || "").trim().normalize("NFC");
-  const sourceName = (fill) => (fill && fill.source === "read" ? "Đọc từ trang" : "Từ chữ đã dán");
+  const sourceNames = { read: "Đọc từ trang", paste: "Từ chữ đã dán", button: "Từ nút đọc trang" };
+  const sourceName = (fill) => sourceNames[fill && fill.source] || "Từ chữ đã dán";
 
   function renderRead(status) {
     MC17.readOn = !!status.readOn;
@@ -455,6 +456,7 @@
     $("read-not-fetched").replaceChildren();
     $("read-not-found").textContent = "";
     $("read-images-part").hidden = true;
+    $("button-shot").hidden = !(fill && fill.source === "button");
     if (!fill) {
       updateMarks();
       return;
@@ -528,6 +530,8 @@
     value(target, "attribute").value = candidate.attribute;
     value(target, "value").value = candidate.value;
     value(target, "sourceSection").value = candidate.sourceSection;
+    const shot = value(target, "screenshot");
+    if (MC17.fill && MC17.fill.source === "button" && MC17.buttonShot && shot.value.trim() === "") shot.value = MC17.buttonShot;
   }
 
   // Dấu "Đọc từ trang" hoặc "Từ chữ đã dán" cạnh mỗi ô còn đúng giá trị đã điền; ô đã sửa coi như gõ tay và không còn dấu.
@@ -607,6 +611,62 @@
   }
 
   // ---------------------------------------------------------------------------------------------
+  // Bước 1 (MC-19): khối thông tin của nút "Đọc trang Shopee", dán ở bất kỳ chỗ nào trên trang.
+  // Chữ dán bắt đầu bằng dấu của khối được gửi ngay cho ứng dụng cùng mã video đang mở; chữ khác dán như bình thường.
+  // ---------------------------------------------------------------------------------------------
+
+  const BLOCK_MARKER = "MC19-NUT-DOC-TRANG";
+
+  function onPaste(event) {
+    const text = event.clipboardData ? event.clipboardData.getData("text/plain") : "";
+    if (!text || !text.trimStart().startsWith(BLOCK_MARKER)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    pasteBlock(text);
+  }
+
+  async function pasteBlock(text) {
+    const open = !$("view-video").hidden && !!MC17.code;
+    const path = open ? "/api/paste?code=" + encodeURIComponent(MC17.code) : "/api/paste";
+    if (open) showStep(1);
+    const target = open ? "read-outcome" : "global-outcome";
+    $(target).replaceChildren();
+    if (open) $("read-status").textContent = "Đang điền từ nút đọc trang và lấy ảnh...";
+    const reply = await api("POST", path, { text });
+    if (open) $("read-status").textContent = "";
+    MC17.lastBlock = reply;
+    if (reply.fill) {
+      MC17.fill = reply.fill;
+      MC17.buttonShot = null;
+      applyFill(reply.fill);
+      renderFill();
+    }
+    if (reply.ok) {
+      showMessage(target, reply.message);
+      return;
+    }
+    showOutcome(target, reply.outcome);
+  }
+
+  // Một ảnh chụp cho mọi dòng điền từ nút (D-008): tải lên một lần, ghi vào mọi dòng từ nút còn trống ảnh chụp.
+  async function uploadButtonShot() {
+    const file = $("button-shot-file").files[0];
+    if (!file) return;
+    const reply = await api("POST", q("/api/screenshot") + "&name=" + encodeURIComponent(file.name), file, "application/octet-stream");
+    showReply("facts-outcome", reply);
+    if (!reply.ok) return;
+    MC17.buttonShot = reply.name;
+    const fill = MC17.fill;
+    for (const box of $("facts-rows").children) {
+      const attribute = box.querySelector('input[data-member="attribute"]').value;
+      const value = box.querySelector('input[data-member="value"]').value;
+      const shot = box.querySelector('input[data-member="screenshot"]');
+      const fromButton = fill && fill.source === "button" && fill.candidates.some((c) => same(attribute, c.attribute) && same(value, c.value));
+      if (fromButton && shot.value.trim() === "") shot.value = reply.name;
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
   // Cài đặt: bật hoặc tắt đọc trang sản phẩm
   // ---------------------------------------------------------------------------------------------
 
@@ -619,6 +679,15 @@
     $("settings-read").checked = reply.readOn;
     $("settings-file").textContent = "Lưu ở tệp " + reply.switchFile;
     $("settings-outcome").replaceChildren();
+    $("button-outcome").replaceChildren();
+    const button = await api("GET", "/api/button");
+    if (button.ok) {
+      $("button-link").href = button.address;
+      $("button-address").value = button.address;
+      $("button-version").textContent = "Dạng khối " + button.formVersion + ", dấu của nút " + button.mark + ". Khi ứng dụng được cập nhật mà dấu này đổi, kéo nút mới lên thanh dấu trang thay cho nút cũ.";
+    } else {
+      showOutcome("button-outcome", button.outcome);
+    }
     showView("settings");
   }
 
@@ -1059,6 +1128,12 @@
     $("paste-run").addEventListener("click", pasteProduct);
     $("nav-settings").addEventListener("click", openSettings);
     $("settings-read").addEventListener("change", setReadSwitch);
+    $("button-link").addEventListener("click", (event) => {
+      event.preventDefault();
+      showMessage("button-outcome", "Nút chỉ chạy trên trang sản phẩm shopee.vn. Hãy kéo nút này lên thanh dấu trang (Ctrl+Shift+B để hiện thanh), rồi bấm nó trên trang sản phẩm.");
+    });
+    $("button-shot-file").addEventListener("change", uploadButtonShot);
+    document.addEventListener("paste", onPaste, true);
     $("facts-header").addEventListener("input", updateMarks);
     $("facts-rows").addEventListener("input", updateMarks);
     $("script-run").addEventListener("click", runScript);

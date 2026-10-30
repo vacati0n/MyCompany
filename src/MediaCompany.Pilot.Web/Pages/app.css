@@ -64,3 +64,4 @@ fieldset { border: 1px solid #d5d9de; border-radius: 6px; margin: 10px 0; }
 .fill-mark { font-size: 14px; color: #8a5a00; margin-left: 6px; }
 .fill-mark.confirmed { color: #1f6f43; }
 .fill-mark .confirm { padding: 1px 10px; font-size: 14px; }
+.button-link { display: inline-block; padding: 8px 16px; border: 2px solid #ee4d2d; border-radius: 6px; color: #ee4d2d; font-weight: bold; text-decoration: none; cursor: grab; }

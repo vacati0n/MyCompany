@@ -138,6 +138,8 @@ public static class Program
         flow.AddClosing();
         using var read = new ReadCases(runner);
         read.Add();
+        using var button = new ButtonCases(runner);
+        button.Add();
         try
         {
             return runner.Run(args.Length > 0 ? args[0] : null);

@@ -40,7 +40,7 @@ internal sealed class ReadApp : IDisposable
     public int Port => new Uri(Origin).Port;
 
     /// <summary>Starts the app on the given folders with the fixture's seam; with a pilot folder, setup is saved through the app's own route.</summary>
-    public static ReadApp Start(string root, ReadFixture fixture, string? pilotFolder, int port = 0, bool testMode = false, string? resultPath = null)
+    public static ReadApp Start(string root, ReadFixture fixture, string? pilotFolder, int port = 0, bool testMode = false, string? resultPath = null, string? fixtureOrigin = null)
     {
         ArgumentNullException.ThrowIfNull(fixture);
         var options = new WebOptions
@@ -53,7 +53,7 @@ internal sealed class ReadApp : IDisposable
             TestResultPath = resultPath,
         };
         Directory.CreateDirectory(options.AppFolder);
-        var (app, web, exit) = MediaCompany.Pilot.Web.Program.Start(options, fixture.Transport).GetAwaiter().GetResult();
+        var (app, web, exit) = MediaCompany.Pilot.Web.Program.Start(options, fixture.Transport with { FixtureOrigin = fixtureOrigin }).GetAwaiter().GetResult();
         if (app is null)
         {
             throw new CaseFailure($"the in-process app did not start (exit {exit})");
