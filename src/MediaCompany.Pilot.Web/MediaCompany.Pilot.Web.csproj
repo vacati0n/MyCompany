@@ -18,6 +18,13 @@
     <ProjectReference Include="..\MediaCompany.Pilot\MediaCompany.Pilot.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <!--
+      MC-18 design decision D-004: the read's transport seam and the internal start path that takes it are internal to this assembly
+      and visible to the test assembly only, so the shipped entry point cannot point a read at the test fixture.
+    -->
+    <InternalsVisibleTo Include="MediaCompany.Pilot.Web.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- The page set (module M-002) is embedded and served from memory: no content folder, no static-asset manifest, nothing fetched. -->
     <None Remove="Pages\**" />
     <Content Remove="Pages\**" />

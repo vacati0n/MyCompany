@@ -2769,3 +2769,17 @@ option on each question put in Vietnamese.
 seller, buy nothing and publish nothing.
 
 ---
+
+## CEO-D-1316 — MC-18: the CEO names the link for the one live read
+
+**The CEO's own decision, 2026-10-30**, resuming MC-18. The CEO's words: "tiếp tục làm. link sản phẩm:
+https://s.shopee.vn/4qGnwJJXwI".
+
+1. **Named link (`CEO-D-1314` item 3).** The one live read of MC-18 is made on `https://s.shopee.vn/4qGnwJJXwI`, once,
+   by the orchestrator, with the built step after quality review, without sign-in. The short link is followed only
+   while every hop is an allowed host, at most five hops. A block, sign-in wall or CAPTCHA ends the read with no retry.
+2. No development agent reads this link or any shopee.vn page.
+
+**Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `CEO-D-1315`, `D-002`, `D-018`.
+
+---

@@ -52,3 +52,15 @@ td.note { font-size: 14px; color: #6b4a00; }
 tr.tool td { color: #555; background: #f2f4f6; }
 .numbers li { margin: 2px 0; }
 fieldset { border: 1px solid #d5d9de; border-radius: 6px; margin: 10px 0; }
+.nav-right { margin-left: 16px; }
+.read-box { border: 1px solid #b8c0c8; border-radius: 6px; padding: 8px 14px 12px; margin: 8px 0 14px; background: #f8fafc; }
+.read-box textarea { width: 100%; }
+.candidates li { margin: 4px 0; }
+.reference { background: #f2f4f6; border-radius: 6px; padding: 2px 12px; margin: 8px 0; }
+.reference .description { white-space: pre-wrap; font-size: 14px; max-height: 12em; overflow: auto; }
+.read-images { display: flex; flex-wrap: wrap; gap: 10px; }
+.read-image { display: flex; flex-direction: column; align-items: center; margin: 0; font-size: 14px; }
+.read-image img { width: 120px; height: 120px; object-fit: contain; border: 1px solid #ccc; background: #fff; }
+.fill-mark { font-size: 14px; color: #8a5a00; margin-left: 6px; }
+.fill-mark.confirmed { color: #1f6f43; }
+.fill-mark .confirm { padding: 1px 10px; font-size: 14px; }

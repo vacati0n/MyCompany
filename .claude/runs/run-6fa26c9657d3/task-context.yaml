@@ -2,8 +2,8 @@ schema: framework.runtime/task-context.v1
 task_id: run-6fa26c9657d3
 command: implement
 workflow: implement-feature v1.0.0
-run_status: ExecutingState
-updated_at: '2026-10-27T13:44:04Z'
+run_status: Dispatching
+updated_at: '2026-10-30T01:50:21Z'
 objective: 'Source: CEO-D-1313 (the CEO''s own decision, 2026-10-27); local://research/ceo-decision-record.md#ceo-d-1313 Issue
   type: Feature Priority: Highest Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, network-egress,
   vietnamese Routed as: /implement (implement-feature) Builds on: MC-17 (src/MediaCompany.Pilot.Web, run run-022d0492a75a,
@@ -41,7 +41,7 @@ relevant_agents:
   - S09
 - phase: implementation
   agent: dev-1-implement
-  status: running
+  status: completed
   required_skills:
   - S03
   - S06
@@ -81,6 +81,12 @@ completed_phases:
   digest: sha256:4194c7d2cc8f52157c86ea51657265ee
   validation: pass 78/78
   attempts: 1
+- phase: implementation
+  agent: dev-1-implement
+  artifact: runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md
+  digest: sha256:32dcdbc19e822210b1fdaf0df4699c5d
+  validation: pass 32/32
+  attempts: 1
 gates:
 - gate: Scope Gate
   closes: scope-and-acceptance
@@ -116,6 +122,7 @@ artifacts:
   scope-and-acceptance: runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md
   execution-planning: runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md
   solution-design-and-risk-assessment: runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md
+  implementation: runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md
 parallel_groups:
 - - scope-and-acceptance
   - execution-planning
@@ -332,6 +339,42 @@ validation_requirements:
   - 'SC-32: M-011, M-017 | inspection | none'
   - 'SC-33: C-018 | inspection | none'
   - 'SC-34: D-004 | record | fixture host with read fixture and blocked fixture'
+  evidence:
+  - 'T-001: The web app and its test program build: 0 warnings, 0 errors | static | C-001, C-002, C-003, C-004, C-005, C-006,
+    C-007, C-008, C-009, C-010, C-015, C-016, C-017, C-018, C-019, C-020'
+  - 'T-002: Program cases 001 to 008, including case 008 as changed: no package reference, no external address in the p...
+    | unit | C-001, C-007, C-011, C-012, C-013, C-014, C-019'
+  - 'T-003: MC-17 program cases 010 to 042 (28 cases: start-up, guard, setup, the seven steps, ledger refusals, browser...
+    | regression | C-002, C-003, C-004, C-005, C-011, C-012, C-013, C-014, C-018, C-020'
+  - 'T-004: Program cases 050 and 060. Five disallowed links (example.com, xshopee.vn, shopee.vn.example.test, 203.0.11...
+    | integration | C-002, C-003, C-006, C-007, C-015, C-016, C-017'
+  - 'T-005: Program cases 051, 052, 054 and 059. Good read: name, classification, page address and read date filled, ca...
+    | integration | C-005, C-006, C-007, C-008, C-009, C-010, C-015, C-016, C-017'
+  - 'T-006: Program case 053. Nine stops each end with their code, the Vietnamese reason, the paste offer and no later...
+    | integration | C-003, C-005, C-007, C-008, C-010, C-015, C-017'
+  - 'T-007: Program cases 055, 056 and 058. An empty operator field is refused by name (header-field-missing). With N =...
+    | integration | C-004, C-005, C-008, C-009, C-010, C-015, C-017'
+  - 'T-008: Program case 057. The switch is off by default and a read is refused with 0 connections; paste and typed sa...
+    | integration | C-002, C-005, C-009, C-017'
+  - 'T-009: Program case 061, socket tables of the fixture host as a child process: no read connection while off, durin...
+    | integration | C-002, C-007, C-016, C-017, C-018'
+  - 'T-010: Program case 062, the digest-checked headless shell against the fixture: read part hidden and off note show...
+    | end-to-end | C-005, C-009, C-011, C-012, C-013, C-014, C-017, C-020'
+  - 'T-011: Program case 061 alone with a 600 s idle period (MC18_IDLE_SECONDS=600): no outbound connection while a lin...
+    | integration | C-007, C-016, C-017'
+  - 'T-012: MC-16 pilot regression: 251 of 251, unchanged | regression | C-001, C-002'
+  - 'T-013: Toolchain unchanged: no diff under src/MediaCompany.Pilot or tests/MediaCompany.Pilot.Tests; the eight new...
+    | static | C-001, C-015, C-016, C-017'
+  - 'T-014: Fixture host mode starts on 127.0.0.1:47900 with the switch on, prints its ready line, the fixture links an...
+    | integration | C-016, C-018'
+  verification:
+  - 'Verification method: The web app and its test program were built. The whole test program ran end to end: the MC-17 cases
+    against the built app, and the read...'
+  - 'Commands executed: dotnet build tests/MediaCompany.Pilot.Web.Tests; dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests;
+    MC18_IDLE_SECONDS=600...'
+  - 'Result summary: 14 evidence entries executed, 14 passed, 0 failed. Build: 0 warnings, 0 errors. Web test program: 49
+    of 49 (the 36 MC-17 cases plus program c...'
+  - 'Unverified areas: none'
 constraints:
 - 'Business constraints: The CEO carries the terms risk as the individual creator (CEO decision 1313 item 5: Shopee''s partner
   terms forbid partners collecting i...'
@@ -488,6 +531,20 @@ decisions:
   no | inline'
 - 'D-015: Link admission refuses a field holding more than one link, naming the one-product rule; the page never star... |
   no | inline'
+- 'V-001: Program case 008, an MC-17 case, was changed rather than only added to: its check that the app has no HTTP... |
+  SC-17 additions only; D-001 | The MC-17 assertion forbids exactly what D-001 requires the app to do now. Leaving it would
+  fail; deleting...'
+- 'V-002: The idle period of program case 061 is 20 s in the full run and is set by MC18_IDLE_SECONDS; the 10-minute... |
+  SC-19 idle 10 minutes | Ten minutes in every full run would more than triple its length; the separate run gives the 10-minute
+  evidence'
+- 'V-003: The harness sample (program case 061) runs a read and then the script verb on the read values, not produce;... |
+  SC-26 sample run with a read and produce | The fixture host has no recording or clip; producing would need the whole MC-17
+  flow inside the harness cas...'
+- 'V-004: test-driver.js gains a second driver for the read, and app.js keeps the last read, paste and save answers o... |
+  D-004 test seam | The driver tests the real page; like the MC-17 driver it is served only in test mode, and it holds no
+  host...'
+- 'V-005: BrowserCase.cs gains a launch helper used by program case 062; program case 030 is unchanged (C-020) | SC-17 additions
+  only | Both browser cases use one digest check and one set of isolation flags'
 open_questions:
 - 'Q-001: Shopee serves product images from hosts outside shopee.vn (for example .susercontent.com); may the read fet... |
   yes | CEO'
@@ -523,6 +580,10 @@ open_questions:
 - 'Q-007: May the SC-34 Browser-pane run use the test program''s fixture host (A-017)? | non-blocking | qa'
 - 'Q-008: Design Gate acceptance of D-001 to D-006, all at Proposed; tech-lead accepts under the producer exclusion r... |
   non-blocking | tech-lead'
+- 'Q-001: Is narrowing program case 008''s networking check to "network types only in ReadSender.cs" accepted as the o...
+  | non-blocking | qa'
+- 'Q-002: Is the harness sample with a read and the script verb, with produce covered by program case 042, accepted f... |
+  non-blocking | qa'
 objectives:
 - 'TO-1: A read returns name, classification and specification rows equal to the page''s values after Unicode NFC normalisation,
   and a paste returns the same row...'
@@ -712,6 +773,17 @@ risks:
 - 'R-027: delivery | The Design Gate decision is delayed or declines the design | Implementation waits or returns to design'
 - 'R-028: delivery | The unmerged MC-16 or MC-17 branch changes after the MC-18 session branch is cut | Rebase and re-run
   of the 251 and 36 tests'
+- 'R-001: The real product page may show its product data only after the page''s scripts run, so a plain read of its H...
+  | high | The read stops with no-product and the operator uses paste or types'
+- 'R-002: Shopee may answer an automated read with 403, 429, a sign-in wall or a CAPTCHA | medium | No fill for that click'
+- 'R-003: The fixture''s page structure (structured product block, labelled specifications, declared images) is a mode...
+  | medium | A real page could fill fewer fields or offer odd candidate rows'
+- 'R-004: The image-host rule accepts any host ending .susercontent.com | low | An image could come from a host of that suffix
+  the page names'
+- 'R-005: The socket harness samples the tables and can miss a socket that opens and closes between samples | low | A brief
+  connection could go unseen by the harness'
+- 'R-006: Anyone who can write the app folder can turn the switch on | low | Reads become possible without the operator using
+  "Cài đặt"'
 plan_tasks:
 - 'T-001: Produce the MC-18 technical design package | depends on none'
 - 'T-002: Map every acceptance criterion to a fixture case | depends on T-001'
@@ -802,11 +874,52 @@ repository_context:
   - 'M-018: Address harness (AddressHarness.cs) | no-change-verified | F-017'
   - 'M-019: Steps 2 to 7 routes and pages | no-change-verified | F-006'
   - 'M-020: mediacompany database, MediaCompany.Persistence, MC-13 and MC-14 material | no-change-verified | F-010'
-  relevant_files: []
+  relevant_files:
+  - src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj (modified)
+  - src/MediaCompany.Pilot.Web/Program.cs (modified)
+  - src/MediaCompany.Pilot.Web/WebContext.cs (modified)
+  - src/MediaCompany.Pilot.Web/Workspace.cs (modified)
+  - src/MediaCompany.Pilot.Web/Routes.cs (modified)
+  - src/MediaCompany.Pilot.Web/ReadLink.cs (added)
+  - src/MediaCompany.Pilot.Web/ReadSender.cs (added)
+  - src/MediaCompany.Pilot.Web/ProductText.cs (added)
+  - src/MediaCompany.Pilot.Web/FillRecord.cs (added)
+  - src/MediaCompany.Pilot.Web/ProductRead.cs (added)
+  - src/MediaCompany.Pilot.Web/Pages/index.html (modified)
+  - src/MediaCompany.Pilot.Web/Pages/app.js (modified)
+  - src/MediaCompany.Pilot.Web/Pages/app.css (modified)
+  - src/MediaCompany.Pilot.Web/Pages/test-driver.js (modified)
+  - tests/MediaCompany.Pilot.Web.Tests/ReadFixture.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ReadHost.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/ReadCases.cs (added)
+  - tests/MediaCompany.Pilot.Web.Tests/Runner.cs (modified)
+  - tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs (modified)
+  - tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs (modified)
   rescan_required_when:
   - the scope or the accepted design changes
   - a dependency this context does not name is discovered
   - a named module or file no longer exists at the recorded path
+changed_files:
+- src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj (modified)
+- src/MediaCompany.Pilot.Web/Program.cs (modified)
+- src/MediaCompany.Pilot.Web/WebContext.cs (modified)
+- src/MediaCompany.Pilot.Web/Workspace.cs (modified)
+- src/MediaCompany.Pilot.Web/Routes.cs (modified)
+- src/MediaCompany.Pilot.Web/ReadLink.cs (added)
+- src/MediaCompany.Pilot.Web/ReadSender.cs (added)
+- src/MediaCompany.Pilot.Web/ProductText.cs (added)
+- src/MediaCompany.Pilot.Web/FillRecord.cs (added)
+- src/MediaCompany.Pilot.Web/ProductRead.cs (added)
+- src/MediaCompany.Pilot.Web/Pages/index.html (modified)
+- src/MediaCompany.Pilot.Web/Pages/app.js (modified)
+- src/MediaCompany.Pilot.Web/Pages/app.css (modified)
+- src/MediaCompany.Pilot.Web/Pages/test-driver.js (modified)
+- tests/MediaCompany.Pilot.Web.Tests/ReadFixture.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ReadHost.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/ReadCases.cs (added)
+- tests/MediaCompany.Pilot.Web.Tests/Runner.cs (modified)
+- tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs (modified)
+- tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs (modified)
 affected_areas:
   determinable: true
   declared: []
@@ -839,6 +952,7 @@ affected_areas:
   - artifact:scope-and-acceptance
   - artifact:execution-planning
   - artifact:solution-design-and-risk-assessment
+  - artifact:implementation
 relevant_skills:
   scope-and-acceptance:
     S02: required

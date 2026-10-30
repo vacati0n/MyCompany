@@ -5,9 +5,9 @@
   "command_id": "implement",
   "workflow_id": "implement-feature",
   "workflow_version": "1.0.0",
-  "run_status": "ExecutingState",
+  "run_status": "Dispatching",
   "created_at": "2026-10-27T04:12:08Z",
-  "updated_at": "2026-10-27T13:44:04Z",
+  "updated_at": "2026-10-30T01:50:20Z",
   "input_digest": "sha256:cdd6a3089565e711536549f31b6982a6",
   "inputs": [
     {
@@ -553,8 +553,8 @@
       "state_id": "implementation",
       "work_type": "state",
       "owner_agent_id": "dev-1-implement",
-      "status": "running",
-      "queue_status": "Executing",
+      "status": "completed",
+      "queue_status": "Completed",
       "eligible": true,
       "phase_index": 4,
       "gate": "none",
@@ -630,11 +630,43 @@
           "gate": null
         }
       ],
-      "completion": null,
+      "completion": {
+        "committed_at": "2026-10-30T01:50:20Z",
+        "artifact_path": "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+        "artifact_digest": "sha256:32dcdbc19e822210b1fdaf0df4699c5d",
+        "result_status": "succeeded",
+        "invocation_id": "inv-6fa26c9657d3-04-001",
+        "validation": {
+          "result": "pass",
+          "checksRun": 32,
+          "checksPassed": 32,
+          "blockingFailures": 0,
+          "correctableFailures": 0,
+          "notMachineCheckable": 3,
+          "counts": {
+            "sections": 10,
+            "status": "complete",
+            "identifiers": {
+              "C": 20,
+              "T": 14,
+              "V": 5,
+              "R": 6,
+              "Q": 2
+            },
+            "tableRows": {
+              "Change Set": 20,
+              "Test Evidence": 14,
+              "Deviations and Tradeoffs": 5,
+              "Residual Risk": 6
+            }
+          },
+          "undeclaredSideEffects": []
+        }
+      },
       "supersessions": [],
       "replays": [],
       "created_at": "2026-10-27T04:12:08Z",
-      "updated_at": "2026-10-27T13:44:04Z",
+      "updated_at": "2026-10-30T01:50:20Z",
       "blocked_by": null,
       "invocation_id": "inv-6fa26c9657d3-04-001",
       "artifact_path": "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
@@ -648,8 +680,8 @@
       "work_type": "state",
       "owner_agent_id": "dev-2-reviewer",
       "status": "pending",
-      "queue_status": "Waiting",
-      "eligible": false,
+      "queue_status": "Ready",
+      "eligible": true,
       "phase_index": 5,
       "gate": "Review Gate, Verification Gate",
       "artifact": "review-package.md",
@@ -696,11 +728,31 @@
         {
           "id": "G3-PREDECESSOR",
           "title": "hard predecessors have completed",
-          "outcome": "wait",
-          "reason_code": "dependency_wait",
+          "outcome": "pass",
+          "reason_code": "enqueued",
           "blocked_reason": null,
           "failure_class": null,
-          "detail": "waiting on ['implementation=pending']",
+          "detail": "hard predecessors: implementation",
+          "gate": null
+        },
+        {
+          "id": "G4-GATE",
+          "title": "predecessor gates are approved",
+          "outcome": "pass",
+          "reason_code": "output_accepted",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "gates on hard predecessors: none",
+          "gate": null
+        },
+        {
+          "id": "G5-INPUT",
+          "title": "the agent input contract is satisfied",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "supplied ['feature-request', 'business-intent', 'implementation-report']; required none (menu contract)",
           "gate": null
         }
       ],
@@ -708,7 +760,7 @@
       "supersessions": [],
       "replays": [],
       "created_at": "2026-10-27T04:12:08Z",
-      "updated_at": "2026-10-27T13:44:03Z"
+      "updated_at": "2026-10-30T01:50:20Z"
     },
     "gate:Review Gate": {
       "work_item_id": "run-6fa26c9657d3::gate::Review Gate",
@@ -758,7 +810,7 @@
       "supersessions": [],
       "replays": [],
       "created_at": "2026-10-27T04:12:08Z",
-      "updated_at": "2026-10-27T13:44:03Z"
+      "updated_at": "2026-10-30T01:50:20Z"
     },
     "gate:Verification Gate": {
       "work_item_id": "run-6fa26c9657d3::gate::Verification Gate",
@@ -808,7 +860,7 @@
       "supersessions": [],
       "replays": [],
       "created_at": "2026-10-27T04:12:08Z",
-      "updated_at": "2026-10-27T13:44:03Z"
+      "updated_at": "2026-10-30T01:50:20Z"
     },
     "documentation-and-release-handoff": {
       "work_item_id": "run-6fa26c9657d3::documentation-and-release-handoff",
@@ -878,7 +930,7 @@
       "supersessions": [],
       "replays": [],
       "created_at": "2026-10-27T04:12:08Z",
-      "updated_at": "2026-10-27T13:44:03Z"
+      "updated_at": "2026-10-30T01:50:20Z"
     },
     "gate:Closure Gate": {
       "work_item_id": "run-6fa26c9657d3::gate::Closure Gate",
@@ -928,7 +980,7 @@
       "supersessions": [],
       "replays": [],
       "created_at": "2026-10-27T04:12:08Z",
-      "updated_at": "2026-10-27T13:44:03Z"
+      "updated_at": "2026-10-30T01:50:20Z"
     }
   },
   "gates": {
@@ -1478,6 +1530,24 @@
       "attempt": 1,
       "idempotency_key": "sha256:2c0fa9085d7c35592a181efaf7706fd1",
       "detail": "dispatching dev-1-implement v1.1.0 through agents/dev-1-implement.agent.md"
+    },
+    {
+      "seq": 26,
+      "at": "2026-10-30T01:50:20Z",
+      "work_item_id": "run-6fa26c9657d3::implementation",
+      "state_id": "implementation",
+      "work_type": "state",
+      "phase_index": 4,
+      "from": "running",
+      "to": "completed",
+      "trigger": "result_accepted",
+      "reason_code": "output_accepted",
+      "queue_status": "Completed",
+      "actor_type": "runtime",
+      "actor_id": "validation-engine",
+      "attempt": 1,
+      "idempotency_key": "sha256:2c0fa9085d7c35592a181efaf7706fd1",
+      "detail": "artifact accepted: 32/32 checks passed"
     }
   ],
   "replays": [],

@@ -4,10 +4,10 @@
   "command_id": "implement",
   "workflow_id": "implement-feature",
   "workflow_version": "1.0.0",
-  "status": "ExecutingState",
+  "status": "Dispatching",
   "input_digest": "sha256:cdd6a3089565e711536549f31b6982a6",
   "created_at": "2026-10-27T04:12:08Z",
-  "updated_at": "2026-10-27T13:44:04Z",
+  "updated_at": "2026-10-30T01:50:21Z",
   "states": {
     "scope-and-acceptance": {
       "status": "completed",
@@ -135,8 +135,8 @@
       "attempts_superseded": 0
     },
     "implementation": {
-      "status": "running",
-      "queue_status": "Executing",
+      "status": "completed",
+      "queue_status": "Completed",
       "owner_agent_id": "dev-1-implement",
       "attempt": 1,
       "attempts_lost": 0,
@@ -148,12 +148,37 @@
       "blocked_reason": null,
       "failure_class": null,
       "state_ledger": "runs/run-6fa26c9657d3/states/implementation/state-ledger.json",
-      "validation": null,
+      "validation": {
+        "result": "pass",
+        "checksRun": 32,
+        "checksPassed": 32,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 10,
+          "status": "complete",
+          "identifiers": {
+            "C": 20,
+            "T": 14,
+            "V": 5,
+            "R": 6,
+            "Q": 2
+          },
+          "tableRows": {
+            "Change Set": 20,
+            "Test Evidence": 14,
+            "Deviations and Tradeoffs": 5,
+            "Residual Risk": 6
+          }
+        },
+        "undeclaredSideEffects": []
+      },
       "attempts_superseded": 0
     },
     "quality-review": {
       "status": "pending",
-      "queue_status": "Waiting",
+      "queue_status": "Ready",
       "owner_agent_id": "dev-2-reviewer",
       "attempt": 0,
       "attempts_lost": 0,
@@ -285,15 +310,15 @@
   },
   "summary": {
     "run_id": "run-6fa26c9657d3",
-    "run_status": "ExecutingState",
+    "run_status": "Dispatching",
     "phases": 6,
-    "completed": 3,
+    "completed": 4,
     "blocked": 0,
     "failed": 0,
     "pending": 2,
     "retrying": 0,
-    "active": 1,
-    "transitions": 25,
+    "active": 0,
+    "transitions": 26,
     "replays_suppressed": 0
   },
   "recovery": {

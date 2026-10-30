@@ -162,4 +162,47 @@ internal static class BrowserCase
             }
         });
     }
+
+    /// <summary>
+    /// The digest-checked headless shell on a page of the app, with the same isolation flags as the recording case and no media device:
+    /// every name but 127.0.0.1 resolves to nothing, no proxy, no background traffic. Used by the MC-18 page case.
+    /// </summary>
+    internal static Process Launch(string profile, string url, IEnumerable<string> extra)
+    {
+        var graphics = Path.GetDirectoryName(BrowserRoot)!;
+        var shell = Path.Combine(BrowserRoot, Shell.Replace('/', Path.DirectorySeparatorChar));
+        var line = File.ReadAllLines(Path.Combine(graphics, "manifests", "browser.sha256")).Single(l => l.EndsWith(" *" + Shell, StringComparison.Ordinal));
+        using (var stream = File.OpenRead(shell))
+        {
+            Expect.Equal(line[..64], Convert.ToHexStringLower(SHA256.HashData(stream)), "headless shell digest against browser.sha256");
+        }
+
+        var start = new ProcessStartInfo(shell) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true };
+        foreach (var argument in new[]
+        {
+            $"--user-data-dir={profile}",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--no-proxy-server",
+            "--disable-background-networking",
+            "--disable-component-update",
+            "--disable-sync",
+            "--disable-default-apps",
+            "--disable-extensions",
+            "--metrics-recording-only",
+            "--disable-domain-reliability",
+            "--disable-features=MediaRouter,OptimizationHints,Translate,AsyncDns,DnsOverHttps",
+            "--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1",
+            "--webrtc-ip-handling-policy=disable_non_proxied_udp",
+            "--force-webrtc-ip-handling-policy",
+        }.Concat(extra).Append(url))
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        var browser = Process.Start(start) ?? throw new CaseFailure("the headless shell did not start");
+        _ = browser.StandardOutput.ReadToEndAsync();
+        _ = browser.StandardError.ReadToEndAsync();
+        return browser;
+    }
 }

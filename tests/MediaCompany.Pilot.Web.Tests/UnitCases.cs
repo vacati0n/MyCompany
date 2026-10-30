@@ -240,8 +240,21 @@ internal static class UnitCases
                     Expect.True(!types.Contains(forbidden), $"the app references {forbidden}: produce never runs in the app's process");
                 }
 
+                // MC-18 (design decision D-001): the product read is the app's one outbound client. Its stack carries no proxy, cookie
+                // store or older handler, the app opens no listener of its own and no datagram socket, and one source file holds it.
                 var networking = types.Where(t => t.StartsWith("System.Net.Http.", StringComparison.Ordinal) || t.StartsWith("System.Net.Sockets.", StringComparison.Ordinal)).ToList();
-                Expect.Equal(0, networking.Count, $"the app opens no outbound client: {string.Join(", ", networking)}");
+                var forbiddenNetworking = new[]
+                {
+                    "System.Net.WebProxy", "System.Net.CookieContainer", "System.Net.Http.HttpClientHandler", "System.Net.Sockets.TcpListener",
+                    "System.Net.Sockets.UdpClient", "System.Net.HttpListener", "System.Net.WebClient", "System.Net.WebRequest",
+                };
+                var forbiddenFound = types.Where(forbiddenNetworking.Contains).ToList();
+                Expect.Equal(0, forbiddenFound.Count, $"the app references {string.Join(", ", forbiddenFound)}");
+                var outbound = Directory.EnumerateFiles(Path.Combine(repo, "src", "MediaCompany.Pilot.Web"), "*.cs")
+                    .Where(f => Regex.IsMatch(File.ReadAllText(f), @"\b(HttpClient|SocketsHttpHandler|NetworkStream)\b|new Socket\("))
+                    .Select(Path.GetFileName).ToList();
+                Expect.Equal("ReadSender.cs", string.Join(", ", outbound), "the one source file that opens an outbound connection");
+                r.Note($"app networking references, all from the product read in ReadSender.cs: {string.Join(", ", networking.Distinct())}");
                 r.Note($"app type references checked: {types.Count}");
             }
 
