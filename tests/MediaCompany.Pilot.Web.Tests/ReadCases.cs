@@ -50,7 +50,7 @@ internal sealed class ReadCases : IDisposable
         _r.Add("T-051", "good read: name, classification, page address and date filled; candidates equal the page; the five own images byte-equal; only those six requests, GET, headers Host, User-Agent, Accept; no cookie sent back; one source address", GoodRead);
         _r.Add("T-052", "a short link of two hops fills exactly what the full link fills; a chain of six hops stops at the sixth with nothing filled", ShortLinkAndChain);
         _r.Add("T-053", "nine stops (403, 429, sign-in redirect, sign-in wall, CAPTCHA, no product, 5xx, closed port, silent server) each end with its code and the paste offer and no later request; a second click during a read is refused", Stops);
-        _r.Add("T-054", "an image on a host outside the image hosts gets no connection and is named; a non-image is skipped; the missing images upload at step 2", ForeignImage);
+        _r.Add("T-054", "an image on a host outside the image hosts gets no connection and is named; a non-image ends the read (not-image) with the facts and the earlier image kept; the missing images upload at step 2", ForeignImage);
         _r.Add("T-055", "confirmations: an empty operator field is refused by name; N-1 of N confirmations refused (fill-unconfirmed), N accepted; picked read images placed byte-equal; price and description never saved; step 2 none missing", Confirmations);
         _r.Add("T-056", "paste mode: the pasted page text fills exactly what the read fills, with no connection; empty and productless pastes refused", Paste);
         _r.Add("T-057", "the switch: off by default (read refused, no connection), paste and typed saves accepted while off; a missing, garbage or other-version file reads off; on and off survive a restart; one setting", Switch);
@@ -59,6 +59,10 @@ internal sealed class ReadCases : IDisposable
         _r.Add("T-060", "the seam is internal: the transport type and the start path are not public, the shipped options refuse a fixture or transport argument, and the fixture host lives in the test program", Seam);
         _r.Add("T-061", "socket tables of the fixture host process: no read connection while the switch is off, during paste or idle; two links refused; one read goes only to the fixture; listeners unchanged by the read; the toolchain owns no socket; proxy variables unused", Harness);
         _r.Add("T-062", "browser, step 1 against the fixture: read part hidden while off; switch on in settings; marks N of N with no read field typed; three read images picked; N-1 confirmations refused, N accepted; input folder holds the three; paste marks", Browser);
+        _r.Add("T-063", "image-phase stops (CR-001): 403, 429, 5xx, 410, a redirect, a redirect to sign-in or /verify/, a CAPTCHA page, a sign-in page, a non-image and an image over 40 MiB each end the read at that image with no further request; facts and the earlier image kept; the rest named", ImageStops);
+        _r.Add("T-064", "page bounds (CR-004): a page over 5 MiB, a non-HTML page, 404, 204 and a redirect without an address stop after one request with nothing filled; a read past the 120 s click bound stops read-time-over with no further request", PageBounds);
+        _r.Add("T-065", "host and hop edges (CR-003): an IDN look-alike, IPv6 literals, an explicit :443, affiliate subdomains, upper-case and trailing-dot hosts refused or read by the rule; hops to http, /verify/ and each edge stop after one request; non-public addresses refused at connect", HostEdges);
+        _r.Add("T-066", "request guard on the four new POST routes (CR-005): a foreign, other-port, missing or \"null\" Origin and a missing or wrong token are refused with 403 on /api/read, /api/paste, /api/read-confirm and /api/read-switch, and none reads, fills, confirms or switches", GuardedRoutes);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -255,7 +259,11 @@ internal sealed class ReadCases : IDisposable
     private void ForeignImage()
     {
         var (requests, connects, answer) = F.During(() => App.Read("V-54", FixtureSite.ForeignImageLink));
-        Expect.True(answer.Ok, $"read: {answer}");
+        // Review correction CR-001: the non-image (an HTML page answered for an image) ends the read; the facts and the image saved
+        // before it are kept.
+        Expect.True(!answer.Ok, $"read: {answer}");
+        Expect.Equal("not-image", answer.Code, $"the non-image ends the read: {answer}");
+        Expect.True(answer["offerPaste"].GetBoolean(), "paste offered");
         Expect.True(!connects.Contains(FixtureSite.ForeignImageHost), $"no connection to {FixtureSite.ForeignImageHost}: {string.Join(",", connects)}");
         var fill = answer["fill"];
         var skipped = fill.GetProperty("notFetched").EnumerateArray().Select(s => (Address: s.GetProperty("address").GetString()!, Reason: s.GetProperty("reason").GetString()!)).ToList();
@@ -263,6 +271,9 @@ internal sealed class ReadCases : IDisposable
         Expect.True(skipped.Any(s => s.Address.EndsWith("mc18-khong-phai-anh", StringComparison.Ordinal) && s.Reason.Contains("không phải ảnh", StringComparison.Ordinal)), "the non-image is named");
         Expect.Equal("anh-doc-01.png", string.Join(",", fill.GetProperty("images").EnumerateArray().Select(i => i.GetProperty("name").GetString())), "one image kept");
         Expect.Equal(3, requests.Count, $"the page, the image and the non-image: {string.Join(", ", requests)}");
+        var after = F.Requests.Count;
+        Thread.Sleep(1000);
+        Expect.Equal(after, F.Requests.Count, "no request after the stop");
 
         UploadScreenshot("V-54");
         ConfirmAll("V-54", fill);
@@ -764,6 +775,266 @@ internal sealed class ReadCases : IDisposable
             browser?.Dispose();
             browserHarness.Dispose();
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Review corrections CR-001, CR-003, CR-004 and CR-005.
+    // -----------------------------------------------------------------------------------------------------------------------------
+
+    private void ImageStops()
+    {
+        const string code = "V-63";
+        var log = Path.Combine(App.Workspace.WebFolder, Web.ReadLog.FileName);
+        foreach (var (name, link, image, stopCode) in FixtureSite.ImageStops)
+        {
+            var logBefore = File.Exists(log) ? File.ReadAllLines(log).Length : 0;
+            var (requests, _, answer) = F.During(() => App.Read(code, link));
+            Expect.Equal(200, answer.Status, $"{name} status");
+            Expect.True(!answer.Ok, $"{name} not ok");
+            Expect.Equal(stopCode, answer.Code, $"{name}: {answer}");
+            Expect.True(answer["offerPaste"].GetBoolean(), $"{name}: paste offered");
+            Expect.True(answer.Line.StartsWith($"DỪNG ĐỌC [{stopCode}]: ", StringComparison.Ordinal), $"{name} line: {answer.Line}");
+            Expect.True(answer.Outcome!.Value.GetProperty("nextStep").GetString()!.Contains("Dán chữ của trang sản phẩm", StringComparison.Ordinal), $"{name}: next step names paste mode");
+
+            var imageUri = new Uri(image);
+            var answered = imageUri.Host is not (FixtureSite.SilentHost or FixtureSite.ClosedHost);
+            var expected = new[] { "shopee.vn" + new Uri(link).AbsolutePath, FixtureSite.ImageHost + "/file/mc18-own-1" }.Concat(answered ? new[] { imageUri.Host + imageUri.AbsolutePath } : Array.Empty<string>()).ToList();
+            Expect.Equal(string.Join(" ", expected), string.Join(" ", requests.Select(q => q.Host + q.PathOnly)), $"{name}: the requests end at the stopping image");
+            Expect.Equal(3, answer["requests"].GetInt32(), $"{name}: requests the app counted");
+            var count = F.Requests.Count;
+            Thread.Sleep(1000);
+            Expect.Equal(count, F.Requests.Count, $"{name}: no request after the stop");
+
+            var fill = answer["fill"];
+            Expect.Equal(FixtureSite.Name, Field(fill, "productName"), $"{name}: the filled facts are kept");
+            Expect.Equal("anh-doc-01.png", string.Join(",", fill.GetProperty("images").EnumerateArray().Select(i => i.GetProperty("name").GetString())), $"{name}: the image saved before the stop is kept");
+            var folder = App.Workspace.ReadImageFolder(code);
+            Expect.Equal("anh-doc-01.png", string.Join(",", Directory.EnumerateFiles(folder).Select(Path.GetFileName)), $"{name}: read image folder");
+            Expect.True(File.ReadAllBytes(Path.Combine(folder, "anh-doc-01.png")).AsSpan().SequenceEqual(FixtureSite.OwnPng(1)), $"{name}: kept image byte-equal");
+            var named = fill.GetProperty("notFetched").EnumerateArray().Select(s => (Address: s.GetProperty("address").GetString()!, Reason: s.GetProperty("reason").GetString()!)).ToList();
+            Expect.Equal(2, named.Count, $"{name}: named for step 2: {string.Join(" | ", named)}");
+            Expect.True(named[0].Address == image && named[0].Reason.StartsWith("lần đọc dừng ở ảnh này", StringComparison.Ordinal), $"{name}: the stopping image is named: {named[0]}");
+            Expect.True(named[1].Address == FixtureSite.OwnImages[2] && named[1].Reason.StartsWith("lần đọc đã dừng trước ảnh này", StringComparison.Ordinal), $"{name}: the later image is named: {named[1]}");
+            Expect.True(Web.FillStore.Load(App.Workspace, code) is { } stored && stored.Images.Count == 1, $"{name}: the fill record is saved with the kept image");
+            var lines = File.ReadAllLines(log).Skip(logBefore).ToList();
+            Expect.Equal(3, lines.Count, $"{name}: read-log lines");
+            Expect.Equal(stopCode is "image-too-large" or "no-connection" or "no-answer" ? stopCode : "-", lines[^1].Split('\t')[5], $"{name}: the sender's code on the last log line");
+            _r.Note($"{name}: {answer.Line.Trim()}; requests {string.Join(", ", requests.Select(q => q.PathOnly))}; kept anh-doc-01.png; named {named.Count}");
+        }
+    }
+
+    private void PageBounds()
+    {
+        foreach (var (name, link, code) in FixtureSite.PageBounds)
+        {
+            var (requests, _, answer) = F.During(() => App.Read("V-64", link));
+            Expect.True(!answer.Ok && answer.Status == 200, $"{name}: {answer}");
+            Expect.Equal(code, answer.Code, $"{name}: {answer}");
+            Expect.True(answer["offerPaste"].GetBoolean(), $"{name}: paste offered");
+            Expect.True(answer.Outcome!.Value.GetProperty("nextStep").GetString()!.Contains("Dán chữ của trang sản phẩm", StringComparison.Ordinal), $"{name}: next step names paste mode");
+            Expect.Equal("shopee.vn" + new Uri(link).AbsolutePath, string.Join(" ", requests.Select(q => q.Host + q.PathOnly)), $"{name}: one request");
+            Expect.True(answer["fill"].ValueKind == JsonValueKind.Null, $"{name}: nothing filled");
+            var count = F.Requests.Count;
+            Thread.Sleep(1000);
+            Expect.Equal(count, F.Requests.Count, $"{name}: no request after the stop");
+            _r.Note($"{name}: {answer.Line.Trim()} (1 request)");
+        }
+
+        Expect.True(Web.FillStore.Load(App.Workspace, "V-64") is null, "no page-phase bound filled anything");
+
+        // The image count bound (D-014): of 22 declared images the first 20 are fetched and the other two named, never requested.
+        var (manyRequests, _, many) = F.During(() => App.Read("V-64n", FixtureSite.ManyImagesLink));
+        Expect.True(many.Ok, $"22 declared images: {many}");
+        Expect.Equal(21, manyRequests.Count, $"the page and 20 images: {manyRequests.Count}");
+        Expect.True(!manyRequests.Any(q => q.PathOnly.EndsWith("mc18-nhieu-21", StringComparison.Ordinal) || q.PathOnly.EndsWith("mc18-nhieu-22", StringComparison.Ordinal)), "images 21 and 22 never requested");
+        Expect.Equal(20, many["fill"].GetProperty("images").GetArrayLength(), "20 images saved");
+        var over = many["fill"].GetProperty("notFetched").EnumerateArray().Select(s => (Address: s.GetProperty("address").GetString()!, Reason: s.GetProperty("reason").GetString()!)).ToList();
+        Expect.True(over.Count == 2 && over.All(s => s.Reason.Contains($"quá {Web.PageReader.MaxImages} ảnh", StringComparison.Ordinal)), $"images 21 and 22 named: {string.Join(" | ", over)}");
+        _r.Note($"22 declared images: {manyRequests.Count} requests, 20 saved, 2 named ({over[0].Reason})");
+
+        // The structured-data depth bound (D-014): a product block nested deeper than the limit is not read, and nothing fails.
+        static string Nested(int levels) => "<html><head><script type=\"application/ld+json\">" + string.Concat(Enumerable.Repeat("{\"@graph\":[", levels))
+            + "{\"@type\":\"Product\",\"name\":\"Sản phẩm lồng sâu\"}" + string.Concat(Enumerable.Repeat("]}", levels)) + "</script></head><body></body></html>";
+        var shallow = Web.PageReader.Read(Nested(10));
+        Expect.Equal("Sản phẩm lồng sâu", shallow.Name, "a product block 10 levels deep is read");
+        var depthWatch = Stopwatch.StartNew();
+        var deep = Web.PageReader.Read(Nested(Web.PageReader.JsonDepth + 8));
+        depthWatch.Stop();
+        Expect.True(deep.Name is null && !deep.Readable, $"a product block {Web.PageReader.JsonDepth + 8} levels deep is not read: {deep.Name}");
+        Expect.True(depthWatch.Elapsed.TotalSeconds < 1, $"the deep block was set aside in {depthWatch.Elapsed.TotalMilliseconds:0} ms");
+        _r.Note($"depth bound {Web.PageReader.JsonDepth}: 10 levels read; {Web.PageReader.JsonDepth + 8} levels set aside in {depthWatch.Elapsed.TotalMilliseconds:0} ms");
+
+        // The click bound: five images that each answer after 25 s (each under the 30 s request bound) pass 120 s at the fifth.
+        var watch = Stopwatch.StartNew();
+        var (slowRequests, _, slow) = F.During(() => App.Read("V-64t", FixtureSite.SlowLink));
+        watch.Stop();
+        Expect.Equal("read-time-over", slow.Code, $"slow read: {slow}");
+        Expect.True(watch.Elapsed.TotalSeconds is >= 119 and <= 132, $"stopped after {watch.Elapsed.TotalSeconds:0.0} s");
+        Expect.True(slow["offerPaste"].GetBoolean(), "slow read: paste offered");
+        Expect.Equal(6, slowRequests.Count, $"the page and five image requests: {string.Join(", ", slowRequests)}");
+        var images = slow["fill"].GetProperty("images").EnumerateArray().Select(i => i.GetProperty("name").GetString()).ToList();
+        Expect.Equal("anh-doc-01.png, anh-doc-02.png, anh-doc-03.png, anh-doc-04.png", string.Join(", ", images), "the four images that arrived in time are kept");
+        var named = slow["fill"].GetProperty("notFetched").EnumerateArray().Select(s => s.GetProperty("address").GetString()).ToList();
+        Expect.True(named.Count == 1 && named[0]!.EndsWith("mc18-cham-5", StringComparison.Ordinal), $"the fifth image is named: {string.Join(", ", named)}");
+        var after = F.Requests.Count;
+        Thread.Sleep(2000);
+        Expect.Equal(after, F.Requests.Count, "no request after the click bound");
+        _r.Note($"click bound: {slow.Line.Trim()} after {watch.Elapsed.TotalSeconds:0.0} s; {slowRequests.Count} requests; kept {images.Count} images");
+    }
+
+    private void HostEdges()
+    {
+        // Links the rule refuses before any connection.
+        var refused = new (string Kind, string Link, string Code)[]
+        {
+            ("IDN look-alike (Cyrillic o)", "https://shоpee.vn" + FixtureSite.GoodPath, "link-not-allowed"),
+            ("IDN look-alike as punycode", "https://xn--shpee-kye.vn" + FixtureSite.GoodPath, "link-not-allowed"),
+            ("IDN look-alike with no scheme", "shоpee.vn" + FixtureSite.GoodPath, "link-not-allowed"),
+            ("IPv6 literal", "https://[2001:db8::7]/binh-giu-nhiet", "link-not-allowed"),
+            ("IPv6 loopback", "https://[::1]/binh-giu-nhiet", "link-not-allowed"),
+            ("IPv4-mapped IPv6", "https://[::ffff:127.0.0.1]/binh-giu-nhiet", "link-not-allowed"),
+            ("explicit :443", "https://shopee.vn:443" + FixtureSite.GoodPath, "link-not-allowed"),
+            ("explicit :443 with no scheme", "shopee.vn:443" + FixtureSite.GoodPath, "link-not-allowed"),
+            ("affiliate subdomain", "https://m.affiliate.shopee.vn/mc18", "link-affiliate"),
+            ("affiliate upper-case", "https://AFFILIATE.Shopee.VN/mc18", "link-affiliate"),
+            ("affiliate with trailing dot", "https://affiliate.shopee.vn./mc18", "link-affiliate"),
+            ("outside Shopee, upper-case", "https://XSHOPEE.VN/binh", "link-not-allowed"),
+            ("outside Shopee, trailing dot", "https://xshopee.vn./binh", "link-not-allowed"),
+            ("shopee.vn on the left, upper-case", "https://SHOPEE.VN.EXAMPLE.TEST/binh", "link-not-allowed"),
+            ("a /verify/ path", "https://shopee.vn/verify/captcha?anti_bot_tracking_id=mc18", "captcha"),
+        };
+        foreach (var (kind, link, code) in refused)
+        {
+            var (requests, connects, answer) = F.During(() => App.Read("V-65", link));
+            Expect.Equal(code, answer.Code, $"{kind}: {answer}");
+            Expect.Equal(0, requests.Count + connects.Count, $"{kind}: connections {string.Join(", ", connects)}");
+            _r.Note($"{kind} \"{link}\": {answer.Code}, 0 connections");
+        }
+
+        // Links the rule reads: the host compares lower-case and without a trailing dot.
+        EnsureGoodRead();
+        foreach (var (kind, link) in new[] { ("upper-case host", "HTTPS://SHOPEE.VN" + FixtureSite.GoodPath), ("trailing-dot host", "https://shopee.vn." + FixtureSite.GoodPath) })
+        {
+            var (requests, connects, answer) = F.During(() => App.Read("V-65", link));
+            Expect.True(answer.Ok, $"{kind}: {answer}");
+            Expect.Equal(Field(_goodFill, "productName"), Field(answer["fill"], "productName"), $"{kind}: product name");
+            Expect.Equal(6, requests.Count, $"{kind}: the page and five images");
+            Expect.True(connects.All(c => c.TrimEnd('.').ToLowerInvariant() is "shopee.vn" or FixtureSite.ImageHost), $"{kind}: connections {string.Join(", ", connects)}");
+            _r.Note($"{kind}: read; connections {string.Join(",", connects.Distinct())}; page address {Field(answer["fill"], "pagePath")}");
+        }
+
+        // Hops: each is checked before it is requested.
+        foreach (var (kind, link, target, code) in FixtureSite.HopEdges)
+        {
+            var (requests, connects, answer) = F.During(() => App.Read("V-65", link));
+            Expect.Equal(code, answer.Code, $"{kind}: {answer}");
+            Expect.Equal("shopee.vn" + new Uri(link).AbsolutePath, string.Join(" ", requests.Select(q => q.Host + q.PathOnly)), $"{kind}: one request, to the hopping page");
+            Expect.Equal("shopee.vn", string.Join(",", connects), $"{kind}: connections");
+            Expect.True(answer["fill"].ValueKind == JsonValueKind.Null, $"{kind}: nothing filled");
+            _r.Note($"{kind} -> {target}: {answer.Code}; 1 request, 0 to the target");
+        }
+
+        // The connect step of the shipped stack (no seam): names that resolve to this computer are refused before a socket connects.
+        // Two addresses are literals, which the resolver returns without asking any server; "localhost" is a name the system resolves
+        // itself (to ::1 and 127.0.0.1) with no query sent. A listener on 127.0.0.1 counts any connection that slips through.
+        using var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        var accepted = 0;
+        using var stopListening = new CancellationTokenSource();
+        _ = Task.Run(async () =>
+        {
+            while (!stopListening.IsCancellationRequested)
+            {
+                try
+                {
+                    using var client = await listener.AcceptTcpClientAsync(stopListening.Token);
+                    Interlocked.Increment(ref accepted);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+            }
+        });
+        var logFolder = Path.Combine(_root, "not-public");
+        foreach (var host in new[] { "127.0.0.1", "127.0.0.2", "localhost" })
+        {
+            using var click = new CancellationTokenSource(Web.ReadSender.ClickBound);
+            using var sender = new Web.ReadSender(null, new Web.ReadLog(logFolder), click.Token);
+            var stop = Expect.Throws<Web.ReadStop>(() => sender.Get(new Uri($"https://{host}:{port}/binh-giu-nhiet"), image: false).GetAwaiter().GetResult(), $"{host}: refused");
+            Expect.Equal("address-not-public", stop.Code, $"{host}: {stop.Reason}");
+            Expect.Equal(0, sender.LocalAddresses.Count, $"{host}: no connection made");
+            _r.Note($"{host}: {stop.Code} \"{stop.Reason}\"");
+        }
+
+        Thread.Sleep(300);
+        stopListening.Cancel();
+        Expect.Equal(0, Volatile.Read(ref accepted), "the listener received no connection");
+        Expect.True(File.ReadAllLines(Path.Combine(logFolder, Web.ReadLog.FileName)).All(l => l.EndsWith("\taddress-not-public", StringComparison.Ordinal)), "read log codes");
+
+        var notPublic = new[]
+        {
+            "127.0.0.1", "127.255.0.9", "10.1.2.3", "172.16.0.1", "172.31.255.255", "192.168.1.1", "169.254.1.1", "100.64.0.1", "100.127.255.255",
+            "0.0.0.0", "224.0.0.1", "239.255.255.250", "255.255.255.255", "192.0.0.8", "::1", "::", "fe80::1", "fec0::1", "fc00::1", "fd12:3456::1",
+            "ff02::1", "::ffff:127.0.0.1", "::ffff:10.0.0.1", "::ffff:192.168.0.1",
+        };
+        var isPublic = new[] { "1.1.1.1", "8.8.8.8", "172.32.0.1", "100.128.0.1", "192.0.1.1", "203.0.113.7", "2001:4860:4860::8888", "::ffff:8.8.8.8" };
+        var wrong = notPublic.Where(a => Web.ReadSender.IsPublic(IPAddress.Parse(a))).Concat(isPublic.Where(a => !Web.ReadSender.IsPublic(IPAddress.Parse(a)))).ToList();
+        Expect.Equal(0, wrong.Count, $"address classes wrong: {string.Join(", ", wrong)}");
+        _r.Note($"address rule: {notPublic.Length} not public, {isPublic.Length} public, as expected; the listener got 0 connections");
+    }
+
+    private void GuardedRoutes()
+    {
+        const string code = "V-66";
+        Expect.True(App.Paste(code, FixtureSite.GoodPasteText()).Ok, "a fill record to confirm against, made through the guarded route");
+        var key = Web.FillStore.Load(App.Workspace, code)!.Fields[0].Member;
+        Expect.True(App.Get("/api/read-switch")["readOn"].GetBoolean(), "the switch is on before the case");
+        var log = Path.Combine(App.Workspace.WebFolder, Web.ReadLog.FileName);
+        var logBefore = File.Exists(log) ? File.ReadAllLines(log).Length : 0;
+
+        var routes = new (string Path, object Body)[]
+        {
+            ($"/api/read?code={code}r", new { link = FixtureSite.GoodLink }),
+            ($"/api/paste?code={code}p", new { text = FixtureSite.GoodPasteText() }),
+            ($"/api/read-confirm?code={code}", new { field = key }),
+            ("/api/read-switch", new { on = false }),
+        };
+        var forms = new (string Name, string? Origin, string? Token, string Code)[]
+        {
+            ("foreign Origin", "http://shop-la.example", App.Token, "origin-not-allowed"),
+            ("another port of this computer", $"http://127.0.0.1:{(App.Port == 65535 ? 1 : App.Port + 1)}", App.Token, "origin-not-allowed"),
+            ("localhost in place of 127.0.0.1", $"http://localhost:{App.Port}", App.Token, "origin-not-allowed"),
+            ("\"null\" Origin", "null", App.Token, "origin-not-allowed"),
+            ("no Origin", null, App.Token, "origin-not-allowed"),
+            ("no token", App.Origin, null, "token-not-valid"),
+            ("wrong token", App.Origin, new string('0', 64), "token-not-valid"),
+        };
+        var refusals = 0;
+        foreach (var (path, body) in routes)
+        {
+            foreach (var (name, origin, token, refusal) in forms)
+            {
+                var (requests, connects, answer) = F.During(() => App.PostAs(path, body, origin, token));
+                Expect.Equal(403, answer.Status, $"{path}, {name}: {answer}");
+                Expect.Equal(refusal, answer.Code, $"{path}, {name}: {answer}");
+                Expect.Equal(0, requests.Count + connects.Count, $"{path}, {name}: connections");
+                refusals++;
+            }
+        }
+
+        Expect.True(App.Get("/api/read-switch")["readOn"].GetBoolean(), "the switch is still on");
+        Expect.True(Web.FillStore.Load(App.Workspace, code + "r") is null, "no read filled anything");
+        Expect.True(!Directory.Exists(App.Workspace.ReadImageFolder(code + "r")), "no read image folder");
+        Expect.True(Web.FillStore.Load(App.Workspace, code + "p") is null, "no paste filled anything");
+        Expect.True(Web.FillStore.Load(App.Workspace, code)!.Fields.All(f => !f.Confirmed), "no field confirmed");
+        Expect.Equal(logBefore, File.Exists(log) ? File.ReadAllLines(log).Length : 0, "no read-log line");
+
+        // The same requests with the page's own Origin and token are accepted: the refusals came from the guard, not the route.
+        Expect.True(App.Post($"/api/read-confirm?code={code}", new { field = key }).Ok, "the guarded confirm is accepted");
+        Expect.True(Web.FillStore.Load(App.Workspace, code)!.Fields.First(f => f.Member == key).Confirmed, "and confirms");
+        _r.Note($"{refusals} refusals (4 routes x {forms.Length} forms: {string.Join(", ", forms.Select(f => $"{f.Name} -> {f.Code}"))}); 0 connections; switch on, no fill, no confirmation, no read-log line");
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------

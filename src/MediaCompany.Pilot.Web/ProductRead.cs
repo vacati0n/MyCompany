@@ -81,31 +81,18 @@ internal static class ProductRead
             try
             {
                 var answer = await sender.Get(address, image: true);
-                if (answer.Status is >= 300 and < 400)
-                {
-                    skipped.Add(new SkippedImage(raw, "máy chủ ảnh chuyển tiếp sang chỗ khác; ứng dụng không đi theo"));
-                    continue;
-                }
-
-                Require(answer.Status, image: true);
-                var extension = Signature(answer.Body);
-                if (extension is null)
-                {
-                    skipped.Add(new SkippedImage(raw, "tệp nhận về không phải ảnh PNG hoặc JPEG"));
-                    continue;
-                }
-
+                var extension = ImageOrStop(address, answer);
                 var name = $"{ImagePrefix}{saved.Count + 1:00}{extension}";
                 var path = Path.Combine(imageFolder, PlainName.Require(name, "Ảnh đọc từ trang", imageFolder));
                 await File.WriteAllBytesAsync(path, answer.Body);
                 saved.Add(new SavedImage(name, address.ToString()));
             }
-            catch (ReadStop stop) when (stop.Code == "image-too-large")
-            {
-                skipped.Add(new SkippedImage(raw, stop.Reason));
-            }
             catch (ReadStop stop)
             {
+                // Every stop of D-010 in the image phase (a block, a redirect, a CAPTCHA or sign-in page, an answer that is not an image,
+                // an over-size image, no connection, time) ends the read here: no request for any later image, no retry. The images
+                // already saved stay (they came from the product's own declared images, on an image host, each with a PNG or JPEG
+                // signature); this image and every later one are named for upload at step 2.
                 imageStop = stop;
                 skipped.Add(new SkippedImage(raw, "lần đọc dừng ở ảnh này: " + stop.Reason));
             }
@@ -114,8 +101,50 @@ internal static class ProductRead
         var fill = FillStore.FromRead(link, final, page, now, saved, skipped);
         var stopped = imageStop is null ? null : new ReadStop(imageStop.Code,
             $"Đã điền thông tin từ trang và lưu {saved.Count} ảnh, rồi dừng khi lấy ảnh: {imageStop.Reason}",
-            "Xác nhận các ô đã điền. Các ảnh chưa lấy được ghi tên ở dưới: tải chúng lên ở bước 2. Ứng dụng không thử đọc lại.");
+            "Xác nhận các ô đã điền. Các ảnh chưa lấy được ghi tên ở dưới: tải chúng lên ở bước 2. "
+            + "Muốn điền lại từ đầu thì mở trang trong trình duyệt của bạn, chép chữ trang rồi dán vào ô \"Dán chữ của trang sản phẩm\"; hoặc gõ tay các ô. "
+            + "Ứng dụng không thử đọc lại.");
         return new ReadResult(fill, stopped, sender.Requests, sender.LocalAddresses);
+    }
+
+    /// <summary>
+    /// The image answer's extension, or the stop it shows (D-010 in the image phase): a redirect (to a sign-in or verification path it
+    /// is named as such; anywhere else it is not followed), a status other than 200, or a 200 answer that is not a PNG or JPEG (a
+    /// CAPTCHA or sign-in page by its markers, anything else as "not an image"). An over-size image is stopped by the sender.
+    /// </summary>
+    private static string ImageOrStop(Uri address, ReadAnswer answer)
+    {
+        if (answer.Status is >= 300 and < 400)
+        {
+            if (!string.IsNullOrWhiteSpace(answer.Location) && Uri.TryCreate(address, answer.Location.Trim(), out var target)
+                && LinkRule.PathStop(target) is { } pathStop)
+            {
+                throw pathStop;
+            }
+
+            throw new ReadStop("image-redirect", $"Máy chủ ảnh trả lời chuyển tiếp (mã {answer.Status}) thay cho ảnh. Ứng dụng không đi theo.", LinkRule.PasteNext);
+        }
+
+        Require(answer.Status, image: true);
+        if (Signature(answer.Body) is { } extension)
+        {
+            return extension;
+        }
+
+        var text = Encoding.UTF8.GetString(answer.Body, 0, (int)Math.Min(answer.Body.Length, ReadSender.PageLimit));
+        try
+        {
+            if (PageReader.Marker(text) is { } marker)
+            {
+                throw marker;
+            }
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            // An answer too odd to look through is still not an image: the stop below.
+        }
+
+        throw new ReadStop("not-image", $"Máy chủ ảnh trả về {answer.MediaType ?? "một tệp không rõ loại"}, không phải ảnh PNG hoặc JPEG.", LinkRule.PasteNext);
     }
 
     /// <summary>The link, its hops (each checked first), and the one page; every stop of D-010 is thrown.</summary>

@@ -32,6 +32,12 @@ internal sealed record FixtureAnswer(int Status, string? MediaType, byte[] Body,
     public static FixtureAnswer Plain(int status) => new(status, "text/html; charset=utf-8", Encoding.UTF8.GetBytes($"<html><body>{status}</body></html>"), []);
 
     public static FixtureAnswer Png(byte[] png) => new(200, "image/png", png, []);
+
+    /// <summary>How long the fixture waits before it answers (a slow server; each wait stays under the read's 30 s request bound).</summary>
+    public TimeSpan Delay { get; init; }
+
+    /// <summary>Send no Content-Length: the body ends when the connection closes, so a size bound must count while it reads.</summary>
+    public bool NoLength { get; init; }
 }
 
 /// <summary>
@@ -176,7 +182,7 @@ internal sealed class ReadFixture : IDisposable
                 var lines = head.Split("\r\n");
                 var parts = lines[0].Split(' ');
                 var headers = lines.Skip(1).Where(l => l.Length > 0).Select(l => (l[..l.IndexOf(':', StringComparison.Ordinal)].Trim(), l[(l.IndexOf(':', StringComparison.Ordinal) + 1)..].Trim())).ToList();
-                var host = headers.FirstOrDefault(h => string.Equals(h.Item1, "Host", StringComparison.OrdinalIgnoreCase)).Item2?.Split(':')[0].ToLowerInvariant() ?? string.Empty;
+                var host = headers.FirstOrDefault(h => string.Equals(h.Item1, "Host", StringComparison.OrdinalIgnoreCase)).Item2?.Split(':')[0].ToLowerInvariant().TrimEnd('.') ?? string.Empty;
                 var request = new FixtureRequest(DateTime.UtcNow, remote, parts[0], host, parts.Length > 1 ? parts[1] : "/", headers);
                 lock (_requests)
                 {
@@ -184,6 +190,11 @@ internal sealed class ReadFixture : IDisposable
                 }
 
                 var answer = Site.TryGetValue(host + request.PathOnly, out var route) ? route(request) : FixtureAnswer.Plain(404);
+                if (answer.Delay > TimeSpan.Zero)
+                {
+                    await Task.Delay(answer.Delay, token);
+                }
+
                 var text = new StringBuilder();
                 text.Append(System.Globalization.CultureInfo.InvariantCulture, $"HTTP/1.1 {answer.Status} {Reason(answer.Status)}\r\n");
                 if (answer.MediaType is not null)
@@ -196,7 +207,12 @@ internal sealed class ReadFixture : IDisposable
                     text.Append($"{name}: {value}\r\n");
                 }
 
-                text.Append(System.Globalization.CultureInfo.InvariantCulture, $"Content-Length: {answer.Body.Length}\r\nConnection: close\r\n\r\n");
+                if (!answer.NoLength)
+                {
+                    text.Append(System.Globalization.CultureInfo.InvariantCulture, $"Content-Length: {answer.Body.Length}\r\n");
+                }
+
+                text.Append("Connection: close\r\n\r\n");
                 await tls.WriteAsync(Encoding.ASCII.GetBytes(text.ToString()), token);
                 await tls.WriteAsync(answer.Body, token);
                 await tls.FlushAsync(token);
@@ -268,6 +284,7 @@ internal sealed class ReadFixture : IDisposable
         308 => "Permanent Redirect",
         403 => "Forbidden",
         404 => "Not Found",
+        410 => "Gone",
         429 => "Too Many Requests",
         503 => "Service Unavailable",
         _ => "Status",
@@ -362,6 +379,66 @@ internal static class FixtureSite
         ("không trả lời", $"https://{SilentHost}/sp-1", "no-answer"),
     ];
 
+    /// <summary>
+    /// The image-phase stops (review correction CR-001, D-010): a product page declaring own image 1, then the image that stops the read,
+    /// then own image 3. Each must end the read at the stopping image with no request for own image 3 (or for a redirect's target), keep
+    /// the filled facts and the one image saved before it, and name the stopping image and own image 3 for upload at step 2.
+    /// </summary>
+    public static readonly IReadOnlyList<(string Name, string Link, string Image, string Code)> ImageStops =
+    [
+        ("ảnh bị chặn 403", "https://shopee.vn/anh-dung-403-i.100.701", $"https://{ImageHost}/file/mc18-dung-403", "access-refused"),
+        ("ảnh 429", "https://shopee.vn/anh-dung-429-i.100.702", $"https://{ImageHost}/file/mc18-dung-429", "too-many-requests"),
+        ("ảnh lỗi máy chủ", "https://shopee.vn/anh-dung-503-i.100.703", $"https://{ImageHost}/file/mc18-dung-503", "server-error"),
+        ("ảnh mã 410", "https://shopee.vn/anh-dung-410-i.100.711", $"https://{ImageHost}/file/mc18-dung-410", "status-unexpected"),
+        ("ảnh chuyển tiếp", "https://shopee.vn/anh-dung-chuyen-i.100.704", $"https://{ImageHost}/file/mc18-dung-chuyen", "image-redirect"),
+        ("ảnh chuyển sang đăng nhập", "https://shopee.vn/anh-dung-dang-nhap-i.100.705", $"https://{ImageHost}/file/mc18-dung-dang-nhap", "sign-in-redirect"),
+        ("ảnh chuyển sang xác minh", "https://shopee.vn/anh-dung-xac-minh-i.100.706", $"https://{ImageHost}/file/mc18-dung-xac-minh", "captcha"),
+        ("ảnh là trang CAPTCHA", "https://shopee.vn/anh-dung-captcha-i.100.707", $"https://{ImageHost}/file/mc18-dung-captcha", "captcha"),
+        ("ảnh là trang đăng nhập", "https://shopee.vn/anh-dung-tuong-i.100.708", $"https://{ImageHost}/file/mc18-dung-tuong", "sign-in-wall"),
+        ("ảnh không phải ảnh", "https://shopee.vn/anh-dung-khong-anh-i.100.709", $"https://{ImageHost}/file/mc18-dung-khong-anh", "not-image"),
+        ("ảnh quá 40 MiB", "https://shopee.vn/anh-dung-qua-lon-i.100.710", $"https://{ImageHost}/file/mc18-dung-qua-lon", "image-too-large"),
+        ("ảnh quá 40 MiB, không ghi độ dài", "https://shopee.vn/anh-dung-qua-lon-dai-i.100.712", $"https://{ImageHost}/file/mc18-dung-qua-lon-dai", "image-too-large"),
+        ("máy chủ ảnh đóng cổng", "https://shopee.vn/anh-dung-dong-cua-i.100.713", $"https://{ClosedHost}/file/mc18-anh", "no-connection"),
+        ("máy chủ ảnh không trả lời", "https://shopee.vn/anh-dung-im-lang-i.100.714", $"https://{SilentHost}/file/mc18-anh", "no-answer"),
+    ];
+
+    /// <summary>The page-phase bounds and stops of review correction CR-004: link and the code it must end with, after one request.</summary>
+    public static readonly IReadOnlyList<(string Name, string Link, string Code)> PageBounds =
+    [
+        ("trang quá 5 MiB", "https://shopee.vn/trang-qua-lon", "page-too-large"),
+        ("trang quá 5 MiB, không ghi độ dài", "https://shopee.vn/trang-qua-lon-dai", "page-too-large"),
+        ("không phải trang web", "https://shopee.vn/khong-phai-trang", "not-html"),
+        ("mã 404", "https://shopee.vn/khong-con-404", "status-unexpected"),
+        ("mã 204", "https://shopee.vn/khong-noi-dung-204", "status-unexpected"),
+        ("chuyển tiếp không ghi địa chỉ", "https://shopee.vn/chuyen-khong-dia-chi", "status-unexpected"),
+    ];
+
+    /// <summary>A product page whose five own images each answer after 25 s: the read passes the 120 s click bound at the fifth.</summary>
+    public const string SlowLink = "https://shopee.vn/cham-dan-i.100.720";
+
+    public static readonly TimeSpan SlowImageDelay = TimeSpan.FromSeconds(25);
+
+    /// <summary>A product page declaring 22 own images: the read fetches the first 20 and names the other two (D-014).</summary>
+    public const string ManyImagesLink = "https://shopee.vn/nhieu-anh-i.100.730";
+
+    public static readonly IReadOnlyList<string> ManyImages = [.. Enumerable.Range(1, 22).Select(i => $"https://{ImageHost}/file/mc18-nhieu-{i}")];
+
+    /// <summary>
+    /// Hops from an allowed page to each host and hop edge of review correction CR-003: kind, link, the hop's target, the code it must
+    /// stop with. Each sends exactly one request (to the hopping page) and opens one connection (to shopee.vn).
+    /// </summary>
+    public static readonly IReadOnlyList<(string Kind, string Link, string Target, string Code)> HopEdges =
+    [
+        ("chuyển sang http", "https://shopee.vn/chuyen-http", "http://shopee.vn" + GoodPath, "hop-not-secure"),
+        ("chuyển sang /verify/", "https://shopee.vn/chuyen-xac-minh", "/verify/captcha?anti_bot_tracking_id=mc18", "captcha"),
+        ("chuyển sang IPv6", "https://shopee.vn/chuyen-ipv6", "https://[2001:db8::7]/binh-giu-nhiet", "hop-not-allowed"),
+        ("chuyển sang cổng :443", "https://shopee.vn/chuyen-cong-443", "https://shopee.vn:443" + GoodPath, "hop-not-allowed"),
+        ("chuyển sang tên giả (IDN)", "https://shopee.vn/chuyen-idn", "https://xn--shpee-kye.vn/binh-giu-nhiet", "hop-not-allowed"),
+        ("chuyển sang tên con của affiliate", "https://shopee.vn/chuyen-affiliate-con", "https://m.affiliate.shopee.vn/mc18", "hop-affiliate"),
+        ("chuyển sang affiliate có dấu chấm cuối", "https://shopee.vn/chuyen-affiliate-cham", "https://affiliate.shopee.vn./mc18", "hop-affiliate"),
+        ("chuyển sang tên chữ hoa ngoài Shopee", "https://shopee.vn/chuyen-chu-hoa", "https://SHOPEE.VN.EXAMPLE.TEST/binh", "hop-not-allowed"),
+    ];
+
     /// <summary>The six disallowed kinds of SC-24 (scope A-024): five links refused before any connection, and a hop to each.</summary>
     public static readonly IReadOnlyList<(string Kind, string Link, string Host)> Disallowed =
     [
@@ -450,7 +527,64 @@ internal static class FixtureSite
             Page(link, _ => FixtureAnswer.Html(ProductPage(Name, Classification, Price, [("Dung tích", "500 ml"), ("Đặc điểm", value)], "Bình mẫu.", [], others: false)));
         }
 
+        // Review correction CR-001: image-phase stops.
+        foreach (var (_, link, image, _) in ImageStops)
+        {
+            Page(link, _ => FixtureAnswer.Html(ProductPage(Name, Classification, Price, Specs, Description,
+                [OwnImages[0], image, OwnImages[2]], others: false)));
+        }
+
+        const string captchaPage = "<!DOCTYPE html><html lang=\"vi\"><head><title>Xác minh</title></head><body><h1>Xác minh để tiếp tục</h1><p>Kéo thanh trượt để ghép hình.</p></body></html>";
+        Page($"https://{ImageHost}/file/mc18-dung-403", _ => FixtureAnswer.Plain(403));
+        Page($"https://{ImageHost}/file/mc18-dung-429", _ => FixtureAnswer.Plain(429));
+        Page($"https://{ImageHost}/file/mc18-dung-503", _ => FixtureAnswer.Plain(503));
+        Page($"https://{ImageHost}/file/mc18-dung-410", _ => FixtureAnswer.Plain(410));
+        Page($"https://{ImageHost}/file/mc18-dung-chuyen", _ => FixtureAnswer.Redirect(302, OwnImages[1]));
+        Page($"https://{ImageHost}/file/mc18-dung-dang-nhap", _ => FixtureAnswer.Redirect(302, "https://shopee.vn/buyer/login?next=%2Fanh"));
+        Page($"https://{ImageHost}/file/mc18-dung-xac-minh", _ => FixtureAnswer.Redirect(302, "https://shopee.vn/verify/captcha?anti_bot_tracking_id=mc18"));
+        Page($"https://{ImageHost}/file/mc18-dung-captcha", _ => FixtureAnswer.Html(captchaPage));
+        Page($"https://{ImageHost}/file/mc18-dung-tuong", _ => FixtureAnswer.Html(SignInPage()));
+        Page($"https://{ImageHost}/file/mc18-dung-khong-anh", _ => new FixtureAnswer(200, "application/json", Encoding.UTF8.GetBytes("{\"error\":90309999}"), []));
+        Page($"https://{ImageHost}/file/mc18-dung-qua-lon", _ => new FixtureAnswer(200, "image/jpeg", Oversize(40L << 20, [0xFF, 0xD8, 0xFF, 0xE0]), []));
+        Page($"https://{ImageHost}/file/mc18-dung-qua-lon-dai", _ => new FixtureAnswer(200, "image/jpeg", Oversize(40L << 20, [0xFF, 0xD8, 0xFF, 0xE0]), []) { NoLength = true });
+
+        // Review correction CR-004: page-phase bounds and stops, and the slow page that passes the click bound.
+        Page("https://shopee.vn/trang-qua-lon", _ => new FixtureAnswer(200, "text/html; charset=utf-8", Oversize(5L << 20, Encoding.ASCII.GetBytes("<!DOCTYPE html><html><body>")), []));
+        Page("https://shopee.vn/trang-qua-lon-dai", _ => new FixtureAnswer(200, "text/html; charset=utf-8", Oversize(5L << 20, Encoding.ASCII.GetBytes("<!DOCTYPE html><html><body>")), []) { NoLength = true });
+        Page(ManyImagesLink, _ => FixtureAnswer.Html(ProductPage(Name, Classification, Price, Specs, Description, ManyImages, others: false)));
+        for (var i = 1; i <= ManyImages.Count; i++)
+        {
+            var png = Png(16, 16, 40 + i);
+            Page(ManyImages[i - 1], _ => FixtureAnswer.Png(png));
+        }
+
+        Page("https://shopee.vn/khong-phai-trang", _ => new FixtureAnswer(200, "application/json", Encoding.UTF8.GetBytes("{\"name\":\"Bình\"}"), []));
+        Page("https://shopee.vn/khong-con-404", _ => FixtureAnswer.Plain(404));
+        Page("https://shopee.vn/khong-noi-dung-204", _ => new FixtureAnswer(204, null, [], []));
+        Page("https://shopee.vn/chuyen-khong-dia-chi", _ => new FixtureAnswer(302, null, [], []));
+        var slowImages = Enumerable.Range(1, 5).Select(i => $"https://{ImageHost}/file/mc18-cham-{i}").ToList();
+        Page(SlowLink, _ => FixtureAnswer.Html(ProductPage(Name, Classification, Price, Specs, Description, slowImages, others: false)));
+        for (var i = 1; i <= 5; i++)
+        {
+            var png = OwnPng(i);
+            Page(slowImages[i - 1], _ => FixtureAnswer.Png(png) with { Delay = SlowImageDelay });
+        }
+
+        // Review correction CR-003: a hop from an allowed page to each host and hop edge.
+        foreach (var (_, link, target, _) in HopEdges)
+        {
+            Page(link, _ => FixtureAnswer.Redirect(302, target));
+        }
+
         return site;
+    }
+
+    /// <summary>A body one byte over the limit, starting with the given bytes.</summary>
+    private static byte[] Oversize(long limit, byte[] start)
+    {
+        var body = new byte[limit + 1];
+        start.CopyTo(body, 0);
+        return body;
     }
 
     /// <summary>The bytes of own image number i of the good product, as the fixture serves them.</summary>

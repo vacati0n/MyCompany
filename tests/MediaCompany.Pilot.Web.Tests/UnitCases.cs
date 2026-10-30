@@ -240,21 +240,32 @@ internal static class UnitCases
                     Expect.True(!types.Contains(forbidden), $"the app references {forbidden}: produce never runs in the app's process");
                 }
 
-                // MC-18 (design decision D-001): the product read is the app's one outbound client. Its stack carries no proxy, cookie
-                // store or older handler, the app opens no listener of its own and no datagram socket, and one source file holds it.
-                var networking = types.Where(t => t.StartsWith("System.Net.Http.", StringComparison.Ordinal) || t.StartsWith("System.Net.Sockets.", StringComparison.Ordinal)).ToList();
-                var forbiddenNetworking = new[]
-                {
-                    "System.Net.WebProxy", "System.Net.CookieContainer", "System.Net.Http.HttpClientHandler", "System.Net.Sockets.TcpListener",
-                    "System.Net.Sockets.UdpClient", "System.Net.HttpListener", "System.Net.WebClient", "System.Net.WebRequest",
-                };
-                var forbiddenFound = types.Where(forbiddenNetworking.Contains).ToList();
-                Expect.Equal(0, forbiddenFound.Count, $"the app references {string.Join(", ", forbiddenFound)}");
-                var outbound = Directory.EnumerateFiles(Path.Combine(repo, "src", "MediaCompany.Pilot.Web"), "*.cs")
-                    .Where(f => Regex.IsMatch(File.ReadAllText(f), @"\b(HttpClient|SocketsHttpHandler|NetworkStream)\b|new Socket\("))
-                    .Select(Path.GetFileName).ToList();
-                Expect.Equal("ReadSender.cs", string.Join(", ", outbound), "the one source file that opens an outbound connection");
-                r.Note($"app networking references, all from the product read in ReadSender.cs: {string.Join(", ", networking.Distinct())}");
+                // MC-18 (design decision D-001; review correction CR-002): the product read is the app's one outbound client, and the
+                // guard fails closed. (1) Every networking type the app's metadata references, nested types included, is one of the read
+                // sender's declared set. (2) No networking assembly outside the declared set is referenced. (3) No source file other than
+                // ReadSender.cs names a networking namespace or an outbound type, written plainly, fully qualified, aliased or as a string.
+                var full = NetworkingGuard.TypeReferences(reader);
+                var undeclared = NetworkingGuard.Undeclared(full);
+                Expect.Equal(0, undeclared.Count, $"networking types outside the read sender's declared set: {string.Join(", ", undeclared)}");
+                var assemblies = reader.AssemblyReferences.Select(h => reader.GetString(reader.GetAssemblyReference(h).Name)).ToList();
+                var networkAssemblies = assemblies.Where(a => a.StartsWith("System.Net", StringComparison.Ordinal)).ToList();
+                var otherAssemblies = networkAssemblies.Where(a => !NetworkingGuard.DeclaredAssemblies.Contains(a)).ToList();
+                Expect.Equal(0, otherAssemblies.Count, $"networking assemblies outside the declared set: {string.Join(", ", otherAssemblies)}");
+                var sources = Directory.EnumerateFiles(Path.Combine(repo, "src", "MediaCompany.Pilot.Web"), "*.cs", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                        && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                    .Select(f => (File: Path.GetFileName(f), Text: File.ReadAllText(f))).ToList();
+                var outside = NetworkingGuard.OutsideSender(sources);
+                Expect.Equal(0, outside.Count, $"networking named outside ReadSender.cs: {string.Join("; ", outside)}");
+                Expect.True(NetworkingGuard.SourceHits(sources.Single(s => s.File == NetworkingGuard.SenderFile).Text).Count > 0, "the scan sees the read sender's own networking (it is not blind)");
+
+                // The guard catches what it must: a disallowed use in any other file, and an undeclared type in the metadata.
+                NetworkingGuard.SelfTest();
+                var used = full.Where(NetworkingGuard.IsNetworking).Distinct().Order(StringComparer.Ordinal).ToList();
+                Expect.Equal(string.Join(", ", NetworkingGuard.Declared.Order(StringComparer.Ordinal)), string.Join(", ", used), "the declared set is exactly what the app references (no unused allowance)");
+                r.Note($"app networking references ({used.Count}), all in the read sender's declared set: {string.Join(", ", used)}");
+                r.Note($"networking assemblies: {string.Join(", ", networkAssemblies)}; {sources.Count} source files scanned, networking named only in {NetworkingGuard.SenderFile}");
+                r.Note($"guard self-test: {NetworkingGuard.SelfTestSources.Count} disallowed uses in another file caught, {NetworkingGuard.SelfTestTypes.Count} undeclared types caught, benign source passed");
                 r.Note($"app type references checked: {types.Count}");
             }
 
@@ -274,4 +285,148 @@ internal static class UnitCases
         (JsonArray e, JsonArray c) => e.Count == c.Count && e.Zip(c).All(z => SameValues(z.First, z.Second)),
         _ => JsonNode.DeepEquals(example, composed),
     };
+}
+
+/// <summary>
+/// THE NETWORKING GUARD OF CASE 008 (MC-18 design decision D-001; review correction CR-002). The app has one outbound client, the
+/// product read in ReadSender.cs. The guard fails closed three ways: a networking type the app's metadata references must be one the
+/// read sender declares; a networking assembly the app references must be one the read sender needs; and no source file other than
+/// ReadSender.cs may name a networking namespace or an outbound type, whether written plainly, fully qualified (global:: included),
+/// through a using alias or a using static, or inside a string for reflection. Comments are scanned too: the guard prefers a false
+/// alarm to a miss.
+/// </summary>
+internal static partial class NetworkingGuard
+{
+    public const string SenderFile = "ReadSender.cs";
+
+    /// <summary>Namespaces whose every type is networking.</summary>
+    public static readonly IReadOnlyList<string> NetworkingNamespaces =
+    [
+        "System.Net.Http", "System.Net.Sockets", "System.Net.WebSockets", "System.Net.Security", "System.Net.Quic", "System.Net.NetworkInformation",
+        "System.Net.Mail", "System.Net.PeerToPeer", "System.Net.Cache",
+    ];
+
+    /// <summary>Types of System.Net itself that resolve names, open connections, or configure a client for them.</summary>
+    public static readonly IReadOnlySet<string> NetworkingTypes = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "System.Net.Dns", "System.Net.IPHostEntry", "System.Net.WebClient", "System.Net.WebRequest", "System.Net.HttpWebRequest",
+        "System.Net.FtpWebRequest", "System.Net.FileWebRequest", "System.Net.WebResponse", "System.Net.HttpWebResponse", "System.Net.WebProxy",
+        "System.Net.IWebProxy", "System.Net.CookieContainer", "System.Net.HttpListener", "System.Net.ServicePointManager", "System.Net.ServicePoint",
+        "System.Net.DecompressionMethods", "System.Net.CredentialCache", "System.Net.NetworkCredential",
+    };
+
+    /// <summary>The read sender's declared set: the networking types ReadSender.cs uses, and nothing else.</summary>
+    public static readonly IReadOnlySet<string> Declared = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "System.Net.Dns", "System.Net.DecompressionMethods", "System.Net.IWebProxy",
+        "System.Net.Http.HttpClient", "System.Net.Http.HttpMessageInvoker", "System.Net.Http.HttpMessageHandler", "System.Net.Http.SocketsHttpHandler",
+        "System.Net.Http.SocketsHttpConnectionContext", "System.Net.Http.HttpRequestMessage", "System.Net.Http.HttpResponseMessage",
+        "System.Net.Http.HttpMethod", "System.Net.Http.HttpContent", "System.Net.Http.HttpCompletionOption", "System.Net.Http.HttpVersionPolicy",
+        "System.Net.Http.HttpRequestException", "System.Net.Http.Headers.HttpHeaders", "System.Net.Http.Headers.HttpRequestHeaders",
+        "System.Net.Http.Headers.HttpResponseHeaders", "System.Net.Http.Headers.HttpContentHeaders", "System.Net.Http.Headers.MediaTypeHeaderValue",
+        "System.Net.Sockets.Socket", "System.Net.Sockets.SocketType", "System.Net.Sockets.ProtocolType", "System.Net.Sockets.AddressFamily",
+        "System.Net.Sockets.NetworkStream", "System.Net.Sockets.SocketException",
+        "System.Net.Security.SslClientAuthenticationOptions", "System.Net.Security.RemoteCertificateValidationCallback",
+        "System.Net.Security.SslPolicyErrors",
+    };
+
+    /// <summary>The networking assemblies the read sender needs (and the address types the MC-17 listener uses).</summary>
+    public static readonly IReadOnlySet<string> DeclaredAssemblies = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "System.Net.Primitives", "System.Net.Http", "System.Net.Sockets", "System.Net.Security", "System.Net.NameResolution",
+    };
+
+    /// <summary>Disallowed uses in a file other than ReadSender.cs, each of which the source scan must catch.</summary>
+    public static readonly IReadOnlyList<string> SelfTestSources =
+    [
+        "var c = new System.Net.Sockets.TcpClient(\"shopee.vn\", 443);",
+        "using var s = new global::System.Net.Sockets.Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);",
+        "using System.Net;\nvar a = await Dns.GetHostAddressesAsync(host);",
+        "using static System.Net.Dns;\nvar a = GetHostEntry(host);",
+        "using System.Net.WebSockets;\nvar w = new ClientWebSocket();",
+        "using N = System . Net . Sockets;\nvar u = new N.UdpClient();",
+        "var u = new UdpClient();",
+        "using var h = new HttpClient();",
+        "var t = Type.GetType(\"System.Net.Sockets.Socket\");",
+        "var r = WebRequest.Create(address);",
+        "await new Ping().SendPingAsync(host);",
+        "var x = new System.Net.Http.SocketsHttpHandler();",
+        "var l = new TcpListener(IPAddress.Loopback, 0);",
+        "var m = new SmtpClient(\"mail.example\");",
+    ];
+
+    /// <summary>Undeclared networking types, each of which the metadata check must catch.</summary>
+    public static readonly IReadOnlyList<string> SelfTestTypes =
+    [
+        "System.Net.Sockets.TcpClient", "System.Net.Sockets.UdpClient", "System.Net.Sockets.TcpListener", "System.Net.WebSockets.ClientWebSocket",
+        "System.Net.NetworkInformation.Ping", "System.Net.WebClient", "System.Net.WebProxy", "System.Net.CookieContainer",
+        "System.Net.Http.HttpClientHandler", "System.Net.Quic.QuicConnection", "System.Net.Security.SslStream", "System.Net.Http.HttpClient+Nested",
+    ];
+
+    public static bool IsNetworking(string fullName) =>
+        NetworkingTypes.Contains(Outer(fullName)) || NetworkingNamespaces.Any(ns => fullName.StartsWith(ns + ".", StringComparison.Ordinal));
+
+    /// <summary>The networking type references outside the declared set.</summary>
+    public static IReadOnlyList<string> Undeclared(IEnumerable<string> typeReferences) =>
+        [.. typeReferences.Where(IsNetworking).Where(t => !Declared.Contains(t)).Distinct().Order(StringComparer.Ordinal)];
+
+    /// <summary>Each networking name the source text holds.</summary>
+    public static IReadOnlyList<string> SourceHits(string source) =>
+        [.. Denied().Matches(source ?? string.Empty).Select(m => m.Value).Distinct()];
+
+    /// <summary>"file: names" for every file other than ReadSender.cs that names networking.</summary>
+    public static IReadOnlyList<string> OutsideSender(IEnumerable<(string File, string Text)> sources) =>
+        [.. sources.Where(s => s.File != SenderFile).Select(s => (s.File, Hits: SourceHits(s.Text))).Where(s => s.Hits.Count > 0)
+            .Select(s => $"{s.File}: {string.Join(", ", s.Hits)}")];
+
+    /// <summary>Every type reference of the assembly by its full name; a nested type carries its enclosing type ("Outer+Inner").</summary>
+    public static IReadOnlyList<string> TypeReferences(MetadataReader reader)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        string Name(TypeReferenceHandle handle)
+        {
+            var type = reader.GetTypeReference(handle);
+            var name = reader.GetString(type.Name);
+            if (type.ResolutionScope.Kind == HandleKind.TypeReference)
+            {
+                return Name((TypeReferenceHandle)type.ResolutionScope) + "+" + name;
+            }
+
+            var space = reader.GetString(type.Namespace);
+            return space.Length == 0 ? name : $"{space}.{name}";
+        }
+
+        return [.. reader.TypeReferences.Select(Name)];
+    }
+
+    /// <summary>Fails the case when the guard would miss a disallowed use, or would flag a benign one.</summary>
+    public static void SelfTest()
+    {
+        foreach (var source in SelfTestSources)
+        {
+            var caught = OutsideSender([("Routes.cs", source), (SenderFile, "using var h = new HttpClient();")]);
+            Expect.True(caught.Count == 1 && caught[0].StartsWith("Routes.cs: ", StringComparison.Ordinal), $"the source scan misses \"{source}\" in Routes.cs");
+        }
+
+        Expect.Equal(0, OutsideSender([(SenderFile, string.Join("\n", SelfTestSources))]).Count, "the read sender itself may name networking");
+        var benign = "using System.Net;\nvar a = IPAddress.Loopback;\nvar e = WebUtility.HtmlEncode(text);\nvar p = new IPEndPoint(a, 0);\n// tệp, ảnh, trang\n";
+        Expect.Equal(0, SourceHits(benign).Count, $"the source scan flags benign code: {string.Join(", ", SourceHits(benign))}");
+        foreach (var type in SelfTestTypes)
+        {
+            Expect.Equal(type, string.Join(",", Undeclared([type, "System.Net.IPAddress", "System.Net.WebUtility", "System.Net.Http.HttpClient"])), $"the metadata check misses {type}");
+        }
+
+        Expect.Equal(0, Undeclared(Declared).Count, "the declared set passes");
+    }
+
+    private static string Outer(string fullName) => fullName.Split('+')[0];
+
+    [GeneratedRegex(
+        @"\bSystem\s*\.\s*Net\s*\.\s*(Http|Sockets|WebSockets|Security|Quic|NetworkInformation|Mail|PeerToPeer|Cache)\b"
+        + @"|\b(Dns|IPHostEntry|TcpClient|TcpListener|UdpClient|Socket|SocketAsyncEventArgs|NetworkStream|SslStream|NegotiateStream|HttpClient"
+        + @"|HttpClientHandler|SocketsHttpHandler|WinHttpHandler|HttpMessageHandler|DelegatingHandler|HttpMessageInvoker|HttpRequestMessage"
+        + @"|HttpResponseMessage|ClientWebSocket|WebSocket|WebClient|WebRequest|HttpWebRequest|FtpWebRequest|FileWebRequest|WebProxy|IWebProxy"
+        + @"|CookieContainer|HttpListener|ServicePointManager|Ping|SmtpClient|QuicConnection|QuicListener|ConnectCallback)\b",
+        RegexOptions.CultureInvariant, 2000)]
+    private static partial Regex Denied();
 }

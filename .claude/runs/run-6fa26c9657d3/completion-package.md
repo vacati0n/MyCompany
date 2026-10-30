@@ -12,8 +12,8 @@ Produced by the Output Aggregator in `runtime/framework_runtime.py`. This packag
 | runtime | `0.11.1` |
 | run status | `WaitingForHuman` |
 | input digest | `sha256:cdd6a3089565e711536549f31b6982a6` |
-| phases | 6 (3 completed, 1 blocked, 0 failed, 2 pending) |
-| state transitions | 21 |
+| phases | 6 (5 completed, 1 blocked, 0 failed, 0 pending) |
+| state transitions | 32 |
 | replays suppressed | 0 |
 
 ## Phase Ledger
@@ -23,9 +23,9 @@ Produced by the Output Aggregator in `runtime/framework_runtime.py`. This packag
 | 1 | `scope-and-acceptance` | `product-owner` | completed | Completed | `runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md` | pass (33/33) |
 | 2 | `execution-planning` | `planner` | completed | Completed | `runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md` | pass (45/45) |
 | 3 | `solution-design-and-risk-assessment` | `architect` | completed | Completed | `runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md` | pass (78/78) |
-| 4 | `implementation` | `dev-1-implement` | blocked | Blocked | - | awaiting_human_decision |
-| 5 | `quality-review` | `dev-2-reviewer` | pending | Waiting | - | - |
-| 6 | `documentation-and-release-handoff` | `documentation` | pending | Waiting | - | - |
+| 4 | `implementation` | `dev-1-implement` | completed | Completed | `runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md` | pass (32/32) |
+| 5 | `quality-review` | `dev-2-reviewer` | completed | Completed | `runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md` | pass (31/31) |
+| 6 | `documentation-and-release-handoff` | `documentation` | blocked | Blocked | - | awaiting_human_decision |
 
 ## Gate Decisions
 
@@ -33,7 +33,7 @@ Produced by the Output Aggregator in `runtime/framework_runtime.py`. This packag
 |---|---|---|---|---|---|
 | Scope Gate | `scope-and-acceptance` | product-owner, business-analyst | approved | business-analyst | CEO |
 | Planning Gate | `execution-planning` | tech-lead, orchestrator | approved | orchestrator | orchestrator (MC-18 session), on the CEO's Scope Gate approval CEO-D-1314 |
-| Design Gate | `solution-design-and-risk-assessment` | architect, tech-lead | undecided | - | - |
+| Design Gate | `solution-design-and-risk-assessment` | architect, tech-lead | approved | tech-lead | CEO (vuhoangcao) |
 | Review Gate | `quality-review` | dev-2-reviewer, qa | undecided | - | - |
 | Verification Gate | `quality-review` | qa | undecided | - | - |
 | Closure Gate | `documentation-and-release-handoff` | orchestrator, documentation | undecided | - | - |
@@ -71,6 +71,20 @@ Modules loaded by each executed agent, in the order its manifest declares.
 | `solution-design-and-risk-assessment` | 5 | `agents/architect/output.md` | `sha256:bf440b99fb1db7d4750ad563bb2c2ea4` |
 | `solution-design-and-risk-assessment` | 6 | `agents/architect/quality.md` | `sha256:ce1c8f09d9d185400063ec43b073d0c7` |
 | `solution-design-and-risk-assessment` | 7 | `agents/architect/examples.md` | `sha256:3ec7bba43b60810b9a05d73f42cc1c02` |
+| `implementation` | 1 | `agents/dev-1-implement/system.md` | `sha256:f66f6548976bd074845dace1bc0041a1` |
+| `implementation` | 2 | `agents/dev-1-implement/identity.md` | `sha256:73c350ff8bbf8c3a81a3323ec008761a` |
+| `implementation` | 3 | `agents/dev-1-implement/reasoning.md` | `sha256:9ab46034da6f7a6b47418fa3a1faa36f` |
+| `implementation` | 4 | `agents/dev-1-implement/execution.md` | `sha256:85bc55c80ca4120571e93a9cb8148784` |
+| `implementation` | 5 | `agents/dev-1-implement/output.md` | `sha256:c6eb01fed0ad992e1bb58c87cc222270` |
+| `implementation` | 6 | `agents/dev-1-implement/quality.md` | `sha256:e83df9473b02f5d1c04ad87bcced61b3` |
+| `implementation` | 7 | `agents/dev-1-implement/examples.md` | `sha256:2bb1fc5f8b0485701e2228ed99d91ee0` |
+| `quality-review` | 1 | `agents/dev-2-reviewer/system.md` | `sha256:f1f2bbfb9fbf2d4068e7f55cad43fa42` |
+| `quality-review` | 2 | `agents/dev-2-reviewer/identity.md` | `sha256:8168902b160985d5b81f36a1be905e66` |
+| `quality-review` | 3 | `agents/dev-2-reviewer/reasoning.md` | `sha256:728cd3b6a63e6f84b3c15f51eb40c4de` |
+| `quality-review` | 4 | `agents/dev-2-reviewer/execution.md` | `sha256:647dfae331aa3093d20df3731613112b` |
+| `quality-review` | 5 | `agents/dev-2-reviewer/output.md` | `sha256:9d5f1de4a1e9e69edd5db3ee1d641c1f` |
+| `quality-review` | 6 | `agents/dev-2-reviewer/quality.md` | `sha256:3584a1884e8da3ee4886ae5b6e77110e` |
+| `quality-review` | 7 | `agents/dev-2-reviewer/examples.md` | `sha256:c2ef09a48bd41c0d5f8e2f1ce76a23db` |
 
 ## State Transition Log
 
@@ -99,6 +113,17 @@ Every persisted work-item transition, in commit order. This is the run's primary
 | 19 | `solution-design-and-risk-assessment` (state) | running | completed | `result_accepted` | `output_accepted` | runtime:validation-engine |
 | 20 | `Design Gate` (gate) | pending | blocked | `awaiting_decision` | `approval_wait` | runtime:state-engine |
 | 21 | `implementation` (state) | pending | blocked | `blocker_detected` | `approval_wait` | runtime:state-engine |
+| 22 | `Design Gate` (gate) | blocked | completed | `decision_approved` | `output_accepted` | human:CEO (vuhoangcao) |
+| 23 | `implementation` (state) | blocked | pending | `blocker_cleared` | `enqueued` | runtime:state-engine |
+| 24 | `implementation` (state) | pending | leased | `lease_acquired` | `leased` | runtime:invocation-gateway |
+| 25 | `implementation` (state) | leased | running | `invocation_started` | `execution_started` | runtime:invocation-gateway |
+| 26 | `implementation` (state) | running | completed | `result_accepted` | `output_accepted` | runtime:validation-engine |
+| 27 | `quality-review` (state) | pending | leased | `lease_acquired` | `leased` | runtime:invocation-gateway |
+| 28 | `quality-review` (state) | leased | running | `invocation_started` | `execution_started` | runtime:invocation-gateway |
+| 29 | `quality-review` (state) | running | completed | `result_accepted` | `output_accepted` | runtime:validation-engine |
+| 30 | `Review Gate` (gate) | pending | blocked | `awaiting_decision` | `approval_wait` | runtime:state-engine |
+| 31 | `Verification Gate` (gate) | pending | blocked | `awaiting_decision` | `approval_wait` | runtime:state-engine |
+| 32 | `documentation-and-release-handoff` (state) | pending | blocked | `blocker_detected` | `approval_wait` | runtime:state-engine |
 
 ## Event Stream
 
@@ -147,6 +172,22 @@ Every persisted work-item transition, in commit order. This is the run's primary
 | E-0041 | `validation_passed` | `solution-design-and-risk-assessment` | runtime:validation-engine | `output_accepted` | artifact conforms: 78/78 checks passed |
 | E-0042 | `escalation_opened` | `gate::Design Gate` | runtime:state-engine | `approval_wait` | gate work item blocked: awaiting_human_decision |
 | E-0043 | `escalation_opened` | `implementation` | runtime:state-engine | `approval_wait` | state work item blocked: awaiting_human_decision |
+| E-0044 | `aggregation_completed` | `documentation-and-release-handoff` | runtime:output-aggregator | `output_accepted` | completion package and provenance manifest persisted for 3/6 completed phase(s) |
+| E-0045 | `escalation_resolved` | `gate::Design Gate` | human:CEO (vuhoangcao) | `output_accepted` | Design Gate approved by tech-lead (evidence: solution-design-and-risk-assessment) |
+| E-0046 | `escalation_resolved` | `implementation` | runtime:state-engine | `enqueued` | state work item unblocked |
+| E-0047 | `context_hydrated` | `implementation` | runtime:context-loader | `context_hydration_completed` | context slice frozen: 18 member(s), 3 input(s) |
+| E-0048 | `work_item_leased` | `implementation` | runtime:invocation-gateway | `leased` | invocation envelope built and leased to the host-subagent adapter in native mode |
+| E-0049 | `invocation_started` | `implementation` | runtime:invocation-gateway | `execution_started` | dispatching agent dev-1-implement v1.1.0 through host registration agents/dev-1-implement.agent.md |
+| E-0050 | `invocation_completed` | `implementation` | agent:dev-1-implement | `output_accepted` | agent returned status 'succeeded' with 1 artifact ref(s) |
+| E-0051 | `validation_passed` | `implementation` | runtime:validation-engine | `output_accepted` | artifact conforms: 32/32 checks passed |
+| E-0052 | `context_hydrated` | `quality-review` | runtime:context-loader | `context_hydration_completed` | context slice frozen: 19 member(s), 3 input(s) |
+| E-0053 | `work_item_leased` | `quality-review` | runtime:invocation-gateway | `leased` | invocation envelope built and leased to the host-subagent adapter in native mode |
+| E-0054 | `invocation_started` | `quality-review` | runtime:invocation-gateway | `execution_started` | dispatching agent dev-2-reviewer v1.1.0 through host registration agents/dev-2-reviewer.agent.md |
+| E-0055 | `invocation_completed` | `quality-review` | agent:dev-2-reviewer | `output_accepted` | agent returned status 'succeeded' with 1 artifact ref(s) |
+| E-0056 | `validation_passed` | `quality-review` | runtime:validation-engine | `output_accepted` | artifact conforms: 31/31 checks passed |
+| E-0057 | `escalation_opened` | `gate::Review Gate` | runtime:state-engine | `approval_wait` | gate work item blocked: awaiting_human_decision |
+| E-0058 | `escalation_opened` | `gate::Verification Gate` | runtime:state-engine | `approval_wait` | gate work item blocked: awaiting_human_decision |
+| E-0059 | `escalation_opened` | `documentation-and-release-handoff` | runtime:state-engine | `approval_wait` | state work item blocked: awaiting_human_decision |
 
 ## Replay Suppression
 
@@ -156,8 +197,9 @@ No repeated call has been made against this run.
 
 | Work item | Blocked reason | Detail |
 |---|---|---|
-| `Design Gate` (gate) | `awaiting_human_decision` | G6-GATE-EVIDENCE: evidence for solution-design-and-risk-assessment is complete; awaiting a decision from ['architect', 'tech-lead'] |
-| `implementation` (state) | `awaiting_human_decision` | G4-GATE: Design Gate closing solution-design-and-risk-assessment has no recorded decision; owners: ['architect', 'tech-lead'] |
+| `Review Gate` (gate) | `awaiting_human_decision` | G6-GATE-EVIDENCE: evidence for quality-review is complete; awaiting a decision from ['dev-2-reviewer', 'qa'] |
+| `Verification Gate` (gate) | `awaiting_human_decision` | G6-GATE-EVIDENCE: evidence for quality-review is complete; awaiting a decision from ['qa'] |
+| `documentation-and-release-handoff` (state) | `awaiting_human_decision` | G4-GATE: Review Gate closing quality-review has no recorded decision; owners: ['dev-2-reviewer', 'qa'] |
 
 ## Residual Items
 

@@ -107,6 +107,27 @@ internal sealed class ReadApp : IDisposable
         return Read(response);
     }
 
+    /// <summary>A JSON POST with the given Origin and token headers, each left out when null (review correction CR-005).</summary>
+    public Answer PostAs(string path, object body, string? origin, string? token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json"),
+        };
+        if (origin is not null)
+        {
+            request.Headers.TryAddWithoutValidation("Origin", origin);
+        }
+
+        if (token is not null)
+        {
+            request.Headers.TryAddWithoutValidation(GuardState.TokenHeader, token);
+        }
+
+        using var response = Http.SendAsync(request).GetAwaiter().GetResult();
+        return Read(response);
+    }
+
     /// <summary>One read click of the page, as the page sends it.</summary>
     public Answer Read(string code, string link) => Post($"/api/read?code={code}", new { link });
 

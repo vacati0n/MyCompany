@@ -210,16 +210,25 @@ internal static partial class LinkRule
             throw new ReadStop(code, $"{where} {host}, không phải trang shopee.vn. Ứng dụng chỉ đọc trang sản phẩm trên shopee.vn.", PasteNext);
         }
 
+        if (PathStop(uri) is { } stop)
+        {
+            throw stop;
+        }
+    }
+
+    /// <summary>The stop for an address whose path is a sign-in path or a verification (CAPTCHA) path, or null.</summary>
+    public static ReadStop? PathStop(Uri uri)
+    {
+        ArgumentNullException.ThrowIfNull(uri);
         var path = uri.AbsolutePath.ToLowerInvariant();
         if (SignInPaths.Any(p => path == p || path.StartsWith(p + "/", StringComparison.Ordinal)))
         {
-            throw new ReadStop("sign-in-redirect", "Shopee chuyển sang trang đăng nhập. Ứng dụng không đăng nhập, không dùng tài khoản nào.", PasteNext);
+            return new ReadStop("sign-in-redirect", "Shopee chuyển sang trang đăng nhập. Ứng dụng không đăng nhập, không dùng tài khoản nào.", PasteNext);
         }
 
-        if (VerifyPaths.Any(p => path.StartsWith(p, StringComparison.Ordinal)))
-        {
-            throw new ReadStop("captcha", "Shopee chuyển sang trang xác minh người dùng (CAPTCHA). Ứng dụng không giải trang xác minh.", PasteNext);
-        }
+        return VerifyPaths.Any(p => path.StartsWith(p, StringComparison.Ordinal))
+            ? new ReadStop("captcha", "Shopee chuyển sang trang xác minh người dùng (CAPTCHA). Ứng dụng không giải trang xác minh.", PasteNext)
+            : null;
     }
 
     /// <summary>True when the authority as written carries a port, even the default one (":443").</summary>
