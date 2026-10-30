@@ -57,6 +57,20 @@ Bounds held on this read: two requests in total, both to shopee.vn hosts; the sh
 (one hop of the five allowed); no cookie sent or kept; no sign-in; affiliate.shopee.vn not contacted; honest user
 agent "MediaCompanyPilot/1.0 (doc-trang-san-pham)"; no image host contacted.
 
+## 2a. Second live read on the full link (CEO-D-1317, after the run closed)
+
+The CEO then named the full product link `https://shopee.vn/product/89827191/28309604497` and asked for it to be
+tried instead of the short one. It was read once, by the orchestrator, in the same isolated app, with the switch on
+for that read and off right after.
+
+| Time (UTC) | Host | Path | Status | Bytes |
+|------------|------|------|--------|-------|
+| 2026-10-30T03:31:21.878Z | shopee.vn | /product/89827191/28309604497 | 200 | 203445 |
+
+The outcome was the same `no-product` stop. It used one request, filled nothing, requested no image, and made no
+retry. The body is the same size as the first read's (203,445 bytes), so both links reach the same page that Shopee
+serves before its scripts run.
+
 ## 3. Answer to design question Q-006 (real-page yield)
 
 An unmodified read of this real product page yields no product facts: the 203 KB HTML Shopee serves to a client that

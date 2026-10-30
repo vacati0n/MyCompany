@@ -2792,3 +2792,23 @@ pages, paste mode is the expected common path. Record:
 **Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `CEO-D-1315`, `D-002`, `D-018`.
 
 ---
+
+## CEO-D-1317 — MC-18: a second live read, on the full product link
+
+**The CEO's own decision, 2026-10-30**, after the first live read stopped `no-product`. The CEO's words:
+"https://shopee.vn/product/89827191/28309604497 / thu bang link day du thay vi rut gon" (try the full link instead of
+the short one).
+
+1. **Named link (`CEO-D-1314` item 3, extended by the CEO).** One more live read was made on
+   `https://shopee.vn/product/89827191/28309604497`, once, by the orchestrator, in the same isolated app, with the
+   switch on for it and off right after (the file then reads `"readOn": false`).
+2. **Outcome.** There was one request, at 03:31:21 UTC: `shopee.vn/product/89827191/28309604497` answered 200 with
+   203,445 bytes of HTML. That is the same size the first read got from the redirect target. The read stopped
+   `no-product`. Nothing was filled, no image was requested, and nothing was retried.
+3. **Meaning.** The full link and the short link reach the same page that Shopee serves before its scripts run. That
+   page carries no product data. The kind of link makes no difference to an honest read. The answer to design
+   question Q-006 stands: paste mode is the everyday path.
+
+**Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `CEO-D-1315`, `CEO-D-1316`.
+
+---
