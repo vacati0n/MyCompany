@@ -1,0 +1,1016 @@
+{
+  "schema": "framework.runtime/state-engine.v1",
+  "run_id": "run-142c58d73427",
+  "runtime_version": "0.11.1",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "run_status": "Dispatching",
+  "created_at": "2026-10-30T03:39:20Z",
+  "updated_at": "2026-10-30T03:50:59Z",
+  "input_digest": "sha256:a52f39513574219a33d4e4ecf83b5ff6",
+  "inputs": [
+    {
+      "type": "feature-request",
+      "reference": "runs/inputs/mc-19-feature-request.md",
+      "source_file": "runs/inputs/mc-19-feature-request.md",
+      "digest": "sha256:87ce06050698fc87d17cf66f7049a8ed"
+    },
+    {
+      "type": "business-intent",
+      "reference": "runs/inputs/mc-19-business-intent.md",
+      "source_file": "runs/inputs/mc-19-business-intent.md",
+      "digest": "sha256:d0e0d5d777bc42f6a114377afff98eee"
+    }
+  ],
+  "work_items": {
+    "scope-and-acceptance": {
+      "work_item_id": "run-142c58d73427::scope-and-acceptance",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "scope-and-acceptance",
+      "work_type": "state",
+      "owner_agent_id": "product-owner",
+      "status": "completed",
+      "queue_status": "Completed",
+      "eligible": true,
+      "phase_index": 1,
+      "gate": "Scope Gate",
+      "artifact": "scope-definition.md",
+      "depends_on": [],
+      "attempt": 1,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": "host-subagent:product-owner",
+      "idempotency_key": "sha256:c05de4862161b4b9bf46ee93e0b431ec",
+      "payload_digest": "sha256:b60c6c7bb8458537694c3ed819380566",
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G1-CAPABILITY",
+          "title": "owner agent is invocable for this phase",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "product-owner v1.0.0 resolves through agents/product-owner.agent.md; validator scope_definition_validator",
+          "gate": null
+        },
+        {
+          "id": "G2-CONTEXT",
+          "title": "a context slice is declared for this phase",
+          "outcome": "pass",
+          "reason_code": "context_hydration_completed",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "14 declared member(s), including the routed workflow specification",
+          "gate": null
+        },
+        {
+          "id": "G3-PREDECESSOR",
+          "title": "hard predecessors have completed",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "hard predecessors: none",
+          "gate": null
+        },
+        {
+          "id": "G4-GATE",
+          "title": "predecessor gates are approved",
+          "outcome": "pass",
+          "reason_code": "output_accepted",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "gates on hard predecessors: none",
+          "gate": null
+        },
+        {
+          "id": "G5-INPUT",
+          "title": "the agent input contract is satisfied",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "supplied ['feature-request', 'business-intent']; required none (menu contract)",
+          "gate": null
+        }
+      ],
+      "completion": {
+        "committed_at": "2026-10-30T03:49:12Z",
+        "artifact_path": "runs/run-142c58d73427/states/scope-and-acceptance/artifacts/scope-definition.md",
+        "artifact_digest": "sha256:3bb9dc195f8f7d1a8f56e92dc281b020",
+        "result_status": "succeeded",
+        "invocation_id": "inv-142c58d73427-01-001",
+        "validation": {
+          "result": "pass",
+          "checksRun": 33,
+          "checksPassed": 33,
+          "blockingFailures": 0,
+          "correctableFailures": 0,
+          "notMachineCheckable": 3,
+          "counts": {
+            "sections": 9,
+            "status": "provisional",
+            "identifiers": {
+              "S": 11,
+              "X": 14,
+              "A": 42,
+              "D": 10,
+              "Q": 9
+            },
+            "tableRows": {
+              "In Scope": 11,
+              "Out of Scope": 14,
+              "Acceptance Criteria": 42,
+              "Scope Decisions": 10,
+              "Open Questions": 9
+            },
+            "scopeVerdict": "partially-bounded",
+            "scopeItems": 11,
+            "exclusions": 14,
+            "acceptanceCriteria": 42,
+            "scopeDecisions": 10,
+            "openQuestions": 9,
+            "blockingOpenQuestions": 2
+          },
+          "undeclaredSideEffects": []
+        }
+      },
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:49:12Z",
+      "invocation_id": "inv-142c58d73427-01-001",
+      "artifact_path": "runs/run-142c58d73427/states/scope-and-acceptance/artifacts/scope-definition.md",
+      "artifact_identifier": "scope-definition"
+    },
+    "gate:Scope Gate": {
+      "work_item_id": "run-142c58d73427::gate::Scope Gate",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "Scope Gate",
+      "work_type": "gate",
+      "owner_agent_id": null,
+      "status": "completed",
+      "queue_status": "Completed",
+      "eligible": false,
+      "phase_index": 1,
+      "gate": "Scope Gate",
+      "artifact": null,
+      "depends_on": [
+        {
+          "state_id": "scope-and-acceptance",
+          "kind": "hard",
+          "basis": "the gate closes this phase"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": "awaiting_human_decision",
+      "blocked_detail": "G6-GATE-EVIDENCE: evidence for scope-and-acceptance is complete; awaiting a decision from ['product-owner', 'business-analyst']",
+      "failure_class": "gate-approval-required",
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G6-GATE-EVIDENCE",
+          "title": "the gated phase has produced its evidence",
+          "outcome": "block",
+          "reason_code": "approval_wait",
+          "blocked_reason": "awaiting_human_decision",
+          "failure_class": "gate-approval-required",
+          "detail": "evidence for scope-and-acceptance is complete; awaiting a decision from ['product-owner', 'business-analyst']",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:58Z",
+      "blocked_by": "guard"
+    },
+    "execution-planning": {
+      "work_item_id": "run-142c58d73427::execution-planning",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "execution-planning",
+      "work_type": "state",
+      "owner_agent_id": "planner",
+      "status": "pending",
+      "queue_status": "Ready",
+      "eligible": true,
+      "phase_index": 2,
+      "gate": "Planning Gate",
+      "artifact": "execution-plan.md",
+      "depends_on": [
+        {
+          "state_id": "scope-and-acceptance",
+          "kind": "soft",
+          "basis": "Input column names the upstream output 'scope-definition.md'; downgraded to soft: the Input column declares an alternative that the supplied inputs satisfy"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G1-CAPABILITY",
+          "title": "owner agent is invocable for this phase",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "planner v1.0.0 resolves through agents/planner.agent.md; validator plan_validator",
+          "gate": null
+        },
+        {
+          "id": "G2-CONTEXT",
+          "title": "a context slice is declared for this phase",
+          "outcome": "pass",
+          "reason_code": "context_hydration_completed",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "12 declared member(s), including the routed workflow specification",
+          "gate": null
+        },
+        {
+          "id": "G3-PREDECESSOR",
+          "title": "hard predecessors have completed",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "hard predecessors: none",
+          "gate": null
+        },
+        {
+          "id": "G4-GATE",
+          "title": "predecessor gates are approved",
+          "outcome": "pass",
+          "reason_code": "output_accepted",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "gates on hard predecessors: Scope Gate",
+          "gate": null
+        },
+        {
+          "id": "G5-INPUT",
+          "title": "the agent input contract is satisfied",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "supplied ['feature-request']; required none (menu contract)",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "gate:Planning Gate": {
+      "work_item_id": "run-142c58d73427::gate::Planning Gate",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "Planning Gate",
+      "work_type": "gate",
+      "owner_agent_id": null,
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 2,
+      "gate": "Planning Gate",
+      "artifact": null,
+      "depends_on": [
+        {
+          "state_id": "execution-planning",
+          "kind": "hard",
+          "basis": "the gate closes this phase"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G6-GATE-EVIDENCE",
+          "title": "the gated phase has produced its evidence",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "execution-planning is pending; a gate assesses evidence that does not exist yet",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "solution-design-and-risk-assessment": {
+      "work_item_id": "run-142c58d73427::solution-design-and-risk-assessment",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "solution-design-and-risk-assessment",
+      "work_type": "state",
+      "owner_agent_id": "architect",
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 3,
+      "gate": "Design Gate",
+      "artifact": "technical-design.md",
+      "depends_on": [
+        {
+          "state_id": "execution-planning",
+          "kind": "hard",
+          "basis": "Input column names the upstream output 'execution-plan.md'"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G1-CAPABILITY",
+          "title": "owner agent is invocable for this phase",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "architect v1.0.0 resolves through agents/architect.agent.md; validator design_validator",
+          "gate": null
+        },
+        {
+          "id": "G2-CONTEXT",
+          "title": "a context slice is declared for this phase",
+          "outcome": "pass",
+          "reason_code": "context_hydration_completed",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "17 declared member(s), including the routed workflow specification",
+          "gate": null
+        },
+        {
+          "id": "G3-PREDECESSOR",
+          "title": "hard predecessors have completed",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "waiting on ['execution-planning=pending']",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "gate:Design Gate": {
+      "work_item_id": "run-142c58d73427::gate::Design Gate",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "Design Gate",
+      "work_type": "gate",
+      "owner_agent_id": null,
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 3,
+      "gate": "Design Gate",
+      "artifact": null,
+      "depends_on": [
+        {
+          "state_id": "solution-design-and-risk-assessment",
+          "kind": "hard",
+          "basis": "the gate closes this phase"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G6-GATE-EVIDENCE",
+          "title": "the gated phase has produced its evidence",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "solution-design-and-risk-assessment is pending; a gate assesses evidence that does not exist yet",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "implementation": {
+      "work_item_id": "run-142c58d73427::implementation",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "implementation",
+      "work_type": "state",
+      "owner_agent_id": "dev-1-implement",
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 4,
+      "gate": "none",
+      "artifact": "implementation-report.md",
+      "depends_on": [
+        {
+          "state_id": "solution-design-and-risk-assessment",
+          "kind": "hard",
+          "basis": "Input column names the upstream output 'technical-design.md'"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G1-CAPABILITY",
+          "title": "owner agent is invocable for this phase",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "dev-1-implement v1.1.0 resolves through agents/dev-1-implement.agent.md; validator implementation_report_validator",
+          "gate": null
+        },
+        {
+          "id": "G2-CONTEXT",
+          "title": "a context slice is declared for this phase",
+          "outcome": "pass",
+          "reason_code": "context_hydration_completed",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "18 declared member(s), including the routed workflow specification",
+          "gate": null
+        },
+        {
+          "id": "G3-PREDECESSOR",
+          "title": "hard predecessors have completed",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "waiting on ['solution-design-and-risk-assessment=pending']",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "quality-review": {
+      "work_item_id": "run-142c58d73427::quality-review",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "quality-review",
+      "work_type": "state",
+      "owner_agent_id": "dev-2-reviewer",
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 5,
+      "gate": "Review Gate, Verification Gate",
+      "artifact": "review-package.md",
+      "depends_on": [
+        {
+          "state_id": "implementation",
+          "kind": "hard",
+          "basis": "Input column names the upstream output 'implementation-report.md'"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G1-CAPABILITY",
+          "title": "owner agent is invocable for this phase",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "dev-2-reviewer v1.1.0 resolves through agents/dev-2-reviewer.agent.md; validator review_package_validator",
+          "gate": null
+        },
+        {
+          "id": "G2-CONTEXT",
+          "title": "a context slice is declared for this phase",
+          "outcome": "pass",
+          "reason_code": "context_hydration_completed",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "19 declared member(s), including the routed workflow specification",
+          "gate": null
+        },
+        {
+          "id": "G3-PREDECESSOR",
+          "title": "hard predecessors have completed",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "waiting on ['implementation=pending']",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "gate:Review Gate": {
+      "work_item_id": "run-142c58d73427::gate::Review Gate",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "Review Gate",
+      "work_type": "gate",
+      "owner_agent_id": null,
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 5,
+      "gate": "Review Gate",
+      "artifact": null,
+      "depends_on": [
+        {
+          "state_id": "quality-review",
+          "kind": "hard",
+          "basis": "the gate closes this phase"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G6-GATE-EVIDENCE",
+          "title": "the gated phase has produced its evidence",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "quality-review is pending; a gate assesses evidence that does not exist yet",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "gate:Verification Gate": {
+      "work_item_id": "run-142c58d73427::gate::Verification Gate",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "Verification Gate",
+      "work_type": "gate",
+      "owner_agent_id": null,
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 5,
+      "gate": "Verification Gate",
+      "artifact": null,
+      "depends_on": [
+        {
+          "state_id": "quality-review",
+          "kind": "hard",
+          "basis": "the gate closes this phase"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G6-GATE-EVIDENCE",
+          "title": "the gated phase has produced its evidence",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "quality-review is pending; a gate assesses evidence that does not exist yet",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "documentation-and-release-handoff": {
+      "work_item_id": "run-142c58d73427::documentation-and-release-handoff",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "documentation-and-release-handoff",
+      "work_type": "state",
+      "owner_agent_id": "documentation",
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 6,
+      "gate": "Closure Gate",
+      "artifact": "release-note.md",
+      "depends_on": [
+        {
+          "state_id": "quality-review",
+          "kind": "hard",
+          "basis": "workflow Phase Model row order"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G1-CAPABILITY",
+          "title": "owner agent is invocable for this phase",
+          "outcome": "pass",
+          "reason_code": "enqueued",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "documentation v1.2.0 resolves through agents/documentation.agent.md; validator release_note_validator",
+          "gate": null
+        },
+        {
+          "id": "G2-CONTEXT",
+          "title": "a context slice is declared for this phase",
+          "outcome": "pass",
+          "reason_code": "context_hydration_completed",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "19 declared member(s), including the routed workflow specification",
+          "gate": null
+        },
+        {
+          "id": "G3-PREDECESSOR",
+          "title": "hard predecessors have completed",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "waiting on ['quality-review=pending']",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    },
+    "gate:Closure Gate": {
+      "work_item_id": "run-142c58d73427::gate::Closure Gate",
+      "run_id": "run-142c58d73427",
+      "workflow_id": "implement-feature",
+      "state_id": "Closure Gate",
+      "work_type": "gate",
+      "owner_agent_id": null,
+      "status": "pending",
+      "queue_status": "Waiting",
+      "eligible": false,
+      "phase_index": 6,
+      "gate": "Closure Gate",
+      "artifact": null,
+      "depends_on": [
+        {
+          "state_id": "documentation-and-release-handoff",
+          "kind": "hard",
+          "basis": "the gate closes this phase"
+        }
+      ],
+      "attempt": 0,
+      "attempts_lost": 0,
+      "max_attempts": 3,
+      "lease_expires_at": null,
+      "available_at": null,
+      "last_worker_id": null,
+      "idempotency_key": null,
+      "payload_digest": null,
+      "blocked_reason": null,
+      "blocked_detail": null,
+      "failure_class": null,
+      "failure_detail": null,
+      "guards": [
+        {
+          "id": "G6-GATE-EVIDENCE",
+          "title": "the gated phase has produced its evidence",
+          "outcome": "wait",
+          "reason_code": "dependency_wait",
+          "blocked_reason": null,
+          "failure_class": null,
+          "detail": "documentation-and-release-handoff is pending; a gate assesses evidence that does not exist yet",
+          "gate": null
+        }
+      ],
+      "completion": null,
+      "supersessions": [],
+      "replays": [],
+      "created_at": "2026-10-30T03:39:20Z",
+      "updated_at": "2026-10-30T03:50:59Z"
+    }
+  },
+  "gates": {
+    "Scope Gate": {
+      "gate": "Scope Gate",
+      "closes_state": "scope-and-acceptance",
+      "owner_roles": [
+        "product-owner",
+        "business-analyst"
+      ],
+      "producer_agent": "product-owner",
+      "decision": "approved",
+      "owner_role": "business-analyst",
+      "decided_by": "CEO",
+      "rationale": "CEO decided at the Scope Gate (CEO-D-1319): signed-in page allowed; clipboard hand-over, guard not widened; one screenshot for all button rows; video must be open; button code fixed in the bookmark; Chrome; fixture proof then one CEO real-page try; bounds 256 KiB/30 images/100 rows; scope A-001..A-042 approved.",
+      "evidence_ref": "research/ceo-decision-record.md",
+      "decided_at": "2026-10-30T03:50:58Z",
+      "decision_history": []
+    },
+    "Planning Gate": {
+      "gate": "Planning Gate",
+      "closes_state": "execution-planning",
+      "owner_roles": [
+        "tech-lead",
+        "orchestrator"
+      ],
+      "producer_agent": "planner",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Design Gate": {
+      "gate": "Design Gate",
+      "closes_state": "solution-design-and-risk-assessment",
+      "owner_roles": [
+        "architect",
+        "tech-lead"
+      ],
+      "producer_agent": "architect",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Review Gate": {
+      "gate": "Review Gate",
+      "closes_state": "quality-review",
+      "owner_roles": [
+        "dev-2-reviewer",
+        "qa"
+      ],
+      "producer_agent": "dev-2-reviewer",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Verification Gate": {
+      "gate": "Verification Gate",
+      "closes_state": "quality-review",
+      "owner_roles": [
+        "qa"
+      ],
+      "producer_agent": "dev-2-reviewer",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    },
+    "Closure Gate": {
+      "gate": "Closure Gate",
+      "closes_state": "documentation-and-release-handoff",
+      "owner_roles": [
+        "orchestrator",
+        "documentation"
+      ],
+      "producer_agent": "documentation",
+      "decision": null,
+      "owner_role": null,
+      "decided_by": null,
+      "rationale": null,
+      "evidence_ref": null,
+      "decided_at": null,
+      "decision_history": []
+    }
+  },
+  "transitions": [
+    {
+      "seq": 1,
+      "at": "2026-10-30T03:39:32Z",
+      "work_item_id": "run-142c58d73427::scope-and-acceptance",
+      "state_id": "scope-and-acceptance",
+      "work_type": "state",
+      "phase_index": 1,
+      "from": "pending",
+      "to": "leased",
+      "trigger": "lease_acquired",
+      "reason_code": "leased",
+      "queue_status": "Executing",
+      "actor_type": "runtime",
+      "actor_id": "invocation-gateway",
+      "attempt": 1,
+      "idempotency_key": "sha256:c05de4862161b4b9bf46ee93e0b431ec",
+      "detail": "leased to the host-subagent adapter in native mode"
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-30T03:39:32Z",
+      "work_item_id": "run-142c58d73427::scope-and-acceptance",
+      "state_id": "scope-and-acceptance",
+      "work_type": "state",
+      "phase_index": 1,
+      "from": "leased",
+      "to": "running",
+      "trigger": "invocation_started",
+      "reason_code": "execution_started",
+      "queue_status": "Executing",
+      "actor_type": "runtime",
+      "actor_id": "invocation-gateway",
+      "attempt": 1,
+      "idempotency_key": "sha256:c05de4862161b4b9bf46ee93e0b431ec",
+      "detail": "dispatching product-owner v1.0.0 through agents/product-owner.agent.md"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-30T03:49:12Z",
+      "work_item_id": "run-142c58d73427::scope-and-acceptance",
+      "state_id": "scope-and-acceptance",
+      "work_type": "state",
+      "phase_index": 1,
+      "from": "running",
+      "to": "completed",
+      "trigger": "result_accepted",
+      "reason_code": "output_accepted",
+      "queue_status": "Completed",
+      "actor_type": "runtime",
+      "actor_id": "validation-engine",
+      "attempt": 1,
+      "idempotency_key": "sha256:c05de4862161b4b9bf46ee93e0b431ec",
+      "detail": "artifact accepted: 33/33 checks passed"
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-30T03:49:12Z",
+      "work_item_id": "run-142c58d73427::gate::Scope Gate",
+      "state_id": "Scope Gate",
+      "work_type": "gate",
+      "phase_index": 1,
+      "from": "pending",
+      "to": "blocked",
+      "trigger": "awaiting_decision",
+      "reason_code": "approval_wait",
+      "queue_status": "Blocked",
+      "actor_type": "runtime",
+      "actor_id": "state-engine",
+      "attempt": 0,
+      "idempotency_key": null,
+      "detail": "G6-GATE-EVIDENCE: evidence for scope-and-acceptance is complete; awaiting a decision from ['product-owner', 'business-analyst']"
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-30T03:50:58Z",
+      "work_item_id": "run-142c58d73427::gate::Scope Gate",
+      "state_id": "Scope Gate",
+      "work_type": "gate",
+      "phase_index": 1,
+      "from": "blocked",
+      "to": "completed",
+      "trigger": "decision_approved",
+      "reason_code": "output_accepted",
+      "queue_status": "Completed",
+      "actor_type": "human",
+      "actor_id": "CEO",
+      "attempt": 0,
+      "idempotency_key": null,
+      "detail": "approved by business-analyst: CEO decided at the Scope Gate (CEO-D-1319): signed-in page allowed; clipboard hand-over, guard not widened; one screenshot for all button rows; video must be open; button code fixed in the bookmark; Chrome; fixture proof then one CEO real-page try; bounds 256 KiB/30 images/100 rows; scope A-001..A-042 approved."
+    }
+  ],
+  "replays": []
+}

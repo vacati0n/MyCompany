@@ -1,0 +1,97 @@
+{
+  "invocation_id": "inv-142c58d73427-01-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-142c58d73427/states/scope-and-acceptance/artifacts/scope-definition.md"
+  ],
+  "structured_output": {
+    "attempt": 1,
+    "max_attempts": 3,
+    "artifact_digest": "not computed by this agent: command execution is prohibited by the envelope, so the digest is left for the runtime to compute on completion",
+    "envelope_bindings_checked": {
+      "input_digest": "sha256:2fbb707dc7c53321b374911939d7fd4d (copied verbatim into the artifact metadata)",
+      "context_digest": "sha256:8432aa0d2cb1bf16c655abffc4957991 (copied verbatim into the artifact metadata)",
+      "task_context_digest": "sha256:7250c4d3102a16135147787cbae1bb00",
+      "permitted_writes": "both writes are within them"
+    },
+    "counts": {
+      "scope_items": 11,
+      "exclusions": 14,
+      "acceptance_criteria": 42,
+      "scope_decisions": 10,
+      "open_questions": 9,
+      "blocking_open_questions": 2
+    },
+    "declared_status": "provisional",
+    "scope_verdict": "partially-bounded",
+    "verdict_basis": "Q-001 (signed-in page) and Q-002 (hand-over path) are blocking and owned by the CEO at the Scope Gate; Q-003 to Q-006 and Q-009 (CEO, Scope Gate), Q-007 (CEO, Design Gate) and Q-008 (architect, Design Gate) are non-blocking, each with a recommended option",
+    "open_questions_for_ceo": {
+      "Q-001": "button on a signed-in Shopee page; recommended (a) allowed, reads only what is shown, sends nothing to Shopee, hands over no account, cookie or stored data (D-008, A-018)",
+      "Q-002": "hand-over path; recommended (b) clipboard, one structured block pasted once at step 1, because it passes the unchanged request guard and does not depend on the browser's local-address rule",
+      "Q-003": "how it is shown working; recommended (a) fixture tests and Browser pane, then the CEO presses once on one real page in their own browser after quality review; no agent opens shopee.vn",
+      "Q-004": "per-row screenshot; recommended (b) one operator screenshot named on every button-filled row in one action, MC-16 check unchanged, falling back to (a) per-row if the check refuses one file on several rows",
+      "Q-005": "video open first; recommended (a) the hand-over fills only the open video and is refused when none is open",
+      "Q-006": "button code fixed in the bookmark or served by the app; recommended (a) fixed text, loads no code at a press, out-of-date button refused",
+      "Q-007": "which browser; recommended (a) the one browser the operator uses, named by the CEO (Design Gate)",
+      "Q-009": "business measure beyond the action count and done condition; recommended (a) none"
+    },
+    "question_for_architect": {
+      "Q-008": "what grounds the fixture page layout when no agent may view a real page; recommended (a) CEO screenshot, MC-18 paste fixture and ticket facts, with the CEO's try as first real check"
+    },
+    "key_finding_for_gate": "As delivered, the request guard refuses any state-changing request whose Origin is not the app's own or that lacks the per-start token. A press on shopee.vn carries the shopee.vn origin and cannot know the token, which changes at each start, so a direct hand-over cannot pass the unchanged guard unless the data first reaches the app's own page (D-002, X-007). This is why Q-002 recommends the clipboard.",
+    "affected_areas": {
+      "database": "triggered by the word in ticket hard constraint 8 only; kept untouched by X-009",
+      "security": "affected: untrusted hand-over, request guard, image egress, signed-in session; skill S09 read; held by S-004, S-005, A-014, A-016 to A-027"
+    },
+    "repository_rescan": "task context names no relevant files; read src/MediaCompany.Pilot.Web/RequestGuard.cs (guard acceptance rule), src/MediaCompany.Pilot/FactSheet.cs (per-row screenshot field) and pilot-affiliate-vn/mc-18/01-huong-dan-doc-trang.md (step 1 fields, marks, switch); also read research/ceo-decision-record.md entries for CEO decisions 1313 to 1318 and research/framework-defects.md per the orchestrator briefing",
+    "quality_checks": {
+      "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+      "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "SD1": "pass", "SD2": "pass", "D5": "pass", "D6": "pass",
+      "SD3": "pass", "SD4": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass",
+      "SD5": "pass", "SD8": "pass", "G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "pass",
+      "L1": "pass", "L2": "pass", "L3": "pass", "L4": "pass", "L5": "pass",
+      "SD6": "pass", "D7": "pass", "D8": "pass", "D9": "pass",
+      "SD7": "pass", "B1": "pass", "B2": "pass", "B3": "pass", "B4": "pass", "B5": "pass", "B6": "pass",
+      "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass"
+    },
+    "not_machine_checkable": {
+      "SN1": "pass: each threshold is a count, equality or zero-count on a code-generated fixture, a stated size bound (256 KiB, 30 image addresses, 100 rows; D-001, amendable by the CEO at the gate), or an operator action count (A-005); none requires an agent to open shopee.vn",
+      "SN2": "pass: every item traces to the ticket or to CEO decisions 1313 to 1318; the shop and Mall fill (D-003), unchanged read-from-link (D-005), image egress only from hand-over addresses (D-006), no account data under any Q-001 answer (D-008), the action-count measure (D-009) and the CEO-only live try (D-010) are recorded as decisions for the gate to assess, not silent widenings; the screenshot convenience is offered only as a Q-004 option",
+      "SN3": "pass: the business goal restates the CEO's request to remove the hand work ('lam manual rat take time') within the bounds of CEO decisions 1313 and 1318; the problem statement quotes the CEO"
+    },
+    "quality_checks_run": 53,
+    "quality_checks_passed": 53,
+    "repair_pass": "first draft failed G2: the ticket's done-means closing acts (run every phase and gate, commit and push on the session branch, compare link to the CEO) appeared in none of scope, exclusions or questions; repaired by naming them as orchestrator acts in the X-012 reason, and the full check set was re-run",
+    "citation_note": "foreign identifiers (CEO decision record entries, per-publication approval rule, risk-carrier rule, the Shopee question, terms entries) are cited descriptively per research/framework-defects.md Finding 6, so no foreign token collides with this artifact's D-/Q- registers; the word the vendor check rejects is absent and the branch is called the MC-19 session branch",
+    "stale_envelope_note": "per Finding 11 any gate-approval-required failure-envelope.json in this phase folder is stale and was not acted on"
+  },
+  "evidence_refs": [
+    "agents/product-owner/manifest.yaml",
+    "agents/product-owner/system.md",
+    "agents/product-owner/identity.md",
+    "agents/product-owner/reasoning.md",
+    "agents/product-owner/execution.md",
+    "agents/product-owner/output.md",
+    "agents/product-owner/quality.md",
+    "runs/run-142c58d73427/states/scope-and-acceptance/invocation-envelope.json",
+    "runs/run-142c58d73427/states/scope-and-acceptance/dispatch-prompt.md",
+    "runs/run-142c58d73427/task-context.yaml",
+    "runs/inputs/mc-19-feature-request.md",
+    "runs/inputs/mc-19-business-intent.md",
+    "templates/scope-definition.md",
+    "workflows/workflow-gate-matrix.md",
+    "context/product-context.md",
+    "context/release-context.md",
+    "context/technical-context.md",
+    "skills/business/domain-modeling.md",
+    "skills/testing/testing-strategy.md",
+    "skills/security/secure-engineering.md"
+  ],
+  "confidence": 0.8,
+  "declared_side_effects": [
+    "runs/run-142c58d73427/states/scope-and-acceptance/artifacts/scope-definition.md",
+    "runs/run-142c58d73427/states/scope-and-acceptance/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

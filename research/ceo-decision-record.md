@@ -2812,3 +2812,71 @@ the short one).
 **Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `CEO-D-1315`, `CEO-D-1316`.
 
 ---
+
+## CEO-D-1318 — MC-19: a one-click button in the operator's own browser fills step 1
+
+**The CEO's own decision, 2026-10-30.** The two live reads of MC-18 (`CEO-D-1316`, `CEO-D-1317`) showed that an honest
+read gets only Shopee's page shell, with no product data. The CEO opened the page in their own browser and saw every
+fact. The CEO's words: "đúng là mở trình duyệt thì có đầy đủ thông. hãy tìm cách vì làm manual rất take time" (it is
+true that the browser shows all the information; find a way, because doing it by hand takes a lot of time). The
+orchestrator weighed three ways:
+
+- calling Shopee's internal API, which is excluded because it needs forged anti-bot signatures (`CEO-D-1313` item 2);
+- running a hidden browser inside the app, which is not recommended because it takes Shopee cookies and invites
+  CAPTCHA or sign-in walls;
+- a one-click button (a bookmarklet) in the operator's own browser, which was recommended.
+
+The CEO chose the third: "Mở MC-19" (open MC-19).
+
+1. **Allowed (to be bounded at the MC-19 Scope Gate).** The operator opens one product page on shopee.vn in their own
+   browser, as they do today, and presses a button on the bookmark bar. The button reads what that page already shows:
+   name, classification, shop, specifications, and price and description for reference. It also reads the addresses
+   of that product's images. It hands all of this to step 1 of the local web app, either directly or through the
+   clipboard. The operator still confirms every filled field, and the MC-16 check still decides.
+2. **Kept.** The app sends no request to shopee.vn pages for this. One product per press, and no crawling. No sign-in
+   by any tool, no CAPTCHA solving, no forged headers or signatures, no IP rotation, no proxy. The button reads the page
+   and does nothing with the operator's account. The read switch and paste mode stay. Image files of that product may
+   be fetched from the image hosts approved in `CEO-D-1315` (D-005). The web app stays on 127.0.0.1. No package is
+   downloaded unless the CEO names it. Each fact row still needs its screenshot (`CEO-D-1314` item 4) unless the CEO
+   decides otherwise.
+3. **Open for the Scope Gate.**
+   - Whether the button may run on a page where the operator is signed in to Shopee. The button reads only what is
+     shown, but that page belongs to the operator's own session.
+   - Whether the hand-over goes straight to 127.0.0.1, which the browser may block, or through the clipboard.
+   - How the button is shown working without any agent opening shopee.vn. The fixture page is used in tests, and the
+     CEO tries it once on a real page in their own browser.
+4. **Risk.** `D-018` and `CEO-D-1313` item 5 still apply: Shopee's terms on collecting information from the platform.
+   The stop condition of `CEO-D-1313` item 6 applies to the button too.
+
+**Unchanged:** `CEO-D-1313` to `CEO-D-1317`, `D-002`, `D-018`.
+
+---
+
+## CEO-D-1319 — MC-19 Scope Gate: clipboard hand-over, signed-in page allowed, one screenshot for all button rows
+
+**The CEO's own decision at the MC-19 Scope Gate, 2026-10-30.** The scope of run-142c58d73427 (`A-001` to `A-042`)
+put nine questions to the CEO. The CEO chose the recommended option on each:
+
+1. **Signed-in page (Q-001): allowed.** The button may be pressed on a page where the operator is signed in to Shopee.
+   It reads only what is shown, sends nothing to Shopee, and never hands over account names, cookies or stored data,
+   whatever page it is pressed on.
+2. **Hand-over (Q-002): through the clipboard.** The button copies one structured block; the operator pastes it once
+   at step 1 of the app. Two actions per product. The MC-17 request guard is not widened.
+3. **Showing it working (Q-003):** fixture pages in tests and the Browser pane; after quality review the CEO presses
+   the button once on one real product page in their own browser and reports it; the orchestrator records it. No
+   agent opens shopee.vn.
+4. **Screenshot (Q-004): one screenshot for all button-filled rows.** The operator takes one screenshot of the page and
+   the app names it on every button-filled row in one action. The MC-16 check is unchanged (it already accepts one file
+   named on several rows).
+5. **Video first (Q-005):** a hand-over fills step 1 of the open video only, and is refused when no video is open.
+6. **Button code (Q-006): fixed in the bookmark.** It loads no code when pressed; an out-of-date button is refused with
+   a request to drag the new one.
+7. **Browser (Q-007): Chrome**, the browser the CEO uses.
+8. **Measure (Q-009):** no business measure beyond the action count (at most two actions per product) and the
+   Browser-pane demonstration.
+9. **Bounds:** hand-over at most 256 KiB, 30 image addresses and 100 specification rows; refused whole when over a
+   bound or malformed.
+
+**Unchanged:** `CEO-D-1313` to `CEO-D-1318`, `D-002`, `D-018`.
+
+---
