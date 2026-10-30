@@ -1,0 +1,17 @@
+{
+  "schema": "framework.runtime/knowledge-harvest.v1",
+  "run_id": "run-142c58d73427",
+  "at": "2026-10-30T04:38:10Z",
+  "status": "succeeded",
+  "lessons": 24,
+  "created": 3,
+  "updated": 3,
+  "retained": 0,
+  "runs_scanned": 5,
+  "occurrences": 34,
+  "unresolved": 0,
+  "store_written": true,
+  "store_digest": "sha256:b8286803a1395bd2f25d81951ef6d0ea",
+  "elapsed_seconds": 0.571,
+  "error_class": null
+}

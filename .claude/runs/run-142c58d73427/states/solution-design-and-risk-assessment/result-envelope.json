@@ -1,0 +1,121 @@
+{
+  "invocation_id": "inv-142c58d73427-03-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-004.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-006.md"
+  ],
+  "structured_output": {
+    "run_id": "run-142c58d73427",
+    "attempt": 2,
+    "design_id": "TD-MC19-PAGE-BUTTON",
+    "package_status": "complete",
+    "counts": {
+      "statements": 22,
+      "facts": 26,
+      "assumptions": 15,
+      "constraints": 33,
+      "impacted_modules": 18,
+      "options": 23,
+      "decisions": 16,
+      "decisions_architecture_significant": 6,
+      "risks": 29,
+      "sequencing_constraints": 9,
+      "open_questions": 7
+    },
+    "decision_records": {
+      "files": [
+        "architecture-decision-record-D-001.md",
+        "architecture-decision-record-D-002.md",
+        "architecture-decision-record-D-003.md",
+        "architecture-decision-record-D-004.md",
+        "architecture-decision-record-D-005.md",
+        "architecture-decision-record-D-006.md"
+      ],
+      "status": "Proposed",
+      "approval": "unsigned"
+    },
+    "repairs": {
+      "D2.6": "CEO decisions cited descriptively as 'CEO decision 13nn'",
+      "D4.3": "each functional requirement line names its statement identifier",
+      "D8.4": "5.3 Selected names O-001 only; other families point to the rows marked selected in 5.2",
+      "D8.5": "5.3 records O-002 as the highest-scoring rejected alternative with its rationale",
+      "D10.3": "migration line states direction not applicable, fully reversible, and transition behaviour",
+      "D17.1": "six separate record files written; Appendix B removed",
+      "typo": "statement register S-007 view name corrected to 'Cài đặt'",
+      "renumbering": "none"
+    },
+    "option_ranking": {
+      "criteria_order": ["hard constraints", "impact surface", "reuse leverage", "quality attributes", "migration burden", "operability"],
+      "families": {
+        "D-001": {"ranking": ["O-001", "O-002"], "eliminated": {"O-003": "C-016"}, "deciding_criterion": "reuse leverage 4 to 3"},
+        "D-002": {"ranking": ["O-004", "O-006"], "eliminated": {"O-005": "C-014"}, "deciding_criterion": "operability"},
+        "D-003": {"ranking": ["O-007", "O-008"], "eliminated": {"O-009": "C-032"}, "deciding_criterion": "reuse leverage 1 to 0"},
+        "D-004": {"ranking": ["O-010"], "eliminated": {"O-011": "C-024", "O-012": "C-026", "O-013": "C-033"}, "deciding_criterion": "only viable"},
+        "D-005": {"ranking": ["O-014", "O-015"], "eliminated": {}, "deciding_criterion": "reuse leverage 3 to 1"},
+        "D-006": {"ranking": ["O-016", "O-017"], "eliminated": {"O-018": "C-020"}, "deciding_criterion": "reuse leverage 1 to 0"},
+        "D-007": {"ranking": ["O-019", "O-020"], "eliminated": {"O-021": "C-004"}, "deciding_criterion": "operability"},
+        "D-008": {"ranking": ["O-022"], "eliminated": {"O-023": "C-021"}, "deciding_criterion": "only viable"}
+      },
+      "package_selection": "O-001",
+      "highest_scoring_rejected": "O-002",
+      "selection_follows_from_table": true
+    },
+    "design_gate_choices_for_ceo": [
+      {"id": "Q-001", "question": "Fetch the product's own images right after the paste so the operator picks from pictures, or fetch only the three picked, chosen by number", "recommendation": "Fetch after paste and pick from pictures (O-014)"},
+      {"id": "Q-002", "question": "Ground the test page on the CEO's screenshot, the MC-18 paste text and the ticket's list, with the CEO's single real-page try as the first real check", "recommendation": "Yes"},
+      {"id": "Q-003", "question": "Mark wording and Mall wording", "recommendation": "'Từ nút đọc trang'; 'shop, Mall' or 'shop, không phải Mall'"}
+    ],
+    "quality_checks": {
+      "run": 98,
+      "passed": 98,
+      "failed": 0,
+      "by_group": {
+        "A1": {"run": 8, "passed": 8},
+        "A2": {"run": 10, "passed": 10},
+        "A3": {"run": 6, "passed": 6},
+        "A4": {"run": 4, "passed": 4},
+        "A5": {"run": 4, "passed": 4},
+        "A6": {"run": 6, "passed": 6},
+        "A7": {"run": 5, "passed": 5},
+        "A8": {"run": 7, "passed": 7},
+        "A9": {"run": 6, "passed": 6},
+        "A10": {"run": 7, "passed": 7},
+        "A11": {"run": 5, "passed": 5},
+        "A12": {"run": 5, "passed": 5},
+        "A13": {"run": 7, "passed": 7},
+        "A14": {"run": 8, "passed": 8},
+        "A15": {"run": 5, "passed": 5},
+        "A16": {"run": 5, "passed": 5}
+      }
+    },
+    "boundary_statement": "No command executed, no external system accessed, no Shopee host opened, no repository file written; decision records at Proposed and unsigned."
+  },
+  "evidence_refs": [
+    ".claude/agents/architect/manifest.yaml",
+    ".claude/agents/architect/system.md",
+    ".claude/agents/architect/reasoning.md",
+    ".claude/agents/architect/output.md",
+    ".claude/agents/architect/quality.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/invocation-envelope.json",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/validation-report.json"
+  ],
+  "confidence": "low",
+  "declared_side_effects": [
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-004.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-006.md",
+    ".claude/runs/run-142c58d73427/states/solution-design-and-risk-assessment/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

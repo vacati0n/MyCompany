@@ -2880,3 +2880,31 @@ put nine questions to the CEO. The CEO chose the recommended option on each:
 **Unchanged:** `CEO-D-1313` to `CEO-D-1318`, `D-002`, `D-018`.
 
 ---
+
+## CEO-D-1320 — MC-19 Design Gate: D-001 to D-006 accepted, images fetched after the paste for picking
+
+**The CEO's own decision at the MC-19 Design Gate, 2026-10-30.** The technical design of run-142c58d73427
+(TD-MC19-PAGE-BUTTON) proposed six decisions and three questions for the CEO. The CEO accepted all six and chose the
+recommended option on each question:
+
+1. **D-001 to D-006 accepted.**
+   - D-001: the button's block enters through the existing guarded paste box at step 1 and is recognised by a fixed
+     marker. The guard is unchanged. When the switch is off, only the button's block is refused.
+   - D-002: the block is strict and versioned, and is refused whole when malformed or over a bound.
+   - D-003: fields are found by the words shown on the page. A field that is not found is left empty, never guessed.
+   - D-004: a test-only allowance for fixture addresses, which the shipped app cannot reach.
+   - D-005: images are fetched after the paste, so the operator picks from pictures.
+   - D-006: each button carries a version and a fingerprint. An out-of-date button is refused.
+2. **Images (Q-001): fetched right after the paste.** At most 20 of that product's images are fetched, from shopee.vn
+   or `*.susercontent.com` only. The operator picks up to 3 from pictures, and only the picked images are kept, as in
+   MC-18.
+3. **Fixture grounding (Q-002):** the fixture page is built from the CEO's screenshot, the MC-18 paste text and the
+   ticket's list. The CEO's single real-page try is the first real check. A missed field is fixed in a later change
+   from the CEO's report. No agent opens shopee.vn.
+4. **Wording (Q-003):** source mark "Từ nút đọc trang"; Mall wording "shop, Mall" or "shop, không phải Mall".
+5. If Chrome refuses the clipboard copy when it is measured on the fixture, the design returns to the architect before
+   the rest of the implementation.
+
+**Unchanged:** `CEO-D-1313` to `CEO-D-1319`, `D-002`, `D-018`.
+
+---

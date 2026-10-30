@@ -1,0 +1,423 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\mc-18-shopee-read-link-27d13c\\.claude\\runs\\run-142c58d73427\\states\\execution-planning\\artifacts\\execution-plan.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 45,
+  "checksPassed": 45,
+  "notMachineCheckable": 5,
+  "counts": {
+    "sections": 13,
+    "tasks": 28,
+    "assumptions": 16,
+    "risks": 30,
+    "edges": 66,
+    "waves": 11,
+    "openQuestions": 5,
+    "planStatus": "complete"
+  },
+  "checks": [
+    {
+      "id": "V1.1",
+      "quality_ref": "Q1.5",
+      "severity": "Blocking",
+      "description": "Metadata block present with all fields populated",
+      "result": "pass",
+      "detail": "8 of 8 fields populated"
+    },
+    {
+      "id": "V1.2",
+      "quality_ref": "Q1.5",
+      "severity": "Blocking",
+      "description": "producedBy is planner",
+      "result": "pass",
+      "detail": "producedBy='planner'"
+    },
+    {
+      "id": "V1.3",
+      "quality_ref": "Q1.5",
+      "severity": "Blocking",
+      "description": "agentVersion is 1.0.0 and schemaVersion is 1.0.0",
+      "result": "pass",
+      "detail": "agentVersion=1.0.0 schemaVersion=1.0.0"
+    },
+    {
+      "id": "V1.4",
+      "quality_ref": "Q1.7",
+      "severity": "Blocking",
+      "description": "status is one of complete, partial, blocked",
+      "result": "pass",
+      "detail": "status='complete'"
+    },
+    {
+      "id": "V2.1",
+      "quality_ref": "Q1.1",
+      "severity": "Blocking",
+      "description": "All twelve mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "12 of 12 present, once each"
+    },
+    {
+      "id": "V2.2",
+      "quality_ref": "Q1.1",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Executive Summary', 'Business Objectives', 'Technical Objectives', 'Scope', 'Assumptions', 'Risks', 'Task Breakdown', 'Dependencies', 'Suggested Workflow', 'Required Capabilities', 'Acceptance Criteria', 'Definition of Done']"
+    },
+    {
+      "id": "V2.3",
+      "quality_ref": "Q1.2",
+      "severity": "Blocking",
+      "description": "Section titles match output.md exactly",
+      "result": "pass",
+      "detail": "exact-title match"
+    },
+    {
+      "id": "V2.4",
+      "quality_ref": "Q1.4",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 sections introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "V2.5",
+      "quality_ref": "Q1.3",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "V2.6",
+      "quality_ref": "Q1.6",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "V3.1",
+      "quality_ref": "Q2.1",
+      "severity": "Blocking",
+      "description": "No fenced code block other than the metadata block",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; exactly 1 (metadata) is permitted"
+    },
+    {
+      "id": "V3.2",
+      "quality_ref": "Q3.1",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "V3.3",
+      "quality_ref": "Q2.2",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "V4.0",
+      "quality_ref": "Q5.1",
+      "severity": "Blocking",
+      "description": "Task Breakdown contains at least one task",
+      "result": "pass",
+      "detail": "28 task(s)"
+    },
+    {
+      "id": "V4.1",
+      "quality_ref": "Q5.1",
+      "severity": "Blocking",
+      "description": "Every task carries all eight declared fields",
+      "result": "pass",
+      "detail": "28 task(s) complete"
+    },
+    {
+      "id": "V4.2",
+      "quality_ref": "Q5.2",
+      "severity": "Blocking",
+      "description": "Every task Owner resolves to a registered agent or an agent contract",
+      "result": "pass",
+      "detail": "28 owner(s) resolved"
+    },
+    {
+      "id": "V4.3",
+      "quality_ref": "Q5.3",
+      "severity": "Blocking",
+      "description": "Exactly one owner per task",
+      "result": "pass",
+      "detail": "one owner each"
+    },
+    {
+      "id": "V4.4",
+      "quality_ref": "Q5.1",
+      "severity": "Blocking",
+      "description": "Complexity states a valid level and an explicit confidence",
+      "result": "pass",
+      "detail": "all valid"
+    },
+    {
+      "id": "V4.5",
+      "quality_ref": "Q5.1",
+      "severity": "Blocking",
+      "description": "Task Status is ready, blocked, or assumption-dependent",
+      "result": "pass",
+      "detail": "all valid"
+    },
+    {
+      "id": "V4.6",
+      "quality_ref": "Q5.7",
+      "severity": "Blocking",
+      "description": "Every XL task carries an open question explaining non-decomposition",
+      "result": "pass",
+      "detail": "no unexplained XL task"
+    },
+    {
+      "id": "V4.7",
+      "quality_ref": "Q5.8",
+      "severity": "Blocking",
+      "description": "Every blocked task names its blocking open question",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "V4.8",
+      "quality_ref": "Q5.6",
+      "severity": "Blocking",
+      "description": "Every task states at least one acceptance criterion",
+      "result": "pass",
+      "detail": "all tasks carry criteria"
+    },
+    {
+      "id": "V4.9",
+      "quality_ref": "Q9.3",
+      "severity": "Blocking",
+      "description": "Named task gates exist in workflows/workflow-gate-matrix.md",
+      "result": "pass",
+      "detail": "all named gates resolve"
+    },
+    {
+      "id": "V5.1",
+      "quality_ref": "Q6.2",
+      "severity": "Blocking",
+      "description": "Every dependency edge references existing tasks or a named external party",
+      "result": "pass",
+      "detail": "66 edge(s) resolve"
+    },
+    {
+      "id": "V5.2",
+      "quality_ref": "Q6.3",
+      "severity": "Blocking",
+      "description": "Every edge carries a valid type and a justification",
+      "result": "pass",
+      "detail": "all edges typed and justified"
+    },
+    {
+      "id": "V5.3",
+      "quality_ref": "Q6.1",
+      "severity": "Blocking",
+      "description": "Dependency graph is acyclic",
+      "result": "pass",
+      "detail": "acyclic; 11 wave(s)"
+    },
+    {
+      "id": "V5.4",
+      "quality_ref": "Q6.4",
+      "severity": "Blocking",
+      "description": "Stated implementation order recomputes exactly from the edge table",
+      "result": "pass",
+      "detail": "recomputed topological order equals stated order"
+    },
+    {
+      "id": "V5.5",
+      "quality_ref": "Q6.5",
+      "severity": "Blocking",
+      "description": "Wave 1 contains exactly the tasks with no unmet dependency",
+      "result": "pass",
+      "detail": "stated=['T-001'] computed=['T-001']"
+    },
+    {
+      "id": "V5.6",
+      "quality_ref": "Q6.4",
+      "severity": "Blocking",
+      "description": "Every task appears in the implementation order",
+      "result": "pass",
+      "detail": "28 task(s) ordered"
+    },
+    {
+      "id": "V6.1",
+      "quality_ref": "Q7.1",
+      "severity": "Blocking",
+      "description": "Every assumption states basis, impact-if-false, and a confirming role",
+      "result": "pass",
+      "detail": "16 assumption(s) complete"
+    },
+    {
+      "id": "V6.2",
+      "quality_ref": "Q7.3",
+      "severity": "Blocking",
+      "description": "Every risk carries class, trigger, impact, likelihood, attachment, mitigation, and owner",
+      "result": "pass",
+      "detail": "30 risk(s) complete"
+    },
+    {
+      "id": "V6.3",
+      "quality_ref": "Q7.3",
+      "severity": "Correctable",
+      "description": "Risk class and likelihood use the declared vocabularies",
+      "result": "pass",
+      "detail": "invalid class: []; invalid likelihood: []"
+    },
+    {
+      "id": "V6.4",
+      "quality_ref": "Q7.4",
+      "severity": "Blocking",
+      "description": "Every risk attaches to existing task identifiers or is marked plan-wide",
+      "result": "pass",
+      "detail": "all risks attached"
+    },
+    {
+      "id": "V6.5",
+      "quality_ref": "Q5.2",
+      "severity": "Correctable",
+      "description": "Every risk owner resolves to a known agent",
+      "result": "pass",
+      "detail": "all risk owners resolve"
+    },
+    {
+      "id": "V7.1",
+      "quality_ref": "Q8.2",
+      "severity": "Blocking",
+      "description": "Backward closure: every task traces to a statement or an assumption",
+      "result": "pass",
+      "detail": "28 task(s) traced"
+    },
+    {
+      "id": "V7.2",
+      "quality_ref": "Q8.1",
+      "severity": "Advisory",
+      "description": "Forward closure evidence present (matrix required when status is partial or blocked)",
+      "result": "pass",
+      "detail": "status=complete and no Traceability Matrix section"
+    },
+    {
+      "id": "V7.3",
+      "quality_ref": "Q8.3",
+      "severity": "Blocking",
+      "description": "Lateral closure: every referenced open question is defined in Open Questions",
+      "result": "pass",
+      "detail": "all question references resolve"
+    },
+    {
+      "id": "V8.1",
+      "quality_ref": "Q9.1",
+      "severity": "Blocking",
+      "description": "Suggested workflow is a registered workflow identifier",
+      "result": "pass",
+      "detail": "selected: ['implement-feature', 'release']"
+    },
+    {
+      "id": "V8.2",
+      "quality_ref": "Q9.4",
+      "severity": "Blocking",
+      "description": "Declared capabilities exist in agents/capability-matrix.md",
+      "result": "pass",
+      "detail": "8 capability name(s) resolve"
+    },
+    {
+      "id": "V8.3",
+      "quality_ref": "Q9.5",
+      "severity": "Blocking",
+      "description": "Declared skill identifiers exist in skills/agent-skill-matrix.md",
+      "result": "pass",
+      "detail": "9 skill identifier(s) resolve"
+    },
+    {
+      "id": "V9.1",
+      "quality_ref": "Q10.1",
+      "severity": "Blocking",
+      "description": "Acceptance Criteria is a non-empty numbered list",
+      "result": "pass",
+      "detail": "9 criterion/criteria"
+    },
+    {
+      "id": "V9.2",
+      "quality_ref": "Q10.3",
+      "severity": "Blocking",
+      "description": "Definition of Done is an objectively checkable checklist",
+      "result": "pass",
+      "detail": "9 checklist item(s)"
+    },
+    {
+      "id": "V9.3",
+      "quality_ref": "Q10.5",
+      "severity": "Blocking",
+      "description": "Every open question carries blocking status, owner, and affected tasks",
+      "result": "pass",
+      "detail": "5 question(s) complete"
+    },
+    {
+      "id": "V10.1",
+      "quality_ref": "Q11.3",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "V10.2",
+      "quality_ref": "Q11.1",
+      "severity": "Correctable",
+      "description": "Identifiers are unique, zero-padded, and ascending without gaps",
+      "result": "pass",
+      "detail": "A=16 R=30 T=28 Q=5"
+    },
+    {
+      "id": "N1",
+      "quality_ref": "Q4.4",
+      "severity": "Advisory",
+      "description": "Business objectives express outcomes, not activities",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N2",
+      "quality_ref": "Q5.4",
+      "severity": "Advisory",
+      "description": "Every task satisfies the five R6 validity conditions",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N3",
+      "quality_ref": "Q6.8",
+      "severity": "Advisory",
+      "description": "No edge encodes preference rather than necessity",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N4",
+      "quality_ref": "Q2.8",
+      "severity": "Advisory",
+      "description": "Task descriptions state completion conditions, not implementation approach",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N5",
+      "quality_ref": "Q7.6",
+      "severity": "Advisory",
+      "description": "No inference appears in the artifact without a registered assumption",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    }
+  ]
+}

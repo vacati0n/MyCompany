@@ -1,0 +1,76 @@
+{
+  "invocation_id": "inv-142c58d73427-02-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-142c58d73427/states/execution-planning/artifacts/execution-plan.md"
+  ],
+  "structured_output": {
+    "plan_id": "PLAN-run-142c58d73427-MC-19",
+    "plan_status": "complete",
+    "counts": {
+      "statements": 19,
+      "assumptions": 16,
+      "risks": 30,
+      "tasks": 28,
+      "edges": 66,
+      "task_to_task_edges": 61,
+      "external_or_policy_edges": 5,
+      "waves": 11,
+      "open_questions": 5,
+      "blocking_open_questions": 0,
+      "plan_acceptance_criteria": 9
+    },
+    "applicable_scope_criteria": "41 of 42; SC-19 withdrawn by CEO-D-1319 item 1 and replaced by its converse under S-012",
+    "recomputed_topological_order": [
+      ["T-001"],
+      ["T-002"],
+      ["T-024"],
+      ["T-003", "T-014"],
+      ["T-004", "T-020"],
+      ["T-005", "T-006", "T-008", "T-011", "T-013", "T-015", "T-016", "T-018", "T-021"],
+      ["T-007", "T-017", "T-019"],
+      ["T-009"],
+      ["T-010", "T-012", "T-022", "T-023", "T-025", "T-026"],
+      ["T-027"],
+      ["T-028"]
+    ],
+    "quality_checks": {
+      "Q1_structure_twelve_sections_in_order_and_metadata": "pass",
+      "Q2_task_eight_fields_and_at_least_three_acceptance_criteria": "pass",
+      "Q3_statement_coverage_S001_to_S019_each_traced_to_a_task": "pass",
+      "Q4_task_traceability_each_task_traces_a_statement_or_assumption": "pass",
+      "Q5_edges_reference_existing_tasks_or_named_external_party": "pass",
+      "Q6_acyclic_and_waves_match_recomputed_order": "pass",
+      "Q7_assumption_dependent_tasks_trace_their_assumptions": "pass",
+      "Q8_owners_and_gates_match_capability_and_gate_matrices": "pass",
+      "Q9_risks_classified_with_owner_and_mitigation": "pass",
+      "Q10_open_questions_owned_none_blocking_status_complete": "pass",
+      "Q11_digests_copied_verbatim_and_no_vendor_or_colliding_tokens": "pass"
+    },
+    "quality_checks_run": 11,
+    "quality_checks_passed": 11,
+    "disclosures": [
+      "Scope Gate answers taken from the orchestrator briefing and checked against the repository decision record entry CEO-D-1319 (A-002)",
+      "Verification tasks owned by dev-2-reviewer and T-028 owned by orchestrator per the MC-18 Planning Gate conventions; raised as Q-001 to Q-003",
+      "Repository context: the web app file list was read once; no wider scan",
+      "On-demand modules identity.md and execution.md were loaded; examples.md was not triggered"
+    ]
+  },
+  "evidence_refs": [
+    ".claude/agents/planner/manifest.yaml",
+    ".claude/agents/planner/system.md",
+    ".claude/agents/planner/reasoning.md",
+    ".claude/agents/planner/output.md",
+    ".claude/agents/planner/quality.md",
+    ".claude/agents/planner/identity.md",
+    ".claude/agents/planner/execution.md",
+    ".claude/runs/run-142c58d73427/states/execution-planning/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    ".claude/runs/run-142c58d73427/states/execution-planning/artifacts/execution-plan.md",
+    ".claude/runs/run-142c58d73427/states/execution-planning/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

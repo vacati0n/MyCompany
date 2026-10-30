@@ -3,7 +3,7 @@ task_id: run-142c58d73427
 command: implement
 workflow: implement-feature v1.0.0
 run_status: Dispatching
-updated_at: '2026-10-30T03:50:59Z'
+updated_at: '2026-10-30T05:03:32Z'
 objective: 'Source: CEO-D-1318 (the CEO''s own decision, 2026-10-30); local://research/ceo-decision-record.md#ceo-d-1318 Issue
   type: Feature Priority: Highest Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, bookmarklet, vietnamese
   Routed as: /implement (implement-feature) Builds on: MC-18 (src/MediaCompany.Pilot.Web read-from-link and paste mode, run
@@ -26,14 +26,14 @@ relevant_agents:
   - S07
 - phase: execution-planning
   agent: planner
-  status: pending
+  status: completed
   required_skills:
   - S02
   - S01
   - S07
 - phase: solution-design-and-risk-assessment
   agent: architect
-  status: pending
+  status: completed
   required_skills:
   - S01
   - S03
@@ -69,6 +69,18 @@ completed_phases:
   digest: sha256:3bb9dc195f8f7d1a8f56e92dc281b020
   validation: pass 33/33
   attempts: 1
+- phase: execution-planning
+  agent: planner
+  artifact: runs/run-142c58d73427/states/execution-planning/artifacts/execution-plan.md
+  digest: sha256:06aa3ad381d3b61aae7823b2b468042f
+  validation: pass 45/45
+  attempts: 1
+- phase: solution-design-and-risk-assessment
+  agent: architect
+  artifact: runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/technical-design.md
+  digest: sha256:03c265f5e092232926766d2d92fe1e0e
+  validation: pass 78/78
+  attempts: 2
 gates:
 - gate: Scope Gate
   closes: scope-and-acceptance
@@ -77,14 +89,14 @@ gates:
   decided_by: CEO
 - gate: Planning Gate
   closes: execution-planning
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: orchestrator
+  decided_by: orchestrator
 - gate: Design Gate
   closes: solution-design-and-risk-assessment
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: tech-lead
+  decided_by: CEO (vuhoangcao)
 - gate: Review Gate
   closes: quality-review
   decision: null
@@ -102,6 +114,8 @@ gates:
   decided_by: null
 artifacts:
   scope-and-acceptance: runs/run-142c58d73427/states/scope-and-acceptance/artifacts/scope-definition.md
+  execution-planning: runs/run-142c58d73427/states/execution-planning/artifacts/execution-plan.md
+  solution-design-and-risk-assessment: runs/run-142c58d73427/states/solution-design-and-risk-assessment/artifacts/technical-design.md
 parallel_groups:
 - - scope-and-acceptance
   - execution-planning
@@ -133,6 +147,43 @@ scope:
     | Ticket done means | must-have'
   - 'S-011: The CEO presses the button once on one real product page in the CEO''s own browser after quality review, and...
     | Ticket open point "Live check"; CEO decision 1318 item 3; D-010; held by Q-003 | should-have'
+  - 'S-001: With one product page open on shopee.vn in their own browser, the operator presses the button once and step 1
+    of the open video is filled with product...'
+  - 'S-002: Every button-filled field and row carries a visible mark of the new source, saves only after the operator confirms
+    each, at most three rows enter the...'
+  - 'S-003: The operator picks up to three offered images; the app fetches only image files whose addresses the hand-over
+    carries, from shopee.vn or hosts ending...'
+  - 'S-004: The button reads only the page it is pressed on and acts on nothing there, hands over no account, cookie or stored
+    data, one product per press; the ap...'
+  - 'S-005: The hand-over is untrusted input: size-bounded, parsed as data, never executed, shown only as text, refused whole
+    when malformed or over a bound, acce...'
+  - 'S-006: The read switch stays the one off switch: with it off the hand-over is refused and paste mode and typing still
+    complete step 1. Tasks: T-018, T-019.'
+  - 'S-007: "Cài đặt" shows the button to drag to the bookmark bar with short Vietnamese instructions, and every new text
+    is Vietnamese. Tasks: T-020, T-021, T-022.'
+  - 'S-008: Read-from-link, paste mode and typing work as at MC-18 close; the MC-16 toolchain is unchanged with zero sockets;
+    the app listens on 127.0.0.1 only. T...'
+  - 'S-009: Tests run offline against code-generated fixture pages on 127.0.0.1, no media file and no package is added, and
+    no agent opens shopee.vn or any Shopee...'
+  - 'S-010: The button is shown working in the Browser pane against a fixture product page, ending in filled, confirmable
+    fields, and with the switch off ending i...'
+  - 'S-011: The CEO presses the button once on one real product page in the CEO''s own browser after quality review, and the
+    outcome is recorded. Task: T-027.'
+  - 'S-012: The button may be pressed on a page where the operator is signed in to Shopee; the hand-over still carries no
+    account name, cookie or stored data (CEO...'
+  - 'S-013: The hand-over goes through the clipboard: one press copies one block and one paste at step 1 delivers it; no direct
+    call from the shopee.vn page to 12...'
+  - 'S-014: One screenshot file chosen once is named on every button-filled row in one action, with the MC-16 check unchanged
+    (CEO-D-1319 item 4). Tasks: T-008, T...'
+  - 'S-015: A hand-over fills step 1 of the open video only and is refused when no video is open (CEO-D-1319 item 5). Tasks:
+    T-004, T-005.'
+  - 'S-016: The button''s code is fixed in the bookmark and loads no code at a press; a block from an out-of-date button is
+    refused with a request to drag the new...'
+  - 'S-017: The button must work in Chrome, the browser the CEO uses (CEO-D-1319 item 7). Tasks: T-001, T-020, T-026.'
+  - 'S-018: No business measure is added beyond at most two operator actions per product and the Browser-pane demonstration
+    (CEO-D-1319 item 8). Tasks: T-005, T-026.'
+  - 'S-019: The change is committed and pushed on the MC-19 session branch, and the CEO receives the compare link (feature
+    request, done means). Task: T-028.'
   out_of_scope:
   - 'X-001: Reading any page other than the one pressed on: other products, the shop page, categories, search, recommen...
     | Ticket hard constraint 1; CEO decision 1318 item 2 | A new CEO decision naming a wider read'
@@ -164,6 +215,30 @@ scope:
     | The stop condition is the CEO''s act on that day (CEO decision 1313 item 6) | A CEO request for monitoring'
   - 'X-014: Pages on any site other than shopee.vn, including Shopee sites of other countries | CEO decision 1318 names shopee.vn
     only | A new CEO decision naming the site'
+  - 'X-001 reading any page other than the one pressed on, and batch, repeated, scheduled or automatic presses: ticket hard
+    constraint 1.'
+  - 'X-002 sign-in by any tool, Shopee cookies, stored data or account details, affiliate.shopee.vn, affiliate links, any
+    action on the operator''s account: CEO-D-...'
+  - 'X-003 CAPTCHA solving, forged headers, signatures or user agent, IP rotation, proxies, Shopee''s internal data interface,
+    a hidden browser inside the app: the...'
+  - 'X-004 any request by the app to a shopee.vn page for this feature, and any download except image files of the pressed
+    product: CEO-D-1318 item 2.'
+  - 'X-005 a screenshot taken by the button or the app: the button cannot take one; S-014 covers the operator''s own screenshot.'
+  - 'X-006 changes to the MC-16 fact-sheet check, its per-row screenshot requirement, banned-term list, price rule or any
+    toolchain behaviour: the check stays the...'
+  - 'X-007 widening the request guard, a cross-origin permission, a route without the per-start token, or a listener off 127.0.0.1:
+    SD-2 and CEO-D-1319 item 2.'
+  - 'X-008 removing or changing MC-18 read-from-link, paste mode or hand typing: SD-5.'
+  - 'X-009 publishing, accounts, sellers, buying; frozen MC-13 and MC-14 material and the mediacompany database: frozen by
+    CEO decision.'
+  - 'X-010 changes to steps 2 to 7 beyond receiving the picked images of S-003: the ticket changes step 1 only.'
+  - 'X-011 a package, CDN script, browser extension or any browser install other than one bookmark; a generative model or
+    speech recognition: ticket hard constrai...'
+  - 'X-012 merging any branch into main and any release, readiness or closure decision: owned by gate owners and the CEO.'
+  - 'X-013 watching for Shopee''s answer or account warnings and switching off automatically: the stop condition is the CEO''s
+    act.'
+  - 'X-014 pages on any site other than shopee.vn: CEO-D-1318 names shopee.vn only.'
+  - 'The signed-in refusal of SC-19: withdrawn by CEO-D-1319 item 1, which allows signed-in pages.'
 validation_requirements:
   acceptance_criteria:
   - 'A-001: On a code-generated fixture product page, one press fills product name, classification, shop name, Mall, pa...
@@ -246,6 +321,48 @@ validation_requirements:
     | S-009 | Scan of added files for media extensions, zero; comparison of project and package files with the branch bas...'
   - 'A-040: No agent opens shopee.vn or any Shopee host during this run | S-009 | Implementation, review and documentation
     reports each state their live Shopee accesses; total zero'
+  test_focus:
+  - 'SC-01: D-003, D-009 | browser | product page: heading, selected variant, Mall shop, five rows, price, description, gallery'
+  - 'SC-02: D-003, D-009 | browser | no variant selected, non-Mall shop'
+  - 'SC-03: D-009 | app | product block'
+  - 'SC-04: D-003 | browser | five gallery images, three other-product images under "SẢN PHẨM TƯƠNG TỰ"'
+  - 'SC-05: D-001, D-007, D-015 | browser and record | product page with step 1 open'
+  - 'SC-06: D-011 | browser | shop page; search page; nameless product page'
+  - 'SC-07: D-010 | app | valid block with no video code'
+  - 'SC-08: D-009 | browser | product page'
+  - 'SC-09: D-009 | browser | product page'
+  - 'SC-10: D-009 | app | product block'
+  - 'SC-11: M-011 | app | eight blocks, banned classes (a) to (g) and a money amount'
+  - 'SC-12: F-013 | browser | five-row block'
+  - 'SC-13: D-008 | browser | product page, one screenshot file made in code'
+  - 'SC-14: D-005, D-016 | app (seam) | block with the seven SC-14 addresses; a redirecting image; a non-image'
+  - 'SC-15: D-005 | browser | five-image block'
+  - 'SC-16: D-003 | browser | product page with fixture request log'
+  - 'SC-17: D-003 | browser | probe counting clicks, submissions, navigations'
+  - 'SC-18: D-003 | browser | signed-in page with planted account name, cookie and stored value'
+  - 'SC-19 converse: D-003 | browser | the same signed-in page'
+  - 'SC-20: D-010 | component and app | two blocks in one text'
+  - 'SC-21: D-005, D-016 | harness | press, pick and save on the seam app'
+  - 'SC-22: D-014 | component and app | 255 KiB and 257 KiB blocks'
+  - 'SC-23: D-014 | component and app | 31 addresses; 101 rows'
+  - 'SC-24: D-002, D-010 | component and app (shipped executable for the address case) | no marker object; unknown version;
+    missing name; wrong type; 127.0.0.1 page address'
+  - 'SC-25: D-009, F-025 | browser | markup and script in each of the seven text members'
+  - 'SC-26: M-007 | app | foreign Origin; no token; earlier token; foreign Host'
+  - 'SC-27: M-007 | inspection and app | none'
+  - 'SC-28: D-010 | browser and harness | switch off'
+  - 'SC-29: F-004 | browser | switch off; pasted text and typed sheet'
+  - 'SC-30: D-010, M-009 | inspection and browser | switch toggled'
+  - 'SC-31: D-004, D-012 | browser | address taken from "Cài đặt" on the seam app'
+  - 'SC-32: D-007, D-012 | inspection | none'
+  - 'SC-33: D-006 | browser and component | request log during the press; earlier-version block; other-mark block'
+  - 'SC-34: M-011, M-012 | inspection | none'
+  - 'SC-35: M-004, M-010 | app | none'
+  - 'SC-36: M-007, M-008 | harness | sample run'
+  - 'SC-37: M-011 | harness | sample run with a block and produce'
+  - 'SC-38: M-013 | harness and inspection | the fixtures of SC-01, SC-04, SC-06, SC-14, SC-18, SC-22, SC-23, SC-24, SC-25'
+  - 'SC-39: M-018, M-013 | inspection | none'
+  - 'SC-40: C-023 | inspection | none'
 constraints:
 - 'Business constraints: The CEO carries the terms risk as the individual creator (CEO decision 1313 item 5: Shopee''s partner
   terms forbid partners collecting i...'
@@ -255,6 +372,77 @@ constraints:
   main (X-012); no package downloaded...'
 - 'External dependencies: the operator''s own browser, its bookmark bar, its rule on a public page sending to a local address
   and its clipboard (Q-002, Q-007); t...'
+- 'Wave 1: T-001'
+- 'Wave 2: T-002'
+- 'Wave 3: T-024'
+- 'Wave 4: T-003, T-014'
+- 'Wave 5: T-004, T-020'
+- 'Wave 6: T-005, T-006, T-008, T-011, T-013, T-015, T-016, T-018, T-021'
+- 'Wave 7: T-007, T-017, T-019'
+- 'Wave 8: T-009'
+- 'Wave 9: T-010, T-012, T-022, T-023, T-025, T-026'
+- 'Wave 10: T-027'
+- 'Wave 11: T-028'
+- 'C-001: functional | One press and paste fill name, classification, shop and Mall, page address, press date and one candidate
+  ro... | hard'
+- 'C-002: functional | Price and description are shown for reference only and never saved by the tool | hard'
+- 'C-003: functional | Only own images are offered; up to three picked; only those enter the input set | hard'
+- 'C-004: functional | At most two operator actions from the open page to filled, confirmable fields | hard'
+- 'C-005: functional | A shop, search or nameless page fills nothing and shows a Vietnamese reason | hard'
+- 'C-006: functional | No open video means the block is refused and nothing is kept | hard'
+- 'C-007: functional | A new Vietnamese mark on each filled field; confirmation before save; unsupplied fields left; at most
+  three... | hard'
+- 'C-008: functional | The check result on filled values equals that on typed values | hard'
+- 'C-009: functional | One screenshot chosen once is named on every button-filled row in one action | hard'
+- 'C-010: security | Only carried image addresses on allowed hosts are fetched, https, one request each, no redirect, PNG
+  or JPE... | hard'
+- 'C-011: security | A press sends zero requests, loads zero code and activates zero controls | hard'
+- 'C-012: security | The block carries no account name, cookie or stored value; a signed-in page hands over normally | hard'
+- 'C-013: security | A block with more than one product is refused | hard'
+- 'C-014: security | Over 256 KiB is refused before parsing; over 30 addresses or 100 rows is refused whole; five malformed
+  kind... | hard'
+- 'C-015: security | Block text is shown as text; zero scripts run; zero elements are created from it | hard'
+- 'C-016: security | The guard is unchanged; foreign Origin, missing token, old token or foreign Host gets 403; no direct
+  page-t... | hard'
+- 'C-017: operability | One switch governs read and block. Off means refusal and zero egress, while paste and typing still
+  save. No... | hard'
+- 'C-018: operability | "Cài đặt" shows the current button with drag instructions, and that button works on the fixture |
+  hard'
+- 'C-019: functional | Every new text is Vietnamese with reason and next step | hard'
+- 'C-020: security | The button code is fixed in the bookmark; a block from an out-of-date button is refused, asking for the
+  new... | hard'
+- 'C-021: structural | Toolchain unchanged with 251 tests; 53 web tests pass; one listener on 127.0.0.1; toolchain jobs own
+  zero s... | hard'
+- 'C-022: operability | Offline tests on code-generated fixtures; zero media files and zero packages | hard'
+- 'C-023: compliance | No agent opens shopee.vn or any Shopee host | hard'
+- 'C-024: functional | The Browser pane shows one press ending in filled, confirmable fields, and a refusal with the switch
+  off | hard'
+- 'C-025: compliance | The CEO''s single real-page try is recorded with ten kinds stated | hard'
+- 'C-026: security | The fixture allowance is unreachable from the shipped app, and the button code under test is the shipped
+  code | hard'
+- 'C-027: structural | Chrome is the only target browser | hard'
+- 'C-028: structural | The mediacompany database, MC-13 and MC-14 are untouched | hard'
+- 'C-029: operability | This phase writes only its artifact, its decision records and its envelope | hard'
+- 'C-030: quality-attribute | Field finding should survive restyling: visible-text anchors rather than generated class names
+  | negotiable'
+- 'C-031: quality-attribute | The button address stays small enough to drag and keep as a bookmark, at or under 32 KiB | negotiable'
+- 'C-032: functional | The button reads what the page shows, not hidden page data | hard'
+- 'C-033: security | The button acts only on shopee.vn pages, and the app accepts only shopee.vn page addresses | hard'
+- 'P-001: The Design Gate decision on D-001 to D-006 and on Q-001 and Q-002 exists before any producer or consumer of... |
+  M-001, M-002, M-003, M-004 | none'
+- 'P-002: The fixture page server, the probe, the seam''s fixture-origin allowance and Chrome measurements of A-002, A...
+  | M-008, M-013 | P-001'
+- 'P-003: The block reader with marker, size, parse, version, mark, bounds and page-address rule exists before any fi... |
+  M-001, M-004 | P-001'
+- 'P-004: The button script and builder exist before "Cài đặt" shows the button | M-002, M-004 | P-001, P-002'
+- 'P-005: The button fill source, its mark wording, the switch refusal and the confirmation rule for that source exis... |
+  M-003, M-004, M-009 | P-003'
+- 'P-006: The image phase is wired to the accepted block before the picker offers button images | M-004, M-005 | P-005'
+- 'P-007: The step-1 paste listener, text-only display, one-action screenshot and "Cài đặt" button exist before brows... |
+  M-006 | P-004, P-005'
+- 'P-008: Criterion cases, harness runs, the 251 and 53 suites, browser runs and the review are complete on the full... |
+  M-011, M-012, M-013, M-014 | P-006, P-007'
+- 'P-009: The release note, the CEO''s single real-page try and the compare link follow the evidence | M-002, M-011 | P-008'
 decisions:
 - 'D-001: The hand-over is bounded at 256 KiB, 30 image addresses and 100 specification rows, carries a format versio... |
   Ticket hard constraint 5 requires a size bound and parsing as data; a trimmed hand-over would leave a partl... | A-022 to
@@ -285,6 +473,71 @@ decisions:
 - 'D-010: The CEO''s real-page try is should-have, made by the CEO alone, and a result that differs from the fixture i...
   | CEO decision 1318 item 3 and ticket hard constraint 8: no agent opens shopee.vn | S-011, A-042; the fixture behaviour
   is the must-have proof'
+- 'Selected: O-001 (hand-over entry, D-001), the structural choice the other seven families sit inside; their selections are
+  the rows the table in 5.2 marks sel...'
+- 'Structural change:'
+- 'Setup, once. "Cài đặt" (M-006) shows a draggable button. The new button route (M-004) builds it: M-002 reads the repository-held
+  script and embeds the format...'
+- The press. On a shopee.vn product page, the script reads the visible anchors (D-003), builds one block (D-002), copies it
+  (D-007) and shows a Vietnamese noti...
+- 'The paste. At step 1 of the open video, the page sees the marker in a paste and posts the text to the guarded paste route
+  (M-004). The route checks, in order:'
+- After the paste, the operator confirms each field and row, picks images and names one screenshot on every button-filled
+  row in one action (D-008). The unchan...
+- Text without the marker takes the MC-18 paste path unchanged.
+- No toolchain file and no guard rule changes.
+- 'Rationale:'
+- The selected entry keeps one guarded door, so the switch refusal for the block sits in one place. A marked block pasted
+  into the MC-18 paste box cannot slip...
+- The strict typed format (D-002) is the only readable format that can refuse a wrong-typed field.
+- Text anchors (D-003) trace to what the CEO's screenshot shows (F-024).
+- The internal seam allowance (D-004) is the only seam allowed by C-024, C-026 and C-033.
+- Fetching at paste (D-005) reuses the MC-18 picker with thumbnails unchanged.
+- The button mark (D-006) retires old buttons automatically.
+- The clipboard chain (D-007) keeps the second action a paste in most cases.
+- 'Highest-scoring rejected alternative and why it lost: O-002 ties O-001 on every hard constraint and on impact surface (1
+  against 1), and loses at reuse lever...'
+- 'Tradeoffs accepted:'
+- 'The paste route''s contract grows: a second path and new refusal codes. The MC-18 text path is kept byte-for-byte in behaviour
+  (R-021).'
+- Under D-005, up to 20 image requests per paste go to allowed image hosts, against 3 for fetching only the picked images.
+  The CEO decides at the Design Gate (...
+- The button's host check and the app's page-address rule are duplicated on purpose (defence in depth). The fixture allowance
+  reaches both only through the int...
+- Chrome's behaviour on a real page (A-002, A-003, A-009) is not measured in this phase. It is measured on the fixture at
+  P-002 and P-004, and the CEO's try (S...
+- 'D-001: Hand-over entry: the guarded paste route recognises the fixed block marker and takes the block path in M-00... |
+  yes | architecture-decision-record-D-001.md'
+- 'D-002: Block format: a fixed ASCII marker naming the format, then one JSON object holding the format version, butt... |
+  yes | architecture-decision-record-D-002.md'
+- 'D-003: Field finding by visible-text anchors (A-004 to A-006, A-010): name from the main heading; classification f... |
+  yes | architecture-decision-record-D-003.md'
+- 'D-004: Test seam: the existing internal seam carries an exact fixture-origin allowance; the button builder adds it... |
+  yes | architecture-decision-record-D-004.md'
+- 'D-005: Image fetch: after a block is accepted and while the switch is on, the image phase fetches the carried addr... |
+  yes | architecture-decision-record-D-005.md'
+- 'D-006: Version: the block carries format version 1 and the button mark (the first 12 hexadecimal characters of the... |
+  yes | architecture-decision-record-D-006.md'
+- 'D-007: Clipboard: the asynchronous write first; on refusal the copy command on an off-screen selected box; on refu... |
+  no | inline'
+- 'D-008: One screenshot: after a block fill, step 1 shows one chooser, "Một ảnh chụp cho mọi dòng từ nút"; one file... |
+  no | inline'
+- 'D-009: Fill: source "button" with the mark "Từ nút đọc trang" and confirmation wording "nút đọc trang"; shopNameAn... |
+  no | inline'
+- 'D-010: Paste-route order for a marked text: more than one marker gives the one-product refusal; then switch off gi... |
+  no | inline'
+- 'D-011: Non-product page: the button copies only when the main heading and the "CHI TIẾT SẢN PHẨM" heading are both... |
+  no | inline'
+- 'D-012: "Cài đặt": the button is shown as a draggable link named "Đọc trang Shopee" with Vietnamese steps: show the... |
+  no | inline'
+- 'D-013: Files only: the existing fill record and read-image folder; no new store; the mediacompany database is unto... |
+  no | inline'
+- 'D-014: Bounds: UTF-8 size of the pasted text 256 KiB, checked before parsing; JSON depth limit 8; 30 addresses; 10... |
+  no | inline'
+- 'D-015: Paste listener: while the app page is open, a paste whose text begins with the marker is taken from the pas... |
+  no | inline'
+- 'D-016: Image address rule at paste: the MC-18 link rule''s image check against the block''s page address (https, all...
+  | no | inline'
 open_questions:
 - 'Q-001: May the button be pressed on a page where the operator is signed in to Shopee? Options: (a) yes, bounded by... |
   yes | CEO'
@@ -304,6 +557,339 @@ open_questions:
   | no | architect; option (b) needs the CEO'
 - 'Q-009: Is a business measure needed beyond A-005 and A-041? Options: (a) no; (b) add one with a threshold, such as... |
   no | CEO'
+- 'Q-001: Framework gap: orchestrator owns no phase in implement-feature, so T-028 and the recording of the CEO''s rea...
+  | non-blocking | orchestrator'
+- 'Q-002: Framework gap: qa owns no phase in implement-feature, so the verification tasks are owned by dev-2-reviewer... |
+  non-blocking | orchestrator'
+- 'Q-003: Does the orchestrator record the Browser-pane run of the done condition, with dev-2-reviewer running the au... |
+  non-blocking | orchestrator'
+- 'Q-004: No agent may view a real page: what grounds the fixture page''s layout? The scope recommends the CEO''s scree...
+  | non-blocking | architect'
+- 'Q-005: The CEO''s answer allowing signed-in pages withdraws SC-19; does the gate accept its converse (a signed-in f...
+  | non-blocking | product-owner'
+- 'Q-001: After a paste, should the app fetch the product''s own images straight away so you can pick from pictures (r...
+  | non-blocking | product-owner'
+- 'Q-002: Ground the test page on your screenshot, the MC-18 paste text and the ticket''s list (recommended), with you...
+  | non-blocking | product-owner'
+- 'Q-003: Mark wording "Từ nút đọc trang" and Mall wording "shop, Mall" or "shop, không phải Mall" (recommended), or... |
+  non-blocking | product-owner'
+- 'Q-004: The orchestrator''s dispatch says the decision records go inside this package and no other file is written.... |
+  non-blocking | orchestrator'
+- 'Q-005: T-001 asks for Chrome''s behaviour measured on the fixture; this phase executes nothing. A-002, A-003, A-007...
+  | non-blocking | dev-1-implement'
+- 'Q-006: Is the read log paired with the address harness accepted as SC-21 evidence (A-013)? | non-blocking | qa'
+- 'Q-007: Design Gate acceptance of D-001 to D-006, each at Proposed. tech-lead accepts under the producer exclusion... |
+  non-blocking | tech-lead'
+objectives:
+- 'TO-1: A press on a product page places on the clipboard one versioned block holding only the listed kinds, equal to the
+  page''s values after Unicode NFC norma...'
+- 'TO-2: A pasted block fills step 1 of the open video through the MC-18 fill record with a new source mark, per-field confirmation,
+  at most three rows and a on...'
+- 'TO-3: The app accepts a block only within the bounds, well-formed, single-product and of the current version, only through
+  the unchanged request guard, and s...'
+- 'TO-4: Only picked image addresses the block carries are fetched, from shopee.vn or hosts ending .susercontent.com, one
+  request each, no redirect, PNG or JPEG...'
+- 'TO-5: The existing read switch refuses the hand-over and no new switch is added. Verified by SC-28 to SC-30. Traces BO-3.'
+- 'TO-6: The toolchain shows zero file changes with 251 tests passing, the 53 web tests pass, one listener stays on 127.0.0.1
+  and toolchain jobs own zero socket...'
+- 'TO-7: The change''s tests run offline against code-generated fixtures on 127.0.0.1, adding zero media files and zero package
+  references. Verified by SC-38, SC...'
+- 'TO-8: "Cài đặt" offers the current button with Vietnamese drag instructions, and every new text meets the Vietnamese language
+  rule. Verified by SC-31, SC-32....'
+- 'Desired outcome: on a shopee.vn product page in the operator''s own Chrome, one press of a bookmark-bar button copies one
+  bounded block. One paste at step 1 o...'
+- 'Architectural objectives:'
+- A button that is a fixed script held in the repository and generated by the app into one bookmark address. It loads no code,
+  sends no request, acts on no pag...
+- One versioned hand-over contract, the block. It is read as untrusted data by one reader that bounds it before parsing and
+  refuses it whole (S-005).
+- 'One entry point for the block: the existing guarded paste route. The request guard is unchanged (S-005, S-013).'
+- The existing read switch governs the block exactly as it governs the MC-18 read (S-006).
+- Image egress only for image addresses the block carries, through the MC-18 image phase and host rule (S-003).
+- A test-only allowance of the fixture origin, passed through the existing internal seam, so the same button code runs on
+  fixture pages and the shipped app has...
+- 'In scope:'
+- New block reader and button builder components in src/MediaCompany.Pilot.Web.
+- The repository-held button script.
+- The paste route's block path and a button route.
+- A third fill source.
+- Step 1 and "Cài đặt" page parts.
+- The internal seam's fixture-origin allowance.
+- New fixtures and cases in tests/MediaCompany.Pilot.Web.Tests.
+- 'Out of scope:'
+- Any change to src/MediaCompany.Pilot or its tests, the fact-sheet check or its per-row screenshot rule (S-008, X-006).
+- Any change to the request guard, its content policy or the listener (S-013, X-007).
+- Any app request to a shopee.vn page. Reading any page other than the pressed one. Pages on other sites (X-001, X-004, X-014).
+- Sign-in, cookies, stored data or account data (S-012, X-002).
+- A screenshot taken by a tool (X-005).
+- Steps 2 to 7 beyond receiving picked images (X-010).
+- Removing MC-18 read or paste (X-008).
+- The mediacompany database, MC-13 and MC-14 material (X-009). Merging (X-012).
+- Browsers other than Chrome (S-017).
+- The CEO's real-page try, which is the CEO's act, recorded by the orchestrator (S-011).
+assumptions:
+- 'A-001: The app''s new parts need only the installed .NET base class library and the button only plain browser scrip...
+  | S-009 | A package needs the CEO''s approval by name before implementation starts'
+- 'A-002: The Scope Gate answers restated by the orchestrator briefing are the CEO''s recorded decision; checked here... |
+  plan-wide | Tasks are built for a hand-over path or bound the CEO did not choose'
+- 'A-003: Chrome runs a bookmark-bar button on a shopee.vn product page and lets one press place one block on the cli... |
+  S-013, S-017 | No hand-over on real pages; paste mode stays the path; T-003 changes'
+- 'A-004: A fixture grounded on the CEO''s screenshot, the MC-18 paste fixture and the ticket''s facts is close enough...
+  | S-001 | The button misses fields on real pages; T-003 and T-024 change'
+- 'A-005: The headless browser the web tests already drive can run the button on a fixture page and read the copied b... |
+  S-009, S-010 | Automated evidence for SC-01, SC-05, SC-41 needs another route; T-024 and T-026 change'
+- 'A-006: The button can be run on fixture pages on 127.0.0.1 while the app refuses a page address not on shopee.vn,... |
+  S-009 | Offline tests of the page-address rule need another route; T-024 is redesigned'
+- 'A-007: The unchanged MC-16 check accepts one screenshot file named on several rows, as the CEO''s Scope Gate record...
+  | S-014 | SC-13 needs a check change, which X-006 excludes; T-008 waits on a CEO decision'
+- 'A-008: The page lets the product''s own images be told apart from other products'' images shown on it | S-001 | Own images
+  cannot be offered safely; SC-04 fails; T-003 changes'
+- 'A-009: The triggered database area needs no work: the mediacompany database is untouched and step 1 keeps its file... |
+  plan-wide | Database design and gate work are added; X-009 conflict'
+- 'A-010: Verification tasks are owned by dev-2-reviewer, because qa owns no phase in implement-feature, and qa decid... |
+  plan-wide | Verification tasks move to qa and are never dispatched'
+- 'A-011: The orchestrator records the Browser-pane run of the done condition, and dev-2-reviewer runs the automated... |
+  S-010 | T-026 also records the Browser-pane run itself'
+- 'A-012: Recording the CEO''s real-page try, the commit, the push and the compare link are orchestrator closing acts;...
+  | S-011, S-019 | An agent task with a real-page access is added, which CEO-D-1318 forbids'
+- 'A-013: The MC-16 and MC-17 socket harness records the app''s outbound connections with remote host and path, and it...
+  | S-008 | SC-21 and SC-36 need another evidence route; T-012 and T-023 change'
+- 'A-014: The Browser pane can run the button on a fixture product page served on 127.0.0.1 | S-010 | The done condition is
+  shown by the automated browser tests only'
+- 'A-015: The existing read switch can govern the hand-over with no new setting and no toolchain change | S-006 | SC-30 conflicts;
+  T-018 changes'
+- 'A-016: The paste reaches the app through a route that passes the unchanged guard, because it happens on the app''s... |
+  S-005, S-013 | A guard change needs a CEO decision under X-007; T-016 changes'
+- 'A-001: The base class library holds what the app side needs: a strict JSON reader with a depth limit, SHA-256 and... |
+  C-022 for every option | A package needs the CEO''s approval by name (R-001)'
+- 'A-002: Chrome runs a bookmark-bar script address on a shopee.vn product page whatever that page''s content policy (...
+  | D-003, D-007 | No hand-over on real pages; paste mode stays (R-002)'
+- 'A-003: On a bookmark press, Chrome lets either the asynchronous clipboard write or the older copy command on a sel... |
+  D-007 keeps two actions | The visible box needs Ctrl+C, a third action (R-003)'
+- 'A-004: A real product page shows these anchors as visible text: the product name as the page''s main heading; the "...
+  | D-003 field finding | Fields are missed and left for the operator (R-004)'
+- 'A-005: The selected variant button carries a standard pressed or selected state, not only a styling class | D-003 classification
+  | Classification stays empty and is never guessed (R-005)'
+- 'A-006: The product''s own images are those in the gallery inside the product region, meaning the region that holds... |
+  D-003 own images | Other images are offered, or none are (R-006)'
+- 'A-007: The headless shell can open a plain-HTTP fixture page on 127.0.0.1 and run the button address there. A fixt... |
+  Browser route for SC-01, SC-05, SC-08, SC-09, SC-25, SC-31, SC-41 | Browser evidence needs another route (R-007)'
+- 'A-008: The Browser pane can open a fixture product page from fixture-host mode on 127.0.0.1 and run the button add... |
+  SC-41 route | SC-41 rests on the headless runs alone (R-008)'
+- 'A-009: Chrome fires a paste event on the app page for Ctrl+V while step 1 is shown, even when no text field has focus |
+  D-001 one paste is one action | The operator clicks the paste box first (R-009)'
+- 'A-010: The rendered page shows the price as a đồng amount near the main heading, before the shop block | D-003 price for
+  reference | Price is absent; it is reference only, so no fact is lost (R-004)'
+- 'A-011: Real gallery image addresses are on hosts ending .susercontent.com or on shopee.vn (the example in CEO deci... |
+  D-005 fetchable images | Images are named for upload at step 2 (R-010)'
+- 'A-012: Gallery addresses as shown may be reduced-size variants; the button carries them as shown and never rewrite... |
+  D-003 never guesses | Picked images may be small; the operator uploads at step 2 (R-011)'
+- 'A-013: SC-21 is shown by pairing the read log''s hosts and paths (F-012) with the harness''s remote addresses and sa...
+  | SC-21, SC-28, SC-36 to SC-38 evidence route | SC-21 needs another route (R-012)'
+- 'A-014: Reading only the product region and the two anchored sections keeps any signed-in account name out of the b... |
+  C-012 | An account name is copied (R-013)'
+- 'A-015: An MC-18 build treats a fill record with an unknown source value as unreadable, therefore absent | Rollback position
+  for M-003 | A rolled-back build shows a stale fill record (R-020)'
+risks:
+- 'R-001: requirement | The briefing''s restatement differs from the recorded Scope Gate decision (A-002 false) | Tasks build
+  a path the CEO did not choose'
+- 'R-002: requirement | A real product page lays out the facts differently from the fixture (A-004 false) | The button misses
+  fields on real pages; paste mode becomes the common path'
+- 'R-003: requirement | The converse of SC-19 is not accepted at the Planning Gate (Q-005) | An acceptance criterion and a
+  verification change'
+- 'R-004: technical | Chrome blocks the button or its clipboard write on a real shopee.vn page (A-003 false) | No hand-over
+  on real pages'
+- 'R-005: technical | The headless browser cannot run the button or read the copied block (A-005 false) | Automated evidence
+  needs another route'
+- 'R-006: technical | Own images cannot be told apart from other images (A-008 false) | Other products'' images are offered;
+  SC-04 fails'
+- 'R-007: technical | The check refuses one file named on several rows (A-007 false) | SC-13 needs a check change outside
+  scope'
+- 'R-008: technical | The socket harness records no remote host or path (A-013 false) | SC-21 and SC-36 evidence is incomplete'
+- 'R-009: technical | The read switch cannot govern the hand-over without a new setting (A-015 false) | SC-30 conflicts'
+- 'R-010: technical | The paste route cannot pass the unchanged guard (A-016 false) | A guard change needs a CEO decision'
+- 'R-011: technical | A needed capability is absent from the base class library (A-001 false) | Implementation waits on a
+  CEO package approval'
+- 'R-012: technical | The design needs storage beyond step 1''s files or touches the mediacompany database (A-009 false) |
+  Database work and an X-009 conflict'
+- 'R-013: dependency | The CEO''s Design Gate decision is delayed or declines the design | All implementation waits or returns
+  to design'
+- 'R-014: dependency | The unmerged MC-16, MC-17 or MC-18 branch changes after this branch is cut | Rebase and a re-run of
+  the 251 and 53 tests'
+- 'R-015: dependency | Shopee changes its page layout at any time | The button stops finding fields; the operator falls back
+  to paste mode'
+- 'R-016: dependency | The CEO makes no real-page try (A-012) | S-011 closes unexercised'
+- 'R-017: dependency | The Browser pane cannot run the button on the fixture (A-014 false) | The done condition rests on the
+  automated browser tests alone'
+- 'R-018: dependency | Chrome, the headless browser or the .NET SDK on the operator machine is changed or missing | Browser
+  evidence needs a CEO decision or a manual run'
+- 'R-019: security | Text in the hand-over is run as script or turned into page elements at step 1 | Script execution in the
+  app''s page on 127.0.0.1'
+- 'R-020: security | An oversized or malformed hand-over reaches the parser | Resource exhaustion or a partly filled sheet'
+- 'R-021: security | The button copies an account name, cookie or stored value from a signed-in page | Breach of CEO-D-1313
+  item 2'
+- 'R-022: security | A route carrying the hand-over skips or widens the request guard | A foreign page fills step 1'
+- 'R-023: security | An image address passes the host rule through a look-alike host, plain http, a data or script address,
+  or a... | Egress beyond the CEO''s bounds'
+- 'R-024: security | The fixture seam is reachable in the shipped app (A-006 false) | The app accepts a page address off shopee.vn'
+- 'R-025: security | Another page or program places a crafted block on the clipboard and the operator pastes it | Unreviewed
+  text enters step 1'
+- 'R-026: security | Another program on the machine reads the copied block from the clipboard | Exposure of public page facts;
+  no account data per SC-18'
+- 'R-027: operational | Shopee answers adversely or warns the account while the button is in use | The CEO''s terms risk materialises;
+  nothing switches off by itself (X-013)'
+- 'R-028: operational | An out-of-date button stays in the bookmark bar after an update | Its block is refused until the operator
+  drags the new one'
+- 'R-029: delivery | A task is owned by a role with no phase in implement-feature (A-010, A-011 or A-012 false) | The task
+  is never dispatched and its evidence is missing'
+- 'R-030: delivery | The compare link against main also shows the unmerged MC-16, MC-17 and MC-18 commits | MC-19 review is
+  confused with earlier work'
+- 'R-001: structural | A needed capability is absent from the base class library (A-001 false) | A package needs the CEO''s
+  approval by name'
+- 'R-002: operability | Chrome refuses to run the bookmark address on a real page (A-002 false) | No hand-over on real pages;
+  paste mode stays the path'
+- 'R-003: operability | Both clipboard writes are refused on a press (A-003 false) | The visible box needs Ctrl+C, a third
+  action against C-004'
+- 'R-004: operability | Real page anchors differ from the fixture (A-004 or A-010 false) | Fields are missed and left for
+  the operator'
+- 'R-005: operability | The selected variant has no standard state (A-005 false) | Classification stays empty'
+- 'R-006: security | Own images cannot be told from others (A-006 false) | Other products'' images are offered, or none'
+- 'R-007: delivery | The headless shell cannot run the button or the probe cannot capture the block (A-007 false) | Browser
+  evidence needs another route'
+- 'R-008: delivery | The Browser pane cannot run the button on the fixture (A-008 false) | SC-41 rests on the headless runs'
+- 'R-009: operability | No paste event fires without a focused field (A-009 false) | The operator clicks the paste box first'
+- 'R-010: operability | Real gallery hosts are outside the rule (A-011 false) | Images are named for upload at step 2'
+- 'R-011: operability | Gallery addresses are small variants (A-012 false hope) | Picked images are small'
+- 'R-012: delivery | The read log paired with the harness is not accepted for SC-21 (A-013 false) | SC-21 evidence incomplete'
+- 'R-013: security | An account name appears inside the product region (A-014 false) | Breach of CEO decision 1313 item 2'
+- 'R-014: security | Another page or program puts a crafted block on the clipboard and the operator pastes it (plan risk 25)
+  | Unreviewed text enters step 1'
+- 'R-015: security | Another program reads the clipboard (plan risk 26) | Public page facts exposed; no account data'
+- 'R-016: security | The fixture allowance is reachable in the shipped app (plan risk 24) | A non-shopee.vn page address is
+  accepted'
+- 'R-017: security | A crafted block names another shopee.vn page path as an image address | One request to a shopee.vn page,
+  answered non-image and discarded, against C-010'
+- 'R-018: security | Block text is turned into page elements (plan risk 19) | Script runs in the app page'
+- 'R-019: security | An oversized or deep block reaches the parser (plan risk 20) | Resource exhaustion'
+- 'R-020: contract | A rolled-back MC-18 build meets a button-source fill record (A-015 false) | A stale or failing fill display'
+- 'R-021: contract | The block path changes MC-18 paste behaviour | SC-35 fails'
+- 'R-022: operability | An out-of-date button stays in the bar (plan risk 28) | Its blocks are refused until the operator
+  drags again'
+- 'R-023: operability | Shopee warns the account while the button is in use (plan risk 27) | The CEO''s terms risk materialises'
+- 'R-024: delivery | The CEO chooses fetching only picked images at Q-001 | D-005 changes to O-015'
+- 'R-025: delivery | The separate-record-file validation rule is applied to this package | Validation reports missing record
+  files'
+- 'R-026: delivery | Chrome behaviour stays unmeasured in this phase (T-001 asks for a measurement) | Chrome evidence arrives
+  only at P-002'
+- 'R-027: delivery | An unmerged earlier branch changes after the MC-19 session branch is cut (plan risk 14) | Rebase and
+  re-run of the 251 and 53 tests'
+- 'R-028: operability | Shopee changes its layout later (plan risk 15) | The button finds fewer fields'
+- 'R-029: delivery | The compare link shows earlier unmerged commits (plan risk 30) | MC-19 review confused with earlier work'
+plan_tasks:
+- 'T-001: Produce the MC-19 technical design package | depends on none'
+- 'T-002: Map every applicable acceptance criterion to a fixture case | depends on T-001'
+- 'T-003: Copy one hand-over block from the open product page with one press | depends on T-001, T-024'
+- 'T-004: Fill step 1 of the open video from one pasted hand-over | depends on T-003, T-014'
+- 'T-005: Verify the press-and-fill criteria | depends on T-004'
+- 'T-006: Mark the source of every button-filled field | depends on T-004'
+- 'T-007: Require confirmation of every button-filled field before save | depends on T-006'
+- 'T-008: Name one screenshot on every button-filled row in one action | depends on T-004'
+- 'T-009: Route button-filled facts through the unchanged fact-sheet check | depends on T-007, T-008'
+- 'T-010: Verify the mark, confirmation, screenshot and check criteria | depends on T-009'
+- 'T-011: Bring the operator''s picked images from the hand-over''s addresses | depends on T-004'
+- 'T-012: Verify the image and egress criteria | depends on T-009, T-011'
+- 'T-013: Verify that a press acts on nothing and hands over no account data | depends on T-004'
+- 'T-014: Refuse a malformed, over-bound or out-of-date hand-over whole | depends on T-001, T-024'
+- 'T-015: Show every handed-over text only as text | depends on T-004'
+- 'T-016: Admit a hand-over only through the unchanged request guard | depends on T-004'
+- 'T-017: Verify the untrusted-input criteria | depends on T-014, T-015, T-016'
+- 'T-018: Refuse the hand-over while the read switch is off | depends on T-004'
+- 'T-019: Verify the off switch | depends on T-018'
+- 'T-020: Show the current button with Vietnamese drag instructions in "Cài đặt" | depends on T-003'
+- 'T-021: Verify the settings button and its fixed code | depends on T-014, T-020'
+- 'T-022: Review the MC-19 change | depends on T-009, T-011, T-015, T-016, T-018, T-020'
+- 'T-023: Verify the delivered behaviour and bounds are unchanged | depends on T-009, T-011, T-015, T-016, T-018, T-020'
+- 'T-024: Serve every button fixture from code-generated loopback pages | depends on T-002'
+- 'T-025: Verify the offline test bounds | depends on T-009, T-011, T-015, T-016, T-018, T-020'
+- 'T-026: Verify the done condition with automated browser tests | depends on T-009, T-018'
+- 'T-027: Write the MC-19 release note | depends on T-005, T-010, T-012, T-013, T-017, T-019, T-021, T-022, T...'
+- 'T-028: Deliver the compare link to the CEO | depends on T-027'
+facts:
+- 'F-001: The web project is an executable with no package reference; its internals are visible to the test assembly... |
+  src/MediaCompany.Pilot.Web project file; MC-18 design module for the project file'
+- 'F-002: The web app listens on the IPv4 loopback address only | src/MediaCompany.Pilot.Web/Program.cs'
+- 'F-003: The request guard needs a loopback peer and Host 127.0.0.1:port. GET and HEAD pass. POST needs exact Origin... |
+  src/MediaCompany.Pilot.Web/RequestGuard.cs'
+- 'F-004: The paste route takes a text and refuses empty text and text with no product. It parses with the shared tex... |
+  src/MediaCompany.Pilot.Web/Routes.cs'
+- 'F-005: The read route refuses with a Vietnamese outcome when the switch is off, and allows one read at a time app-... |
+  src/MediaCompany.Pilot.Web/Routes.cs, WebContext.cs'
+- 'F-006: Step-1 routes take the video code from the query of the request | src/MediaCompany.Pilot.Web/Routes.cs'
+- 'F-007: The fill record is at form version 1 and holds: a source of read or paste, link, final address, time, field... |
+  src/MediaCompany.Pilot.Web/FillRecord.cs'
+- 'F-008: The read switch is its own file in the app folder. It is off by default and set on the "Cài đặt" view | src/MediaCompany.Pilot.Web/FillRecord.cs,
+  Pages/app.js'
+- 'F-009: The shared text parser anchors on "Tên sản phẩm", "Phân loại", "CHI TIẾT SẢN PHẨM" and "MÔ TẢ SẢN PHẨM". It... |
+  src/MediaCompany.Pilot.Web/ProductText.cs'
+- 'F-010: The link rule takes the host in lower-case ASCII form without a trailing dot. Page hosts are shopee.vn and... |
+  src/MediaCompany.Pilot.Web/ReadLink.cs'
+- 'F-011: The image phase sends one request per image with no redirect. It keeps a file only with a PNG or JPEG signa... |
+  src/MediaCompany.Pilot.Web/ProductRead.cs, ProductText.cs'
+- 'F-012: Each outbound request is written to the read log in the web folder. Bounds: 120 s per click, 5 MiB per page... |
+  src/MediaCompany.Pilot.Web/ReadSender.cs'
+- 'F-013: Step 1 shows a mark with a confirm button beside each filled field and row; marks disappear when a value is... |
+  src/MediaCompany.Pilot.Web/Pages/app.js'
+- 'F-014: "Cài đặt" is a view reached from the top bar after setup; it holds the read switch | src/MediaCompany.Pilot.Web/Pages/index.html,
+  Pages/app.js'
+- 'F-015: The fact sheet holds shopNameAndMall as one header text ("Tên gian hàng và Mall hay không"), with example f... |
+  src/MediaCompany.Pilot/FactSheet.cs; pilot-affiliate-vn/mc-16/vi-du-bang-thong-tin.json'
+- 'F-016: The producer de-duplicates screenshot files, ignoring case, before staging | src/MediaCompany.Pilot/Producer.cs'
+- 'F-017: The read transport seam is an internal type. It is passed only through the internal start path; the shipped... |
+  src/MediaCompany.Pilot.Web/WebContext.cs, Program.cs; tests ReadCases.cs'
+- 'F-018: The test program has a code-generated HTTPS fixture on 127.0.0.1, reached through the seam. It also has a f... |
+  tests/MediaCompany.Pilot.Web.Tests/ReadFixture.cs, ReadHost.cs'
+- 'F-019: The headless shell is digest-checked. Its launch maps every name except 127.0.0.1 to not-found, uses no pro... |
+  tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs'
+- 'F-020: In test mode the app serves a test driver script and a result route | src/MediaCompany.Pilot.Web/Routes.cs; tests
+  BrowserCase.cs'
+- 'F-021: The address harness samples the TCP and UDP tables about every 20 ms. It records addresses, ports and owner... |
+  tests/MediaCompany.Pilot.Web.Tests/AddressHarness.cs; MC-18 design facts'
+- 'F-022: At MC-18 close the toolchain has 251 passing tests and the web app 53 | orchestrator briefing section 5'
+- 'F-023: Both MC-18 live reads got a script-rendered page shell with no product data and stopped with no product | feature
+  request WHY; orchestrator briefing section 2'
+- 'F-024: The CEO''s screenshot of a product page shows: product name, price, shop with a Mall badge, classification b...
+  | orchestrator dispatch'
+- 'F-025: The app''s page sets every shown text as text, never as markup | src/MediaCompany.Pilot.Web/Pages/app.js'
+- 'F-026: The toolchain''s network guard covers only the toolchain''s own code; toolchain jobs own zero sockets | MC-18 design
+  facts on the network guard (run-6fa26c9657d3)'
+repository_context:
+  relevant_modules:
+  - 'M-001: Block reader (new, in MediaCompany.Pilot.Web): marker, size bound, strict parse, version and button mark, b...
+    | extension | F-004, F-010, A-001'
+  - 'M-002: Button script (new, a repository-held plain script in MediaCompany.Pilot.Web) and button builder | extension |
+    F-014, F-024, A-002 to A-006, A-010, A-012, A-014'
+  - 'M-003: Fill record and confirmation rule (FillRecord.cs) | contract-change | F-007, F-015, A-015'
+  - 'M-004: MediaCompany.Pilot.Web routes (Routes.cs) | contract-change | F-004, F-005, F-006'
+  - 'M-005: Image phase (ProductRead.cs, ReadSender.cs, link rule in ReadLink.cs) | extension | F-010, F-011, F-012'
+  - 'M-006: Step-1 and "Cài đặt" page parts (index.html, app.js, styles) | extension | F-013, F-014, F-025, A-009'
+  - 'M-007: Request guard and content policy (RequestGuard.cs) | no-change-verified | F-003'
+  - 'M-008: Start-up and internal seam (Program.cs, WebContext.cs, the read transport seam) | extension | F-017'
+  - 'M-009: Read switch store | no-change-verified | F-008'
+  - 'M-010: Shared text parser (ProductText.cs) | no-change-verified | F-009'
+  - 'M-011: MC-16 toolchain src/MediaCompany.Pilot (check, fact sheet, producer) | no-change-verified | F-015, F-016, F-026'
+  - 'M-012: MC-16 toolchain tests | no-change-verified | F-022'
+  - 'M-013: MediaCompany.Pilot.Web.Tests: fixture product pages, probe, button runs, fixture-host additions, new cases | extension
+    | F-018, F-019, F-020, A-007, A-008'
+  - 'M-014: Address harness (AddressHarness.cs) | no-change-verified | F-021'
+  - 'M-015: Pilot folder layout (Workspace.cs) | no-change-verified | F-007, F-011'
+  - 'M-016: Steps 2 to 7 routes and pages | no-change-verified | F-011, F-013'
+  - 'M-017: mediacompany database, MediaCompany.Persistence, MC-13 and MC-14 material | no-change-verified | F-007'
+  - 'M-018: Web project file | no-change-verified | F-001'
+  relevant_files: []
+  rescan_required_when:
+  - the scope or the accepted design changes
+  - a dependency this context does not name is discovered
+  - a named module or file no longer exists at the recorded path
 affected_areas:
   determinable: true
   declared: []
@@ -313,19 +899,29 @@ affected_areas:
       term: database
     - source: artifact:scope-and-acceptance
       term: database
+    - source: artifact:execution-planning
+      term: database
+    performance:
+    - source: artifact:execution-planning
+      term: performance
+    - source: artifact:solution-design-and-risk-assessment
+      term: performance
     security:
     - source: input:feature-request
       term: token
     - source: artifact:scope-and-acceptance
       term: token
+    - source: artifact:execution-planning
+      term: security
   not_triggered:
   - avalonia-ui
-  - performance
   - react-frontend
   sources_scanned:
   - input:feature-request
   - input:business-intent
   - artifact:scope-and-acceptance
+  - artifact:execution-planning
+  - artifact:solution-design-and-risk-assessment
 relevant_skills:
   scope-and-acceptance:
     S02: required
@@ -348,15 +944,8 @@ relevant_skills:
   quality-review:
     S07: required
     S09: required
-    S08: not-triggered
+    S08: required
   documentation-and-release-handoff:
     S11: required
     S10: required
     S12: required
-repository_context:
-  relevant_modules: []
-  relevant_files: []
-  rescan_required_when:
-  - the scope or the accepted design changes
-  - a dependency this context does not name is discovered
-  - a named module or file no longer exists at the recorded path
