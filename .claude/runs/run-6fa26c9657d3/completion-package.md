@@ -10,10 +10,10 @@ Produced by the Output Aggregator in `runtime/framework_runtime.py`. This packag
 | command | `/implement` |
 | workflow | `implement-feature` v1.0.0 |
 | runtime | `0.11.1` |
-| run status | `WaitingForHuman` |
+| run status | `Completed` |
 | input digest | `sha256:cdd6a3089565e711536549f31b6982a6` |
-| phases | 6 (5 completed, 1 blocked, 0 failed, 0 pending) |
-| state transitions | 32 |
+| phases | 6 (6 completed, 0 blocked, 0 failed, 0 pending) |
+| state transitions | 40 |
 | replays suppressed | 0 |
 
 ## Phase Ledger
@@ -25,7 +25,7 @@ Produced by the Output Aggregator in `runtime/framework_runtime.py`. This packag
 | 3 | `solution-design-and-risk-assessment` | `architect` | completed | Completed | `runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md` | pass (78/78) |
 | 4 | `implementation` | `dev-1-implement` | completed | Completed | `runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md` | pass (32/32) |
 | 5 | `quality-review` | `dev-2-reviewer` | completed | Completed | `runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md` | pass (31/31) |
-| 6 | `documentation-and-release-handoff` | `documentation` | blocked | Blocked | - | awaiting_human_decision |
+| 6 | `documentation-and-release-handoff` | `documentation` | completed | Completed | `runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md` | pass (34/34) |
 
 ## Gate Decisions
 
@@ -34,9 +34,9 @@ Produced by the Output Aggregator in `runtime/framework_runtime.py`. This packag
 | Scope Gate | `scope-and-acceptance` | product-owner, business-analyst | approved | business-analyst | CEO |
 | Planning Gate | `execution-planning` | tech-lead, orchestrator | approved | orchestrator | orchestrator (MC-18 session), on the CEO's Scope Gate approval CEO-D-1314 |
 | Design Gate | `solution-design-and-risk-assessment` | architect, tech-lead | approved | tech-lead | CEO (vuhoangcao) |
-| Review Gate | `quality-review` | dev-2-reviewer, qa | undecided | - | - |
-| Verification Gate | `quality-review` | qa | undecided | - | - |
-| Closure Gate | `documentation-and-release-handoff` | orchestrator, documentation | undecided | - | - |
+| Review Gate | `quality-review` | dev-2-reviewer, qa | approved | qa | orchestrator (MC-18 session), for qa |
+| Verification Gate | `quality-review` | qa | approved | qa | orchestrator (MC-18 session), for qa |
+| Closure Gate | `documentation-and-release-handoff` | orchestrator, documentation | approved | orchestrator | orchestrator (MC-18 session) |
 
 Gate approval is a human decision by default. The runtime records it, enforces the Producer Exclusion Rule of `workflows/workflow-gate-matrix.md`, and refuses to invent one; an undecided gate holds its successor phase in `blocked`. Under `config/gate-policy.json`'s `auto-on-clean-evidence` mode the runtime itself may record an approval (attributed `runtime:auto-policy`, with the evaluated evidence in the decision record) when every policy condition holds; any gate the policy holds keeps the human path.
 
@@ -85,6 +85,13 @@ Modules loaded by each executed agent, in the order its manifest declares.
 | `quality-review` | 5 | `agents/dev-2-reviewer/output.md` | `sha256:9d5f1de4a1e9e69edd5db3ee1d641c1f` |
 | `quality-review` | 6 | `agents/dev-2-reviewer/quality.md` | `sha256:3584a1884e8da3ee4886ae5b6e77110e` |
 | `quality-review` | 7 | `agents/dev-2-reviewer/examples.md` | `sha256:c2ef09a48bd41c0d5f8e2f1ce76a23db` |
+| `documentation-and-release-handoff` | 1 | `agents/documentation/system.md` | `sha256:02237376afed5750b08312579ed1e8e2` |
+| `documentation-and-release-handoff` | 2 | `agents/documentation/identity.md` | `sha256:e2ab389529729dd0031c5905ab91681e` |
+| `documentation-and-release-handoff` | 3 | `agents/documentation/reasoning.md` | `sha256:7854ad87b16b12dc4ad3012eee8ce22c` |
+| `documentation-and-release-handoff` | 4 | `agents/documentation/execution.md` | `sha256:b71cbe6ebd9942f85eeb0c2e31995804` |
+| `documentation-and-release-handoff` | 5 | `agents/documentation/output.md` | `sha256:57d68fa8d298f98fe3bbe4b0614a8e3b` |
+| `documentation-and-release-handoff` | 6 | `agents/documentation/quality.md` | `sha256:aecb71ada9af733446fbb8643cf6b376` |
+| `documentation-and-release-handoff` | 7 | `agents/documentation/examples.md` | `sha256:8562232c2e0da475881d3ed6e8c5e366` |
 
 ## State Transition Log
 
@@ -124,6 +131,14 @@ Every persisted work-item transition, in commit order. This is the run's primary
 | 30 | `Review Gate` (gate) | pending | blocked | `awaiting_decision` | `approval_wait` | runtime:state-engine |
 | 31 | `Verification Gate` (gate) | pending | blocked | `awaiting_decision` | `approval_wait` | runtime:state-engine |
 | 32 | `documentation-and-release-handoff` (state) | pending | blocked | `blocker_detected` | `approval_wait` | runtime:state-engine |
+| 33 | `Review Gate` (gate) | blocked | completed | `decision_approved` | `output_accepted` | human:orchestrator (MC-18 session), for qa |
+| 34 | `Verification Gate` (gate) | blocked | completed | `decision_approved` | `output_accepted` | human:orchestrator (MC-18 session), for qa |
+| 35 | `documentation-and-release-handoff` (state) | blocked | pending | `blocker_cleared` | `enqueued` | runtime:state-engine |
+| 36 | `documentation-and-release-handoff` (state) | pending | leased | `lease_acquired` | `leased` | runtime:invocation-gateway |
+| 37 | `documentation-and-release-handoff` (state) | leased | running | `invocation_started` | `execution_started` | runtime:invocation-gateway |
+| 38 | `documentation-and-release-handoff` (state) | running | completed | `result_accepted` | `output_accepted` | runtime:validation-engine |
+| 39 | `Closure Gate` (gate) | pending | blocked | `awaiting_decision` | `approval_wait` | runtime:state-engine |
+| 40 | `Closure Gate` (gate) | blocked | completed | `decision_approved` | `output_accepted` | human:orchestrator (MC-18 session) |
 
 ## Event Stream
 
@@ -188,6 +203,20 @@ Every persisted work-item transition, in commit order. This is the run's primary
 | E-0057 | `escalation_opened` | `gate::Review Gate` | runtime:state-engine | `approval_wait` | gate work item blocked: awaiting_human_decision |
 | E-0058 | `escalation_opened` | `gate::Verification Gate` | runtime:state-engine | `approval_wait` | gate work item blocked: awaiting_human_decision |
 | E-0059 | `escalation_opened` | `documentation-and-release-handoff` | runtime:state-engine | `approval_wait` | state work item blocked: awaiting_human_decision |
+| E-0060 | `aggregation_completed` | `documentation-and-release-handoff` | runtime:output-aggregator | `output_accepted` | completion package and provenance manifest persisted for 5/6 completed phase(s) |
+| E-0061 | `escalation_resolved` | `gate::Review Gate` | human:orchestrator (MC-18 session), for qa | `output_accepted` | Review Gate approved by qa (evidence: quality-review) |
+| E-0062 | `aggregation_completed` | `documentation-and-release-handoff` | runtime:output-aggregator | `output_accepted` | completion package and provenance manifest persisted for 5/6 completed phase(s) |
+| E-0063 | `escalation_resolved` | `gate::Verification Gate` | human:orchestrator (MC-18 session), for qa | `output_accepted` | Verification Gate approved by qa (evidence: quality-review) |
+| E-0064 | `escalation_resolved` | `documentation-and-release-handoff` | runtime:state-engine | `enqueued` | state work item unblocked |
+| E-0065 | `context_hydrated` | `documentation-and-release-handoff` | runtime:context-loader | `context_hydration_completed` | context slice frozen: 18 member(s), 1 input(s) |
+| E-0066 | `work_item_leased` | `documentation-and-release-handoff` | runtime:invocation-gateway | `leased` | invocation envelope built and leased to the host-subagent adapter in native mode |
+| E-0067 | `invocation_started` | `documentation-and-release-handoff` | runtime:invocation-gateway | `execution_started` | dispatching agent documentation v1.2.0 through host registration agents/documentation.agent.md |
+| E-0068 | `invocation_completed` | `documentation-and-release-handoff` | agent:documentation | `output_accepted` | agent returned status 'succeeded' with 1 artifact ref(s) |
+| E-0069 | `validation_passed` | `documentation-and-release-handoff` | runtime:validation-engine | `output_accepted` | artifact conforms: 34/34 checks passed |
+| E-0070 | `escalation_opened` | `gate::Closure Gate` | runtime:state-engine | `approval_wait` | gate work item blocked: awaiting_human_decision |
+| E-0071 | `aggregation_completed` | `documentation-and-release-handoff` | runtime:output-aggregator | `output_accepted` | completion package and provenance manifest persisted for 6/6 completed phase(s) |
+| E-0072 | `run_completed` | `documentation-and-release-handoff` | runtime:execution-coordinator | `output_accepted` | every workflow phase completed and every gate was decided |
+| E-0073 | `escalation_resolved` | `gate::Closure Gate` | human:orchestrator (MC-18 session) | `output_accepted` | Closure Gate approved by orchestrator (evidence: documentation-and-release-handoff) |
 
 ## Replay Suppression
 
@@ -195,11 +224,7 @@ No repeated call has been made against this run.
 
 ## Open Escalations
 
-| Work item | Blocked reason | Detail |
-|---|---|---|
-| `Review Gate` (gate) | `awaiting_human_decision` | G6-GATE-EVIDENCE: evidence for quality-review is complete; awaiting a decision from ['dev-2-reviewer', 'qa'] |
-| `Verification Gate` (gate) | `awaiting_human_decision` | G6-GATE-EVIDENCE: evidence for quality-review is complete; awaiting a decision from ['qa'] |
-| `documentation-and-release-handoff` (state) | `awaiting_human_decision` | G4-GATE: Review Gate closing quality-review has no recorded decision; owners: ['dev-2-reviewer', 'qa'] |
+None.
 
 ## Residual Items
 

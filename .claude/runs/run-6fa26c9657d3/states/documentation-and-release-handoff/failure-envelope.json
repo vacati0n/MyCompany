@@ -74,5 +74,8 @@
   ],
   "default_fallback_action": "hold the work item blocked and await a human decision",
   "clearing_action": "record the decision on the gate that closes the predecessor named in the detail.",
-  "status": "open"
+  "status": "resolved",
+  "resolved_at": "2026-10-30T02:59:34Z",
+  "resolution": "every guard now passes; the condition the envelope recorded no longer holds",
+  "resolved_by": "runtime:state-engine"
 }

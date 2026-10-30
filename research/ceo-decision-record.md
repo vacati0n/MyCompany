@@ -2780,6 +2780,15 @@ https://s.shopee.vn/4qGnwJJXwI".
    while every hop is an allowed host, at most five hops. A block, sign-in wall or CAPTCHA ends the read with no retry.
 2. No development agent reads this link or any shopee.vn page.
 
+**Outcome (recorded by the orchestrator, 2026-10-30, after quality review).** The read was made once at
+02:47:57 UTC in an isolated app with the switch turned on for it and off right after. There were two requests:
+`s.shopee.vn/4qGnwJJXwI` answered 301 and the one hop was checked and followed, then
+`shopee.vn/opaanlp/89827191/28309604497` answered 200 with 203,445 bytes of HTML. That page carries no product data a
+client gets without running the page's scripts, so the read stopped with `no-product`. Nothing was filled, no image
+was requested, and nothing was retried. The operator path is paste mode. This answers design question Q-006: on real
+pages, paste mode is the expected common path. Record:
+`.claude/runs/run-6fa26c9657d3/states/quality-review/artifacts/orchestrator-browser-and-live-read-record.md`.
+
 **Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `CEO-D-1315`, `D-002`, `D-018`.
 
 ---

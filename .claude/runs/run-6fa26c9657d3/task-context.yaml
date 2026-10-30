@@ -2,8 +2,8 @@ schema: framework.runtime/task-context.v1
 task_id: run-6fa26c9657d3
 command: implement
 workflow: implement-feature v1.0.0
-run_status: WaitingForHuman
-updated_at: '2026-10-30T02:03:26Z'
+run_status: Completed
+updated_at: '2026-10-30T03:06:09Z'
 objective: 'Source: CEO-D-1313 (the CEO''s own decision, 2026-10-27); local://research/ceo-decision-record.md#ceo-d-1313 Issue
   type: Feature Priority: Highest Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, network-egress,
   vietnamese Routed as: /implement (implement-feature) Builds on: MC-17 (src/MediaCompany.Pilot.Web, run run-022d0492a75a,
@@ -57,7 +57,7 @@ relevant_agents:
   - S08
 - phase: documentation-and-release-handoff
   agent: documentation
-  status: blocked
+  status: completed
   required_skills:
   - S11
   - S10
@@ -93,6 +93,12 @@ completed_phases:
   digest: sha256:84db264ae374c03affb0cac24e749bdf
   validation: pass 31/31
   attempts: 1
+- phase: documentation-and-release-handoff
+  agent: documentation
+  artifact: runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md
+  digest: sha256:a9a48c92630c712c5a704dc59ca21cdd
+  validation: pass 34/34
+  attempts: 1
 gates:
 - gate: Scope Gate
   closes: scope-and-acceptance
@@ -111,25 +117,26 @@ gates:
   decided_by: CEO (vuhoangcao)
 - gate: Review Gate
   closes: quality-review
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: qa
+  decided_by: orchestrator (MC-18 session), for qa
 - gate: Verification Gate
   closes: quality-review
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: qa
+  decided_by: orchestrator (MC-18 session), for qa
 - gate: Closure Gate
   closes: documentation-and-release-handoff
-  decision: null
-  owner_role: null
-  decided_by: null
+  decision: approved
+  owner_role: orchestrator
+  decided_by: orchestrator (MC-18 session)
 artifacts:
   scope-and-acceptance: runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md
   execution-planning: runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md
   solution-design-and-risk-assessment: runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md
   implementation: runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md
   quality-review: runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md
+  documentation-and-release-handoff: runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md
 parallel_groups:
 - - scope-and-acceptance
   - execution-planning
@@ -374,13 +381,23 @@ validation_requirements:
     | static | C-001, C-015, C-016, C-017'
   - 'T-014: Fixture host mode starts on 127.0.0.1:47900 with the switch on, prints its ready line, the fixture links an...
     | integration | C-016, C-018'
+  - 'T-015: Program case 063 (review correction CR-001), 14 image-phase stops: 403, 429, 503, 410, a redirect, a redire...
+    | integration | C-006, C-010, C-015, C-017'
+  - 'T-016: Program case 064 (review correction CR-004): a page over 5 MiB with and without a length gives page-too-lar...
+    | integration | C-007, C-008, C-010, C-015, C-017'
+  - 'T-017: Program case 065 (review correction CR-003): 15 links refused with 0 connections (an IDN look-alike in Cyri...
+    | integration | C-006, C-007, C-015, C-017'
+  - 'T-018: Program case 066 (review correction CR-005): POSTs to /api/read, /api/paste, /api/read-confirm and /api/rea...
+    | integration | C-005, C-016, C-017'
+  - 'T-019: Mutation checks of the review corrections, each restored and compared byte for byte afterwards: a planted r...
+    | static | C-010, C-019'
   verification:
   - 'Verification method: The web app and its test program were built. The whole test program ran end to end: the MC-17 cases
     against the built app, and the read...'
-  - 'Commands executed: dotnet build tests/MediaCompany.Pilot.Web.Tests; dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests;
-    MC18_IDLE_SECONDS=600...'
-  - 'Result summary: 14 evidence entries executed, 14 passed, 0 failed. Build: 0 warnings, 0 errors. Web test program: 49
-    of 49 (the 36 MC-17 cases plus program c...'
+  - 'Commands executed: dotnet build tests/MediaCompany.Pilot.Web.Tests; the full program run after the review corrections;
+    dotnet run --no-build --project tests/...'
+  - 'Result summary: 19 evidence entries executed, 19 passed, 0 failed. Build: 0 warnings, 0 errors. Web test program after
+    the review corrections: 53 of 53 (the...'
   - 'Unverified areas: none'
 constraints:
 - 'Business constraints: The CEO carries the terms risk as the individual creator (CEO decision 1313 item 5: Shopee''s partner
@@ -587,8 +604,8 @@ open_questions:
 - 'Q-007: May the SC-34 Browser-pane run use the test program''s fixture host (A-017)? | non-blocking | qa'
 - 'Q-008: Design Gate acceptance of D-001 to D-006, all at Proposed; tech-lead accepts under the producer exclusion r... |
   non-blocking | tech-lead'
-- 'Q-001: Is narrowing program case 008''s networking check to "network types only in ReadSender.cs" accepted as the o...
-  | non-blocking | qa'
+- 'Q-001: Is the fail-closed program case 008 (networking denied everywhere but the exact set ReadSender.cs declares,... |
+  non-blocking | qa'
 - 'Q-002: Is the harness sample with a read and the script verb, with produce covered by program case 042, accepted f... |
   non-blocking | qa'
 - 'Q-001: Accept narrowing the MC-17 networking assertion of case 008 against SC-17 "additions only" (the implementer... |
@@ -977,6 +994,8 @@ affected_areas:
       term: performance
     - source: artifact:solution-design-and-risk-assessment
       term: performance
+    - source: artifact:implementation
+      term: slow
     security:
     - source: artifact:scope-and-acceptance
       term: authorization
@@ -995,6 +1014,7 @@ affected_areas:
   - artifact:solution-design-and-risk-assessment
   - artifact:implementation
   - artifact:quality-review
+  - artifact:documentation-and-release-handoff
 relevant_skills:
   scope-and-acceptance:
     S02: required

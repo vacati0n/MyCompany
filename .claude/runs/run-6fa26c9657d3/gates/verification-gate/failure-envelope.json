@@ -73,5 +73,8 @@
   ],
   "default_fallback_action": "hold the work item blocked and await a human decision",
   "clearing_action": "python .claude/runtime/framework_runtime.py gate --run-id run-6fa26c9657d3 --gate \"Verification Gate\" --decision approve --owner-role <role> --decided-by <who> --rationale <text>",
-  "status": "open"
+  "status": "resolved",
+  "resolved_at": "2026-10-30T02:59:34Z",
+  "resolution": "approved by qa, recorded by orchestrator (MC-18 session), for qa",
+  "resolved_by": "human:orchestrator (MC-18 session), for qa"
 }

@@ -1,0 +1,654 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-06-001",
+  "run_id": "run-6fa26c9657d3",
+  "work_item_id": "run-6fa26c9657d3::documentation-and-release-handoff",
+  "idempotency_key": "sha256:a84482fcdf3cc0e87fd6bb4e2e3613ff",
+  "state_id": "documentation-and-release-handoff",
+  "phase_index": 6,
+  "agent_id": "documentation",
+  "agent_version": "1.2.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/documentation.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/documentation/manifest.yaml",
+    "load_order": [
+      "agents/documentation/system.md",
+      "agents/documentation/identity.md",
+      "agents/documentation/reasoning.md",
+      "agents/documentation/execution.md",
+      "agents/documentation/output.md",
+      "agents/documentation/quality.md",
+      "agents/documentation/examples.md"
+    ],
+    "module_digests": {
+      "agents/documentation/system.md": "sha256:02237376afed5750b08312579ed1e8e2",
+      "agents/documentation/identity.md": "sha256:e2ab389529729dd0031c5905ab91681e",
+      "agents/documentation/reasoning.md": "sha256:7854ad87b16b12dc4ad3012eee8ce22c",
+      "agents/documentation/execution.md": "sha256:b71cbe6ebd9942f85eeb0c2e31995804",
+      "agents/documentation/output.md": "sha256:57d68fa8d298f98fe3bbe4b0614a8e3b",
+      "agents/documentation/quality.md": "sha256:aecb71ada9af733446fbb8643cf6b376",
+      "agents/documentation/examples.md": "sha256:8562232c2e0da475881d3ed6e8c5e366"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/documentation/system.md",
+        "agents/documentation/reasoning.md",
+        "agents/documentation/output.md",
+        "agents/documentation/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/documentation/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/documentation/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/documentation/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 45513,
+      "full_bytes": 90740
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "documentation",
+      "release-communication"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S11",
+        "proficiency": "Primary",
+        "registryIdentifier": "observability-logging",
+        "specificationPath": "skills/logging/observability-logging.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S10",
+        "proficiency": "Primary",
+        "registryIdentifier": "git-collaboration",
+        "specificationPath": "skills/git/git-collaboration.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S02",
+        "proficiency": "Secondary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S07",
+        "proficiency": "Secondary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S03",
+        "proficiency": "Secondary",
+        "registryIdentifier": "engineering-playbook",
+        "specificationPath": "skills/dotnet/engineering-playbook.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S01",
+        "proficiency": "Secondary",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Secondary",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S11",
+        "registryIdentifier": "observability-logging",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S10",
+        "registryIdentifier": "git-collaboration",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S12",
+        "registryIdentifier": "error-handling-strategy",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S11",
+      "displayName": "Logging and Observability",
+      "specificationPath": "skills/logging/observability-logging.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S10",
+      "displayName": "Git Collaboration",
+      "specificationPath": "skills/git/git-collaboration.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "area security triggered by 'authorization' in artifact:scope-and-acceptance",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "implementation-report",
+      "validation-report",
+      "review-package",
+      "deployment-status",
+      "technical-recommendation",
+      "scope-definition",
+      "technical-design",
+      "execution-plan",
+      "bug-analysis",
+      "monitoring-health-record",
+      "final-change-summary",
+      "stakeholder-list",
+      "verification-report",
+      "release-checklist",
+      "known-issues",
+      "risk-profile",
+      "closure-context",
+      "communication-requirements",
+      "existing-documentation",
+      "architecture-context"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "review-package",
+        "reference": "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-18-shopee-read-link-27d13c/.claude/runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+        "text": "```yaml\nreviewPackage:\n  packageId: RP-2026-003\n  reviewReference: run-6fa26c9657d3 quality-review; commit 6ab01fb on 7bafc64 on the MC-18 session branch (git diff 7bafc64..6ab01fb -- src tests)\n  sourceInputs:\n    - type: implementation-report\n      reference: runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md (IR-2026-0035)\n    - type: feature-request\n      reference: runs/inputs/mc-18-feature-request.md\n    - type: business-intent\n      reference: runs/inputs/mc-18-business-intent.md\n    - type: code-diff\n      reference: git diff 7bafc64..6ab01fb -- src tests\n    - type: test-evidence\n      reference: inline (dotnet test tests/MediaCompany.Pilot.Tests and dotnet run --project tests/MediaCompany.Pilot.Web.Tests, executed in this run)\n    - type: design-reference\n      reference: runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md (decisions D-001 to D-014, risk table)\n    - type: design-reference\n      reference: runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md and runs/run-6fa26c9657d3/task-context.yaml (acceptance criteria SC-01 to SC-34)\n    - type: design-reference\n      reference: research/ceo-decision-record.md, entries CEO-D-1313 to CEO-D-1316\n  producedBy: dev-2-reviewer\n  agentVersion: 1.1.0\n  schemaVersion: 1.0.0\n  status: complete\n  verdict: approve-with-corrections\n  inputDigest: sha256:9f14cc71a90b52b481930224465da86c\n  contextDigest: sha256:75bb3dd26a2c83c8267d5f109eb9d6fe\n```\n\n## Metadata\n\n- Review ID: RP-2026-003\n- Reviewer: dev-2-reviewer\n- Change under review: commit 6ab01fb (MC-18 read from link at step 1: ReadLink, ReadSender, ProductText, FillRecord, ProductRead, routes, page, cases 050 to 062, case 008 narrowed) on 7bafc64, run-6fa26c9657d3, change account IR-2026-0035 by dev-1-implement\n- Review date: 2026-10-30\n\n## Review Scope\n\n- In scope: every changed file under src/MediaCompany.Pilot.Web (ReadLink.cs, ReadSender.cs, ProductText.cs, FillRecord.cs, ProductRead.cs, Routes.cs, Program.cs, WebContext.cs, Workspace.cs, the project file, Pages/app.js, Pages/index.html) and under tests/MediaCompany.Pilot.Web.Tests (ReadCases.cs, ReadFixture.cs, UnitCases.cs case 008, the program registration), reviewed security first against the host allow-list, the per-hop rule, request identity, stop behavior, image bounds, the test seam, the MC-17 guard, the switch, the loopback bind, toolchain immutability, the MC-16 check and the confirmation rule\n- Out of scope: the toolchain projects src/MediaCompany.Pilot and tests/MediaCompany.Pilot.Tests, safe because git diff --quiet 7bafc64..6ab01fb over both reported no change; framework run evidence under .claude/runs, not part of the change; any live read against shopee.vn, which this role may not perform and which acceptance criteria SC-33 and SC-34 assign to orchestrator evidence (recorded as an open question); the Vietnamese wording of operator messages, judged by qa\n- Evidence reviewed: the full diff 7bafc64..6ab01fb -- src tests; IR-2026-0035 sections Implementation Summary, Change Set, Test Evidence, Verification Results, Deviations and Tradeoffs, Open Questions; technical-design.md decisions D-001 to D-014 and its risk table; task-context.yaml acceptance criteria and deviations; the two test logs executed in this run; git diff --quiet over the toolchain; git log author of 6ab01fb\n\n## Findings\n\n| ID | Severity | Category | Location | Requirement | Finding | Correction Request | Status |\n|---|---|---|---|---|---|---|---|\n| `F-001` | high | correctness | src/MediaCompany.Pilot.Web/ProductRead.cs:84 | Design D-010 (a hop to a sign-in path, a CAPTCHA or sign-in page and an over-size answer each end the read with no further request); CEO-D-1313 item 2; SC-12, SC-13 | In the image phase a 3xx answer (lines 84 to 88), a 200 answer that is not PNG or JPEG such as a CAPTCHA or sign-in page (lines 91 to 95), and image-too-large (line 103) are skipped and the loop requests the next image, so a block seen on an image request is followed by up to 19 further requests | `CR-001` | open |\n| `F-002` | medium | test-adequacy | tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs:246 | Design D-001 (one outbound client, in ReadSender.cs); SC-17 | Narrowed case 008 checks a fixed deny-list and a regex of three type names plus \"new Socket(\"; TcpClient, ClientWebSocket, Dns, Ping or a namespace-qualified Socket constructor in another file would pass, so the guard no longer fails closed | `CR-002` | open |\n| `F-003` | medium | test-adequacy | tests/MediaCompany.Pilot.Web.Tests/ReadCases.cs:66 | Design D-006 (host and hop rule) and the design's risks on look-alike hosts and non-public addresses; SC-24, SC-21 | No executed check covers an IDN look-alike host, a trailing-dot or upper-case host, an IPv6 literal, an explicit :443, an affiliate subdomain, an http hop (hop-not-secure), a hop to a /verify/ path, or the connect-time non-public address refusal (address-not-public); the code handles each correctly on inspection | `CR-003` | open |\n| `F-004` | medium | test-adequacy | tests/MediaCompany.Pilot.Web.Tests/ReadCases.cs:203 | Design D-010 and D-014 (stops and bounds) | No executed check covers an image-phase stop, page-too-large, image-too-large, not-html, status-unexpected or read-time-over (the 120 s click bound); the nine stops of case 053 are page-phase only | `CR-004` | open |\n| `F-005` | medium | test-adequacy | tests/MediaCompany.Pilot.Web.Tests/ReadCases.cs:49 | C-023 (a read starts only from a guarded request from the app's own page); the design's cross-site read risk names a foreign-Origin fixture case as its mitigation | No case sends a foreign-Origin or token-less POST to /api/read, /api/paste, /api/read-confirm or /api/read-switch; coverage rests on the MC-17 middleware at src/MediaCompany.Pilot.Web/Routes.cs:61 applying to all routes, confirmed by inspection only | `CR-005` | open |\n| `F-006` | low | packaging | .claude/runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md:87 | identity.md decision rule 5 (an unexercised claim is recorded as unverified) | The change account states \"Unverified areas: none\" while the behaviors listed in F-003, F-004 and F-005 have no executed check | `CR-006` | open |\n\n## Severity Summary\n\n- Critical: 0\n- High: 1\n- Medium: 4\n- Low: 1\n\n## Standards and Architecture Conformance\n\n- Coding standards: S03 .NET Engineering and S12 Error Handling applied: conforms; nullable flow, disposal of the per-click stack and semaphore release in finally are correct, every regex carries a timeout, structured-data depth is bounded at 32, the switch file fails closed to off\n- Architecture rules: S01 Architecture Foundations and design D-001 to D-014 applied: conforms except F-001 (D-010 in the image phase) and F-002 (D-001 guard strength); the read lives in the web app behind the guard, one read at a time via ReadGate, toolchain byte-unchanged, no PackageReference and no media file added\n- Security criteria: S09 Security Engineering, CEO-D-1313 items 1 to 3, design D-002, D-005, D-006 applied: conforms except F-001. Confirmed: host rule runs before every connect and every hop with at most 5 hops (cases 050, 052); no cookie store, no proxy, no automatic redirect, no decompression, no propagated trace header, only User-Agent \"MediaCompanyPilot/1.0 (doc-trang-san-pham)\" and Accept sent (cases 051, 059); connect-time refusal of non-public addresses (inspection, ReadSender.cs:238); page-phase stops with no further request (case 053); generated image names, signature sniffing, 5 MiB and 40 MiB bounds, traversal refused (cases 051, 054); test seam internal and unreachable from the shipped entry point (case 060, Program.cs passes a null transport); listener on 127.0.0.1 (case 061); switch off by default, damaged file reads as off, paste works while off (case 057); MC-16 check runs before the confirmation rule (case 058); price and description shown only, never saved, every filled field confirmed before save (case 055)\n- Exceptions requested: Two, owned by qa: narrowing the MC-17 networking assertion of case 008 against SC-17 \"additions only\" (deviation entry 1 of IR-2026-0035), and running read plus script rather than read plus produce in the case 061 harness against SC-26 (deviation entry 3); see Q-001 and Q-002\n\n## Test Adequacy Assessment\n\n- Test evidence reviewed: executed in this run: dotnet test tests/MediaCompany.Pilot.Tests gave 251 passed, 0 failed, 251 total; dotnet run --project tests/MediaCompany.Pilot.Web.Tests gave \"RESULT: 49 passed, 0 failed, 49 run (251 s)\" with cases 001 to 008, 010 to 028, 030 to 035, 040 to 042 and 050 to 062 each PASS; git status identical before and after the runs\n- Coverage of changed behavior: link admission and the six disallowed host kinds, affiliate, two links, empty and port (050); good read and request identity (051, 059); hops and the six-hop chain (052); nine page-phase stops (053); image names and traversal (054); confirmation and save rule (055); paste mode (056); switch (057); MC-16 order (058); seam (060); harness with read plus script, 0 member sockets (061); browser driver (062); toolchain process sockets with produce (042)\n- Gaps requiring new tests: the image-phase stop behaviors of F-001 once corrected; a non-ReadSender networking reference failing case 008 (F-002); the host and hop edge cases and address-not-public of F-003; image-phase stop, page-too-large, image-too-large, not-html, status-unexpected and read-time-over of F-004; foreign-Origin and token-less POSTs to the four new POST routes (F-005)\n\n## Correction Requests\n\n| ID | Addresses | Required change | Blocking | Owner |\n|---|---|---|---|---|\n| `CR-001` | `F-001` | In the image phase, a redirect answer, an answer the page markers recognise as a CAPTCHA or sign-in page, and every other D-010 stop end the read with no further request, keeping the filled facts and naming the remaining images, shown by an executed fixture case counting requests | yes | dev-1-implement |\n| `CR-002` | `F-002` | Case 008 fails when any source file other than ReadSender.cs references an outbound networking type, or the app references a networking type outside the read sender's declared set | no | dev-1-implement |\n| `CR-003` | `F-003` | Executed checks cover the host and hop edge cases and the non-public address refusal named in F-003 | no | dev-1-implement |\n| `CR-004` | `F-004` | Executed checks cover each stop and bound named in F-004 with zero further requests after the stop | no | dev-1-implement |\n| `CR-005` | `F-005` | An executed case shows each new POST route refuses a foreign Origin and a missing token without starting a read | no | dev-1-implement |\n| `CR-006` | `F-006` | The change account names the behaviors with no executed check as unverified | no | dev-1-implement |\n\n## Residual Risk\n\n- Accepted risk: None identified.\n- Unmitigated risk: the image-host suffix rule accepts any host ending .susercontent.com (risk R-004 of IR-2026-0035, no acceptance recorded); the non-public address check does not name the IPv6 transition prefixes 64:ff9b::/96 and 2002::/16; a read already running continues up to the 120 s click bound after the switch is turned off; real-page yield rests on assumption A-002 until the single live read; no acceptor is recorded for these\n- Monitoring required: the read log doc-trang.log (host, path, status, bytes, code) reviewed after the single live read named by CEO-D-1316 and during the pilot for 403, 429 and captcha codes\n\n## Verdict\n\n- Decision: approve-with-corrections\n- Rationale: Stage 8 first matching row is \"any high finding is open\": F-001 is open at high with blocking correction CR-001, test evidence was executed and reviewed, so the package is complete and approval carries corrections\n- Blocking findings outstanding: F-001\n- Readiness recommendation: Recommended to the Verification Gate owner as not ready until CR-001 closes with an executed case; CR-002 to CR-006 are recommended before release; the gate decision rests with its owner per the gate matrix\n\n## Open Questions\n\n| ID | Question | Blocking | Owner | Affects |\n|---|---|---|---|---|\n| `Q-001` | Accept narrowing the MC-17 networking assertion of case 008 against SC-17 \"additions only\" (the implementer's first open question)? Recommendation: accept, since design D-001 accepted at the Design Gate makes the old zero-client assertion unsatisfiable and deleting it would lose the guard; condition it on CR-002 | no | qa | F-002, SC-17 |\n| `Q-002` | Accept case 061 running read plus script, with produce covered by case 042, against SC-26 (the implementer's second open question)? Recommendation: accept: toolchain byte-unchanged, case 008 shows no app reference from it, case 042 on this build shows 0 toolchain-owned rows with produce, case 061 shows 0 member rows with read plus script; the gap is only that the two never share one harness window | no | qa | SC-26 |\n| `Q-003` | Who records the SC-34 Browser-pane run and the SC-33 single live read named by CEO-D-1316? Both are pending orchestrator evidence and were not performed here | yes | orchestrator | Verification Gate; not this verdict |",
+        "digest": "sha256:3f7fbb0f257e3a70f937e267c1151033",
+        "produced_by": "quality-review"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the account of what was delivered: an implementation report for the change set itself, a validation report for what was proven about it, a review package for a `review-pull-request` run, a deployment status for the `communication-and-post-release` phase, which publishes after a release has landed, or a technical recommendation for the `publication` phase of investigate and the `findings-publication` phase of research, which publish on the `findings` basis what an investigation concluded and is the artifact both phases' predecessor hands over. Without one there is nothing to publish from, and publishing anyway would mean describing a system from this agent's own reading of what it was supposed to become."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "review-package",
+      "reference": "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+      "produced_by": "quality-review",
+      "artifact": "review-package.md",
+      "bytes": 13194,
+      "sections": {
+        "read_first": [
+          "Findings",
+          "Correction Requests",
+          "Verdict",
+          "Open Questions"
+        ],
+        "on_demand": [
+          "Review Scope",
+          "Severity Summary",
+          "Standards and Architecture Conformance",
+          "Test Adequacy Assessment",
+          "Residual Risk"
+        ]
+      }
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-6fa26c9657d3/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:9e5281efa3b9abe3ca39a1341f1fb150",
+    "bytes": 77204,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database",
+        "performance",
+        "security"
+      ],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "documentation-and-release-handoff"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-30T02:59:35Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/release-note.md",
+        "digest": "sha256:87c753809d878baa1942cbbdee5c8c20",
+        "supplies": null,
+        "bytes": 3282,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/review-package.md",
+        "digest": "sha256:e376c4fa9896aaa7f14a5f16cbf136f4",
+        "supplies": null,
+        "bytes": 5268,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/implementation-report.md",
+        "digest": "sha256:d0616790c1cb2c658ccc70b61ebb4a3e",
+        "supplies": null,
+        "bytes": 5809,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "skills/logging/observability-logging.md",
+        "digest": "sha256:f1e4d272b21f98a691f848748ebcffd3",
+        "supplies": null,
+        "bytes": 1208,
+        "read": "required",
+        "read_reason": "skill S11 is required for this phase"
+      },
+      {
+        "path": "skills/git/git-collaboration.md",
+        "digest": "sha256:865c6c5542a6c4490fbcce4163b2d445",
+        "supplies": null,
+        "bytes": 1252,
+        "read": "required",
+        "read_reason": "skill S10 is required for this phase"
+      },
+      {
+        "path": "skills/error-handling/error-handling-strategy.md",
+        "digest": "sha256:f079a0cde78d28036a798b7be398579f",
+        "supplies": null,
+        "bytes": 1333,
+        "read": "required",
+        "read_reason": "skill S12 is required for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:4a5bfc355c7a1d63a52636724d0108fe",
+    "input_digest": "sha256:3f7fbb0f257e3a70f937e267c1151033",
+    "inputs": [
+      {
+        "type": "review-package",
+        "reference": "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-18-shopee-read-link-27d13c/.claude/runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+        "digest": "sha256:3f7fbb0f257e3a70f937e267c1151033"
+      }
+    ],
+    "unnarrowed": [
+      "runtime/README.md",
+      "skills/error-handling/error-handling-strategy.md",
+      "skills/git/git-collaboration.md",
+      "skills/logging/observability-logging.md",
+      "templates/implementation-report.md",
+      "templates/release-note.md",
+      "templates/review-package.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "skills/error-handling/error-handling-strategy.md",
+      "skills/git/git-collaboration.md",
+      "skills/logging/observability-logging.md",
+      "templates/implementation-report.md",
+      "templates/release-note.md",
+      "templates/review-package.md"
+    ],
+    "read_on_demand": [
+      "runtime/README.md",
+      "workflows/implement-feature.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 181536,
+    "bytes_required": 19701,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:5fe9140cf7a04677697495bacd975b6c",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md",
+      "runs/run-6fa26c9657d3/states/documentation-and-release-handoff/result-envelope.json"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": false,
+      "purpose": "none. Every fact this agent publishes comes from a supplied artifact, and a fact obtained by running a command would be this agent producing evidence rather than communicating it.",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "any command that modifies production source or committed run evidence",
+        "repository history rewriting, publishing, or release actions",
+        "reproducing a test or validation result, which belongs to qa"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution",
+      "external system, repository, or ticketing access",
+      "write, repair, or refactor production code",
+      "author or amend a technical design, an architecture decision, or a structural constraint",
+      "define, widen, or narrow product scope or acceptance criteria",
+      "award, withhold, or restate a validation verdict as though this agent reached it",
+      "record a merge, release, or deployment decision",
+      "publish a statement the supplied evidence does not support",
+      "omit, soften, or defer a breaking change a supplied input declares",
+      "carry forward prior-release content the delivered change made false",
+      "resolve an engineering gap rather than returning it to the role that owns it",
+      "decide a gate that assesses evidence this agent produced",
+      "modify committed run evidence or a governance record",
+      "access external systems directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "describe delivered behavior from the implementation and validation evidence supplied",
+        "draft release notes, change summaries, and closure communication packages",
+        "record usage, limitations, known issues, and troubleshooting guidance",
+        "state the compatibility consequence a declared contract change carries",
+        "identify documentation the delivered change made stale, and propose its correction",
+        "name the audience a communication was addressed to and the handoff it carries",
+        "maintain the trace from each published statement to the artifact that supports it",
+        "record an unresolved engineering question as an open question against its owning role"
+      ],
+      "prohibited": [
+        "write, repair, or refactor production code",
+        "author or amend a technical design, an architecture decision, or a structural constraint",
+        "define, widen, or narrow product scope or acceptance criteria",
+        "award, withhold, or restate a validation verdict as though this agent reached it",
+        "record a merge, release, or deployment decision",
+        "publish a statement the supplied evidence does not support",
+        "omit, soften, or defer a breaking change a supplied input declares",
+        "carry forward prior-release content the delivered change made false",
+        "resolve an engineering gap rather than returning it to the role that owns it",
+        "decide a gate that assesses evidence this agent produced",
+        "modify committed run evidence or a governance record",
+        "access external systems directly"
+      ],
+      "repositoryWrites": {
+        "allowed": false,
+        "scope": "none. This agent writes its own artifact and its result envelope, and nothing else. Product documentation living in the repository is proposed as content inside the artifact and applied by the role that owns the file, so a documentation change never travels as an unreviewed write.",
+        "rationale": "This agent's authority is over what is said about a change, never over the change itself. Writing to the repository would let a publication step alter the delivered behavior it exists to describe, and the resulting document would then be accurate about a system this agent had just modified."
+      },
+      "commandExecution": {
+        "allowed": false,
+        "purpose": "none. Every fact this agent publishes comes from a supplied artifact, and a fact obtained by running a command would be this agent producing evidence rather than communicating it.",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "any command that modifies production source or committed run evidence",
+          "repository history rewriting, publishing, or release actions",
+          "reproducing a test or validation result, which belongs to qa"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical inputs and an identical context snapshot must produce the same published statements, the same known-issue set, the same compatibility statement, the same declared release verdict, and the same declared artifact status.",
+      "identifierSchemes": {
+        "knownIssues": "K-<zero-padded-sequence>"
+      },
+      "orderingRule": "Known issues keep the order of the source that recorded them, so a supplied defect list and the issues published from it can be read side by side.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied evidence, release context, or repository context."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "release-note.md",
+    "artifact_path": "runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md",
+    "template_ref": "templates/release-note.md",
+    "contract_ref": "agents/documentation/output.md",
+    "quality_ref": "agents/documentation/quality.md",
+    "validator": "release_note_validator",
+    "result_envelope_path": "runs/run-6fa26c9657d3/states/documentation-and-release-handoff/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-30T02:59:35Z",
+  "model_tier": {
+    "tier": "light",
+    "host_hint": "haiku",
+    "basis": "declared light for implement-feature/documentation-and-release-handoff in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 90740,
+    "modules_core_bytes": 45513,
+    "slice_all_bytes": 181536,
+    "slice_required_bytes": 19701,
+    "inputs_bytes": 0,
+    "upstream_full_bytes": 13300,
+    "upstream_read_first_bytes": 5715,
+    "task_context_bytes": 77204,
+    "fixed_bytes": 13296,
+    "legacy_estimate_bytes": 298872,
+    "progressive_estimate_bytes": 161429,
+    "legacy_estimate_tokens": 74718,
+    "progressive_estimate_tokens": 40357,
+    "savings_pct": 46.0
+  }
+}

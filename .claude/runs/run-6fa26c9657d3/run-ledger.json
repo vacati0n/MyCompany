@@ -4,10 +4,10 @@
   "command_id": "implement",
   "workflow_id": "implement-feature",
   "workflow_version": "1.0.0",
-  "status": "WaitingForHuman",
+  "status": "Completed",
   "input_digest": "sha256:cdd6a3089565e711536549f31b6982a6",
   "created_at": "2026-10-27T04:12:08Z",
-  "updated_at": "2026-10-30T02:03:26Z",
+  "updated_at": "2026-10-30T03:06:09Z",
   "states": {
     "scope-and-acceptance": {
       "status": "completed",
@@ -224,20 +224,42 @@
       "attempts_superseded": 0
     },
     "documentation-and-release-handoff": {
-      "status": "blocked",
-      "queue_status": "Blocked",
+      "status": "completed",
+      "queue_status": "Completed",
       "owner_agent_id": "documentation",
-      "attempt": 0,
+      "attempt": 1,
       "attempts_lost": 0,
-      "attempts_charged": 0,
+      "attempts_charged": 1,
       "max_attempts": 3,
       "available_at": null,
-      "idempotency_key": null,
-      "artifact_path": null,
-      "blocked_reason": "awaiting_human_decision",
-      "failure_class": "gate-approval-required",
-      "state_ledger": null,
-      "validation": null,
+      "idempotency_key": "sha256:a84482fcdf3cc0e87fd6bb4e2e3613ff",
+      "artifact_path": "runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md",
+      "blocked_reason": null,
+      "failure_class": null,
+      "state_ledger": "runs/run-6fa26c9657d3/states/documentation-and-release-handoff/state-ledger.json",
+      "validation": {
+        "result": "pass",
+        "checksRun": 34,
+        "checksPassed": 34,
+        "blockingFailures": 0,
+        "correctableFailures": 0,
+        "notMachineCheckable": 3,
+        "counts": {
+          "sections": 7,
+          "status": "complete",
+          "identifiers": {
+            "K": 16
+          },
+          "tableRows": {
+            "Known Issues": 16
+          },
+          "releaseVerdict": "handed-off",
+          "communicationBasis": "release-handoff",
+          "knownIssues": 16,
+          "version": "0.0.0+58a22c5"
+        },
+        "undeclaredSideEffects": []
+      },
       "attempts_superseded": 0
     }
   },
@@ -298,12 +320,12 @@
         "qa"
       ],
       "producer_agent": "dev-2-reviewer",
-      "decision": null,
-      "owner_role": null,
-      "decided_by": null,
-      "rationale": null,
-      "evidence_ref": null,
-      "decided_at": null,
+      "decision": "approved",
+      "owner_role": "qa",
+      "decided_by": "orchestrator (MC-18 session), for qa",
+      "rationale": "RP-2026-003 approve-with-corrections; CR-001 (blocking) to CR-006 applied in 58a22c5 with executed cases 063-066 and mutation checks. Q-001 accepted (case 008 fails closed after CR-002); Q-002 accepted (case 061 read+script, produce covered by case 042, toolchain byte-unchanged). Rerun at 58a22c5: pilot 251/251, web 53/53. src/MediaCompany.Pilot unchanged in every MC-18 commit.",
+      "evidence_ref": ".claude/runs/run-6fa26c9657d3/states/quality-review/artifacts/review-corrections.md",
+      "decided_at": "2026-10-30T02:59:23Z",
       "decision_history": []
     },
     "Verification Gate": {
@@ -313,12 +335,12 @@
         "qa"
       ],
       "producer_agent": "dev-2-reviewer",
-      "decision": null,
-      "owner_role": null,
-      "decided_by": null,
-      "rationale": null,
-      "evidence_ref": null,
-      "decided_at": null,
+      "decision": "approved",
+      "owner_role": "qa",
+      "decided_by": "orchestrator (MC-18 session), for qa",
+      "rationale": "SC-34 Browser-pane run on the fixture host recorded (short-link read filled 4 fields, 4 rows, 5 images; blocked page stopped access-refused with no retry and opened paste; paste filled 2 fields, 4 rows). SC-33 single live read on the CEO-named link (CEO-D-1316): 2 requests, both shopee.vn hosts, stopped no-product, nothing filled, no retry, switch off afterwards; answers Q-006. Low-severity note O-1 (fixture-host switch display) recorded. Rerun at 58a22c5: pilot 251/251, web 53/53.",
+      "evidence_ref": ".claude/runs/run-6fa26c9657d3/states/quality-review/artifacts/orchestrator-browser-and-live-read-record.md",
+      "decided_at": "2026-10-30T02:59:34Z",
       "decision_history": []
     },
     "Closure Gate": {
@@ -329,37 +351,37 @@
         "documentation"
       ],
       "producer_agent": "documentation",
-      "decision": null,
-      "owner_role": null,
-      "decided_by": null,
-      "rationale": null,
-      "evidence_ref": null,
-      "decided_at": null,
+      "decision": "approved",
+      "owner_role": "orchestrator",
+      "decided_by": "orchestrator (MC-18 session)",
+      "rationale": "All six phases completed and every gate decided. Release note RN-2026-018 validated; known issues K-001..K-016 recorded. Live read (CEO-D-1316) done once: no-product, paste mode is the common path. Operator guide pilot-affiliate-vn/mc-18/01-huong-dan-doc-trang.md written and the MC-17 guide header and section 9 corrected per the release note's stale-content finding. Tests at 58a22c5: pilot 251/251, web 53/53. Commit, push and compare link follow as orchestrator closing acts.",
+      "evidence_ref": ".claude/runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md",
+      "decided_at": "2026-10-30T03:06:09Z",
       "decision_history": []
     }
   },
   "summary": {
     "run_id": "run-6fa26c9657d3",
-    "run_status": "WaitingForHuman",
+    "run_status": "Completed",
     "phases": 6,
-    "completed": 5,
-    "blocked": 1,
+    "completed": 6,
+    "blocked": 0,
     "failed": 0,
     "pending": 0,
     "retrying": 0,
     "active": 0,
-    "transitions": 32,
+    "transitions": 40,
     "replays_suppressed": 0
   },
   "recovery": {
     "ledger": "runs/run-6fa26c9657d3/recovery-ledger.json",
-    "classifications": 9,
-    "open": 3,
-    "resolved": 6,
+    "classifications": 10,
+    "open": 0,
+    "resolved": 10,
     "retries_scheduled": 1,
     "by_failure_class": {
       "output-schema-failure": 1,
-      "gate-approval-required": 8
+      "gate-approval-required": 9
     },
     "retry_profile": {
       "max_attempts": 3,
