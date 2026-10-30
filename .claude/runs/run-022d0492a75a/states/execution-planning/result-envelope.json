@@ -1,0 +1,125 @@
+{
+  "invocation_id": "inv-022d0492a75a-02-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md"
+  ],
+  "structured_output": {
+    "attempt": 2,
+    "pass_kind": "repair",
+    "plan_status": "complete",
+    "counts": {
+      "statements": 21,
+      "assumptions": 11,
+      "risks": 18,
+      "tasks": 28,
+      "edges": 54,
+      "waves": 17,
+      "open_questions": 3
+    },
+    "repairs": [
+      {
+        "finding": "V4.1 / V4.8 (Q5.1, Q5.6)",
+        "cause": "plan_validator field regex '\\s*:\\s*(.*)$' lets '\\s*' cross the newline after 'Acceptance Criteria:', so the first nested bullet is captured as the field value and only later bullets are counted; a task with exactly one criterion therefore reads as having none",
+        "repair": "one genuine second criterion added to each of the three single-criterion tasks, each tracing to S-013 already in the task's trace: T-006, T-013 and T-016 now carry an SC-20 Vietnamese-screen criterion (T-016 also keeps the toolchain verify line unchanged beside its Vietnamese label)",
+        "tasks_changed": ["T-006", "T-013", "T-016"]
+      },
+      {
+        "finding": "V5.1 (Q6.2)",
+        "cause": "the 8.2 Responsible party cells were worded differently from the external From cells of 8.1, so the exact-match lookup found no party for the six external and policy-gate edges",
+        "repair": "the four 8.2 Responsible party cells reworded to equal the 8.1 From names exactly: 'CEO (owner of the unmerged MC-16 branch)', 'CEO (Design Gate decision)', 'CEO (answer to Q-001)', 'CEO (operator machine installs)'; the last row's What is needed cell keeps 'owner of the operator machine' as its opening words; no edge, task, wave or identifier changed",
+        "edges_resolved": [
+          "CEO (owner of the unmerged MC-16 branch) -> T-001",
+          "CEO (Design Gate decision) -> T-017",
+          "CEO (Design Gate decision) -> T-023",
+          "CEO (answer to Q-001) -> T-014",
+          "CEO (operator machine installs) -> T-026",
+          "CEO (operator machine installs) -> T-025"
+        ]
+      }
+    ],
+    "briefing_discrepancy": "the orchestrator briefing called V4.1 the only failed check; the validation report and the binding dispatch prompt list three Blocking failures (V4.1, V4.8, V5.1); all three were repaired, and V4.8 shares V4.1's cause",
+    "unchanged": "metadata block and digests, all section text other than the three task criteria and the four 8.2 party cells, all identifiers (no renumbering, no compaction), all 54 edges, all 17 waves",
+    "recomputed_topological_order": [
+      "T-001", "T-014",
+      "T-002",
+      "T-017", "T-023",
+      "T-020", "T-026",
+      "T-018",
+      "T-003",
+      "T-005", "T-006", "T-007",
+      "T-008",
+      "T-009",
+      "T-010",
+      "T-011",
+      "T-012", "T-013",
+      "T-015",
+      "T-016",
+      "T-004", "T-019", "T-021", "T-022", "T-024", "T-025",
+      "T-027",
+      "T-028"
+    ],
+    "recomputed_waves": {
+      "1": ["T-001", "T-014"],
+      "2": ["T-002"],
+      "3": ["T-017", "T-023"],
+      "4": ["T-020", "T-026"],
+      "5": ["T-018"],
+      "6": ["T-003"],
+      "7": ["T-005", "T-006", "T-007"],
+      "8": ["T-008"],
+      "9": ["T-009"],
+      "10": ["T-010"],
+      "11": ["T-011"],
+      "12": ["T-012", "T-013"],
+      "13": ["T-015"],
+      "14": ["T-016"],
+      "15": ["T-004", "T-019", "T-021", "T-022", "T-024", "T-025"],
+      "16": ["T-027"],
+      "17": ["T-028"]
+    },
+    "quality_checks": {
+      "check_set": "agents/planner/quality.md (planner 1.0.0)",
+      "run": 70,
+      "passed": 70,
+      "results": {
+        "Q1.1": "pass", "Q1.2": "pass", "Q1.3": "pass", "Q1.4": "pass", "Q1.5": "pass", "Q1.6": "pass", "Q1.7": "pass",
+        "Q2.1": "pass", "Q2.2": "pass", "Q2.3": "pass", "Q2.4": "pass", "Q2.5": "pass", "Q2.6": "pass", "Q2.7": "pass", "Q2.8": "pass",
+        "Q3.1": "pass", "Q3.2": "pass", "Q3.3": "pass", "Q3.4": "pass",
+        "Q4.1": "pass", "Q4.2": "pass", "Q4.3": "pass", "Q4.4": "pass", "Q4.5": "pass",
+        "Q5.1": "pass", "Q5.2": "pass", "Q5.3": "pass", "Q5.4": "pass", "Q5.5": "pass", "Q5.6": "pass", "Q5.7": "pass", "Q5.8": "pass", "Q5.9": "pass", "Q5.10": "pass",
+        "Q6.1": "pass", "Q6.2": "pass", "Q6.3": "pass", "Q6.4": "pass", "Q6.5": "pass", "Q6.6": "pass", "Q6.7": "pass", "Q6.8": "pass",
+        "Q7.1": "pass", "Q7.2": "pass", "Q7.3": "pass", "Q7.4": "pass", "Q7.5": "pass", "Q7.6": "pass",
+        "Q8.1": "pass", "Q8.2": "pass", "Q8.3": "pass", "Q8.4": "pass", "Q8.5": "pass",
+        "Q9.1": "pass", "Q9.2": "pass", "Q9.3": "pass", "Q9.4": "pass", "Q9.5": "pass", "Q9.6": "pass", "Q9.7": "pass",
+        "Q10.1": "pass", "Q10.2": "pass", "Q10.3": "pass", "Q10.4": "pass", "Q10.5": "pass",
+        "Q11.1": "pass", "Q11.2": "pass", "Q11.3": "pass", "Q11.4": "pass", "Q11.5": "pass"
+      },
+      "basis": "repair pass: checks touched by the repair (Q5.1, Q5.6, Q6.2, Q6.7, Q8.3, Q11.1, Q11.2) re-run against the repaired artifact, including a hand trace of the validator's criteria parser over the three tasks and an exact-string match of the six external From cells against 8.2; all other checks carried from attempt 1, whose validator run passed every check except V4.1, V4.8 and V5.1, on content this pass did not change"
+    },
+    "closure": {
+      "forward": "21 of 21 in-scope statements map to a task",
+      "backward": "28 of 28 tasks trace to a statement or assumption",
+      "lateral": "all risk, assumption, edge and question references resolve; 6 of 6 external edges resolve to an 8.2 party"
+    },
+    "module_loading_note": "repair-pass loading per the dispatch prompt: output.md and quality.md, then examples.md on its repair-pass trigger; the failed checks' quality references (Q5.1, Q5.6, Q6.2) live in quality.md itself, and no content was re-derived, so system.md, reasoning.md, identity.md and execution.md were not reloaded",
+    "statement": "no implementation work was performed, no command was executed, and no external system was accessed; runtime/plan_validator.py and runtime/artifact_lib.py were read, not changed, to locate the parser behaviour"
+  },
+  "evidence_refs": [
+    "agents/planner/output.md",
+    "agents/planner/quality.md",
+    "agents/planner/examples.md",
+    "runs/run-022d0492a75a/states/execution-planning/dispatch-prompt.md",
+    "runs/run-022d0492a75a/states/execution-planning/invocation-envelope.json",
+    "runs/run-022d0492a75a/states/execution-planning/validation-report.json",
+    "runtime/plan_validator.py",
+    "runtime/artifact_lib.py"
+  ],
+  "confidence": "high",
+  "declared_side_effects": [
+    "runs/run-022d0492a75a/states/execution-planning/artifacts/execution-plan.md",
+    "runs/run-022d0492a75a/states/execution-planning/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

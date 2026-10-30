@@ -1,0 +1,119 @@
+{
+  "invocation_id": "inv-022d0492a75a-05-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md"
+  ],
+  "structured_output": {
+    "package_status": "complete",
+    "verdict": "approve-with-corrections",
+    "findings_by_severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 3,
+      "low": 2
+    },
+    "open_findings_by_severity": {
+      "critical": 0,
+      "high": 1,
+      "medium": 3,
+      "low": 2
+    },
+    "correction_requests": 6,
+    "open_questions": 3,
+    "blocking_findings_outstanding": [
+      "F-001"
+    ],
+    "commands_executed": [
+      {
+        "command": "dotnet build MediaCompany.slnx",
+        "result": "exit 0, 0 warnings, 0 errors; MediaCompany.Architecture.Tests 101 passed"
+      },
+      {
+        "command": "dotnet test tests/MediaCompany.Pilot.Tests --no-build",
+        "result": "251 passed, 0 failed, 0 skipped"
+      },
+      {
+        "command": "tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe",
+        "result": "31 passed, 0 failed, 31 run (282 s), exit 0"
+      },
+      {
+        "command": "git status --porcelain (before and after the web test run)",
+        "result": "identical"
+      },
+      {
+        "command": "python .claude/runtime/review_package_validator.py <artifact>",
+        "result": "PASS, 30/30 checks"
+      }
+    ],
+    "checks": {
+      "S1": "pass",
+      "S2": "pass",
+      "S3": "pass",
+      "S4": "pass",
+      "S5": "pass",
+      "S6": "pass",
+      "S7": "pass",
+      "S8": "pass",
+      "D1": "pass",
+      "D2": "pass",
+      "D3": "pass",
+      "D4": "pass",
+      "D5": "pass",
+      "D6": "pass",
+      "P1": "pass",
+      "P2": "pass",
+      "P3": "pass",
+      "P4": "pass",
+      "P5": "pass",
+      "P6": "pass",
+      "P7": "pass",
+      "F1": "pass",
+      "F2": "pass",
+      "F3": "pass",
+      "F4": "pass",
+      "F5": "pass",
+      "R1": "pass",
+      "R2": "pass",
+      "R3": "pass",
+      "E1": "pass",
+      "E2": "pass",
+      "E3": "pass",
+      "E4": "pass",
+      "E5": "pass",
+      "A1": "pass",
+      "A2": "pass",
+      "A3": "pass",
+      "A4": "pass",
+      "A5": "pass",
+      "A6": "pass",
+      "C1": "pass",
+      "C2": "pass",
+      "C3": "pass",
+      "C4": "pass",
+      "C5": "pass",
+      "C6": "pass"
+    },
+    "checks_run": 46,
+    "checks_passed": 46,
+    "not_machine_checkable": {
+      "N1": "discharged: every production source of the web app named under In scope was read in full against the six focus areas; the request guard, bind, child-process path, approval and recording flows were traced into the toolchain code they call; files read in part are listed under Out of scope",
+      "N2": "discharged: every finding names a decision record, design statement, CEO decision, acceptance criterion or loaded skill standard",
+      "N3": "discharged: F-002 and F-003 are medium, not high, on stated evidence (A-004 and A-005 met by T-004; C-024 containment met, shown by T-014); no other severity was lowered"
+    }
+  },
+  "evidence_refs": [
+    ".claude/agents/dev-2-reviewer/system.md",
+    ".claude/agents/dev-2-reviewer/reasoning.md",
+    ".claude/agents/dev-2-reviewer/output.md",
+    ".claude/agents/dev-2-reviewer/quality.md",
+    ".claude/runs/run-022d0492a75a/states/quality-review/invocation-envelope.json"
+  ],
+  "confidence": 0.8,
+  "declared_side_effects": [
+    ".claude/runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md",
+    ".claude/runs/run-022d0492a75a/states/quality-review/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

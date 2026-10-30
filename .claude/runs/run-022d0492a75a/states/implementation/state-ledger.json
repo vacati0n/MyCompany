@@ -1,0 +1,82 @@
+{
+  "run_id": "run-022d0492a75a",
+  "slice": "vertical-slice-3-implement-execution",
+  "runtime_version": "0.11.1",
+  "status": "completed",
+  "queue_status": "Executing",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "state_id": "implementation",
+  "work_item_id": "run-022d0492a75a::implementation",
+  "idempotency_key": "sha256:c859be499c347070ba89f41c782ebab8",
+  "attempt": 1,
+  "agent_id": "dev-1-implement",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "invocation_id": "inv-022d0492a75a-04-001",
+  "input_digest": "sha256:ddcf525c6ab9a30cbccfb0b2726a6576",
+  "context_digest": "sha256:f19a60b2df50db05b4d00e11d9687b71",
+  "module_load_order": [
+    "agents/dev-1-implement/system.md",
+    "agents/dev-1-implement/identity.md",
+    "agents/dev-1-implement/reasoning.md",
+    "agents/dev-1-implement/execution.md",
+    "agents/dev-1-implement/output.md",
+    "agents/dev-1-implement/quality.md",
+    "agents/dev-1-implement/examples.md"
+  ],
+  "artifact_path": "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+  "conditional_artifact_globs": [],
+  "result_envelope_path": "runs/run-022d0492a75a/states/implementation/result-envelope.json",
+  "validator": "implementation_report_validator",
+  "load_profile_mode": "progressive",
+  "context_budget": {
+    "modules_full_bytes": 68729,
+    "modules_core_bytes": 32672,
+    "slice_all_bytes": 184720,
+    "slice_required_bytes": 22885,
+    "inputs_bytes": 18657,
+    "upstream_full_bytes": 67807,
+    "upstream_read_first_bytes": 25248,
+    "task_context_bytes": 58930,
+    "fixed_bytes": 13658,
+    "legacy_estimate_bytes": 353571,
+    "progressive_estimate_bytes": 172050,
+    "legacy_estimate_tokens": 88392,
+    "progressive_estimate_tokens": 43012,
+    "savings_pct": 51.3
+  },
+  "execution_started_at": "2026-10-27T01:26:52Z",
+  "execution_completed_at": "2026-10-27T02:49:32Z",
+  "validation": {
+    "result": "pass",
+    "checksRun": 32,
+    "checksPassed": 32,
+    "blockingFailures": 0,
+    "correctableFailures": 0,
+    "notMachineCheckable": 3,
+    "counts": {
+      "sections": 10,
+      "status": "complete",
+      "identifiers": {
+        "C": 32,
+        "T": 17,
+        "V": 8,
+        "R": 6,
+        "Q": 3
+      },
+      "tableRows": {
+        "Change Set": 32,
+        "Test Evidence": 17,
+        "Deviations and Tradeoffs": 8,
+        "Residual Risk": 6
+      }
+    },
+    "undeclaredSideEffects": []
+  },
+  "agent_result_status": "succeeded",
+  "artifact_digest": "sha256:fea169088253323495cdae760ccc23ed",
+  "recovery": null
+}

@@ -15,5 +15,11 @@ okf_version: "0.2"
 - [validation-check C3.2 on release-note.md](L-ae8d96f7c5.md) - No model, vendor, or provider named
 - [validation-check C6.1 on scope-definition.md](L-cf46b749eb.md) - Identifiers use the zero-padded three-digit scheme
 - [validation-check SD6 on scope-definition.md](L-56c82f972a.md) - Every scope decision carries a rationale a reviewer can assess
+- [validation-check D14.3 on technical-design.md](L-16562ce500.md) - Every open decision owner resolves to a known agent
+- [validation-check D2.6 on technical-design.md](L-3564fdde58.md) - Identifiers use the zero-padded three-digit scheme
+- [validation-check D4.3 on technical-design.md](L-6e77db508d.md) - Every requirement traces to a statement identifier
+- [validation-check D6.5 on technical-design.md](L-3eac0a2a38.md) - Every speculative impact has a matching risk
 - [validation-check D7.4 on technical-design.md](L-64b31f3eb6.md) - Every rejected candidate states why it is unsuitable
+- [validation-check D8.3 on technical-design.md](L-606ac5af7f.md) - Every eliminated option names the hard constraint it violates
+- [validation-check D8.4 on technical-design.md](L-6701578f8b.md) - The recorded selection is the option the evaluation table marks selected
 - [gate-rejection Review Gate on review-package.md](L-7f80924b57.md) - Gate 'Review Gate' rejected the evidence of phase 'quality-review' and the phase was sent back for rework

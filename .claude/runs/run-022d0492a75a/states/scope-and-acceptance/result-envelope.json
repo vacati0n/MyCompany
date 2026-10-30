@@ -1,0 +1,71 @@
+{
+  "invocation_id": "inv-022d0492a75a-01-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-022d0492a75a/states/scope-and-acceptance/artifacts/scope-definition.md"
+  ],
+  "structured_output": {
+    "run_id": "run-022d0492a75a",
+    "counts": {
+      "scope_items": 18,
+      "exclusions": 11,
+      "acceptance_criteria": 30,
+      "acceptance_criteria_metadata": 30,
+      "scope_decisions": 6,
+      "open_questions": 4,
+      "blocking_open_questions": 2
+    },
+    "status": "provisional",
+    "scope_verdict": "partially-bounded",
+    "waiting_on": [
+      "Q-001 (CEO, Scope Gate): loopback-only listener, proposed default D-002",
+      "Q-002 (CEO, Scope Gate): owner of the one-time settings set-up"
+    ],
+    "quality_checks": {
+      "run": 50,
+      "passed": 50,
+      "note": "SD8 passes vacuously because the verdict is not bounded; all other checks are decided on the artifact as emitted. The runtime Validation Engine re-runs C1 to C7 and SD1 to SD8 and decides the phase advance.",
+      "results": {
+        "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+        "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "SD1": "pass", "SD2": "pass", "D5": "pass", "D6": "pass",
+        "SD3": "pass", "SD4": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass",
+        "SD5": "pass", "SD8": "pass", "G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "pass",
+        "L1": "pass", "L2": "pass", "L3": "pass", "L4": "pass", "L5": "pass",
+        "SD6": "pass", "D7": "pass", "D8": "pass", "D9": "pass",
+        "SD7": "pass", "B1": "pass", "B2": "pass", "B3": "pass", "B4": "pass", "B5": "pass", "B6": "pass",
+        "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass"
+      }
+    },
+    "not_machine_checkable": {
+      "SN1": "Judged: the thresholds are the 60.0 s limit, the 0.5 s clip tolerance, the 1.2 s caption page minimum carried from the CEO decisions, the 26-item tick count, the 1 s live-check latency and the 9:16 proportion; each is a value the business would accept. Judgement is recorded on A-004, A-008, A-012, A-015 and A-017. Not verified against a real voice or clip.",
+      "SN2": "Judged: the scope follows the ticket's steps 1 to 7, constraints and done means; no expectation was added that the inputs do not state. The request-origin check (S-015) and the loopback listener (S-014) are carried from the declared security area and the socket proposal, and are held as decisions (D-002, D-006), not as widening.",
+      "SN3": "Judged: the business goal and target outcome restate the business intent (operator without technical help; CEO approval by hash; nothing published). The success measure is not inferred; its absence is recorded as Q-004."
+    },
+    "escalations": [
+      "Q-001 to CEO at the Scope Gate (blocking): socket proposal D-002",
+      "Q-002 to CEO at the Scope Gate (blocking): one-time settings set-up"
+    ],
+    "non_blocking_questions": [
+      "Q-003 to CEO at the Design Gate: who may press approve",
+      "Q-004 to CEO at the Scope Gate: success measure"
+    ],
+    "repository_rescan": "none; the task context names no modules or files and no scope change required a rescan. Read only the MC-16 operator guide, MC-16 scope and release note, the ticket, and the task inputs.",
+    "writes": "artifact and result envelope only; no command executed; no external access; the gate decision and readiness claims were not recorded"
+  },
+  "evidence_refs": [
+    "agents/product-owner/system.md",
+    "agents/product-owner/identity.md",
+    "agents/product-owner/reasoning.md",
+    "agents/product-owner/execution.md",
+    "agents/product-owner/output.md",
+    "agents/product-owner/quality.md",
+    "runs/run-022d0492a75a/states/scope-and-acceptance/invocation-envelope.json"
+  ],
+  "confidence": "medium",
+  "declared_side_effects": [
+    "runs/run-022d0492a75a/states/scope-and-acceptance/artifacts/scope-definition.md",
+    "runs/run-022d0492a75a/states/scope-and-acceptance/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

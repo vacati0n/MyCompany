@@ -1,0 +1,323 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\mc-17-pilot-web-fffc59\\.claude\\runs\\run-022d0492a75a\\states\\documentation-and-release-handoff\\artifacts\\release-note.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 34,
+  "checksPassed": 34,
+  "notMachineCheckable": 3,
+  "counts": {
+    "sections": 7,
+    "status": "complete",
+    "identifiers": {
+      "K": 14
+    },
+    "tableRows": {
+      "Known Issues": 14
+    },
+    "releaseVerdict": "handed-off",
+    "communicationBasis": "release-handoff",
+    "knownIssues": 14,
+    "version": "0.0.0+ef327e9"
+  },
+  "checks": [
+    {
+      "id": "C1.1",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "Metadata block present with every declared field populated",
+      "result": "pass",
+      "detail": "10 of 10 fields populated"
+    },
+    {
+      "id": "C1.2",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "producedBy is an agent contracted to emit release-note.md",
+      "result": "pass",
+      "detail": "producedBy='documentation'; contracted producers: ['documentation']"
+    },
+    {
+      "id": "C1.3",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "schemaVersion is 1.0.0 and agentVersion is semantic",
+      "result": "pass",
+      "detail": "schemaVersion=1.0.0 agentVersion=1.2.0"
+    },
+    {
+      "id": "C1.4",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='complete'"
+    },
+    {
+      "id": "C2.1",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "All 7 mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "7 of 7 present, once each"
+    },
+    {
+      "id": "C2.2",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Highlights', 'Technical Changes and Compatibility', 'Operational Notes', 'Validation Summary', 'Known Issues', 'Communication']"
+    },
+    {
+      "id": "C2.3",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 section introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C2.4",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "C2.5",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Advisory",
+      "description": "No template authoring guidance remains in the emitted artifact",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C3.1",
+      "quality_ref": "config/execution-engine.md#agent-adapter",
+      "severity": "Blocking",
+      "description": "At most 1 fenced block(s), as the contract permits",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; 1 permitted"
+    },
+    {
+      "id": "C3.2",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "C3.3",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "C4.1",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "Every declared field label is present in its section",
+      "result": "pass",
+      "detail": "19 declared field(s) present"
+    },
+    {
+      "id": "C4.2",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "No declared field is left unanswered",
+      "result": "pass",
+      "detail": "every declared field carries a value"
+    },
+    {
+      "id": "C4.3",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Correctable",
+      "description": "Fields with a declared substance floor carry more than a token answer",
+      "result": "pass",
+      "detail": "all fields meet their floor"
+    },
+    {
+      "id": "C5.1",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Fields bound to a vocabulary use a permitted value",
+      "result": "pass",
+      "detail": "all bounded fields valid"
+    },
+    {
+      "id": "C5.2",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Correctable",
+      "description": "Fields bound to a format match it",
+      "result": "pass",
+      "detail": "all formatted fields valid"
+    },
+    {
+      "id": "C4.4",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared minimum carry at least that many items",
+      "result": "pass",
+      "detail": "all list sections meet their minimum"
+    },
+    {
+      "id": "C4.5",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared table carry it, with the declared columns",
+      "result": "pass",
+      "detail": "row counts: {'Known Issues': 14}"
+    },
+    {
+      "id": "C4.6",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "No table row leaves a required cell empty",
+      "result": "pass",
+      "detail": "all rows complete"
+    },
+    {
+      "id": "C6.1",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "C6.2",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "Every referenced identifier is defined in its declaring section",
+      "result": "pass",
+      "detail": "defined: {'K': 14}"
+    },
+    {
+      "id": "C6.3",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "No identifier is defined twice",
+      "result": "pass",
+      "detail": "identifiers unique"
+    },
+    {
+      "id": "C6.4",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Correctable",
+      "description": "Identifiers ascend from 001 without gaps",
+      "result": "pass",
+      "detail": "contiguous: {'K': 14}"
+    },
+    {
+      "id": "C7.1",
+      "quality_ref": "config/execution-engine.md#context-loader",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "N1",
+      "quality_ref": "agents/documentation.md#responsibilities",
+      "severity": "Advisory",
+      "description": "The note describes the behaviour that was actually delivered",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N2",
+      "quality_ref": "agents/documentation.md#responsibilities",
+      "severity": "Advisory",
+      "description": "Stale content from the prior release has been removed rather than carried forward",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N3",
+      "quality_ref": "agents/documentation.md#constraints",
+      "severity": "Advisory",
+      "description": "Every user-visible change is represented, and none is overstated",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "R1",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "releaseVerdict is one of released, partial, rolled-back, handed-off, findings-published, delta-published",
+      "result": "pass",
+      "detail": "releaseVerdict='handed-off'"
+    },
+    {
+      "id": "R2",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Blocking",
+      "description": "The version in the metadata block and in the Metadata section are the same",
+      "result": "pass",
+      "detail": "metadata='0.0.0+ef327e9' section='0.0.0+ef327e9'"
+    },
+    {
+      "id": "R3",
+      "quality_ref": "agents/documentation.md#responsibilities",
+      "severity": "Blocking",
+      "description": "A declared contract change carries a backward compatibility statement",
+      "result": "pass",
+      "detail": "contract change declared and compatibility stated"
+    },
+    {
+      "id": "R4",
+      "quality_ref": "agents/documentation.md#responsibilities",
+      "severity": "Blocking",
+      "description": "A partial or rolled-back release records at least one known issue",
+      "result": "pass",
+      "detail": "releaseVerdict='handed-off', 14 known issue(s)"
+    },
+    {
+      "id": "R5",
+      "quality_ref": "agents/documentation.md#responsibilities",
+      "severity": "Blocking",
+      "description": "A rolled-back release states the criteria the rollback was taken under",
+      "result": "pass",
+      "detail": "rollback criteria stated"
+    },
+    {
+      "id": "R8",
+      "quality_ref": "agents/documentation/reasoning.md#stage-8--determine-the-release-position",
+      "severity": "Blocking",
+      "description": "The release position is supported by the evidence type it is read off",
+      "result": "pass",
+      "detail": "releaseVerdict='handed-off' needs a sourceInputs entry of type verification-report or validation-report; listed: ['architecture-context', 'final-change-summary', 'stakeholder-list', 'verification-report']"
+    },
+    {
+      "id": "R9",
+      "quality_ref": "agents/documentation/reasoning.md#stage-8--determine-the-release-position",
+      "severity": "Blocking",
+      "description": "The release position is one the phase's communication basis yields",
+      "result": "pass",
+      "detail": "phase 'documentation-and-release-handoff' has basis 'release-handoff', which yields handed-off; releaseVerdict='handed-off'"
+    },
+    {
+      "id": "R6",
+      "quality_ref": "agents/documentation.md#purpose",
+      "severity": "Correctable",
+      "description": "The note names the stakeholders it was communicated to",
+      "result": "pass",
+      "detail": "stakeholders notified=\"This note is addressed to three readers: the CEO, who approves every publication the employee operator, who may press approve on the CEO's written instruction the orchestrator, which owns the Closure Gate and delivers the compare link\""
+    },
+    {
+      "id": "R7",
+      "quality_ref": "templates/release-note.md",
+      "severity": "Correctable",
+      "description": "The version is a recognisable version string",
+      "result": "pass",
+      "detail": "version='0.0.0+ef327e9'"
+    }
+  ]
+}

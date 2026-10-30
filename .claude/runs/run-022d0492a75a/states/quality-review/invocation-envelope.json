@@ -1,0 +1,732 @@
+{
+  "invocation_id": "inv-022d0492a75a-05-001",
+  "run_id": "run-022d0492a75a",
+  "work_item_id": "run-022d0492a75a::quality-review",
+  "idempotency_key": "sha256:7043ec09d4d6d57ac8d54785f4b24181",
+  "state_id": "quality-review",
+  "phase_index": 5,
+  "agent_id": "dev-2-reviewer",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/dev-2-reviewer.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/dev-2-reviewer/manifest.yaml",
+    "load_order": [
+      "agents/dev-2-reviewer/system.md",
+      "agents/dev-2-reviewer/identity.md",
+      "agents/dev-2-reviewer/reasoning.md",
+      "agents/dev-2-reviewer/execution.md",
+      "agents/dev-2-reviewer/output.md",
+      "agents/dev-2-reviewer/quality.md",
+      "agents/dev-2-reviewer/examples.md"
+    ],
+    "module_digests": {
+      "agents/dev-2-reviewer/system.md": "sha256:f1f2bbfb9fbf2d4068e7f55cad43fa42",
+      "agents/dev-2-reviewer/identity.md": "sha256:8168902b160985d5b81f36a1be905e66",
+      "agents/dev-2-reviewer/reasoning.md": "sha256:728cd3b6a63e6f84b3c15f51eb40c4de",
+      "agents/dev-2-reviewer/execution.md": "sha256:647dfae331aa3093d20df3731613112b",
+      "agents/dev-2-reviewer/output.md": "sha256:9d5f1de4a1e9e69edd5db3ee1d641c1f",
+      "agents/dev-2-reviewer/quality.md": "sha256:3584a1884e8da3ee4886ae5b6e77110e",
+      "agents/dev-2-reviewer/examples.md": "sha256:c2ef09a48bd41c0d5f8e2f1ce76a23db"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/dev-2-reviewer/system.md",
+        "agents/dev-2-reviewer/reasoning.md",
+        "agents/dev-2-reviewer/output.md",
+        "agents/dev-2-reviewer/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/dev-2-reviewer/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/dev-2-reviewer/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/dev-2-reviewer/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 37865,
+      "full_bytes": 74164
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "code-review",
+      "governance-enforcement",
+      "quality-verification"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S07",
+        "proficiency": "Primary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Primary",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S01",
+        "proficiency": "Secondary",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S02",
+        "proficiency": "Secondary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S03",
+        "proficiency": "Secondary",
+        "registryIdentifier": "engineering-playbook",
+        "specificationPath": "skills/dotnet/engineering-playbook.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S06",
+        "proficiency": "Secondary",
+        "registryIdentifier": "database-engineering",
+        "specificationPath": "skills/database/database-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S08",
+        "proficiency": "Secondary",
+        "registryIdentifier": "performance-engineering",
+        "specificationPath": "skills/performance/performance-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S10",
+        "proficiency": "Secondary",
+        "registryIdentifier": "git-collaboration",
+        "specificationPath": "skills/git/git-collaboration.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S11",
+        "proficiency": "Secondary",
+        "registryIdentifier": "observability-logging",
+        "specificationPath": "skills/logging/observability-logging.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S07",
+        "registryIdentifier": "testing-strategy",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S09",
+        "registryIdentifier": "secure-engineering",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S08",
+        "registryIdentifier": "performance-engineering",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "security is always read in review and validation phases",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S08",
+      "displayName": "Performance Engineering",
+      "specificationPath": "skills/performance/performance-engineering.md",
+      "status": "required",
+      "area": "performance",
+      "basis": "area performance triggered by 'slow' in input:business-intent",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S06",
+      "displayName": "Database Engineering",
+      "specificationPath": "skills/database/database-engineering.md",
+      "status": "required",
+      "area": "database",
+      "basis": "area database triggered by 'database' in input:feature-request",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S10",
+      "displayName": "Git Collaboration",
+      "specificationPath": "skills/git/git-collaboration.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S11",
+      "displayName": "Logging and Observability",
+      "specificationPath": "skills/logging/observability-logging.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "implementation-report",
+      "pull-request-diff",
+      "quality-scan-scope",
+      "technical-design",
+      "execution-plan",
+      "scope-definition",
+      "bug-analysis",
+      "architecture-decision-record",
+      "coding-standards",
+      "test-evidence",
+      "architecture-rules",
+      "security-criteria",
+      "standards-checklist",
+      "regression-targets",
+      "known-issues",
+      "feature-request",
+      "change-request",
+      "business-intent",
+      "architecture-context"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-17-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-17-feature-request.md",
+        "text": "# MC-17: A friendly local web app in Vietnamese that walks a non-technical operator through one pilot video, with in-browser recording\n\n- Source: the CEO's request in chat, 2026-10-27; local://research/ceo-decision-record.md#ceo-d-1300 to #ceo-d-1309\n- Issue type: Feature   Priority: Highest\n- Labels: affiliate, shopee-video, pilot, operator-ux, web-app, recording, vietnamese\n- Routed as: /implement (implement-feature)\n- Builds on: MC-16 (`src/MediaCompany.Pilot`, branch `claude/mc-16-pilot-pipeline-a4df61`, run `run-535f3f938f32`), not yet merged to `main`\n\n## Description\n\n### WHY\n\nThe CEO's request, verbatim: \"ng\u01b0\u1eddi d\u00f9ng l\u00e0 non tech user human v\u00ec v\u1eady nh\u1eefng vi\u1ec7c nh\u01b0 trong h\u01b0\u1edbng d\u1eabn v\u1eadn h\u00e0nh c\u00f4ng c\u1ee5\ng\u00e2y kh\u00f3 kh\u0103n. h\u00e3y vi\u1ebft m\u1ed9t tool web app c\u00f3 UI,UX frendly cho user nh\u1eadp d\u1eef li\u1ec7u t\u1eebng step bao g\u1ed3m c\u1ea3 vi\u1ec7c support ghi \u00e2m\ntr\u1ef1c ti\u1ebfp thay v\u00ec b\u1eaft user t\u1ea3i file.\"\n\n(The user is a non-technical human, so the tasks in the operator guide are hard. Write a web app tool with a friendly\nUI/UX where the user enters data step by step, including direct recording support instead of making the user upload a\nfile.)\n\nMC-16 delivered `src/MediaCompany.Pilot`, an offline .NET 10 console tool with five verbs (check, script, produce,\napprove, verify). Its operator guide `pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md` asks the operator to hand-edit\na JSON fact sheet, lay out an input folder, type command lines with paths and copy a 64-character hash. The operator is\nthe CEO now and a human employee later (`CEO-D-1306` item 1, `CEO-D-1307` item 2). MC-17 puts a friendly local web\nfront end on top of the MC-16 tool so the operator never edits JSON or types a command line.\n\n### THE STEPS THE OPERATOR WALKS THROUGH, ONE VIDEO AT A TIME\n\n1. **Fact sheet in a form.** Every field of the MC-16 fact sheet, each fact row with its source section and its\n   screenshot. Banned terms are checked live as the operator types, naming the term and why it is banned (its class).\n2. **Product images.** Upload or pick the three images.\n3. **Script.** See the generated script and tick each sentence's Part E source line.\n4. **Record the narration in the browser.** No file upload is required, though upload stays an option. A timer with a\n   hard stop at 60 s, playback, re-record. The recording is converted with the installed ffmpeg. Never text-to-speech,\n   never voice cloning, and a reused recording is refused.\n5. **Presenter clip.** Upload the AI-presenter clip the operator made in HeyGen or D-ID; the app checks it is portrait\n   and that its length matches the recording within 0.5 s (`CEO-D-1308` item 3).\n6. **Produce the package.** Show progress and every refusal in plain Vietnamese with what to do next; offer a manual\n   timing editor when pause detection does not match the sentence count.\n7. **Preview and approve.** Preview the video and the kit 04 checklist; the CEO ticks B3, B5 and the other items and\n   approves the video by its hash (`D-002`, `CEO-D-1309` item 2).\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 REUSE IT\n\n- `src/MediaCompany.Pilot` and its 251 tests in `tests/MediaCompany.Pilot.Tests`: the fact sheet check, the banned-term\n  check, the script generator, admission of recording and clip, pause timing and `timing.txt`, ffmpeg 9:16 composition,\n  the package, the hash-chained ledger, approval by hash and verify.\n- The MC-16 run evidence `.claude/runs/run-535f3f938f32/` (technical design, ADRs D-001 to D-005, release note with\n  known issues K-001 to K-016).\n- Installed on this machine: the .NET 10 SDK with the ASP.NET Core 10 shared framework, ffmpeg and ffprobe through\n  WinGet (`C:/Users/vuhoangcao/AppData/Local/Microsoft/WinGet/Links/`), a Chromium-based browser with MediaRecorder.\n\n### HARD CONSTRAINTS\n\n1. Download nothing (no npm, NuGet or pip package, no CDN script, no font) unless the CEO approves it by name.\n2. The app calls no generative model, no speech recognition and no metered service. No text-to-speech, no voice\n   cloning (`CEO-D-1304`, `CEO-D-1305`, `CEO-D-1307`).\n3. **Socket conflict, for the Scope Gate.** `CEO-D-1308` keeps the MC-16 toolchain at zero sockets. A web app must\n   listen on a socket, and microphone access needs a secure context, which `localhost` provides. The proposal for the\n   CEO: the web app binds 127.0.0.1 only, opens no outbound connection, and the MC-16 tool itself stays at zero sockets.\n   The CEO decides this explicitly before design.\n4. The web app is a front end only. It weakens no MC-16 check: the hash approval, the 60 s limit, refusal of a reused\n   recording, the safe area, the banned-term checks, the 0.5 s clip tolerance and the 1.2 s caption page all stay in the\n   tool, which keeps deciding.\n5. Agents never sign in anywhere, create accounts, contact sellers, buy anything or publish anything. Nothing publishes.\n6. Frozen Wave 12 (MC-13) and Wave 13 (MC-14) are not touched. The `mediacompany` database is not touched; Docker is down.\n7. Tests run offline with fixtures generated by code. No media file is added to the repository. The recording flow is\n   covered by a test that needs no real microphone.\n8. Every publication is approved by the CEO individually (`D-002`); the CEO carries the legal position (`D-018`).\n\n### DONE MEANS\n\n- MC-17 runs through every phase and gate of `implement-feature`; the CEO decides at the Scope and Design gates.\n- The app has been run and shown working in the Browser pane on a code-generated sample, including the record step.\n- Committed and pushed on the session branch; the CEO gets the compare link against `main`, noting that the branch is\n  cut from the unmerged MC-16 branch.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no\nrepository file; an agent claiming a finding covers \"every\" case lists the cases; a `failure-envelope.json` of class\n`gate-approval-required` in a phase folder is stale once that phase's dispatch prompt exists (Finding 11).\n\n## Acceptance criteria\n\n_To be defined by the scope phase and approved at the Scope Gate._",
+        "digest": "sha256:a14fe9e6638fa76cbc0a7ce39f5550fd"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-17-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-17-business-intent.md",
+        "text": "# Business intent for MC-17 (the owner's request and decisions, verbatim)\n\n## The CEO's request, 2026-10-27, in chat\n\n\"ng\u01b0\u1eddi d\u00f9ng l\u00e0 non tech user human v\u00ec v\u1eady nh\u1eefng vi\u1ec7c nh\u01b0 trong h\u01b0\u1edbng d\u1eabn v\u1eadn h\u00e0nh c\u00f4ng c\u1ee5 g\u00e2y kh\u00f3 kh\u0103n. h\u00e3y vi\u1ebft m\u1ed9t tool web app c\u00f3 UI,UX frendly cho user nh\u1eadp d\u1eef li\u1ec7u t\u1eebng step bao g\u1ed3m c\u1ea3 vi\u1ec7c support ghi \u00e2m tr\u1ef1c ti\u1ebfp thay v\u00ec b\u1eaft user t\u1ea3i file.\"\n\n---\n\n## CEO-D-1304 \u2014 The AI presenter lip-syncs to the CEO's own recorded voice\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the orchestrator session, on the presenter form of\n`CEO-D-1301` item 4 and the tool choice `OD12` of `CEO-D-1302`.\n\nThe CEO's words: \"anh m\u1edf t\u00e0i kho\u1ea3n shopee r\u1ed3i . v\u1ec1 ti\u1ebfng vi\u1ec7t l\u00e0 ti\u1ebfng m\u1eb9 \u0111\u1ebb c\u00f3 th\u1ec3 d\u00f9ng b\u1ea3n ghi \u00e2m c\u1ee7a anh \u0111\u01b0\u1ee3c\" (I\nhave opened the Shopee account. As for Vietnamese, it is my native language, so my own recordings can be used). Asked\nwhether an AI face is still needed with a real voice, the CEO chose \"M\u1eb7t AI + gi\u1ecdng anh\" (AI face plus my voice) over\ndropping the avatar.\n\n1. **Voice.** The narration of every video is the CEO's own recorded voice, in Vietnamese. The AI face lip-syncs to\n   that recording. No text-to-speech is used in the pilot, and Vbee is dropped.\n2. **Proposed default, not the CEO's words: no voice cloning.** Each video uses a fresh real recording of its own\n   approved script; no tool is given the CEO's voice to clone. This is the orchestrator's proposed default and stands\n   only when the CEO confirms it.\n3. **Tool (`OD12` revised, a proposal for the CEO).** Whichever of HeyGen and D-ID passes the lip-sync test (file\n   `pilot-affiliate-vn/pilot-kit/07-kich-ban-thu-va-mo-ta-nguoi-dan.md`) driven by the CEO's own uploaded recording is\n   bought, billed monthly at USD 29 (HeyGen Creator or D-ID Pro), from the USD 42.99 fixed line of `OD13`. The D-ID\n   Pro plus Vbee path (about USD 35.43, ESTIMATE) falls away. What the evidence says\n   (`pilot-affiliate-vn/evidence/ai-presenter-pricing-2026-10-26.md`):\n   - D-ID Studio accepts uploaded audio, MP3 or WAV up to 5 minutes. The quote (\"upload an audio file for your avatar to\n     speak\") comes from a D-ID help search result, not a fetched page. D-ID Pro keeps a visible generic \"AI\" mark in\n     the bottom left corner (D3).\n   - HeyGen's acceptance of uploaded audio is not quoted anywhere in the evidence: **UNVERIFIED**, settled by the test.\n   - Whether either free tier or trial accepts uploaded audio is **UNVERIFIED**, settled by the test.\n4. **Everything else stands.** The \"Video t\u1ea1o b\u1edfi AI\" label is still turned on for every video, because the face is AI.\n   Scripts use only sourced facts and never claim use of the product. The disclosure is spoken at the start and the\n   end. The Article 15a(3) stop rule (`OD14`), `D-002`, and one presenter on one account (`OD18`) are unchanged.\n5. **Fact reported, not verified:** the CEO reports opening \"the Shopee account\" on 2026-10-26. No agent has seen it;\n   agents never sign in. Whether it is the Shopee Affiliate registration as an individual KOC, and so whether day 1 of\n   the plan is 2026-10-26, is for the CEO to state in the measurement sheet. If it is, the \"before day 1\" steps\n   (counsel pack sent, eligibility checked) are already due.\n6. **Effect on the open questions, an inference for counsel and not a finding:** the presenter now speaks in the\n   CEO's real voice, which may bear on whether the CEO is presenting the product personally under Article 15a(3)\n   (`Q-002`, `Q-016`). The counsel pack asks this.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1305 \u2014 No voice cloning: every video uses a fresh real recording\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session, on the proposed default of\n`CEO-D-1304` item 2.\n\nAsked \"Kh\u00f4ng nh\u00e2n b\u1ea3n gi\u1ecdng: m\u1ed7i video d\u00f9ng m\u1ed9t b\u1ea3n ghi \u00e2m th\u1eadt, ghi m\u1edbi. CEO x\u00e1c nh\u1eadn hay b\u00e1c b\u1ecf?\", the CEO chose\n\"X\u00e1c nh\u1eadn\".\n\n1. **Confirmed.** No tool is given the CEO's voice to clone, and no voice-generation or \"voice clone\" feature is turned\n   on in the presenter tool. Each video uses a fresh real recording of its own approved script, made after that script\n   is approved; sentences are never spliced from another video's recording. `CEO-D-1304` item 2 stands as a decision,\n   no longer as a proposal.\n2. **Effect on the kit and on MC-16.** Part F of `pilot-affiliate-vn/pilot-kit/03-mau-kich-ban-nguoi-dan-ai.md` drops\n   its \"awaiting confirmation\" note. The MC-16 toolchain refuses to package a video whose recording is not new for that\n   video: a recording whose digest was already used by another video is rejected.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` item 1 (no text-to-speech); agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1306 \u2014 MC-16 scope answers: the tool writes the script, a call to action without price, pause-detected captions, 60 seconds is a hard limit\n\n**The CEO's own decision, 2026-10-26**, given in the chat with the MC-16 session on the four blocking questions of the\nMC-16 scope phase (run `run-535f3f938f32`).\n\n1. **The tool writes the script for the CEO to record.** Asked how each fact row becomes a spoken sentence when the\n   toolchain may use no language model, the CEO's words: \"vi\u1ebft k\u1ecbch b\u1ea3n cho CEO thu \u00e2m. sau n\u00e0y s\u1ebd handover l\u1ea1i cho\n   nh\u00e2n vi\u00ean l\u00e0 human.\" (write the script for the CEO to record; later this will be handed over to a human employee).\n   The orchestrator reads this as: the script generator produces every spoken sentence itself, deterministically, from\n   the fact sheet; the CEO does not write sentences. The person who runs the tool and records is the operator (the CEO\n   now, a human employee later); the per-publication approval stays the CEO's under `D-002`. Whether the employee may\n   also record the voice is not decided here: `CEO-D-1304` names the CEO's voice, and a change needs a CEO decision.\n2. **The call to action carries no price.** Asked about the template's guidance sentence, which says \"gi\u00e1\", the CEO's\n   words: \"h\u00e3y d\u00f9ng c\u00e2u d\u1ec5 d\u1eabn d\u1eaft kh\u00e1ch h\u00e0ng b\u1eb1ng c\u00e1ch b\u1ea5m v\u00e0o gi\u1ecf h\u00e0ng, b\u1ea5m link \u0111\u1ec3 xem chi ti\u1ebft....\" (use a sentence\n   that leads the customer to tap the cart or the link to see details). Part B row 6 of the script template is\n   replaced by a call to tap the cart or the product link for details, with no price, discount or urgency wording.\n   The bare word \"gi\u00e1\" is not a banned term (it would refuse products such as \"gi\u00e1 \u0111\u1ee1 \u0111i\u1ec7n tho\u1ea1i\"); money amounts,\n   discounts, promotions, sold counts and ratings stay banned.\n3. **Caption timing by pause detection.** The CEO chose the proposed default: the tool finds the pauses between\n   sentences in the recording by signal processing (no speech recognition); the operator reads with a clear pause\n   between sentences; when the pauses found do not match the sentence count, the tool stops and the operator writes the\n   timings by hand.\n4. **Sixty seconds is a hard limit.** The CEO chose \"Ch\u1eb7n tr\u00ean 60 gi\u00e2y\": a recording longer than 60 seconds is refused;\n   the operator drops the optional third fact and records again. The 5-minute upload ceiling is moot below it.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304`, `CEO-D-1305`; agents create no account, sign in nowhere, contact no\nseller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1307 \u2014 MC-16 Scope Gate approved; an employee operator may record in their own real voice\n\n**The CEO's own decision, 2026-10-26**, at the Scope Gate of run `run-535f3f938f32` (MC-16).\n\n1. **Scope approved** as the scope phase's third attempt states it, with the defaults it carries: captions in white on\n   a dark band in the lower third, one per sentence; a presenter clip that is not portrait is refused; product images\n   move by a slow pan or zoom; recording reuse is detected by the file's digest only; banned class (f) is \"so v\u1edbi\",\n   \"h\u01a1n h\u1eb3n\" and naming another shop or brand as better, not the bare word \"h\u01a1n\".\n2. **Employee voice.** Asked whether a human employee who later operates the tool may record the narration, the CEO\n   chose \"\u0110\u01b0\u1ee3c, gi\u1ecdng th\u1eadt\" (yes, in their real voice). This amends `CEO-D-1304` item 1: the narration is the real\n   recorded voice of the CEO or of the employee operating the tool. Still no text-to-speech, no voice cloning, and a\n   fresh recording for every video (`CEO-D-1305`). The presenter stays one presenter on one account (`OD18`). Whether\n   a different human voice behind the same AI face bears on counsel questions Q-002 and Q-016 is an inference for\n   counsel, not a finding.\n\n**Unchanged:** `D-002` (the CEO approves every publication), `D-018`; agents create no account, sign in nowhere,\ncontact no seller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1308 \u2014 MC-16 Design Gate approved, with phone-screen safe areas\n\n**The CEO's own decision, 2026-10-26**, at the Design Gate of run `run-535f3f938f32` (MC-16).\n\n1. **Design approved with safe areas.** The design composes the 1080x1920 (9:16) video with the installed ffmpeg only,\n   with no browser and no socket, in a separate .NET tool that never touches the company store; the pilot ledger is a\n   hash-chained file outside the repository. Asked first, the CEO answered \"khung hinh dien thoai di dong vi da so\n   nguoi dung xem reels hoac youtube short\" (a mobile phone frame, because most people watch Reels or YouTube Shorts).\n   Asked again with the design restated as that frame plus safe areas, the CEO chose \"Duy\u1ec7t k\u00e8m v\u00f9ng an to\u00e0n\".\n   - Captions and the overlay \"Video t\u1ea1o b\u1edfi AI \u00b7 C\u00f3 li\u00ean k\u1ebft ti\u1ebfp th\u1ecb\" sit inside a safe area, clear of the\n     right-hand action buttons (like, comment, cart) and the caption and description text at the bottom of the Shopee\n     Video, Reels and Shorts players.\n   - The text is large enough to read on a small screen.\n   The tool still publishes nowhere.\n2. **Fallback for Vietnamese marks.** If the proof frame shows ffmpeg drawing a Vietnamese mark wrongly, the CEO allows\n   ahead of time (\"Cho ph\u00e9p n\u1ed9i b\u1ed9\") the fallback: the installed browser renderer draws only the caption plates as\n   transparent images. It may open loopback sockets on 127.0.0.1 only, never a connection off the machine, and the\n   package states it.\n3. **Clip and recording tolerance.** The presenter clip and the recording start together, and their lengths may differ\n   by at most 0.5 s (\"0,5 gi\u00e2y\"). Beyond that, the tool refuses and names the difference in seconds.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1307`; agents create no account, sign in nowhere, contact no\nseller, buy nothing, download no asset and publish nothing.\n\n---\n\n## CEO-D-1309 \u2014 MC-16 quality review: long captions page in two-line pages; B3 and B5 stay for the CEO to tick\n\n**The CEO's own decision, 2026-10-27**, on the quality review of run `run-535f3f938f32` (MC-16).\n\n1. **Caption paging.** At 56 px inside the safe area of `CEO-D-1308`, the fixed disclosure sentence needs four lines.\n   The CEO chose \"Chia trang 2 d\u00f2ng\": a sentence too long for two lines is shown as consecutive two-line pages\n   within the time window in which it is spoken. Each page stays on screen for at least 1.2 s. Where the window is\n   too short for that, the tool refuses and names the sentence. This amends the scope rule of one caption, of at most\n   two lines, per sentence.\n2. **B3 and B5 are not pre-ticked.** The price and claim-of-use checks are closed word lists. They are widened (for\n   example \"VN\u0110\", \"ngh\u00ecn\", \"tri\u1ec7u\", and first-person wording in an operator's override), but cannot catch every\n   phrasing. The CEO chose \"CEO t\u1ef1 t\u00edch\": the package states that the tool's check found nothing, and leaves B3 (\"no\n   claim of use\") and B5 (\"no price\") unticked for the CEO, who reads the script. Only B8 (the \"Video t\u1ea1o b\u1edfi AI\"\n   overlay for the whole video) is pre-ticked. This amends the scope rule that pre-ticked exactly B3, B5 and B8.\n\n**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1308`; agents create no account, sign in nowhere, contact no\nseller, buy nothing, download no asset and publish nothing.\n\n---",
+        "digest": "sha256:5cdc471a170c1142945cad022920cdc5"
+      },
+      {
+        "type": "implementation-report",
+        "reference": "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-17-pilot-web-fffc59/.claude/runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+        "text": "```yaml\nimplementationReport:\n  reportId: IR-2026-0034\n  changeReference: MC-17 local Vietnamese web app over the MC-16 pilot toolchain, run run-022d0492a75a, invocation inv-022d0492a75a-04-001\n  sourceInputs:\n    - type: feature-request\n      reference: runs/inputs/mc-17-feature-request.md\n    - type: business-intent\n      reference: runs/inputs/mc-17-business-intent.md\n    - type: technical-design\n      reference: runs/run-022d0492a75a/states/solution-design-and-risk-assessment/artifacts/technical-design.md\n  producedBy: dev-1-implement\n  agentVersion: 1.1.0\n  schemaVersion: 1.0.0\n  status: complete\n  workflowPhase: implementation\n  verificationStatus: verified\n  inputDigest: sha256:ddcf525c6ab9a30cbccfb0b2726a6576\n  contextDigest: sha256:f19a60b2df50db05b4d00e11d9687b71\n```\n\n## Metadata\n\n- Report ID: IR-2026-0034\n- Change reference: MC-17 local Vietnamese web app over the MC-16 pilot toolchain, run run-022d0492a75a, invocation inv-022d0492a75a-04-001\n- Workflow phase: implementation\n- Status: complete\n- Verification status: verified\n- Review status: pending-review\n\n## Implementation Summary\n\n- Change intent: A non-technical operator can now make one pilot video without editing JSON or typing a command line. The new local web app, MediaCompany.Pilot.Web, shows every screen in plain Vietnamese and walks the operator through seven steps. (1) A fact sheet form with a live banned-term check that names the term and its class. (2) The three images. (3) The script, with a tick for each sentence's source line. (4) Recording in the browser, with a 60 s hard stop, a timer, playback and re-record; upload is still possible. (5) The portrait presenter clip, length within 0.5 s. (6) Produce, with progress and a manual timing editor. (7) Preview, the kit 04 checklist (B3 and B5 included), and approval by hash. A first-run setup screen writes the settings. It can create a desktop shortcut if the operator agrees.\n- Approach taken: The app is its own assembly on the web SDK and the installed ASP.NET Core shared framework, with zero package references. The pages are plain HTML, CSS and JavaScript embedded in the assembly; recording uses MediaRecorder; no script, font or style is fetched. It listens on 127.0.0.1 only and checks at start-up that every bound address is 127.0.0.1. Every request must name the exact host. Every state-changing request must carry the exact Origin and a token that is new at each start. Pure checks, settings validation, probe, recording conversion and recording admission run in process through the toolchain library. check, script, produce, approve and verify run as the toolchain executable in a child process: an argument list, no shell, a kill-on-close job, and the digest recorded at setup. The operator sees the toolchain's own line unchanged. For the fourteen codes in the guide, the app adds the guide's Vietnamese reason and next step. The tool keeps every decision: hash approval, the 60 s limit, the reused-recording refusal, the safe area, banned terms, the 0.5 s clip tolerance and the 1.2 s caption page. The app adds pre-checks only in front of those decisions. Necessity and reuse: The new project exists because the Design Gate requires the app to be an assembly the toolchain never references. Every check the app shows reuses the toolchain's own code (held data, fact sheet check, admission, ledger, settings reader, media tool) rather than a copy. The new test program exists because the decision requires zero package references, which the MC-16 xunit project cannot meet. It reuses the MC-16 fixture helpers by link, and its address harness is the MC-16 job-membership harness with the address columns kept. No package and no new framework dependency was added.\n- Design reference: technical-design.md decisions D-001 to D-015 and delivery steps P-001 to P-013; Scope Gate decision record entry 1310; Design Gate decision record entry 1311.\n- Out of scope: src/MediaCompany.Pilot is unchanged, along with its tests, the MC-16 kit and guide files, MC-13 and MC-14 material, and the company store database. Docker stayed down. Nothing was signed in to, created, bought, published or downloaded. No generative model, speech recognition, text-to-speech or voice cloning is used.\n\n## Change Set\n\n| ID | Path | Change Type | Purpose | Design Ref |\n|---|---|---|---|---|\n| C-001 | src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj | added | Web SDK project, net10.0, no package reference, invariant globalization off, pages embedded; references the toolchain project, which never references it back | D-001; D-007; P-001 |\n| C-002 | src/MediaCompany.Pilot.Web/Program.cs | added | Start-up: named single-instance lock per application folder, listener on 127.0.0.1 (default port 47817, `--port 0` for tests), bound-address check (exit 4 if any address is not 127.0.0.1), ready line, optional browser open | D-003; D-013; P-002 |\n| C-003 | src/MediaCompany.Pilot.Web/WebContext.cs | added | Command-line options (port, app folder, desktop folder, no-browser, test mode and result path) and the per-start shared state | D-003; D-006 |\n| C-004 | src/MediaCompany.Pilot.Web/RequestGuard.cs | added | Request guard: loopback peer, exact host allow-list, exact Origin and per-start token header on every POST, other methods refused; security headers including a self-only content policy | D-003; P-002 |\n| C-005 | src/MediaCompany.Pilot.Web/Routes.cs | added | Every page and API route of the seven steps, setup, progress, checklist, approval and verify. Ordered pre-checks with Vietnamese refusals, and the mapping of refusal and failure classes to JSON outcomes | D-008 to D-012; P-005 to P-012 |\n| C-006 | src/MediaCompany.Pilot.Web/Setup.cs | added | First-run setup: finds ffmpeg and ffprobe by digest, the face by its manifest line, and the toolchain build output. Copies every CEO number from the example settings file, with none typed. Validates with the toolchain's reader before and after writing | D-004; P-003 |\n| C-007 | src/MediaCompany.Pilot.Web/AppRecord.cs | added | The app record (pilot folder, CEO name, toolchain digest), read with unknown members refused; JSON options for files and requests | D-004; D-008 |\n| C-008 | src/MediaCompany.Pilot.Web/Shortcut.cs | added | Desktop shortcut through the Windows shell link interface, written only on the operator's confirmation; a shell failure becomes a Vietnamese refusal (shortcut-failed) that does not undo setup | D-013 |\n| C-009 | src/MediaCompany.Pilot.Web/Names.cs | added | Approver text in exactly the two decided forms, and plain-name checks for every stored file | D-005; D-008 |\n| C-010 | src/MediaCompany.Pilot.Web/Workspace.cs | added | Per-video input folder under the pilot folder and the per-video web state file (script ticks, checklist ticks, last package) | D-008; P-005 |\n| C-011 | src/MediaCompany.Pilot.Web/FactSteps.cs | added | Live banned-term check through the toolchain's held list. NFC normalisation of the stored sheet. The fact sheet check run before the images exist | D-015; P-006 |\n| C-012 | src/MediaCompany.Pilot.Web/MediaSteps.cs | added | Browser-take conversion to mono 16-bit PCM WAV, bit-exact, file protocol only, capped at 60 s. Recording admission through the toolchain's Admission and Ledger before a recording is replaced. Uploaded recording and clip admission | D-002; P-009; P-010 |\n| C-013 | src/MediaCompany.Pilot.Web/ToolchainRunner.cs | added | The toolchain child path: argument list, no shell, UTF-8 output, digest check before each start, exit-status mapping, timeout | D-001; P-004 |\n| C-014 | src/MediaCompany.Pilot.Web/ChildJob.cs | added | Kill-on-close job object holding every toolchain child and what it starts | D-001; P-004 |\n| C-015 | src/MediaCompany.Pilot.Web/ProduceJobs.cs | added | One background produce at a time, with a read-only progress view; a second start is refused (produce-busy) | D-009; P-011 |\n| C-016 | src/MediaCompany.Pilot.Web/Outcomes.cs | added | Outcome display: the toolchain's line unchanged; reason and next step for the fourteen guide codes; app fault and tool failure kinds | D-010 |\n| C-017 | src/MediaCompany.Pilot.Web/ChecklistView.cs | added | Reads the package's checklist.md against the held kit 04 list: B8 ticked by the tool, 26 items for the approver, B3 and B5 notes | D-012; P-012 |\n| C-018 | src/MediaCompany.Pilot.Web/WebLog.cs | added | Local log of route, status, code, exit and duration only | D-014 |\n| C-019 | src/MediaCompany.Pilot.Web/WebRefusal.cs | added | The app's pre-check refusal type: stable code, Vietnamese message, HTTP status | D-010 |\n| C-020 | src/MediaCompany.Pilot.Web/PageAssets.cs | added | Serves the embedded pages and injects the per-start token; injects the test driver only in test mode | D-003; D-006 |\n| C-021 | src/MediaCompany.Pilot.Web/Pages/index.html | added | Setup, home and video views with the seven step tabs, all in Vietnamese | D-010; P-005 to P-012 |\n| C-022 | src/MediaCompany.Pilot.Web/Pages/app.js | added | Page logic: token header on each POST, text set only through textContent, live check after 250 ms, MediaRecorder recorder with the 60 s hard stop, timer, playback and re-record, timing editor, checklist and approval | D-002; D-011; D-012; D-015 |\n| C-023 | src/MediaCompany.Pilot.Web/Pages/app.css | added | Plain local styling, no font or image fetched | D-007 |\n| C-024 | src/MediaCompany.Pilot.Web/Pages/test-driver.js | added | Recording-test driver, served only in test mode, that drives the real page with the browser's fake microphone and posts what it saw to the test result route | D-006; P-013 |\n| C-025 | tests/MediaCompany.Pilot.Web.Tests/MediaCompany.Pilot.Web.Tests.csproj | added | Console test program with zero package references; links the MC-16 fixture helpers unchanged | D-006; P-013 |\n| C-026 | tests/MediaCompany.Pilot.Web.Tests/Runner.cs | added | Case runner, PASS/FAIL lines with evidence notes, exit code equal to the failure count | P-013 |\n| C-027 | tests/MediaCompany.Pilot.Web.Tests/Support.cs | added | Starts the built app as its own process; HTTP helper with Origin and token; direct toolchain runs for parity; fixtures | P-013 |\n| C-028 | tests/MediaCompany.Pilot.Web.Tests/AddressHarness.cs | added | The MC-16 job-membership socket-table harness, extended to keep both addresses of each row | D-006; P-013 |\n| C-029 | tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs | added | Program cases 001 to 008: approver text, outcome mapping, guard, live check against the check verb, conversion arguments, NFC, setup composition, static checks | D-003; D-004; D-005; D-010; D-015 |\n| C-030 | tests/MediaCompany.Pilot.Web.Tests/FlowCases.cs | added | Program cases 010 to 028 and 040 to 042: the seven steps over HTTP, each toolchain refusal compared with the toolchain run directly, guard, single instance, log, ledger refusals and the socket evidence | D-001 to D-015 |\n| C-031 | tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs | added | Program case 030: the digest-checked headless shell with a fake microphone from a WAV drawn at test time records, stops at 60 s, plays back, accepts and re-records | D-006; P-013 |\n| C-032 | MediaCompany.slnx | modified | Adds the app under /src/ and its test program under /tests/ | D-007 |\n\n## Test Evidence\n\n| ID | Test | Type | Covers | Command | Result |\n|---|---|---|---|---|---|\n| T-001 | Whole solution builds with warnings as errors: 0 warnings, 0 errors | static | C-001, C-002, C-003, C-004, C-005, C-006, C-007, C-008, C-009, C-010, C-011, C-012, C-013, C-014, C-015, C-016, C-017, C-018, C-019, C-020, C-025, C-026, C-027, C-028, C-029, C-030, C-031, C-032 | dotnet build MediaCompany.slnx | pass |\n| T-002 | Program cases 001 to 008. Approver text has two forms; 5 bad names are refused for each role. All 14 guide codes have a reason and a next step. 15 request-guard cases. Banned classes a to g are found by the live check and by the check verb run directly. Conversion arguments. NFC. Setup equals the example's CEO numbers, and bad folders and tools are refused. Static checks: no PackageReference; project.assets.json lists projects only; no external address in the pages; no media file; the toolchain does not reference the app; the app has no type reference to Producer, Program, Composition, System.Net.Http or System.Net.Sockets; NetworkGuard passes | unit | C-004, C-006, C-009, C-011, C-012, C-016, C-021, C-022, C-023, C-024, C-029 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-003 | Program cases 010 and 012 to 016. The app starts on 127.0.0.1 only; its one listener is 127.0.0.1. It sends the content policy, no Server header, and no test driver outside test mode. Setup is required first. At setup, an unknown member such as a CEO number, an in-repository folder and a bracketed name are refused; the settings equal the example and the shortcut is written. 17 blank-field sheets: each refusal code and line equals the check verb's. Missing and path-named screenshots are refused. NFC is stored. Images are refused when undeclared or of a different type. The script follows the generator's order. Recording waits for all 5 ticks | integration | C-002, C-003, C-004, C-005, C-006, C-007, C-008, C-010, C-011, C-020, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-004 | Program cases 017 to 019. A 60.0 s upload is kept byte for byte. A 61.0 s upload is refused with produce's own line. A .webm upload is refused with the accepted list. A webm/opus take converts to one digest across 3 conversions; an unknown take type is refused. Landscape 960x540 gives clip-not-portrait and 18.0 s against 17.4 s gives clip-length-mismatch, each line equal to produce's. 540x960 at 17.4 s is accepted | integration | C-005, C-012, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-005 | Program case 020. A continuous tone gives pauses-not-found and opens the timing editor; the line equals produce's. A bad timing line is refused (timing-file-invalid) and nothing is saved. A 0.5 s first window gives caption-page-too-short and offers the editor; the line equals produce's. A second produce while one runs gives 409 produce-busy. Good timing gives a ready package, exit 0 | integration | C-005, C-013, C-014, C-015, C-016, C-022, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-006 | Program cases 021 and 022. The checklist has 27 items in held order. B8 is the only tool-ticked item. 26 items are for the approver; B3 and B5 carry notes. The digest shown equals the manifest and file digest, and the previewed bytes equal the package video. 25 ticks give checklist-incomplete with no approval.json. No presser gives pressed-by-missing. B8 cannot be ticked by the operator. 26 ticks with an employee approve by hash with the exact decided wording, and verify exits 0 | integration | C-005, C-009, C-017, C-022, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-007 | Program cases 023 to 026; each line equals the toolchain verb's line on the same files. A one-byte change gives approval-hash-mismatch with no approval written. Verify refuses package-file-not-plain, package-ledger-mismatch and approval-void. A recording used for one video is refused for a second video at step 4 (recording-reused). Settings loosened by hand give settings-looser-than-ceo | integration | C-005, C-012, C-013, C-016, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-008 | Program cases 011, 027 and 028. Six foreign requests are refused: POST without Origin (403), foreign Origin (403), no token (403), wrong token (403), foreign Host (403), PUT (405). 85 pilot files and the application folder are unchanged. A second start with the same application folder names the running address, exits 0 and never listens. The log holds no token, CEO name, employee name, query string, product text or pilot path | integration | C-002, C-004, C-018, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-009 | Program case 030. The headless shell's SHA-256 c4d6a64a\u2026e3c matches browser.sha256. The fake microphone is fed a WAV drawn at test time. The page stops the first take itself at 60 s; the timer reads \"60,0 gi\u00e2y\". It plays back to the end, and the accepted recording is 60.000 s. A re-record is stopped by hand at 3.1 s, played back and accepted at 3.060 s, replacing the first. App harness: 30 members, 6 rows, all owned by the app and on loopback. Browser harness, counted apart: 7 processes, 3 TCP rows, all 127.0.0.1, 0 UDP rows | end-to-end | C-002, C-012, C-020, C-021, C-022, C-024, C-028, C-031 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-010 | Program cases 040 to 042. An emptied ledger gives ledger-entry-missing and a deleted ledger gives ledger-truncated; each line equals the check verb's. Socket evidence over the whole flow: 5569 samples, 146 member processes (19 toolchain, 25 ffmpeg, 28 ffprobe, 73 conhost). 0 rows are owned by any member other than the app. The app's 4 distinct rows are all 127.0.0.1. Run total: 31 passed, 0 failed, 31 run in 173 s | integration | C-005, C-013, C-014, C-028, C-030 | tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe | pass |\n| T-011 | MC-16 pilot regression: 251 of 251, unchanged | regression | C-001, C-025, C-032 | dotnet test tests/MediaCompany.Pilot.Tests --no-build | pass |\n| T-012 | Architecture regression: 101 of 101 | regression | C-032 | dotnet test tests/MediaCompany.Architecture.Tests --no-build | pass |\n| T-013 | Capability regression: 90 of 90 | regression | C-032 | dotnet test tests/MediaCompany.Capability.Tests --no-build | pass |\n| T-014 | Deterministic regression: 453 of 453 | regression | C-032 | dotnet test tests/MediaCompany.Deterministic.Tests --no-build | pass |\n| T-015 | Domain regression: 48 of 48 | regression | C-032 | dotnet test tests/MediaCompany.Domain.Tests --no-build | pass |\n| T-016 | Production regression: 132 passed and 1 skipped of 133, the same skip as the MC-16 baseline | regression | C-032 | dotnet test tests/MediaCompany.Production.Tests --no-build | pass |\n| T-017 | Persistence regression: 61 passed and 184 skipped of 245. The skipped tests need the company store database, which was not started | regression | C-032 | dotnet test tests/MediaCompany.Persistence.Tests --no-build | pass |\n\n## Verification Results\n\n- Verification method: The solution was built. The new test program ran end to end against the built app and the built toolchain executable, with media fixtures drawn into temporary folders at test time. Every refusal the toolchain can give was compared with the toolchain run directly on a copy of the same files. The recording step ran in the digest-checked headless shell with its fake microphone. The MC-16 pilot suite and the other test projects were re-run against their baselines.\n- Commands executed: `dotnet build MediaCompany.slnx`; `tests/MediaCompany.Pilot.Web.Tests/bin/Debug/net10.0/MediaCompany.Pilot.Web.Tests.exe`; `dotnet test tests/MediaCompany.Pilot.Tests --no-build`; `dotnet test tests/MediaCompany.Architecture.Tests --no-build`; `dotnet test tests/MediaCompany.Capability.Tests --no-build`; `dotnet test tests/MediaCompany.Deterministic.Tests --no-build`; `dotnet test tests/MediaCompany.Domain.Tests --no-build`; `dotnet test tests/MediaCompany.Production.Tests --no-build`; `dotnet test tests/MediaCompany.Persistence.Tests --no-build`\n- Result summary: 17 evidence entries executed, 17 passed, 0 failed. Build: 0 warnings, 0 errors. New web test program: 31 of 31 (8 unit cases, 22 flow cases, 1 browser case), 173 s. MC-16 pilot: 251 of 251. Regression: Architecture 101/101, Capability 90/90, Deterministic 453/453, Domain 48/48, Production 132 passed and 1 skipped of 133, Persistence 61 passed and 184 skipped of 245. Toolchain refusals reproduced through the app with the toolchain's own line: recording-too-long, clip-not-portrait, clip-length-mismatch, pauses-not-found, caption-page-too-short, approval-hash-mismatch, package-file-not-plain, package-ledger-mismatch, approval-void, recording-reused, settings-looser-than-ceo, ledger-entry-missing, ledger-truncated, banned-term (classes a to g), and the 17 blank-field codes. Two runs before the final one failed and were fixed in the tests only. In the first, a second produce was sent for a video with no clip, so the clip pre-check answered before the busy check. In the second, one request body was reused after it had been disposed, and a browser UDP row with no remote address was asserted as an address. A third run passed 31 of 31; the final run, after the shortcut refusal was added (C-008), passed 31 of 31 again, and the MC-16 pilot suite was re-run after it (251 of 251).\n- Unverified areas: none\n\n## Deviations and Tradeoffs\n\n| ID | Deviation | Design element | Rationale | Escalation |\n|---|---|---|---|---|\n| V-001 | The recording-test driver runs inside the real page and is injected only when the app starts with `--test-mode`; it is not a separate test page (C-020, C-024) | D-006 recording test | Driving the real page tests the operator's recorder, not a copy of it. The browser cannot turn test mode on; case 010 shows the driver is neither linked nor served outside test mode | not-required |\n| V-002 | Recording admission runs at step 4: length, the 300 s upload ceiling and reuse against the ledger, through the toolchain's own Admission and Ledger in process. Produce still re-checks everything (C-012) | D-001 process boundary; D-002 recording | The operator learns at once that a recording is too long or already used, not after producing. The decision stays the toolchain's own code | not-required |\n| V-003 | Replacing a recording also deletes that video's timing.txt (C-012) | D-011 timing editor | Windows typed for an old recording would be wrong for the new one, and produce would use them without warning | not-required |\n| V-004 | Added GET /api/input/recording so the timing editor can play the stored recording (C-005) | D-011 timing editor | The operator needs to hear the recording to type its windows; the route reads only that video's stored recording | not-required |\n| V-005 | The approve route requires all 26 approver items ticked, a presser choice and the shown digest before it runs the approve verb (C-005, C-022) | D-012 checklist and approval | Stricter than the toolchain, which does not see ticks. The toolchain still decides by hash | not-required |\n| V-006 | The toolchain's digest is recorded at setup; a rebuilt toolchain is refused (toolchain-changed) until setup is saved again (C-013) | D-004 first-run setup | The app never starts an executable that differs from the one set up | not-required |\n| V-007 | The live check covers only the fields the check verb scans: the header subject and classification, and each row's subject, attribute, value and override. It does not check every typed field (C-022) | D-015 live check | The check verb does not scan product name, shop, niche or source fields. Checking them live would warn about text the tool accepts, so the page and the tool would disagree | Raised to the architect as an open question |\n| V-008 | Besides the three decided capture flags, the headless shell gets a temporary profile and flags that turn its own background traffic off. Browser rows are asserted for TCP, which carries both addresses. A UDP row has no remote address in the system table, so it is reported, not asserted (C-031) | D-006 recording test | One run showed the shell binding a UDP socket on the any-address with no remote, which the table cannot attribute. With the flags added, the final run showed 0 UDP rows. The browser's loopback connection is kept outside the toolchain count, as decided | Raised to qa as an open question |\n\n## Boundary Compliance\n\n- Module boundaries preserved: The app is its own assembly and references only the toolchain project. The toolchain references only MediaCompany.Deterministic and never the app, and its closure check still passes (T-002, T-011). The app has no type reference to Producer, the toolchain's Program, Composition, System.Net.Http or System.Net.Sockets (T-002). No file under src/MediaCompany.Pilot or tests/MediaCompany.Pilot.Tests changed. The web test program links PilotTestEnvironment.cs from the MC-16 test project unchanged.\n- Public interface changes: A new executable, MediaCompany.Pilot.Web, with options `--port`, `--app-folder`, `--desktop-folder`, `--no-browser`, plus `--test-mode` and `--test-result` for the test program only. Exit codes: 0 started or another instance is already running, 1 usage, 4 port busy or a non-loopback address. A loopback-only HTTP API is used by its own page. The app adds its own pre-check codes (for example facts-needed, images-missing, script-not-ticked, take-format-refused, recording-format-refused, checklist-incomplete, pressed-by-missing, produce-busy, toolchain-changed, shortcut-failed, origin-not-allowed, token-not-valid, host-not-allowed). The toolchain's five verbs, exit codes and refusal codes are unchanged.\n- Data or migration impact: None in the company store. The app writes these files: the app record and running-address file in its application folder (by default under LocalApplicationData/MediaCompany/PilotWeb); cai-dat.json, inputs/<video code>/, web/ (state files and nhat-ky.log) and the toolchain's runs/ and ledger inside the operator's pilot folder outside the repository; and, on confirmation, one desktop shortcut.\n- Declared side effects: The 32 files of the change set (C-001 to C-032), plus this artifact and the result envelope under runs/run-022d0492a75a/states/implementation/. Outside the repository, test runs wrote only to temporary folders under the system temp folder. Build outputs went to bin and obj. No media file was added to the repository.\n\n## Residual Risk\n\n| ID | Risk | Likelihood | Impact | Mitigation in place |\n|---|---|---|---|---|\n| R-001 | The recording test uses the headless shell's fake capture device, not a real microphone or the operator's own browser, whose MediaRecorder container may differ | medium | A real browser could produce a container the conversion has not seen in a test | webm, ogg and mp4 takes are accepted by Content-Type and converted by the digest-checked ffmpeg; an unconvertible take is refused with a next step; upload of a WAV recording remains |\n| R-002 | The socket harness samples every 20 ms and can miss a socket that opens and closes between samples | low | A brief connection by a child process could go unseen | Every media input is limited to the file protocol; the toolchain's closure check passes; 5569 samples over the flow saw no row for any child |\n| R-003 | A UDP socket owned by the test browser cannot be attributed to a destination, because the system UDP table has no remote column (V-008) | low | The browser evidence covers TCP only | Background-traffic flags and a host resolver rule that resolves nothing but 127.0.0.1; the browser is test equipment, outside the toolchain count |\n| R-004 | Another local program could read the page over loopback and obtain the per-start token | low | It could post as the page; such a program can already read the pilot folder directly | Exact host and Origin are required, the token is new at each start, the listener is loopback only, and the toolchain still decides every check |\n| R-005 | Produce progress shows elapsed time only, so a long real recording shows no percentage | medium | The operator may think the app has stalled | The page says that produce is running and for how long; one produce at a time; the job is killed when the app closes |\n| R-006 | The desktop shortcut uses the Windows shell link interface; a locked-down machine may refuse it | low | No shortcut is created | Setup still saves, and its message gives the reason (shortcut-failed), the app's file and folder to start from, and the home-screen button that retries; this path has no automated test |\n\n## Handoff Notes\n\n- Reviewer focus areas: RequestGuard and the start-up address check in Program.cs. The pre-check order in Routes.cs against the toolchain's own order. MediaSteps.Convert and AcceptUploadedRecording, which call Admission.Recording before anything is replaced. ToolchainRunner and ChildJob: argument list, no shell, digest check, kill-on-close. The approval wording in Names.cs. The live-check field set (V-007). The address harness and the browser flags in BrowserCase.cs.\n- Follow-up work: A first session with a real microphone in the operator's own browser should confirm the take container and the conversion (R-001). The operator guide pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md still describes only the command-line route. Whether it gains a section on the web app is left to its owner.\n- Documentation impact: How to start the app: `dotnet run --project src/MediaCompany.Pilot.Web`, or after a build `src/MediaCompany.Pilot.Web/bin/Debug/net10.0/MediaCompany.Pilot.Web.exe`; it opens http://127.0.0.1:47817 (options `--port`, `--no-browser`, `--app-folder`). To fake a microphone in a demo, run this in the browser console before pressing record: `navigator.mediaDevices.getUserMedia = async () => { const c = new AudioContext(); const o = c.createOscillator(); const d = c.createMediaStreamDestination(); o.connect(d); o.start(); return d.stream; }`. To make a matching portrait presenter clip, take the recording length the app shows at step 4 and run `ffmpeg -f lavfi -i color=c=magenta:s=540x960:r=30:d=<seconds> -c:v libx264 -pix_fmt yuv420p presenter.mp4`. The clip must be within 0.5 s of the recording length.\n\n## Open Questions\n\n| ID | Question | Blocking | Owner | Affects |\n|---|---|---|---|---|\n| Q-001 | Is the live check's field set accepted: exactly the fields the check verb scans, not every typed field (V-007)? | non-blocking | architect | C-022 |\n| Q-002 | Is reporting, rather than asserting, the test browser's UDP rows accepted, given that the system UDP table has no remote address (V-008, R-003)? | non-blocking | qa | C-031 |\n| Q-003 | Should the MC-16 operator guide gain a section that points the operator to the web app? | non-blocking | product-owner | C-021 |",
+        "digest": "sha256:5609330cf5423286a2d55e1d48a34295",
+        "produced_by": "implementation"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the subject under review: an implementation report for a delivered change, a stable pull request diff for a review-pull-request run, or a quality-scan scope naming the repository boundary, exclusions, and risk threshold for a code-quality-scan run. Without one there is nothing under review, and reviewing anyway would mean assessing this agent's own choice of what to read."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "implementation-report",
+      "reference": "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+      "produced_by": "implementation",
+      "artifact": "implementation-report.md",
+      "bytes": 30507,
+      "sections": {
+        "read_first": [
+          "Implementation Summary",
+          "Change Set",
+          "Test Evidence",
+          "Verification Results",
+          "Deviations and Tradeoffs",
+          "Open Questions"
+        ],
+        "on_demand": [
+          "Boundary Compliance",
+          "Residual Risk",
+          "Handoff Notes"
+        ]
+      }
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-022d0492a75a/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:c7ed834ed308cbe2f745160bfa5d2073",
+    "bytes": 69309,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database",
+        "performance",
+        "react-frontend",
+        "security"
+      ],
+      "declared": [
+        "security"
+      ]
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "quality-review"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-27T02:50:06Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/review-package.md",
+        "digest": "sha256:e376c4fa9896aaa7f14a5f16cbf136f4",
+        "supplies": null,
+        "bytes": 5268,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/implementation-report.md",
+        "digest": "sha256:d0616790c1cb2c658ccc70b61ebb4a3e",
+        "supplies": null,
+        "bytes": 5809,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/technical-design.md",
+        "digest": "sha256:ef4bb02c7c6453013cf58a10b5c6f746",
+        "supplies": null,
+        "bytes": 6560,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "skills/testing/testing-strategy.md",
+        "digest": "sha256:186a1e81b3ff01bcadec23c9119e86d6",
+        "supplies": null,
+        "bytes": 1265,
+        "read": "required",
+        "read_reason": "skill S07 is required for this phase"
+      },
+      {
+        "path": "skills/security/secure-engineering.md",
+        "digest": "sha256:474ba6292d92cbc8e8533e7942955357",
+        "supplies": null,
+        "bytes": 1236,
+        "read": "required",
+        "read_reason": "skill S09 is required for this phase"
+      },
+      {
+        "path": "skills/performance/performance-engineering.md",
+        "digest": "sha256:018d88d8cc352700bf6bb06703a8129e",
+        "supplies": null,
+        "bytes": 1266,
+        "read": "required",
+        "read_reason": "skill S08 is required for this phase"
+      },
+      {
+        "path": "skills/architecture/clean-architecture-checklist.md",
+        "digest": "sha256:8e4f9ca28ad1bb63d8368998cb67cc5a",
+        "supplies": null,
+        "bytes": 4862,
+        "read": "required",
+        "read_reason": "skill S01 is required for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:75bb3dd26a2c83c8267d5f109eb9d6fe",
+    "input_digest": "sha256:444d55c234288e24a6fc286d950b2434",
+    "inputs": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-17-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-17-feature-request.md",
+        "digest": "sha256:a14fe9e6638fa76cbc0a7ce39f5550fd"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-17-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-17-business-intent.md",
+        "digest": "sha256:5cdc471a170c1142945cad022920cdc5"
+      },
+      {
+        "type": "implementation-report",
+        "reference": "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-17-pilot-web-fffc59/.claude/runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+        "digest": "sha256:5609330cf5423286a2d55e1d48a34295"
+      }
+    ],
+    "unnarrowed": [
+      "runtime/README.md",
+      "skills/architecture/clean-architecture-checklist.md",
+      "skills/performance/performance-engineering.md",
+      "skills/security/secure-engineering.md",
+      "skills/testing/testing-strategy.md",
+      "templates/implementation-report.md",
+      "templates/review-package.md",
+      "templates/technical-design.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "skills/architecture/clean-architecture-checklist.md",
+      "skills/performance/performance-engineering.md",
+      "skills/security/secure-engineering.md",
+      "skills/testing/testing-strategy.md",
+      "templates/implementation-report.md",
+      "templates/review-package.md",
+      "templates/technical-design.md"
+    ],
+    "read_on_demand": [
+      "runtime/README.md",
+      "workflows/implement-feature.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 189650,
+    "bytes_required": 27815,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:f90407234b5404dabfa6045a8ba138ed",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md",
+      "runs/run-022d0492a75a/states/quality-review/result-envelope.json"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": true,
+      "purpose": "the repository's own test, build, and static-analysis commands, run read-only to confirm results the change under review reports as executed",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "any command that modifies repository source, tests, or committed run evidence",
+        "repository history rewriting, publishing, or release actions",
+        "any command whose result is not recorded in the review package"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution other than the repository's own test, build, and static-analysis commands, run read-only to confirm results the change under review reports as executed",
+      "external system, repository, or ticketing access",
+      "write, repair, or refactor production code or tests",
+      "revise the technical design rather than raising a finding against it",
+      "define, widen, or narrow product scope",
+      "validate acceptance criteria or release thresholds, which belongs to qa",
+      "record a merge or release decision",
+      "decide a gate that assesses evidence this agent produced",
+      "review a change this agent authored",
+      "approve while a critical or high finding is open, or while test evidence is absent",
+      "lower a severity without evidence that lowers it",
+      "relax an acceptance criterion, a quality threshold, or a declared invariant",
+      "modify committed run evidence or a governance record",
+      "access external systems directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "review an implemented change against the requirements, the accepted design, and the standards in force",
+        "survey a bounded repository scope for redundant, dead, duplicated, over-abstracted, or generated low-value code, against the maintainability standards in force",
+        "assess conformance to coding standards, architecture rules, and security criteria",
+        "judge whether the supplied evidence supports the claim it is offered for",
+        "judge whether executed tests cover the behavior the change altered",
+        "classify each defect by severity, category, and location against a named standard",
+        "issue correction requests that state a required outcome and name its owner",
+        "assess residual risk and recommend readiness for the gate the phase feeds",
+        "execute the repository's own verification commands to confirm reported results",
+        "decide a gate over evidence another role produced"
+      ],
+      "prohibited": [
+        "write, repair, or refactor production code or tests",
+        "revise the technical design rather than raising a finding against it",
+        "define, widen, or narrow product scope",
+        "validate acceptance criteria or release thresholds, which belongs to qa",
+        "record a merge or release decision",
+        "decide a gate that assesses evidence this agent produced",
+        "review a change this agent authored",
+        "approve while a critical or high finding is open, or while test evidence is absent",
+        "lower a severity without evidence that lowers it",
+        "relax an acceptance criterion, a quality threshold, or a declared invariant",
+        "modify committed run evidence or a governance record",
+        "access external systems directly"
+      ],
+      "repositoryWrites": {
+        "allowed": false,
+        "rationale": "Independence is the whole value of this role. An agent that can change the code it assesses becomes the producer of the work it is about to judge, and the Producer Exclusion Rule then disqualifies it from the very verdict it exists to give. The review reads the repository and writes only its own artifact and result envelope."
+      },
+      "commandExecution": {
+        "allowed": true,
+        "purpose": "the repository's own test, build, and static-analysis commands, run read-only to confirm results the change under review reports as executed",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "any command that modifies repository source, tests, or committed run evidence",
+          "repository history rewriting, publishing, or release actions",
+          "any command whose result is not recorded in the review package"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical inputs and an identical context snapshot must produce the same finding set, the same severity assignment, the same correction-request set, the same verdict, and the same declared package status.",
+      "identifierSchemes": {
+        "findings": "F-<zero-padded-sequence>",
+        "correctionRequests": "CR-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "orderingRule": "Findings are ordered by descending severity; ties break toward the lower location in lexical order. Correction requests follow the findings they address.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied change, standards, or repository context."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "review-package.md",
+    "artifact_path": "runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md",
+    "template_ref": "templates/review-package.md",
+    "contract_ref": "agents/dev-2-reviewer/output.md",
+    "quality_ref": "agents/dev-2-reviewer/quality.md",
+    "validator": "review_package_validator",
+    "result_envelope_path": "runs/run-022d0492a75a/states/quality-review/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-27T02:50:06Z",
+  "model_tier": {
+    "tier": "deep",
+    "host_hint": "opus",
+    "basis": "declared deep for implement-feature/quality-review in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 74164,
+    "modules_core_bytes": 37865,
+    "slice_all_bytes": 189650,
+    "slice_required_bytes": 27815,
+    "inputs_bytes": 18657,
+    "upstream_full_bytes": 30508,
+    "upstream_read_first_bytes": 23449,
+    "task_context_bytes": 69309,
+    "fixed_bytes": 13375,
+    "legacy_estimate_bytes": 326354,
+    "progressive_estimate_bytes": 190470,
+    "legacy_estimate_tokens": 81588,
+    "progressive_estimate_tokens": 47617,
+    "savings_pct": 41.6
+  }
+}

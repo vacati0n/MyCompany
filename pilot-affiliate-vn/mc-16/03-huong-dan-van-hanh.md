@@ -4,6 +4,9 @@ Tài liệu này dành cho người vận hành: CEO, hoặc nhân viên vận h
 ảnh sản phẩm, bản ghi giọng thật của bạn và đoạn phim người dẫn. Công cụ không tạo giọng, không nhân bản giọng, không nhận dạng
 giọng nói, không mở mạng và không đăng gì lên đâu. Đăng bài vẫn do người làm bằng tay, theo danh sách duyệt (kit 04).
 
+> **Cách dễ hơn (MC-17):** nếu bạn không quen dòng lệnh, dùng ứng dụng web trên máy này, đi từng bước và ghi âm ngay trong
+> trình duyệt. Xem `pilot-affiliate-vn/mc-17/01-huong-dan-ung-dung-web.md`. Tài liệu dưới đây vẫn đúng cho cách chạy bằng dòng lệnh.
+
 Mọi lệnh và mọi kết quả trong tài liệu này lấy từ lần chạy mẫu ngày 2026-10-27 (thư mục `C:/Users/vuhoangcao/MediaCompanyRun/pilot-sample/`,
 bản ghi đầy đủ ở `sample-transcript.txt` trong thư mục đó).
 

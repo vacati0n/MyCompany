@@ -1,0 +1,95 @@
+{
+  "invocation_id": "inv-022d0492a75a-06-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-022d0492a75a/states/documentation-and-release-handoff/artifacts/release-note.md"
+  ],
+  "structured_output": {
+    "artifact_status": "complete",
+    "release_verdict": "handed-off",
+    "communication_basis": "release-handoff",
+    "audience_source": "partly inferred from the phase: the CEO and the employee operator are named by decision record entries 1310 and 1311 and the ticket; the orchestrator is implied by the phase as Closure Gate owner",
+    "input_mapping": {
+      "runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md": "verification-report (supplied as review-package)",
+      "runs/run-022d0492a75a/states/quality-review/artifacts/review-corrections.md": "verification-report",
+      "runs/run-022d0492a75a/state.json": "verification-report (Review Gate and Verification Gate rationales)",
+      "inline (orchestrator briefing 2026-10-27)": "verification-report (Browser-pane demonstration figures)",
+      "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md": "final-change-summary",
+      "research/ceo-decision-record.md": "stakeholder-list (nearest declared type; entries 1310 to 1313)",
+      "pilot-affiliate-vn/mc-17/00-ticket-mc-17.md": "stakeholder-list (nearest declared type)",
+      "runs/run-022d0492a75a/task-context.yaml": "architecture-context",
+      "src/MediaCompany.Pilot.Web": "architecture-context (Program.cs, Routes.cs, RequestGuard.cs, Outcomes.cs, Setup.cs, Shortcut.cs, Pages/index.html, Pages/app.js)",
+      "pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md": "architecture-context"
+    },
+    "known_issue_count": 14,
+    "published_statement_count": 44,
+    "statement_sources": [
+      "runs/run-022d0492a75a/states/quality-review/artifacts/review-package.md",
+      "runs/run-022d0492a75a/states/quality-review/artifacts/review-corrections.md",
+      "runs/run-022d0492a75a/state.json",
+      "inline (orchestrator briefing 2026-10-27)",
+      "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+      "research/ceo-decision-record.md",
+      "pilot-affiliate-vn/mc-17/00-ticket-mc-17.md",
+      "runs/run-022d0492a75a/task-context.yaml",
+      "src/MediaCompany.Pilot.Web",
+      "pilot-affiliate-vn/mc-16/03-huong-dan-van-hanh.md"
+    ],
+    "changes_by_class": {
+      "feature-addition": 1,
+      "bug-fix": 0,
+      "improvement": 0,
+      "contract-change": 1,
+      "migration": 0,
+      "configuration-change": 1,
+      "breaking-change": 0
+    },
+    "staging_writes": [
+      "D:/ClaudeTemp/claude/D--Project-MyCompany--claude-worktrees-mc-17-pilot-web-fffc59/99fce59c-b5c3-4ca2-b271-9599b8969c54/scratchpad/docs-stage/01-huong-dan-ung-dung-web.md (Vietnamese operator guide, outside the repository, written on the orchestrator's direction for it to copy into pilot-affiliate-vn/mc-17/; not a repository write, so not listed in declared_side_effects)"
+    ],
+    "quality_checks": {
+      "run": 62,
+      "passed": 62,
+      "failed": 0,
+      "results": {
+        "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+        "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass", "D7": "pass",
+        "P1": "pass", "P2": "pass", "P3": "pass", "P4": "pass", "P5": "pass", "P6": "pass",
+        "R3": "pass",
+        "X1": "pass", "X2": "pass", "X3": "pass", "X4": "pass",
+        "R1": "pass", "R2": "pass", "R4": "pass", "R5": "pass", "R7": "pass", "R8": "pass", "R9": "pass",
+        "V1": "pass", "V2": "pass", "V3": "pass",
+        "K1": "pass", "K2": "pass", "K3": "pass", "K4": "pass", "K5": "pass", "K6": "pass",
+        "R6": "pass",
+        "A1": "pass", "A2": "pass", "A3": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass", "A8": "pass", "A9": "pass", "A10": "pass", "A11": "pass", "A12": "pass", "A13": "pass",
+        "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass", "C6": "pass"
+      }
+    },
+    "judgements": {
+      "N1": "Each statement is written for the CEO, the operator and the orchestrator; the Vietnamese summary repeats only facts stated in the English body",
+      "N2": "Untested surfaces (real microphone, the operator's own browser, a real presenter clip, the exit-4 start-up refusal) are stated as not validated, not softened",
+      "N3": "Every 'all'/'every' claim lists its members: the seven steps, the 26 checklist items (count), the four compatibility differences, the four exit-code meanings, the demonstration results, the fields the live warning covers; foreign identifiers are cited descriptively per the cross-document citation finding"
+    },
+    "open_questions": [
+      { "question": "What version should MediaCompany.Pilot.Web declare; this note uses 0.0.0+ef327e9 (K-013)?", "owner_role": "tech-lead" },
+      { "question": "Should the MC-16 operator guide point to the web app and its guide (K-014)?", "owner_role": "product-owner" },
+      { "question": "Who confirms a real microphone in the operator's own browser before the first real video, and where is it tracked (K-004)?", "owner_role": "orchestrator" },
+      { "question": "Is the live-warning coverage limited to the check command's fields accepted as permanent (K-001)?", "owner_role": "architect" }
+    ]
+  },
+  "evidence_refs": [
+    ".claude/agents/documentation/manifest.yaml",
+    ".claude/agents/documentation/system.md",
+    ".claude/agents/documentation/reasoning.md",
+    ".claude/agents/documentation/output.md",
+    ".claude/agents/documentation/quality.md",
+    ".claude/runs/run-022d0492a75a/states/documentation-and-release-handoff/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    ".claude/runs/run-022d0492a75a/states/documentation-and-release-handoff/artifacts/release-note.md",
+    ".claude/runs/run-022d0492a75a/states/documentation-and-release-handoff/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

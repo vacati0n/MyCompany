@@ -2633,3 +2633,96 @@ seller, buy nothing, download no asset and publish nothing.
 seller, buy nothing, download no asset and publish nothing.
 
 ---
+
+## CEO-D-1310 — MC-17 Scope Gate approved: the web app listens on 127.0.0.1 only; a first-run setup screen; an employee may approve on the CEO's written instruction
+
+**The CEO's own decision, 2026-10-27**, at the Scope Gate of run `run-022d0492a75a` (MC-17), on the four open questions
+of the scope phase.
+
+1. **Socket (Q-001).** Asked whether the MC-17 web app may listen on 127.0.0.1 only, with no outbound connection, while
+   the MC-16 toolchain keeps zero sockets, the CEO chose "Đồng ý 127.0.0.1". This amends `CEO-D-1308` item 1 for the
+   front end only: the web app opens one listening socket on the loopback address and no other socket; the MC-16 tool
+   and the ffmpeg and ffprobe processes it starts keep zero sockets.
+2. **One-time settings (Q-002).** The CEO chose "Màn hình lần đầu": on first run the app shows a Vietnamese screen that
+   asks for the pilot folder, finds ffmpeg, ffprobe and the typeface, computes their SHA-256 and writes the settings
+   file. The numbers the CEO fixed in `CEO-D-1308` and `CEO-D-1309` are written as decided and are not editable there.
+3. **Who approves (Q-003).** The CEO chose "Nhân viên, nếu CEO cho phép": an employee operator may press approve on the
+   CEO's written instruction, and the CEO's name is recorded in the approval. `D-002` stands: each publication is the
+   CEO's approval, given in person or by written instruction.
+4. **Scope (Q-004 and the gate).** Scope approved as the scope phase states it (S-001 to S-018, X-001 to X-011, A-001
+   to A-030); the success measure is the done condition A-029 only.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1309`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---
+
+## CEO-D-1311 — MC-17 Design Gate approved: pure checks in the web process, a zero-package recording test, a desktop shortcut
+
+**The CEO's own decision, 2026-10-27**, at the Design Gate of run `run-022d0492a75a` (MC-17), on the design's open
+decisions and its six decision records D-001 to D-006.
+
+1. **Process boundary (Q-001, D-001).** The CEO chose "Được phép" (O-003): the web app may call the toolchain's pure
+   checks in its own process: the live banned-term check, settings validation, probe and conversion of the recording.
+   Check, script, produce, approve and verify still run as the MC-16 tool in a separate child process with zero
+   sockets. This reads `CEO-D-1310` item 1 as covering the toolchain program and the processes it starts.
+2. **Recording test (Q-002, D-006).** The CEO chose "Không thêm gói" (O-018): the no-microphone recording test drives
+   the installed headless browser with fake capture from a code-generated sound, in a test program that adds zero
+   package references. Scope criterion SC-23 stands unchanged.
+3. **Launcher (Q-004).** The CEO chose "Có, tạo lối tắt": the first-run screen creates a desktop shortcut on the
+   operator's confirmation; a double-click starts the app and opens the browser, or reopens the page if it is running.
+4. **Design (Q-005).** Design approved, D-001 to D-006 accepted. The approver text is "[CEO name] (CEO)" when the CEO
+   presses approve, and "[CEO name] (CEO; nhân viên [employee name] bấm duyệt theo chỉ thị bằng văn bản của CEO)" when
+   an employee presses it.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1310`; agents create no account, sign in nowhere, contact no
+seller, buy nothing, download no asset and publish nothing.
+
+---
+
+## CEO-D-1312 — MC-17 review correction CR-001: step 4 may read the ledger to warn early
+
+**The CEO's own decision, 2026-10-27**, on correction request CR-001 of the quality review of run `run-022d0492a75a`
+(MC-17, finding F-001).
+
+1. **Early warning kept.** The CEO chose "Giữ báo sớm": at step 4 the web app may run the toolchain's recording
+   admission in its own process, which opens the ledger read-only, so a reused recording is reported when it is recorded
+   rather than at produce. The web app never writes the ledger. The produce verb still re-admits the recording in the
+   toolchain child and decides. This amends `CEO-D-1311` item 1 and decision record D-001 of the MC-17 design.
+2. **Serialised with produce.** Step 4 admission waits while a produce job holds the ledger, so it never reads the
+   ledger while the toolchain writes it.
+
+**Unchanged:** `D-002`, `D-018`, `CEO-D-1304` to `CEO-D-1311` except as amended above.
+
+---
+
+## CEO-D-1313 — The bot reads the public Shopee product page to fill the fact sheet
+
+**The CEO's own decision, 2026-10-27.** The CEO's words: "Tôi chấp nhận rủi ro và muốn tự động hoàn toàn." (I accept
+the risk and want it fully automatic.) The CEO approved the Vietnamese text verbatim ("chấp nhận nguyên văn") in the
+MC-16 session and confirmed it directly in the MC-17 session, choosing to build it as a follow-up run after MC-17
+closes. This entry is the English form.
+
+1. **Allowed:** when the CEO supplies an affiliate link or product link, the tool opens the **public product page on
+   shopee.vn** that the link points to. It takes that product's own name, price, classification, specifications,
+   description and images, then fills the fact sheet and saves the images into the video folder. **One product at a
+   time, on the CEO's click.** No crawling of other pages, no category scanning, no batch runs.
+2. **Kept:** no sign-in, no use of the CEO's cookies or session, and affiliate.shopee.vn is not opened (it requires
+   sign-in). No CAPTCHA solving, no browser impersonation to evade anti-bot measures, no IP rotation. If Shopee blocks
+   the page or asks for sign-in, the tool stops and falls back to the semi-automatic mode: the CEO pastes the page
+   content and the tool fills the sheet.
+3. **Changed:** the "download no asset" rule (`CEO-D-1303`) is relaxed **only** for the product images of the product
+   the CEO supplies. The local-connections-only rule (`CEO-D-1308`) is relaxed **only** for the page-reading step, to
+   shopee.vn hosts. Video composition stays fully offline.
+4. **Checks unchanged:** the data the bot takes still passes the MC-16 fact-sheet check (banned terms, price
+   spellings, use claims). The CEO still reviews each fact, and still approves each video before it is published
+   (`D-002`).
+5. **Risk the CEO carries (`D-018`):** Shopee's terms (E-105) forbid partners from "collecting any information on the
+   e-commerce platform". A bot reading pages may be judged a breach, which can mean the affiliate account is locked and
+   commission is lost. E-107 sets a fine of up to 10 million dong for each unauthorised use of content.
+6. **Stop condition:** if Shopee answers Q-014 unfavourably or sends any account warning, the bot is switched off the
+   same day and the tool returns to the semi-automatic mode. Q-014 is still sent.
+
+**Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.
+
+---

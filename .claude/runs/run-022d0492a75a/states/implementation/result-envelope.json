@@ -1,0 +1,138 @@
+{
+  "invocation_id": "inv-022d0492a75a-04-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md"
+  ],
+  "structured_output": {
+    "report_id": "IR-2026-0034",
+    "report_status": "complete",
+    "verification_status": "verified",
+    "workflow_phase": "implementation",
+    "review_status": "pending-review",
+    "counts": {
+      "change_set_entries": 32,
+      "test_evidence_entries": 17,
+      "deviations": 8,
+      "residual_risks": 6,
+      "open_questions": 3,
+      "blocking_open_questions": 0,
+      "escalated_deviations": 2
+    },
+    "executed_results": {
+      "build": "dotnet build MediaCompany.slnx: 0 warnings, 0 errors",
+      "web_test_program": "31/31 (8 unit, 22 flow, 1 browser), 173 s",
+      "pilot": "251/251",
+      "architecture": "101/101",
+      "capability": "90/90",
+      "deterministic": "453/453",
+      "domain": "48/48",
+      "production": "132 passed, 1 skipped of 133 (baseline unchanged)",
+      "persistence": "61 passed, 184 skipped of 245 (database tests skip; the database was not started)"
+    },
+    "evidence": {
+      "toolchain_refusals_reproduced_with_identical_line": [
+        "recording-too-long",
+        "clip-not-portrait",
+        "clip-length-mismatch",
+        "pauses-not-found",
+        "caption-page-too-short",
+        "approval-hash-mismatch",
+        "package-file-not-plain",
+        "package-ledger-mismatch",
+        "approval-void",
+        "recording-reused",
+        "settings-looser-than-ceo",
+        "ledger-entry-missing",
+        "ledger-truncated",
+        "banned-term (classes a to g)",
+        "17 blank-field fact sheets"
+      ],
+      "foreign_requests_refused": [
+        "POST without Origin: 403 origin-not-allowed",
+        "POST from a foreign Origin: 403 origin-not-allowed",
+        "POST without token: 403 token-not-valid",
+        "POST with a wrong token: 403 token-not-valid",
+        "GET with a foreign Host: 403 host-not-allowed",
+        "PUT: 405 method-not-allowed"
+      ],
+      "socket_harness_flow": "5569 samples; 146 job members (19 toolchain, 25 ffmpeg, 28 ffprobe, 73 conhost); 0 rows owned by any member other than the app; 4 distinct app rows, all 127.0.0.1",
+      "browser_case": "headless shell SHA-256 c4d6a64a7af8db5081de3d66bd6957b8999b08064ce8254bb4f99d33d9170e3c matches browser.sha256; first take stopped by the page at 60.0 s, accepted 60.000 s; re-record stopped by hand at 3.1 s, accepted 3.060 s; browser harness 7 processes, 3 TCP rows all 127.0.0.1, 0 UDP rows (kept apart from the toolchain count)",
+      "start": "dotnet run --project src/MediaCompany.Pilot.Web -> http://127.0.0.1:47817"
+    },
+    "quality_check_set_version": "1.0.0",
+    "quality_checks": {
+      "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+      "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass",
+      "M1": "pass", "M5": "pass", "M7": "pass",
+      "E1": "pass", "E2": "pass", "E3": "pass", "E4": "pass",
+      "M3": "pass", "M2": "pass", "K1": "pass", "K2": "pass", "M4": "pass",
+      "V1": "pass", "V2": "pass", "V3": "pass",
+      "B1": "pass", "B2": "pass", "B3": "pass", "B4": "pass", "B5": "pass", "B6": "pass", "B7": "pass",
+      "M6": "pass",
+      "A1": "pass", "A2": "pass", "A3": "pass",
+      "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass"
+    },
+    "quality_checks_run": 45,
+    "quality_checks_passed": 45,
+    "validator": {
+      "tool": "runtime/implementation_report_validator.py",
+      "result": "PASS",
+      "checks": "31/31"
+    },
+    "not_machine_checkable": {
+      "N1": "discharged: each change-set row was written from the file at that path; src/MediaCompany.Pilot and tests/MediaCompany.Pilot.Tests have no diff; MediaCompany.slnx gains two lines",
+      "N2": "discharged: each test-evidence row names program cases whose assertions were checked against FlowCases.cs, UnitCases.cs and BrowserCase.cs, with the counts taken from the run output",
+      "N3": "discharged: the app writes only to its application folder, the configured pilot folder outside the repository and, on confirmation, one desktop shortcut; it starts only the digest-checked toolchain and media tools; the test driver and result route exist only under --test-mode",
+      "N4": "discharged: the new app project and the zero-package test program are required by the Design Gate; every check reuses the toolchain library; the harness extends the MC-16 harness; no package or framework dependency was added (recorded in Approach taken)"
+    }
+  },
+  "evidence_refs": [
+    "agents/dev-1-implement/system.md",
+    "agents/dev-1-implement/identity.md",
+    "agents/dev-1-implement/reasoning.md",
+    "agents/dev-1-implement/execution.md",
+    "agents/dev-1-implement/output.md",
+    "agents/dev-1-implement/quality.md",
+    "runs/run-022d0492a75a/states/implementation/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    "src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj",
+    "src/MediaCompany.Pilot.Web/Program.cs",
+    "src/MediaCompany.Pilot.Web/WebContext.cs",
+    "src/MediaCompany.Pilot.Web/RequestGuard.cs",
+    "src/MediaCompany.Pilot.Web/Routes.cs",
+    "src/MediaCompany.Pilot.Web/Setup.cs",
+    "src/MediaCompany.Pilot.Web/AppRecord.cs",
+    "src/MediaCompany.Pilot.Web/Shortcut.cs",
+    "src/MediaCompany.Pilot.Web/Names.cs",
+    "src/MediaCompany.Pilot.Web/Workspace.cs",
+    "src/MediaCompany.Pilot.Web/FactSteps.cs",
+    "src/MediaCompany.Pilot.Web/MediaSteps.cs",
+    "src/MediaCompany.Pilot.Web/ToolchainRunner.cs",
+    "src/MediaCompany.Pilot.Web/ChildJob.cs",
+    "src/MediaCompany.Pilot.Web/ProduceJobs.cs",
+    "src/MediaCompany.Pilot.Web/Outcomes.cs",
+    "src/MediaCompany.Pilot.Web/ChecklistView.cs",
+    "src/MediaCompany.Pilot.Web/WebLog.cs",
+    "src/MediaCompany.Pilot.Web/WebRefusal.cs",
+    "src/MediaCompany.Pilot.Web/PageAssets.cs",
+    "src/MediaCompany.Pilot.Web/Pages/index.html",
+    "src/MediaCompany.Pilot.Web/Pages/app.js",
+    "src/MediaCompany.Pilot.Web/Pages/app.css",
+    "src/MediaCompany.Pilot.Web/Pages/test-driver.js",
+    "tests/MediaCompany.Pilot.Web.Tests/MediaCompany.Pilot.Web.Tests.csproj",
+    "tests/MediaCompany.Pilot.Web.Tests/Runner.cs",
+    "tests/MediaCompany.Pilot.Web.Tests/Support.cs",
+    "tests/MediaCompany.Pilot.Web.Tests/AddressHarness.cs",
+    "tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs",
+    "tests/MediaCompany.Pilot.Web.Tests/FlowCases.cs",
+    "tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs",
+    "MediaCompany.slnx",
+    ".claude/runs/run-022d0492a75a/states/implementation/artifacts/implementation-report.md",
+    ".claude/runs/run-022d0492a75a/states/implementation/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}
