@@ -60,53 +60,15 @@ public static class Program
 
     private static async Task<int> Serve(WebOptions options, string runningFile)
     {
-        var guard = new GuardState();
-        var web = new WebContext(options, guard);
-        var port = options.Port ?? web.Record?.Port ?? DefaultPort;
-
-        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { Args = [], ContentRootPath = AppContext.BaseDirectory });
-        builder.Logging.ClearProviders();
-        builder.WebHost.ConfigureKestrel(kestrel =>
+        // The shipped entry point: no transport seam is ever passed here (MC-18 design decision D-004).
+        var started = await Start(options, transport: null);
+        if (started.App is null)
         {
-            kestrel.AddServerHeader = false;
-            kestrel.Listen(IPAddress.Loopback, port);
-        });
-
-        await using var app = builder.Build();
-        Routes.Map(app, web);
-        try
-        {
-            await app.StartAsync();
-        }
-        catch (IOException error)
-        {
-            Console.Out.WriteLine($"LỖI ỨNG DỤNG [port-busy]: cổng {port} đang bị chương trình khác dùng ({error.Message}). Đóng chương trình đó, hoặc chạy lại với --port <số khác>.");
-            return ExitAddress;
+            return started.Exit;
         }
 
-        var addresses = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses ?? [];
-        var bound = new List<int>();
-        foreach (var address in addresses)
-        {
-            var uri = new Uri(address);
-            if (!IPAddress.TryParse(uri.Host, out var ip) || !ip.Equals(IPAddress.Loopback))
-            {
-                Console.Out.WriteLine($"LỖI ỨNG DỤNG [address-not-local]: ứng dụng nghe ở {address}, không phải 127.0.0.1. Ứng dụng dừng lại. Báo người phụ trách kỹ thuật.");
-                await app.StopAsync();
-                return ExitAddress;
-            }
-
-            bound.Add(uri.Port);
-        }
-
-        if (bound.Count != 1)
-        {
-            Console.Out.WriteLine("LỖI ỨNG DỤNG [address-not-local]: không đọc được địa chỉ ứng dụng đang nghe. Ứng dụng dừng lại. Báo người phụ trách kỹ thuật.");
-            await app.StopAsync();
-            return ExitAddress;
-        }
-
-        guard.Port = bound[0];
+        await using var app = started.App;
+        var guard = started.Web.Guard;
         var url = guard.Origin + "/";
         File.WriteAllText(runningFile, url, new UTF8Encoding(false));
         Console.Out.WriteLine(ReadyPrefix + guard.Origin);
@@ -126,6 +88,68 @@ public static class Program
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// THE INTERNAL START PATH (MC-18 design decision D-004): builds the app on 127.0.0.1, maps the routes, starts it and checks the bound
+    /// addresses. The shipped entry point calls it with no transport. The test program, which alone sees this assembly's internals, calls
+    /// it with the transport seam that points reads at its own loopback fixture. On success the app is running and the guard knows its
+    /// port; otherwise the app is null and the exit status says why.
+    /// </summary>
+    internal static async Task<(WebApplication? App, WebContext Web, int Exit)> Start(WebOptions options, ReadTransport? transport)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        var guard = new GuardState();
+        var web = new WebContext(options, guard, transport);
+        var port = options.Port ?? web.Record?.Port ?? DefaultPort;
+
+        var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { Args = [], ContentRootPath = AppContext.BaseDirectory });
+        builder.Logging.ClearProviders();
+        builder.WebHost.ConfigureKestrel(kestrel =>
+        {
+            kestrel.AddServerHeader = false;
+            kestrel.Listen(IPAddress.Loopback, port);
+        });
+
+        var app = builder.Build();
+        Routes.Map(app, web);
+        try
+        {
+            await app.StartAsync();
+        }
+        catch (IOException error)
+        {
+            Console.Out.WriteLine($"LỖI ỨNG DỤNG [port-busy]: cổng {port} đang bị chương trình khác dùng ({error.Message}). Đóng chương trình đó, hoặc chạy lại với --port <số khác>.");
+            await app.DisposeAsync();
+            return (null, web, ExitAddress);
+        }
+
+        var addresses = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses ?? [];
+        var bound = new List<int>();
+        foreach (var address in addresses)
+        {
+            var uri = new Uri(address);
+            if (!IPAddress.TryParse(uri.Host, out var ip) || !ip.Equals(IPAddress.Loopback))
+            {
+                Console.Out.WriteLine($"LỖI ỨNG DỤNG [address-not-local]: ứng dụng nghe ở {address}, không phải 127.0.0.1. Ứng dụng dừng lại. Báo người phụ trách kỹ thuật.");
+                await app.StopAsync();
+                await app.DisposeAsync();
+                return (null, web, ExitAddress);
+            }
+
+            bound.Add(uri.Port);
+        }
+
+        if (bound.Count != 1)
+        {
+            Console.Out.WriteLine("LỖI ỨNG DỤNG [address-not-local]: không đọc được địa chỉ ứng dụng đang nghe. Ứng dụng dừng lại. Báo người phụ trách kỹ thuật.");
+            await app.StopAsync();
+            await app.DisposeAsync();
+            return (null, web, ExitAddress);
+        }
+
+        guard.Port = bound[0];
+        return (app, web, 0);
     }
 
     /// <summary>Opens the operator's default browser on the app's own loopback address; nothing else is ever opened.</summary>

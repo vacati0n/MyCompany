@@ -124,6 +124,11 @@ public static class Program
     public static int Main(string[] args)
     {
         Console.OutputEncoding = new UTF8Encoding(false);
+        if (args.Length > 0 && args[0] == FixtureHost.Argument)
+        {
+            return FixtureHost.Run(args);
+        }
+
         var runner = new Runner();
         UnitCases.Add(runner);
         CorrectionCases.Add(runner);
@@ -131,6 +136,8 @@ public static class Program
         flow.Add();
         BrowserCase.Add(runner);
         flow.AddClosing();
+        using var read = new ReadCases(runner);
+        read.Add();
         try
         {
             return runner.Run(args.Length > 0 ? args[0] : null);

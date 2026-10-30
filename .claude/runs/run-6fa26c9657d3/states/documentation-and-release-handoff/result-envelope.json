@@ -1,0 +1,118 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-06-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md"
+  ],
+  "structured_output": {
+    "artifact_status": "complete",
+    "release_verdict": "handed-off",
+    "communication_basis": "release-handoff",
+    "stage8_row": "release-handoff: a verified change set (Review Gate and Verification Gate approved by the orchestrator for qa), handed to the Closure Gate -> handed-off, complete",
+    "audience_source": "partly inferred from the phase: the CEO is named by decision record entries 1313 to 1316 and the employee operator by the MC-18 operator guide; the orchestrator is implied by the phase as Closure Gate owner. No stakeholder list or communication requirements were supplied.",
+    "input_mapping": {
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md": "verification-report (supplied as review-package, digest sha256:3f7fbb0f257e3a70f937e267c1151033)",
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-corrections.md": "verification-report",
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/orchestrator-browser-and-live-read-record.md": "verification-report (Browser-pane run and the single live read)",
+      "runs/run-6fa26c9657d3/state.json": "verification-report (gate records only)",
+      "inline (orchestrator dispatch briefing 2026-10-30)": "verification-report (gate answers; 434 s rerun duration, stated only there)",
+      "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md": "final-change-summary",
+      "research/ceo-decision-record.md": "stakeholder-list (nearest declared type; entries 1313 to 1316)",
+      "pilot-affiliate-vn/mc-18/01-huong-dan-doc-trang.md": "architecture-context (existing documentation)",
+      "pilot-affiliate-vn/mc-17/01-huong-dan-ung-dung-web.md": "architecture-context (existing documentation; lines 10 to 22 and section 9 read, the rest searched)",
+      "runs/run-022d0492a75a/states/documentation-and-release-handoff/artifacts/release-note.md": "architecture-context (prior release note, read for stale content)"
+    },
+    "not_used_as_source": [
+      "runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md and its decision records: searched, not read in full, so no statement rests on them (P2, P4)",
+      "runs/run-6fa26c9657d3/task-context.yaml: header read only; facts were taken from the source artifacts"
+    ],
+    "known_issue_count": 16,
+    "known_issue_order": "review package residual risk (K-001 to K-004), review corrections record not-changed list (K-005, K-006), implementation report residual risks not already listed (K-007 to K-010), orchestrator record (K-011 to K-015), version (K-016)",
+    "published_statement_count": 58,
+    "statement_sources": [
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-corrections.md",
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/orchestrator-browser-and-live-read-record.md",
+      "runs/run-6fa26c9657d3/state.json",
+      "inline (orchestrator dispatch briefing 2026-10-30)",
+      "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+      "research/ceo-decision-record.md",
+      "pilot-affiliate-vn/mc-18/01-huong-dan-doc-trang.md",
+      "pilot-affiliate-vn/mc-17/01-huong-dan-ung-dung-web.md",
+      "runs/run-022d0492a75a/states/documentation-and-release-handoff/artifacts/release-note.md"
+    ],
+    "changes_by_class": {
+      "breaking": 0,
+      "contract": 1,
+      "operational": 2,
+      "feature": 1,
+      "fix": 0,
+      "improvement": 0,
+      "internal": 1
+    },
+    "changes_by_class_detail": {
+      "contract": "new loopback routes, stop and refusal codes, save refusals when a fill record exists, test-program --fixture-host option (additive)",
+      "operational": "outbound HTTPS to shopee.vn and .susercontent.com hosts when the switch is on; new switch, fill-record, read-image and read-log files",
+      "feature": "read from link and paste mode at step 1, with the settings switch, marks and confirmation, and the image picker",
+      "internal": "test program fixture, cases 050 to 066 and the changed case 008 (published only as compatibility and validation facts, not as a user-visible change)"
+    },
+    "stale_content": [
+      "release note RN-2026-017: 'no network beyond 127.0.0.1' holds from 58a22c5 only while the switch is off; correction published in this note, the prior note is committed evidence and is not edited",
+      "pilot-affiliate-vn/mc-17/01-huong-dan-ung-dung-web.md line 10 ('luôn' header text) and the section 9 title 'Chưa có trong ứng dụng này': correction proposed as content for product-owner; not applied"
+    ],
+    "quality_checks": {
+      "run": 62,
+      "passed": 62,
+      "failed": 0,
+      "results": {
+        "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+        "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "D5": "pass", "D6": "pass", "D7": "pass",
+        "P1": "pass", "P2": "pass", "P3": "pass", "P4": "pass", "P5": "pass", "P6": "pass",
+        "R3": "pass",
+        "X1": "pass", "X2": "pass", "X3": "pass", "X4": "pass",
+        "R1": "pass", "R2": "pass", "R4": "pass", "R5": "pass", "R7": "pass", "R8": "pass", "R9": "pass",
+        "V1": "pass", "V2": "pass", "V3": "pass",
+        "K1": "pass", "K2": "pass", "K3": "pass", "K4": "pass", "K5": "pass", "K6": "pass",
+        "R6": "pass",
+        "A1": "pass", "A2": "pass", "A3": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass", "A8": "pass", "A9": "pass", "A10": "pass", "A11": "pass", "A12": "pass", "A13": "pass",
+        "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass", "C6": "pass"
+      },
+      "notes": {
+        "S4": "one fenced block, the metadata block; kept at one because the validator's fenced-block allowance is 1 while the output contract allows four (framework defect finding 9)",
+        "R8": "handed-off lists verification-report; the supplied review-package is recorded under that declared type, as output.md permits",
+        "P2": "the MC-17 operator guide is listed with the lines actually read; the technical design was not read in full and is therefore not listed and not relied on",
+        "C3": "no vendor or runtime name; the git branch is called the MC-18 session branch and framework paths are written from runs/",
+        "C5": "foreign identifiers from other registers (correction requests, findings, open questions, scope criteria, design decisions, CEO decision tokens, observation numbers) are cited descriptively per framework defect finding 6; only K-nnn, commit hashes, case numbers and document identifiers (RP-, IR-, RN-) appear as tokens, as in RN-2026-017"
+      }
+    },
+    "judgements": {
+      "N1": "The note describes the delivered behaviour at 58a22c5 and leads with the live-read outcome: on the one real page read, nothing was filled and paste mode is the expected everyday path",
+      "N2": "RN-2026-017's statement that the app makes no network connection beyond 127.0.0.1 is corrected here rather than carried forward; the MC-17 guide's inconsistent header line and section title are proposed for correction",
+      "N3": "Each user-visible addition at step 1 is listed (paste, read, settings switch, marks and confirmation, image picker, reference-only price and description); the read is not overstated: the note states it filled nothing on the real page. Claims of the form 'each'/'every' that name cases list them: MC-17 cases 010 to 042 (28), MC-18 cases 050 to 066, the four guarded POST routes, the four MC-18 commits"
+    },
+    "open_questions": [
+      { "question": "Is the fixture-host switch display disagreement at start-up (orchestrator record observation 1) to be corrected, and where is it tracked (K-011)?", "owner_role": "qa" },
+      { "question": "Should a paste after a read clear values the read filled that the pasted text does not supply (orchestrator record observation 3, K-012)?", "owner_role": "product-owner" },
+      { "question": "Who pastes text copied from a real Shopee page through step 1 before first real use, and where is the result recorded (K-014)?", "owner_role": "orchestrator" },
+      { "question": "No real image host has been contacted; is real-page image yield to be confirmed, and where is it tracked (K-015)?", "owner_role": "orchestrator" },
+      { "question": "What version should MediaCompany.Pilot.Web declare; this note uses 0.0.0+58a22c5 (K-016)?", "owner_role": "tech-lead" },
+      { "question": "Apply the proposed MC-17 operator guide correction (drop 'luôn' at line 10, retitle section 9)?", "owner_role": "product-owner" }
+    ],
+    "rescans": "none; no repository scan beyond the named evidence, the two operator guides, and the prior release note"
+  },
+  "evidence_refs": [
+    ".claude/agents/documentation/manifest.yaml",
+    ".claude/agents/documentation/system.md",
+    ".claude/agents/documentation/reasoning.md",
+    ".claude/agents/documentation/output.md",
+    ".claude/agents/documentation/quality.md",
+    ".claude/runs/run-6fa26c9657d3/states/documentation-and-release-handoff/invocation-envelope.json"
+  ],
+  "confidence": 0.85,
+  "declared_side_effects": [
+    ".claude/runs/run-6fa26c9657d3/states/documentation-and-release-handoff/artifacts/release-note.md",
+    ".claude/runs/run-6fa26c9657d3/states/documentation-and-release-handoff/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

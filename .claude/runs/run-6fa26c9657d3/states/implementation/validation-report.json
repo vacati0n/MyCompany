@@ -1,0 +1,310 @@
+{
+  "artifact": "D:\\Project\\MyCompany\\.claude\\worktrees\\mc-18-shopee-read-link-27d13c\\.claude\\runs\\run-6fa26c9657d3\\states\\implementation\\artifacts\\implementation-report.md",
+  "validatorSchemaVersion": "1.0.0",
+  "result": "pass",
+  "blockingFailures": 0,
+  "correctableFailures": 0,
+  "advisoryFailures": 0,
+  "checksRun": 32,
+  "checksPassed": 32,
+  "notMachineCheckable": 3,
+  "counts": {
+    "sections": 10,
+    "status": "complete",
+    "identifiers": {
+      "C": 20,
+      "T": 14,
+      "V": 5,
+      "R": 6,
+      "Q": 2
+    },
+    "tableRows": {
+      "Change Set": 20,
+      "Test Evidence": 14,
+      "Deviations and Tradeoffs": 5,
+      "Residual Risk": 6
+    }
+  },
+  "checks": [
+    {
+      "id": "C1.1",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Metadata block present with every declared field populated",
+      "result": "pass",
+      "detail": "11 of 11 fields populated"
+    },
+    {
+      "id": "C1.2",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "producedBy is an agent contracted to emit implementation-report.md",
+      "result": "pass",
+      "detail": "producedBy='dev-1-implement'; contracted producers: ['dev-1-implement']"
+    },
+    {
+      "id": "C1.3",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "schemaVersion is 1.0.0 and agentVersion is semantic",
+      "result": "pass",
+      "detail": "schemaVersion=1.0.0 agentVersion=1.1.0"
+    },
+    {
+      "id": "C1.4",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "status is one of complete, provisional, blocked",
+      "result": "pass",
+      "detail": "status='complete'"
+    },
+    {
+      "id": "C2.1",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "All 9 mandatory sections present exactly once",
+      "result": "pass",
+      "detail": "9 of 9 present, once each"
+    },
+    {
+      "id": "C2.2",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Mandatory sections appear in contract order",
+      "result": "pass",
+      "detail": "observed order: ['Metadata', 'Implementation Summary', 'Change Set', 'Test Evidence', 'Verification Results', 'Deviations and Tradeoffs', 'Boundary Compliance', 'Residual Risk', 'Handoff Notes']"
+    },
+    {
+      "id": "C2.3",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Correctable",
+      "description": "No unpermitted level-2 section introduced",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C2.4",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "No mandatory section is empty",
+      "result": "pass",
+      "detail": "all non-empty"
+    },
+    {
+      "id": "C2.5",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Advisory",
+      "description": "No template authoring guidance remains in the emitted artifact",
+      "result": "pass",
+      "detail": "none"
+    },
+    {
+      "id": "C3.1",
+      "quality_ref": "config/execution-engine.md#agent-adapter",
+      "severity": "Blocking",
+      "description": "At most 1 fenced block(s), as the contract permits",
+      "result": "pass",
+      "detail": "1 fenced block(s) found; 1 permitted"
+    },
+    {
+      "id": "C3.2",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No model, vendor, or provider named",
+      "result": "pass",
+      "detail": "none (repository path prefixes excluded)"
+    },
+    {
+      "id": "C3.3",
+      "quality_ref": "domain-model/agent-specification.md",
+      "severity": "Blocking",
+      "description": "No patch instruction, diff, or file-modification directive",
+      "result": "pass",
+      "detail": "0 diff marker(s)"
+    },
+    {
+      "id": "C4.1",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Every declared field label is present in its section",
+      "result": "pass",
+      "detail": "21 declared field(s) present"
+    },
+    {
+      "id": "C4.2",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "No declared field is left unanswered",
+      "result": "pass",
+      "detail": "every declared field carries a value"
+    },
+    {
+      "id": "C4.3",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Correctable",
+      "description": "Fields with a declared substance floor carry more than a token answer",
+      "result": "pass",
+      "detail": "all fields meet their floor"
+    },
+    {
+      "id": "C5.1",
+      "quality_ref": "rule-engine.md",
+      "severity": "Blocking",
+      "description": "Fields bound to a vocabulary use a permitted value",
+      "result": "pass",
+      "detail": "all bounded fields valid"
+    },
+    {
+      "id": "C5.2",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Correctable",
+      "description": "Fields bound to a format match it",
+      "result": "pass",
+      "detail": "all formatted fields valid"
+    },
+    {
+      "id": "C4.4",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared minimum carry at least that many items",
+      "result": "pass",
+      "detail": "all list sections meet their minimum"
+    },
+    {
+      "id": "C4.5",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Sections with a declared table carry it, with the declared columns",
+      "result": "pass",
+      "detail": "row counts: {'Change Set': 20, 'Test Evidence': 14, 'Deviations and Tradeoffs': 5, 'Residual Risk': 6}"
+    },
+    {
+      "id": "C4.6",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "No table row leaves a required cell empty",
+      "result": "pass",
+      "detail": "all rows complete"
+    },
+    {
+      "id": "C6.1",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Correctable",
+      "description": "Identifiers use the zero-padded three-digit scheme",
+      "result": "pass",
+      "detail": "all well-formed"
+    },
+    {
+      "id": "C6.2",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Every referenced identifier is defined in its declaring section",
+      "result": "pass",
+      "detail": "defined: {'C': 20, 'T': 14, 'V': 5, 'R': 6, 'Q': 2}"
+    },
+    {
+      "id": "C6.3",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "No identifier is defined twice",
+      "result": "pass",
+      "detail": "identifiers unique"
+    },
+    {
+      "id": "C6.4",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Correctable",
+      "description": "Identifiers ascend from 001 without gaps",
+      "result": "pass",
+      "detail": "contiguous: {'C': 20, 'T': 14, 'V': 5, 'R': 6, 'Q': 2}"
+    },
+    {
+      "id": "C7.1",
+      "quality_ref": "config/execution-engine.md#context-loader",
+      "severity": "Blocking",
+      "description": "Metadata digests match the frozen snapshot recorded in the invocation envelope",
+      "result": "pass",
+      "detail": "digests match the envelope"
+    },
+    {
+      "id": "N1",
+      "quality_ref": "agents/dev-1-implement/output.md#change-set",
+      "severity": "Advisory",
+      "description": "Each change-set row describes the change that was actually made at that path",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N2",
+      "quality_ref": "agents/dev-1-implement/quality.md#evidence-checks",
+      "severity": "Advisory",
+      "description": "Each test-evidence row exercises the change-set entries its Covers cell names",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "N3",
+      "quality_ref": "agents/dev-1-implement/quality.md#boundary-checks",
+      "severity": "Advisory",
+      "description": "No hidden side effect was introduced into critical business logic",
+      "result": "not-machine-checkable",
+      "detail": "agent self-verification obligation; not decidable by artifact inspection"
+    },
+    {
+      "id": "M1",
+      "quality_ref": "agents/dev-1-implement/quality.md#evidence-checks",
+      "severity": "Blocking",
+      "description": "Every change-set entry is cited by at least one test-evidence row",
+      "result": "pass",
+      "detail": "20 change(s) covered by 14 test row(s)"
+    },
+    {
+      "id": "M2",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Workflow phase, status, and verification status agree between the metadata block and the Metadata section",
+      "result": "pass",
+      "detail": "all three fields agree"
+    },
+    {
+      "id": "M3",
+      "quality_ref": "agents/dev-1-implement/quality.md#completion-rule",
+      "severity": "Blocking",
+      "description": "A report at status complete records no failing or unrun test and claims verified verification",
+      "result": "pass",
+      "detail": "status='complete', 14 result(s), 0 failing or unrun, 2 open question(s)"
+    },
+    {
+      "id": "M4",
+      "quality_ref": "agents/dev-1-implement/quality.md#deviation-checks",
+      "severity": "Blocking",
+      "description": "Every recorded deviation cites the change-set entry that embodies it",
+      "result": "pass",
+      "detail": "5 deviation(s), each attributed"
+    },
+    {
+      "id": "M5",
+      "quality_ref": "templates/implementation-report.md",
+      "severity": "Blocking",
+      "description": "Test evidence uses the declared type and result vocabularies",
+      "result": "pass",
+      "detail": "14 row(s) within both vocabularies"
+    },
+    {
+      "id": "M6",
+      "quality_ref": "agents/dev-1-implement/quality.md#authority-checks",
+      "severity": "Blocking",
+      "description": "The report records no review verdict and no merge or release readiness claim",
+      "result": "pass",
+      "detail": "review status is pending-review and no readiness claim appears"
+    },
+    {
+      "id": "M7",
+      "quality_ref": "agents/dev-1-implement/quality.md#evidence-checks",
+      "severity": "Blocking",
+      "description": "The declared verification status agrees with the unverified areas the report names",
+      "result": "pass",
+      "detail": "verification='verified', unverified areas none"
+    }
+  ]
+}

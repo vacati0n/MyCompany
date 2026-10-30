@@ -12,10 +12,11 @@
 <body>
 <header class="top">
   <h1>Thí điểm video MediaCompany</h1>
-  <p class="small">Ứng dụng chạy trên máy này (127.0.0.1). Không gửi gì ra ngoài, không đăng, không mua.</p>
+  <p class="small">Ứng dụng chạy trên máy này (127.0.0.1). Chỉ đọc trang sản phẩm shopee.vn khi bạn bấm "Đọc trang" (bật ở Cài đặt); ngoài ra không gửi gì ra ngoài, không đăng, không mua.</p>
   <nav id="top-nav" hidden>
     <button type="button" id="nav-home" class="link">Danh sách video</button>
     <span id="nav-video"></span>
+    <button type="button" id="nav-settings" class="link nav-right">Cài đặt</button>
   </nav>
 </header>
 
@@ -38,6 +39,17 @@
     <ul id="setup-numbers" class="numbers"></ul>
     <button type="button" id="setup-save" class="primary">Lưu cài đặt</button>
     <div id="setup-outcome"></div>
+  </section>
+
+  <!-- CÀI ĐẶT: ĐỌC TRANG SẢN PHẨM -->
+  <section id="view-settings" class="view" hidden>
+    <h2>Cài đặt</h2>
+    <h3>Đọc trang sản phẩm</h3>
+    <p>Khi bật, ở bước 1 có nút <b>Đọc trang</b>: ứng dụng đọc đúng một trang sản phẩm shopee.vn bạn dán vào, cùng các ảnh của sản phẩm đó, rồi điền sẵn các ô để bạn đối chiếu và xác nhận. Ứng dụng chỉ đọc khi bạn bấm nút, không đăng nhập, không lưu cookie.</p>
+    <p>Khi tắt, ứng dụng không gửi gì ra ngoài. Dán chữ của trang và gõ tay vẫn dùng được.</p>
+    <label class="check"><input type="checkbox" id="settings-read"> Bật đọc trang sản phẩm</label>
+    <p class="small" id="settings-file"></p>
+    <div id="settings-outcome"></div>
   </section>
 
   <!-- DANH SÁCH VIDEO -->
@@ -70,6 +82,37 @@
     <div class="step" id="step-1" hidden>
       <h2>Bước 1. Bảng thông tin sản phẩm</h2>
       <p>Chép đúng từ trang sản phẩm. Khi gõ, ứng dụng báo ngay từ bị cấm (nêu từ và nhóm). Bấm <b>Lưu bảng thông tin</b> khi xong.</p>
+      <div class="read-box">
+        <h3>Điền sẵn từ trang sản phẩm</h3>
+        <div id="read-link-part">
+          <label>Đường dẫn trang sản phẩm shopee.vn (một sản phẩm):
+            <input type="text" id="read-link" class="wide" autocomplete="off" spellcheck="false">
+          </label>
+          <button type="button" id="read-run" class="primary">Đọc trang</button>
+          <span id="read-status" class="status"></span>
+        </div>
+        <p id="read-off-note" class="small" hidden>Đọc trang đang tắt (bật ở <b>Cài đặt</b>). Vẫn dán chữ của trang ở dưới, hoặc gõ tay.</p>
+        <details id="paste-part">
+          <summary>Dán chữ của trang sản phẩm</summary>
+          <p class="small">Trên trang sản phẩm, bôi đen từ tên sản phẩm đến hết phần CHI TIẾT SẢN PHẨM, chép rồi dán vào đây. Ứng dụng không gửi chữ này đi đâu.</p>
+          <textarea id="paste-text" rows="8" class="wide"></textarea>
+          <button type="button" id="paste-run">Điền từ chữ đã dán</button>
+        </details>
+        <div id="read-outcome"></div>
+        <div id="read-found" hidden>
+          <h4>Dòng thông tin tìm thấy</h4>
+          <p class="small">Bảng thông tin giữ 1 đến 3 dòng. Bấm "Dùng dòng này" để đưa một dòng vào bảng; mỗi dòng đưa vào cần bạn xác nhận.</p>
+          <ul id="read-candidates" class="candidates"></ul>
+          <div id="read-reference" class="reference"></div>
+          <div id="read-images-part" hidden>
+            <h4>Ảnh đọc từ trang</h4>
+            <p class="small">Chọn tối đa 3 ảnh dùng trong video. Ảnh đã chọn được đặt vào video khi bấm lưu bảng thông tin.</p>
+            <div id="read-images" class="read-images"></div>
+          </div>
+          <ul id="read-not-fetched" class="small"></ul>
+          <p id="read-not-found" class="small"></p>
+        </div>
+      </div>
       <div id="facts-header" class="grid"></div>
       <label>Câu kêu gọi cuối video:
         <select id="facts-cta"></select>

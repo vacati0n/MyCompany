@@ -68,12 +68,25 @@ public sealed class WebContext
     private AppRecord? _record;
 
     public WebContext(WebOptions options, GuardState guard)
+        : this(options, guard, transport: null)
+    {
+    }
+
+    /// <summary>The internal form: only the internal start path passes a transport seam, and only test code calls it (MC-18 D-004).</summary>
+    internal WebContext(WebOptions options, GuardState guard, ReadTransport? transport)
     {
         Options = options;
         Guard = guard;
+        Transport = transport;
         _record = AppRecordStore.Read(options.AppFolder);
         Log = new WebLog(() => Record is { } record ? new Workspace(record).WebFolder : Options.AppFolder);
     }
+
+    /// <summary>The test transport seam; always null in the shipped app.</summary>
+    internal ReadTransport? Transport { get; }
+
+    /// <summary>One product read at a time, app-wide (MC-18 D-001 and D-014): a second click while one runs is refused.</summary>
+    internal SemaphoreSlim ReadGate { get; } = new(1, 1);
 
     public WebOptions Options { get; }
 

@@ -200,6 +200,7 @@
     $("nav-video").textContent = " › Video " + status.code;
     showView("video");
     renderFacts(status);
+    renderRead(status);
     renderImages(status);
     renderScript(status.script, status.scriptTicks);
     renderRecording(status);
@@ -402,11 +403,229 @@
 
   async function saveFacts() {
     const reply = await api("POST", q("/api/facts"), collectFacts());
+    MC17.lastSave = reply;
     showReply("facts-outcome", reply);
     if (reply.ok) {
       const status = await refreshStatus();
       if (status.ok) renderImages(status);
     }
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Bước 1 (MC-18): đọc trang sản phẩm, dán chữ, xác nhận từng ô, chọn ảnh đọc từ trang.
+  // Chỉ đọc khi bấm nút "Đọc trang"; dán chữ hay gõ không bao giờ tự đọc.
+  // ---------------------------------------------------------------------------------------------
+
+  const same = (a, b) => String(a || "").trim().normalize("NFC") === String(b || "").trim().normalize("NFC");
+  const sourceName = (fill) => (fill && fill.source === "read" ? "Đọc từ trang" : "Từ chữ đã dán");
+
+  function renderRead(status) {
+    MC17.readOn = !!status.readOn;
+    $("read-link-part").hidden = !MC17.readOn;
+    $("read-off-note").hidden = MC17.readOn;
+    $("read-status").textContent = "";
+    $("read-outcome").replaceChildren();
+    $("paste-part").open = !MC17.readOn;
+    MC17.fill = status.fill || null;
+    renderFill();
+  }
+
+  // Đưa giá trị đã điền vào các ô đầu bảng; các dòng gợi ý đầu tiên vào các dòng thông tin còn trống (tối đa 3).
+  function applyFill(fill) {
+    for (const field of fill.fields) {
+      const input = $("fh-" + field.member);
+      if (input) input.value = field.value;
+    }
+    for (const candidate of fill.candidates.slice(0, 3)) useCandidate(candidate, true);
+    const used = $("fh-imagesUsed");
+    if (used) {
+      const kept = used.value.split(",").map((s) => s.trim()).filter((s) => s.length > 0 && !s.startsWith("anh-doc-"));
+      used.value = kept.join(", ");
+    }
+    liveCheckSoon();
+  }
+
+  function renderFill() {
+    const fill = MC17.fill;
+    $("read-found").hidden = !fill;
+    const candidates = $("read-candidates");
+    candidates.replaceChildren();
+    $("read-reference").replaceChildren();
+    $("read-images").replaceChildren();
+    $("read-not-fetched").replaceChildren();
+    $("read-not-found").textContent = "";
+    $("read-images-part").hidden = true;
+    if (!fill) {
+      updateMarks();
+      return;
+    }
+    if (fill.candidates.length === 0) candidates.append(el("li", { textContent: "Không tìm thấy dòng CHI TIẾT SẢN PHẨM nào. Gõ tay dòng thông tin." }));
+    for (const candidate of fill.candidates) {
+      const use = el("button", { type: "button", textContent: "Dùng dòng này" });
+      use.addEventListener("click", () => { useCandidate(candidate, false); liveCheckSoon(); updateMarks(); });
+      candidates.append(el("li", {}, [
+        el("span", { textContent: candidate.attribute + ": " + candidate.value + " (" + candidate.sourceSection + ") " }),
+        use,
+      ]));
+    }
+    const reference = $("read-reference");
+    if (fill.price || fill.description) {
+      reference.append(el("h4", { textContent: "Chỉ để tham khảo (không đưa vào bảng thông tin)" }));
+      if (fill.price) reference.append(el("p", { textContent: "Giá trên trang: " + fill.price }));
+      if (fill.description) reference.append(el("p", { className: "description", textContent: "Mô tả sản phẩm: " + fill.description }));
+    }
+    if (fill.images.length > 0) {
+      $("read-images-part").hidden = false;
+      const picked = pickedImages();
+      for (const image of fill.images) {
+        const box = el("input", { type: "checkbox", checked: picked.includes(image.name) });
+        box.dataset.name = image.name;
+        box.addEventListener("change", () => pickImage(box));
+        const thumb = el("img", { alt: image.name, src: q("/api/read-image") + "&name=" + encodeURIComponent(image.name) });
+        $("read-images").append(el("label", { className: "read-image" }, [thumb, el("span", {}, [box, document.createTextNode(" " + image.name)])]));
+      }
+    }
+    for (const skipped of fill.notFetched) {
+      $("read-not-fetched").append(el("li", { textContent: "Chưa lấy ảnh " + skipped.address + ": " + skipped.reason + ". Tải ảnh này lên ở bước 2 nếu cần." }));
+    }
+    if (fill.notFound.length > 0) $("read-not-found").textContent = "Không tìm thấy trên trang: " + fill.notFound.join(", ") + ". Gõ tay các mục này.";
+    updateMarks();
+  }
+
+  function pickedImages() {
+    const used = $("fh-imagesUsed");
+    return used ? used.value.split(",").map((s) => s.trim()).filter((s) => s.length > 0) : [];
+  }
+
+  function pickImage(box) {
+    let names = pickedImages().filter((n) => n !== box.dataset.name);
+    if (box.checked) {
+      if (names.filter((n) => n.startsWith("anh-doc-")).length >= 3) {
+        box.checked = false;
+        showOutcome("read-outcome", { kind: "tu-choi", code: "", line: "Chỉ chọn tối đa 3 ảnh đọc từ trang.", reason: "", nextStep: "Bỏ chọn một ảnh khác trước." });
+        return;
+      }
+      names = names.concat([box.dataset.name]);
+    }
+    $("fh-imagesUsed").value = names.join(", ");
+  }
+
+  // Một dòng gợi ý vào dòng thông tin trống đầu tiên, hoặc một dòng mới nếu còn chỗ (bảng có tối đa 3 dòng).
+  function useCandidate(candidate, quiet) {
+    const rows = [...$("facts-rows").children];
+    const value = (box, member) => box.querySelector('input[data-member="' + member + '"]');
+    if (rows.some((box) => same(value(box, "attribute").value, candidate.attribute) && same(value(box, "value").value, candidate.value))) return;
+    let target = rows.find((box) => ["attribute", "value", "sourceSection"].every((m) => value(box, m).value.trim() === ""));
+    if (!target) {
+      if (rows.length >= 3) {
+        if (!quiet) showOutcome("read-outcome", { kind: "tu-choi", code: "", line: "Bảng thông tin đã có 3 dòng.", reason: "", nextStep: "Bỏ một dòng ở dưới rồi bấm \"Dùng dòng này\" lại." });
+        return;
+      }
+      addFactRow({});
+      renumberRows();
+      target = $("facts-rows").lastElementChild;
+    }
+    value(target, "attribute").value = candidate.attribute;
+    value(target, "value").value = candidate.value;
+    value(target, "sourceSection").value = candidate.sourceSection;
+  }
+
+  // Dấu "Đọc từ trang" hoặc "Từ chữ đã dán" cạnh mỗi ô còn đúng giá trị đã điền; ô đã sửa coi như gõ tay và không còn dấu.
+  function updateMarks() {
+    for (const old of document.querySelectorAll("#step-1 .fill-mark")) old.remove();
+    const fill = MC17.fill;
+    if (!fill) return;
+    for (const field of fill.fields) {
+      const input = $("fh-" + field.member);
+      if (!input || !same(input.value, field.value)) continue;
+      input.parentElement.append(mark(fill, field.confirmed, field.member));
+    }
+    for (const box of $("facts-rows").children) {
+      const attribute = box.querySelector('input[data-member="attribute"]').value;
+      const value = box.querySelector('input[data-member="value"]').value;
+      const matches = fill.candidates.filter((c) => same(attribute, c.attribute) && same(value, c.value));
+      if (matches.length === 0) continue;
+      const confirmed = matches.some((c) => c.confirmed);
+      box.querySelector("h4").append(mark(fill, confirmed, matches[0].key));
+    }
+  }
+
+  function mark(fill, confirmed, key) {
+    const node = el("span", { className: "fill-mark" + (confirmed ? " confirmed" : "") });
+    node.dataset.key = key;
+    node.append(el("span", { textContent: " " + sourceName(fill) + (confirmed ? " — đã xác nhận" : " ") }));
+    if (!confirmed) {
+      const button = el("button", { type: "button", className: "confirm", textContent: "Xác nhận" });
+      button.addEventListener("click", (event) => { event.preventDefault(); confirmFill(key); });
+      node.append(button);
+    }
+    return node;
+  }
+
+  async function confirmFill(key) {
+    const reply = await api("POST", q("/api/read-confirm"), { field: key });
+    if (!reply.ok) {
+      showOutcome("read-outcome", reply.outcome);
+      return;
+    }
+    MC17.fill = reply.fill;
+    updateMarks();
+  }
+
+  async function readProduct() {
+    $("read-run").disabled = true;
+    $("read-status").textContent = "Đang đọc trang...";
+    $("read-outcome").replaceChildren();
+    const reply = await api("POST", q("/api/read"), { link: $("read-link").value });
+    $("read-run").disabled = false;
+    $("read-status").textContent = "";
+    MC17.lastRead = reply;
+    if (reply.fill) {
+      MC17.fill = reply.fill;
+      applyFill(reply.fill);
+      renderFill();
+    }
+    if (reply.ok) {
+      showMessage("read-outcome", reply.message);
+      return;
+    }
+    showOutcome("read-outcome", reply.outcome, reply.offerPaste ? ["Ứng dụng không thử đọc lại. Dán chữ của trang vào ô \"Dán chữ của trang sản phẩm\", hoặc gõ tay."] : []);
+    if (reply.offerPaste) $("paste-part").open = true;
+  }
+
+  async function pasteProduct() {
+    const reply = await api("POST", q("/api/paste"), { text: $("paste-text").value });
+    MC17.lastPaste = reply;
+    if (!reply.ok) {
+      showOutcome("read-outcome", reply.outcome);
+      return;
+    }
+    MC17.fill = reply.fill;
+    applyFill(reply.fill);
+    renderFill();
+    showMessage("read-outcome", reply.message);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Cài đặt: bật hoặc tắt đọc trang sản phẩm
+  // ---------------------------------------------------------------------------------------------
+
+  async function openSettings() {
+    const reply = await api("GET", "/api/read-switch");
+    if (!reply.ok) {
+      showOutcome("global-outcome", reply.outcome);
+      return;
+    }
+    $("settings-read").checked = reply.readOn;
+    $("settings-file").textContent = "Lưu ở tệp " + reply.switchFile;
+    $("settings-outcome").replaceChildren();
+    showView("settings");
+  }
+
+  async function setReadSwitch() {
+    const reply = await api("POST", "/api/read-switch", { on: $("settings-read").checked });
+    showReply("settings-outcome", reply);
+    if (reply.ok) MC17.readOn = reply.readOn;
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -836,6 +1055,12 @@
     for (const button of document.querySelectorAll("#step-tabs button")) button.addEventListener("click", () => showStep(button.dataset.step));
     $("facts-add-row").addEventListener("click", () => { addFactRow({}); renumberRows(); });
     $("facts-save").addEventListener("click", saveFacts);
+    $("read-run").addEventListener("click", readProduct);
+    $("paste-run").addEventListener("click", pasteProduct);
+    $("nav-settings").addEventListener("click", openSettings);
+    $("settings-read").addEventListener("change", setReadSwitch);
+    $("facts-header").addEventListener("input", updateMarks);
+    $("facts-rows").addEventListener("input", updateMarks);
     $("script-run").addEventListener("click", runScript);
     $("rec-start").addEventListener("click", startRecording);
     $("rec-stop").addEventListener("click", () => stopRecording("nguoi-dung"));

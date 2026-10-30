@@ -1,0 +1,92 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-01-002",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md"
+  ],
+  "structured_output": {
+    "attempt": 2,
+    "max_attempts": 3,
+    "prior_validation_addressed": {
+      "attempt": 1,
+      "report": "runs/run-6fa26c9657d3/states/scope-and-acceptance/validation-report.json (as cited by the attempt-2 invocation envelope)",
+      "failure": "C3.2 Blocking, vendor name found: 'claude'",
+      "repair": "the branch name in the Delivery constraints line replaced by 'the MC-18 session branch'; zero occurrences of the word remain in the artifact; no other content changed; boundary, criteria and verdict not altered (execution.md Retry prohibition respected)"
+    },
+    "artifact_digest": "not computed by this agent: command execution is prohibited by the envelope, so the digest is left for the runtime to compute on completion",
+    "envelope_bindings_checked": {
+      "input_digest": "sha256:a7733876abd63993a6781fa3a8d25170 (unchanged from attempt 1; matches the artifact metadata)",
+      "context_digest": "sha256:8432aa0d2cb1bf16c655abffc4957991 (unchanged from attempt 1; matches the artifact metadata)",
+      "task_context_digest": "sha256:2e0ee463f8fd4d44c0a5fba2f41bd14f",
+      "permitted_writes": "unchanged; both writes are within them",
+      "artifact_change_required": false
+    },
+    "counts": {
+      "scope_items": 11,
+      "exclusions": 12,
+      "acceptance_criteria": 34,
+      "scope_decisions": 8,
+      "open_questions": 6,
+      "blocking_open_questions": 2
+    },
+    "declared_status": "provisional",
+    "scope_verdict": "partially-bounded",
+    "verdict_basis": "Q-001 (image hosts outside shopee.vn) and Q-002 (short-link redirects) are blocking and owned by the CEO at the Scope Gate; Q-003 to Q-005 (CEO) and Q-006 (architect) are non-blocking",
+    "open_questions_for_ceo": {
+      "Q-001": "image CDN hosts outside shopee.vn (e.g. *.susercontent.com); recommended (a) allow for the supplied product's image files only",
+      "Q-002": "follow s.shopee.vn short-link redirects; recommended (a) only while every hop is an allowed host, at most five hops",
+      "Q-003": "one live read by an agent on a CEO-named link; recommended (b) no, fixture plus paste mode",
+      "Q-004": "success measure; recommended (a) done condition A-034 only",
+      "Q-005": "fact-row screenshots; recommended (a) operator keeps attaching them"
+    },
+    "risk_flagged": "Shopee product pages are largely rendered by script and the data interface is protected by anti-bot signatures; an unmodified read may get little data, forging is forbidden (X-003), paste mode may be the common path (D-002); routed to architect as Q-006, not resolved here",
+    "affected_areas": {
+      "database": "triggered by the word in ticket constraint 9 only; kept untouched by X-009",
+      "security": "revealed by the work (egress, host allow-list, redirects, request headers); skill S09 read; held by S-007, S-008, A-020 to A-025"
+    },
+    "repository_rescan": "task context names no relevant files; read src/MediaCompany.Pilot.Web/FactSteps.cs, Routes.cs, Pages/app.js (step-1 parts) and src/MediaCompany.Pilot/FactSheet.cs on the caller's direction to learn the step-1 fields and the check",
+    "quality_checks": {
+      "S1": "pass", "S2": "pass", "S3": "pass", "S4": "pass", "S5": "pass", "S6": "pass", "S7": "pass", "S8": "pass",
+      "D1": "pass", "D2": "pass", "D3": "pass", "D4": "pass", "SD1": "pass", "SD2": "pass", "D5": "pass", "D6": "pass",
+      "SD3": "pass", "SD4": "pass", "A4": "pass", "A5": "pass", "A6": "pass", "A7": "pass",
+      "SD5": "pass", "SD8": "pass", "G1": "pass", "G2": "pass", "G3": "pass", "G4": "pass", "G5": "pass",
+      "L1": "pass", "L2": "pass", "L3": "pass", "L4": "pass", "L5": "pass",
+      "SD6": "pass", "D7": "pass", "D8": "pass", "D9": "pass",
+      "SD7": "pass", "B1": "pass", "B2": "pass", "B3": "pass", "B4": "pass", "B5": "pass", "B6": "pass",
+      "C1": "pass", "C2": "pass", "C3": "pass", "C4": "pass", "C5": "pass"
+    },
+    "not_machine_checkable": {
+      "SN1": "pass: each threshold is a count, equality or zero-count on a code-generated fixture, or a stated time (1 s live warning, 30 s no-answer stop, 10 min idle), which the CEO can accept or amend at the gate",
+      "SN2": "pass: every item traces to CEO decision 1313 or the ticket; the per-field confirmation (D-003), price/description handling (D-004), image pick (D-005), no-cookie-of-any-origin (D-006) and settings-screen switch (D-007) are recorded as decisions for the gate to assess, not silent widenings",
+      "SN3": "pass: the business goal restates the CEO's request for automatic step-1 filling within the bounds of CEO decision 1313; the problem statement quotes the CEO"
+    },
+    "quality_checks_run": 53,
+    "quality_checks_passed": 53,
+    "repair_pass": "first draft failed C2 (TikTok and Docker named, absent from the inputs) and carried an inferred 'slow and error-prone' in the problem statement (SN3 risk); both repaired and the full set re-run. Runtime validation of attempt 1 then failed C3.2 on a vendor name the self-check missed (the branch name in the Delivery constraints line); repaired as above for attempt 2. Retry entered, so execution.md was loaded per its on-demand trigger",
+    "citation_note": "foreign identifiers from the CEO decision record (per-publication approval rule, risk-carrier rule, the Shopee question, terms entries) are cited descriptively per research/framework-defects.md Finding 6, so no foreign token collides with this artifact's D-/Q- registers"
+  },
+  "evidence_refs": [
+    "agents/product-owner/system.md",
+    "agents/product-owner/identity.md",
+    "agents/product-owner/reasoning.md",
+    "agents/product-owner/execution.md",
+    "agents/product-owner/output.md",
+    "agents/product-owner/quality.md",
+    "runs/run-6fa26c9657d3/states/scope-and-acceptance/invocation-envelope.json",
+    "runs/run-6fa26c9657d3/task-context.yaml",
+    "runs/inputs/mc-18-feature-request.md",
+    "runs/inputs/mc-18-business-intent.md",
+    "templates/scope-definition.md",
+    "workflows/workflow-gate-matrix.md",
+    "skills/business/domain-modeling.md",
+    "skills/testing/testing-strategy.md",
+    "skills/security/secure-engineering.md"
+  ],
+  "confidence": 0.8,
+  "declared_side_effects": [
+    "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md",
+    "runs/run-6fa26c9657d3/states/scope-and-acceptance/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

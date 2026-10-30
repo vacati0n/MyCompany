@@ -2726,3 +2726,69 @@ closes. This entry is the English form.
 **Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.
 
 ---
+
+## CEO-D-1314 — MC-18 Scope Gate approved: product image hosts, bounded short links, one live read for the demo
+
+**The CEO's own decision, 2026-10-27**, at the Scope Gate of run `run-6fa26c9657d3` (MC-18), on the scope's open
+questions, within `CEO-D-1313`.
+
+1. **Image hosts (Q-001).** The CEO chose "Được, chỉ ảnh": the read may fetch the image files of the supplied product
+   from Shopee's image hosts outside shopee.vn (for example `*.susercontent.com`), image files only, never a page.
+2. **Short links (Q-002).** The CEO chose "Được, có giới hạn": the read may follow `s.shopee.vn` redirects only while
+   every hop is an allowed host, at most five hops, and stops on any other host, affiliate.shopee.vn included.
+3. **Live read (Q-003).** The CEO chose "Được, một lần": an agent may read one real public product page once, on a link
+   the CEO names, without sign-in, to show the step working. Without a named link no agent reads shopee.vn.
+4. **Scope (Q-004 to Q-006).** Scope approved with acceptance criteria A-001 to A-034: the read price and description
+   are shown for reference and not saved in the fact sheet; the operator still attaches a screenshot per fact; fields
+   the page does not supply stay for the operator; a blocked read never retries and falls back to paste mode.
+
+**Unchanged:** `CEO-D-1313` and its bounds, `D-002`, `D-018`. Agents create no account, sign in nowhere, contact no
+seller, buy nothing and publish nothing.
+
+---
+
+## CEO-D-1315 — MC-18 Design Gate approved: read inside the web app, honest tool name, switch off by default
+
+**The CEO's own decision, 2026-10-27**, at the Design Gate of run `run-6fa26c9657d3` (MC-18), choosing the recommended
+option on each question put in Vietnamese.
+
+1. **Design (Q-008).** Approved: the read runs inside the web app behind the MC-17 request guard (D-001, option
+   O-001), one read at a time; a block, sign-in wall, CAPTCHA or unreadable page stops with no retry and offers paste
+   mode; every specification found is offered and the operator keeps up to three rows, because the unchanged MC-16
+   check allows one to three (Q-004). Decision records D-001 to D-006 accepted.
+2. **Request identity (Q-001).** The read names itself honestly as "MediaCompanyPilot/1.0 (doc-trang-san-pham)"
+   (D-002). It never imitates a browser.
+3. **Off switch (Q-002).** The read starts switched off; the operator turns it on in the new settings view (D-003).
+   Paste mode and typing always work.
+4. **Image hosts (Q-003).** shopee.vn and hosts ending `.susercontent.com`, image files of the supplied product only
+   (D-005).
+5. **For qa, decided by the orchestrator (Q-005, Q-007).** The read log paired with the socket harness is accepted as
+   evidence that egress happens only during a read; the Browser-pane run uses the test program's local fixture host.
+
+**Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `D-002`, `D-018`. Agents create no account, sign in nowhere, contact no
+seller, buy nothing and publish nothing.
+
+---
+
+## CEO-D-1316 — MC-18: the CEO names the link for the one live read
+
+**The CEO's own decision, 2026-10-30**, resuming MC-18. The CEO's words: "tiếp tục làm. link sản phẩm:
+https://s.shopee.vn/4qGnwJJXwI".
+
+1. **Named link (`CEO-D-1314` item 3).** The one live read of MC-18 is made on `https://s.shopee.vn/4qGnwJJXwI`, once,
+   by the orchestrator, with the built step after quality review, without sign-in. The short link is followed only
+   while every hop is an allowed host, at most five hops. A block, sign-in wall or CAPTCHA ends the read with no retry.
+2. No development agent reads this link or any shopee.vn page.
+
+**Outcome (recorded by the orchestrator, 2026-10-30, after quality review).** The read was made once at
+02:47:57 UTC in an isolated app with the switch turned on for it and off right after. There were two requests:
+`s.shopee.vn/4qGnwJJXwI` answered 301 and the one hop was checked and followed, then
+`shopee.vn/opaanlp/89827191/28309604497` answered 200 with 203,445 bytes of HTML. That page carries no product data a
+client gets without running the page's scripts, so the read stopped with `no-product`. Nothing was filled, no image
+was requested, and nothing was retried. The operator path is paste mode. This answers design question Q-006: on real
+pages, paste mode is the expected common path. Record:
+`.claude/runs/run-6fa26c9657d3/states/quality-review/artifacts/orchestrator-browser-and-live-read-record.md`.
+
+**Unchanged:** `CEO-D-1313`, `CEO-D-1314`, `CEO-D-1315`, `D-002`, `D-018`.
+
+---

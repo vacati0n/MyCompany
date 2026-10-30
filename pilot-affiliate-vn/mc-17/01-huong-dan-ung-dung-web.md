@@ -7,13 +7,15 @@ Phiên bản: commit ef327e9 (chưa có số phiên bản). Ngày: 2026-10-27.
 vẫn do bộ công cụ MC-16 quyết, giống hệt khi chạy bằng dòng lệnh. Chữ trong ngoặc kép ở hướng dẫn này là
 đúng chữ hiện trên màn hình.
 
-Đầu trang luôn ghi: "Ứng dụng chạy trên máy này (127.0.0.1). Không gửi gì ra ngoài, không đăng, không mua."
+Đầu trang ghi: "Ứng dụng chạy trên máy này (127.0.0.1). Không gửi gì ra ngoài, không đăng, không mua."
+(Từ MC-18 dòng này đổi, xem mục 9.)
 
 ---
 
 ## 1. Những việc ứng dụng KHÔNG BAO GIỜ làm
 
 - Không dùng mạng ngoài máy. Ứng dụng chỉ nghe ở địa chỉ 127.0.0.1; máy khác không mở được trang.
+  (Từ MC-18 có một ngoại lệ, mặc định tắt: đọc một trang sản phẩm shopee.vn khi bạn bấm "Đọc trang". Xem mục 9.)
 - Không tải gì về máy.
 - Không dùng giọng máy (TTS), không nhân bản giọng nói. Giọng trong video là bản ghi giọng thật của bạn.
 - Không đăng bài, không gửi video đi đâu. Đăng là việc CEO tự làm bằng tay, sau khi duyệt.
@@ -291,7 +293,9 @@ Dừng, không đăng, và báo người phụ trách khi: có mã ở mục 7.2
 
 ---
 
-## 9. Chưa có trong ứng dụng này
+## 9. Thêm sau MC-17: đọc trang sản phẩm (MC-18)
 
-Đọc trang sản phẩm Shopee từ đường dẫn chưa có; đó là việc của lần sau (MC-18). Hiện tại bạn tự đọc trang và
-điền bảng thông tin ở bước 1.
+Từ MC-18 (commit 58a22c5), bước 1 có thêm phần "Điền sẵn từ trang sản phẩm": dán chữ của trang, hoặc đọc từ đường
+dẫn khi đã bật ở "Cài đặt". Đầu trang khi đó ghi: "Ứng dụng chạy trên máy này (127.0.0.1). Chỉ đọc trang sản phẩm
+shopee.vn khi bạn bấm "Đọc trang" (bật ở Cài đặt); ngoài ra không gửi gì ra ngoài, không đăng, không mua." Xem
+`pilot-affiliate-vn/mc-18/01-huong-dan-doc-trang.md`.

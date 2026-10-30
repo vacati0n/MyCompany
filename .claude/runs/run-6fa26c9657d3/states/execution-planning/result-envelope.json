@@ -1,0 +1,101 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-02-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    "runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md"
+  ],
+  "structured_output": {
+    "attempt": 1,
+    "pass_kind": "initial",
+    "plan_status": "complete",
+    "counts": {
+      "statements": 15,
+      "assumptions": 14,
+      "risks": 24,
+      "tasks": 25,
+      "edges": 51,
+      "external_edges": 5,
+      "waves": 11,
+      "open_questions": 4
+    },
+    "recomputed_topological_order": [
+      "T-001",
+      "T-002", "T-017",
+      "T-015", "T-021",
+      "T-003", "T-012",
+      "T-004", "T-014",
+      "T-006", "T-007", "T-019",
+      "T-008", "T-016",
+      "T-009",
+      "T-005", "T-010", "T-011", "T-013", "T-018", "T-020", "T-022", "T-023",
+      "T-024",
+      "T-025"
+    ],
+    "recomputed_waves": {
+      "1": ["T-001"],
+      "2": ["T-002", "T-017"],
+      "3": ["T-015", "T-021"],
+      "4": ["T-003", "T-012"],
+      "5": ["T-004", "T-014"],
+      "6": ["T-006", "T-007", "T-019"],
+      "7": ["T-008", "T-016"],
+      "8": ["T-009"],
+      "9": ["T-005", "T-010", "T-011", "T-013", "T-018", "T-020", "T-022", "T-023"],
+      "10": ["T-024"],
+      "11": ["T-025"]
+    },
+    "quality_checks": {
+      "check_set": "agents/planner/quality.md (planner 1.0.0)",
+      "run": 70,
+      "passed": 70,
+      "results": {
+        "Q1.1": "pass", "Q1.2": "pass", "Q1.3": "pass", "Q1.4": "pass", "Q1.5": "pass", "Q1.6": "pass", "Q1.7": "pass",
+        "Q2.1": "pass", "Q2.2": "pass", "Q2.3": "pass", "Q2.4": "pass", "Q2.5": "pass", "Q2.6": "pass", "Q2.7": "pass", "Q2.8": "pass",
+        "Q3.1": "pass", "Q3.2": "pass", "Q3.3": "pass", "Q3.4": "pass",
+        "Q4.1": "pass", "Q4.2": "pass", "Q4.3": "pass", "Q4.4": "pass", "Q4.5": "pass",
+        "Q5.1": "pass", "Q5.2": "pass", "Q5.3": "pass", "Q5.4": "pass", "Q5.5": "pass", "Q5.6": "pass", "Q5.7": "pass", "Q5.8": "pass", "Q5.9": "pass", "Q5.10": "pass",
+        "Q6.1": "pass", "Q6.2": "pass", "Q6.3": "pass", "Q6.4": "pass", "Q6.5": "pass", "Q6.6": "pass", "Q6.7": "pass", "Q6.8": "pass",
+        "Q7.1": "pass", "Q7.2": "pass", "Q7.3": "pass", "Q7.4": "pass", "Q7.5": "pass", "Q7.6": "pass",
+        "Q8.1": "pass", "Q8.2": "pass", "Q8.3": "pass", "Q8.4": "pass", "Q8.5": "pass",
+        "Q9.1": "pass", "Q9.2": "pass", "Q9.3": "pass", "Q9.4": "pass", "Q9.5": "pass", "Q9.6": "pass", "Q9.7": "pass",
+        "Q10.1": "pass", "Q10.2": "pass", "Q10.3": "pass", "Q10.4": "pass", "Q10.5": "pass",
+        "Q11.1": "pass", "Q11.2": "pass", "Q11.3": "pass", "Q11.4": "pass", "Q11.5": "pass"
+      },
+      "repair_passes": [],
+      "lesson_handling": {
+        "V4.1 and V4.8": "every task carries all eight fields; every task states at least three acceptance criteria so that at least two survive the field parser's known first-bullet absorption (framework defect 5)",
+        "V5.1": "every external and policy-gate From cell in 8.1 equals a Responsible party cell in 8.2 exactly; 5 external edges resolve to 4 parties"
+      }
+    },
+    "closure": {
+      "forward": "15 of 15 in-scope statements map to at least one task",
+      "backward": "25 of 25 tasks trace to a statement",
+      "lateral": "all risk, assumption, edge and question references resolve; 5 of 5 external edges resolve to an 8.2 party; 14 of 14 assumptions have a matching risk"
+    },
+    "citation_note": "the scope-definition's acceptance criteria are cited as SC-01 to SC-34 and its scope decisions as SD-1 to SD-8, because its own A- and Q- tokens collide with this plan's assumption and question registers (framework finding 6); its scope items and exclusions are adopted as S-001 to S-011 and X-001 to X-012",
+    "orchestrator_directions_applied": [
+      "implementation tasks owned by dev-1-implement, verification tasks by dev-2-reviewer; qa owns no task (finding 8), recorded as A-012, R-023 and Q-002",
+      "the live read on a CEO-named link is an orchestrator act after quality review, planned as the external edge into T-024, recorded as A-011, R-014, R-022",
+      "the CEO's Scope Gate answers are restated in the metadata block as gate decisions (finding 7)"
+    ],
+    "statement": "no implementation work was performed, no command was executed, no external system was accessed, and no file other than the two permitted paths was written"
+  },
+  "evidence_refs": [
+    "agents/planner/manifest.yaml",
+    "agents/planner/system.md",
+    "agents/planner/reasoning.md",
+    "agents/planner/output.md",
+    "agents/planner/quality.md",
+    "runs/run-6fa26c9657d3/states/execution-planning/invocation-envelope.json",
+    "runs/run-6fa26c9657d3/states/execution-planning/dispatch-prompt.md",
+    "runs/run-6fa26c9657d3/task-context.yaml",
+    "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md"
+  ],
+  "confidence": "high",
+  "declared_side_effects": [
+    "runs/run-6fa26c9657d3/states/execution-planning/artifacts/execution-plan.md",
+    "runs/run-6fa26c9657d3/states/execution-planning/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}
