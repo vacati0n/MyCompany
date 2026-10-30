@@ -1,0 +1,93 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-03-001",
+  "status": "succeeded",
+  "artifact_refs": [
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-004.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-006.md"
+  ],
+  "structured_output": {
+    "run_id": "run-6fa26c9657d3",
+    "design_id": "TD-MC18-READ-LINK",
+    "package_status": "complete",
+    "counts": {
+      "facts": 22,
+      "assumptions": 18,
+      "constraints": 30,
+      "impacted_modules": 20,
+      "options": 19,
+      "decisions": 15,
+      "architecture_significant_decisions": 6,
+      "risks": 28,
+      "sequencing_constraints": 10,
+      "open_questions": 8,
+      "statements": 27
+    },
+    "option_ranking": {
+      "criteria_order": ["hard constraints", "impact surface", "reuse leverage", "quality attributes", "migration burden", "operability"],
+      "D-001": "O-001 selected; O-005 not selected, lost at impact surface (2 vs 3); O-002 eliminated C-010; O-003 eliminated C-020; O-004 eliminated C-012",
+      "D-002": "O-006 selected; O-007 not selected, lost at quality attributes (1 vs 0); O-008 eliminated C-012",
+      "D-003": "O-009 selected; O-010 not selected, lost at impact surface (0 vs 1); O-011 eliminated C-020",
+      "D-004": "O-012 only viable; O-013 and O-014 eliminated C-022",
+      "D-005": "O-015 selected; O-017 not selected, tied through migration burden and lost at operability; O-016 eliminated C-015",
+      "D-006": "O-018 only viable; O-019 eliminated C-014",
+      "selection_follows_from_table": true
+    },
+    "yield_answer": "An unmodified honest request most likely gets a script shell or a verify or sign-in page and stops; at best name, page address, read date, price, description and declared images fill; classification and specification rows come from paste. Paste mode is the expected common path (technical design 5.3, A-002, Q-006).",
+    "design_gate_choices_for_ceo": {
+      "Q-001": "user agent: honest tool name (recommended) or none",
+      "Q-002": "switch default: off until turned on (recommended) or on",
+      "Q-003": "image hosts: shopee.vn plus .susercontent.com (recommended) or a wider named list",
+      "Q-004": "SC-01 met by candidate rows with up to three kept (recommended, the unchanged check allows 1 to 3)"
+    },
+    "repair_pass": "Orchestrator validator run found two Blocking failures, D8.3 (A8.4) and D17.4 (A13.4). Repaired in the same invocation: O-005, O-007, O-010 and O-017 meet every hard constraint and now carry the outcome 'not selected: lost at <criterion>' instead of 'rejected', with the outcome vocabulary stated above the 5.2 table; decision record D-002 now cites baseline facts F-001, F-018, F-022 beside its constraints and modules, and the D-002 decision row in technical-design.md 5.4 carries the same citations.",
+    "quality_checks": {
+      "run": 98,
+      "passed": 98,
+      "results": {
+        "A1.1": "pass", "A1.2": "pass", "A1.3": "pass", "A1.4": "pass", "A1.5": "pass", "A1.6": "pass", "A1.7": "pass", "A1.8": "pass",
+        "A2.1": "pass", "A2.2": "pass", "A2.3": "pass", "A2.4": "pass", "A2.5": "pass", "A2.6": "pass", "A2.7": "pass", "A2.8": "pass", "A2.9": "pass", "A2.10": "pass",
+        "A3.1": "pass", "A3.2": "pass", "A3.3": "pass", "A3.4": "pass", "A3.5": "pass", "A3.6": "pass",
+        "A4.1": "pass", "A4.2": "pass", "A4.3": "pass", "A4.4": "pass",
+        "A5.1": "pass", "A5.2": "pass", "A5.3": "pass", "A5.4": "pass",
+        "A6.1": "pass", "A6.2": "pass", "A6.3": "pass", "A6.4": "pass", "A6.5": "pass", "A6.6": "pass",
+        "A7.1": "pass", "A7.2": "pass", "A7.3": "pass", "A7.4": "pass", "A7.5": "pass",
+        "A8.1": "pass", "A8.2": "pass", "A8.3": "pass", "A8.4": "pass", "A8.5": "pass", "A8.6": "pass", "A8.7": "pass",
+        "A9.1": "pass", "A9.2": "pass", "A9.3": "pass", "A9.4": "pass", "A9.5": "pass", "A9.6": "pass",
+        "A10.1": "pass", "A10.2": "pass", "A10.3": "pass", "A10.4": "pass", "A10.5": "pass", "A10.6": "pass", "A10.7": "pass",
+        "A11.1": "pass", "A11.2": "pass", "A11.3": "pass", "A11.4": "pass", "A11.5": "pass",
+        "A12.1": "pass", "A12.2": "pass", "A12.3": "pass", "A12.4": "pass", "A12.5": "pass",
+        "A13.1": "pass", "A13.2": "pass", "A13.3": "pass", "A13.4": "pass", "A13.5": "pass", "A13.6": "pass", "A13.7": "pass",
+        "A14.1": "pass", "A14.2": "pass", "A14.3": "pass", "A14.4": "pass", "A14.5": "pass", "A14.6": "pass", "A14.7": "pass", "A14.8": "pass",
+        "A15.1": "pass", "A15.2": "pass", "A15.3": "pass", "A15.4": "pass", "A15.5": "pass",
+        "A16.1": "pass", "A16.2": "pass", "A16.3": "pass", "A16.4": "pass", "A16.5": "pass"
+      }
+    },
+    "boundary_statement": "No implementation work was performed, no command was executed, no external system was accessed and no live page was read; records D-001 to D-006 are at status Proposed and unsigned."
+  },
+  "evidence_refs": [
+    ".claude/agents/architect/manifest.yaml",
+    ".claude/agents/architect/system.md",
+    ".claude/agents/architect/reasoning.md",
+    ".claude/agents/architect/output.md",
+    ".claude/agents/architect/quality.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/invocation-envelope.json"
+  ],
+  "confidence": "low",
+  "declared_side_effects": [
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-001.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-002.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-003.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-004.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-005.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/architecture-decision-record-D-006.md",
+    ".claude/runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/result-envelope.json"
+  ],
+  "error_class": null,
+  "error_detail": null
+}

@@ -21,12 +21,22 @@ public sealed record TimingRequest(IReadOnlyList<string> Lines);
 
 public sealed record ApproveRequest(string Sha256, IReadOnlyList<string> Ticked, string PressedBy, string? EmployeeName);
 
+public sealed record ReadRequest(string Link);
+
+public sealed record PasteRequest(string Text);
+
+public sealed record ConfirmRequest(string Field);
+
+public sealed record SwitchRequest(bool On);
+
 /// <summary>
 /// THE ROUTES (technical design, API impact). Read routes: the page and its files, setup status, the video list and status, produce
 /// progress, the timing form, the checklist, the package video and frame. State-changing routes, all POST and all behind the request
 /// guard's Origin and token check: setup save, shortcut, fact sheet save, live check, image upload, screenshot upload, script run,
 /// script tick save, take upload, take accept, recording upload, clip upload, produce start, timing save, checklist tick save,
-/// approval, verify. There is no route that sends a file anywhere.
+/// approval, verify; from MC-18 also product read, paste, fill confirmation and the read switch. There is no route that sends a file
+/// anywhere. The one route that sends anything out is the product read (MC-18 design decision D-001): it only reads, only from the
+/// shopee.vn page the operator pasted and the images that page declares, only when the switch is on and only on the button.
 /// </summary>
 public static class Routes
 {
@@ -34,7 +44,7 @@ public static class Routes
     [
         "/api/setup", "/api/shortcut", "/api/facts", "/api/live-check", "/api/image", "/api/screenshot", "/api/script", "/api/script-ticks",
         "/api/take", "/api/take-accept", "/api/recording", "/api/clip", "/api/produce", "/api/timing", "/api/checklist-ticks", "/api/approve",
-        "/api/verify",
+        "/api/verify", "/api/read", "/api/paste", "/api/read-confirm", "/api/read-switch",
     ];
 
     private const long SmallBody = 1L << 20;
@@ -92,6 +102,12 @@ public static class Routes
         app.MapGet("/api/videos", Answer(web, http => Task.FromResult(Videos(web))));
         app.MapGet("/api/video", Answer(web, http => Task.FromResult(VideoStatus(http, web))));
         app.MapPost("/api/live-check", Answer(web, http => LiveCheck(http)));
+        app.MapGet("/api/read-switch", Answer(web, http => Task.FromResult(SwitchStatus(web))));
+        app.MapPost("/api/read-switch", Answer(web, http => SetSwitch(http, web)));
+        app.MapPost("/api/read", Answer(web, http => ReadProduct(http, web)));
+        app.MapPost("/api/paste", Answer(web, http => PasteProduct(http, web)));
+        app.MapPost("/api/read-confirm", Answer(web, http => ConfirmFill(http, web)));
+        app.MapGet("/api/read-image", (HttpContext http) => ReadImageFile(http, web));
         app.MapPost("/api/facts", Answer(web, http => SaveFacts(http, web)));
         app.MapPost("/api/screenshot", Answer(web, http => UploadScreenshot(http, web)));
         app.MapPost("/api/image", Answer(web, http => UploadImage(http, web)));
@@ -382,6 +398,8 @@ public static class Routes
             timing = File.Exists(workspace.TimingPath(code)),
             producing = job is { Running: true },
             lastPackage = workspace.LastPackage(code),
+            fill = FillStore.Load(workspace, code),
+            readOn = ReadSwitch.IsOn(web.Options.AppFolder),
         });
     }
 
@@ -431,9 +449,16 @@ public static class Routes
         var folder = workspace.InputFolder(code);
         var screenshots = workspace.ScreenshotFolder(code);
         var sheet = FactSteps.CheckBeforeImages(normalised, folder, screenshots, workspace.UploadFolder);
+
+        // MC-18 D-007: a value the read or the paste filled, saved unchanged, must have been confirmed by the operator.
+        var fill = FillStore.Load(workspace, code);
+        FillStore.RequireConfirmed(fill, normalised);
         var refused = FactSteps.PlaceScreenshots(sheet, screenshots, folder);
+        var placed = PlaceReadImages(sheet, fill, workspace.ReadImageFolder(code), folder);
         File.WriteAllBytes(workspace.FactSheetPath(code), normalised);
-        var saved = $"Đã lưu bảng thông tin {sheet.VideoCode}: {sheet.Facts.Count} dòng thông tin, {sheet.ImagesUsed.Count} ảnh cần tải ở bước 2.";
+        var saved = placed == 0
+            ? $"Đã lưu bảng thông tin {sheet.VideoCode}: {sheet.Facts.Count} dòng thông tin, {sheet.ImagesUsed.Count} ảnh cần tải ở bước 2."
+            : $"Đã lưu bảng thông tin {sheet.VideoCode}: {sheet.Facts.Count} dòng thông tin, {placed} ảnh đọc từ trang đã đặt vào video, {sheet.ImagesUsed.Count - placed} ảnh cần tải ở bước 2.";
         return new Reply(new
         {
             ok = true,
@@ -461,6 +486,185 @@ public static class Routes
             name,
             message = $"Đã nhận ảnh chụp {name}. Ảnh được dùng khi bạn bấm lưu bảng thông tin, nếu một dòng thông tin ghi đúng tên này.",
         });
+    }
+
+    /// <summary>
+    /// The read images the saved sheet names in its image list (MC-18 D-009): each one the fill record lists and the video's read-image
+    /// folder holds is copied into the input folder under the same name, so step 2 shows it present. A copy, not a move: the operator
+    /// may change the pick and save again. Any other name is left for upload at step 2.
+    /// </summary>
+    private static int PlaceReadImages(FactSheet sheet, FillRecord? fill, string readFolder, string inputFolder)
+    {
+        if (fill is null || !Directory.Exists(readFolder))
+        {
+            return 0;
+        }
+
+        var placed = 0;
+        foreach (var name in sheet.ImagesUsed)
+        {
+            var source = Path.Combine(readFolder, name);
+            if (fill.Images.Any(i => string.Equals(i.Name, name, StringComparison.Ordinal)) && Path.GetFileName(name) == name && File.Exists(source))
+            {
+                File.Copy(source, Path.Combine(inputFolder, name), overwrite: true);
+                placed++;
+            }
+        }
+
+        return placed;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Step 1, MC-18: product read, paste mode, confirmations, read images, the switch (design decisions D-001 to D-015)
+    // -----------------------------------------------------------------------------------------------------------------------------
+
+    private static Reply SwitchStatus(WebContext web) => new(new
+    {
+        ok = true,
+        readOn = ReadSwitch.IsOn(web.Options.AppFolder),
+        switchFile = ReadSwitch.PathIn(web.Options.AppFolder),
+    });
+
+    private static async Task<Reply> SetSwitch(HttpContext http, WebContext web)
+    {
+        var request = await Body<SwitchRequest>(http);
+        ReadSwitch.Set(web.Options.AppFolder, request.On);
+        return new Reply(new
+        {
+            ok = true,
+            readOn = request.On,
+            message = request.On
+                ? "Đã bật đọc trang sản phẩm. Ứng dụng chỉ đọc trang shopee.vn khi bạn dán đường dẫn và bấm \"Đọc trang\"."
+                : "Đã tắt đọc trang sản phẩm. Ứng dụng không gửi gì ra ngoài; vẫn dán chữ hoặc gõ tay như trước.",
+        });
+    }
+
+    /// <summary>
+    /// One read click (D-001): refused when the switch is off or a read is already running; otherwise the read runs in this process
+    /// and its fill record replaces the video's. A stop answers 200 with ok false, the stop as the outcome and the paste offer, so the
+    /// page shows the bracketed code and the next step; a stop in the page phase leaves the video's earlier record as it was.
+    /// </summary>
+    private static async Task<Reply> ReadProduct(HttpContext http, WebContext web)
+    {
+        var workspace = web.Workspace();
+        var code = CodeOf(http, workspace);
+        var request = await Body<ReadRequest>(http);
+        if (!ReadSwitch.IsOn(web.Options.AppFolder))
+        {
+            throw new WebRefusal("read-off",
+                "Đọc trang sản phẩm đang tắt, nên ứng dụng không gửi gì ra ngoài. Bật ở mục \"Cài đặt\", hoặc dán chữ của trang vào ô bên dưới, hoặc gõ tay.", 409);
+        }
+
+        if (!web.ReadGate.Wait(0))
+        {
+            throw new WebRefusal("read-busy", "Ứng dụng đang đọc một trang. Chờ lần đọc đó xong rồi bấm lại.", 409);
+        }
+
+        try
+        {
+            var result = await ProductRead.Run(request.Link, web.Transport, new ReadLog(workspace.WebFolder), workspace.ReadImageFolder(code), DateTimeOffset.Now);
+            if (result.Fill is not null)
+            {
+                FillStore.Save(workspace, code, result.Fill);
+            }
+
+            if (result.Stop is { } stop)
+            {
+                return new Reply(new
+                {
+                    ok = false,
+                    outcome = stop.View(),
+                    offerPaste = true,
+                    fill = result.Fill,
+                    requests = result.Requests,
+                    localAddresses = result.LocalAddresses,
+                }, 200, stop.Code);
+            }
+
+            var fill = result.Fill!;
+            return new Reply(new
+            {
+                ok = true,
+                fill,
+                requests = result.Requests,
+                localAddresses = result.LocalAddresses,
+                message = $"Đã đọc trang: điền {fill.Fields.Count} ô, {fill.Candidates.Count} dòng thông tin gợi ý, lưu {fill.Images.Count} ảnh. Đối chiếu từng ô với trang rồi bấm \"Xác nhận\".",
+            });
+        }
+        finally
+        {
+            web.ReadGate.Release();
+        }
+    }
+
+    /// <summary>Paste mode (D-012): the same parser over the pasted text; nothing is sent; any earlier read images are cleared.</summary>
+    private static async Task<Reply> PasteProduct(HttpContext http, WebContext web)
+    {
+        var workspace = web.Workspace();
+        var code = CodeOf(http, workspace);
+        var request = await Body<PasteRequest>(http);
+        if (string.IsNullOrWhiteSpace(request.Text))
+        {
+            throw new WebRefusal("paste-empty", "Ô dán chữ đang trống. Trên trang sản phẩm, bôi đen và chép phần tên, giá, phân loại và CHI TIẾT SẢN PHẨM, dán vào ô rồi bấm lại.");
+        }
+
+        var text = TextParser.Parse(request.Text);
+        if (text.Name is null && text.Classification is null && text.Specs.Count == 0)
+        {
+            throw new WebRefusal("paste-no-product",
+                "Không tìm thấy tên sản phẩm, phân loại hay dòng CHI TIẾT SẢN PHẨM nào trong chữ đã dán. Chép lại cả phần đầu trang và phần CHI TIẾT SẢN PHẨM, hoặc gõ tay.");
+        }
+
+        var images = workspace.ReadImageFolder(code);
+        if (Directory.Exists(images))
+        {
+            foreach (var old in Directory.EnumerateFiles(images))
+            {
+                File.Delete(old);
+            }
+        }
+
+        var fill = FillStore.FromPaste(text, DateTimeOffset.Now);
+        FillStore.Save(workspace, code, fill);
+        return new Reply(new
+        {
+            ok = true,
+            fill,
+            message = $"Đã điền từ chữ đã dán: {fill.Fields.Count} ô, {fill.Candidates.Count} dòng thông tin gợi ý. Đối chiếu từng ô rồi bấm \"Xác nhận\"; đường dẫn trang và ngày đọc thì gõ tay.",
+        });
+    }
+
+    private static async Task<Reply> ConfirmFill(HttpContext http, WebContext web)
+    {
+        var workspace = web.Workspace();
+        var code = CodeOf(http, workspace);
+        var request = await Body<ConfirmRequest>(http);
+        var fill = FillStore.Confirm(workspace, code, request.Field);
+        return new Reply(new { ok = true, fill });
+    }
+
+    /// <summary>A read image waiting for the pick (D-009): a plain name the video's fill record lists, served read only.</summary>
+    private static IResult ReadImageFile(HttpContext http, WebContext web)
+    {
+        try
+        {
+            var workspace = web.Workspace();
+            var code = CodeOf(http, workspace);
+            var folder = workspace.ReadImageFolder(code);
+            var name = PlainName.Require(Query(http, "name"), "Ảnh đọc từ trang", folder);
+            var listed = FillStore.Load(workspace, code)?.Images.Any(i => string.Equals(i.Name, name, StringComparison.Ordinal)) ?? false;
+            var path = Path.Combine(folder, name);
+            if (!listed || !File.Exists(path))
+            {
+                return Results.NotFound();
+            }
+
+            return Results.File(path, Path.GetExtension(name).Equals(".png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg");
+        }
+        catch (Exception error) when (error is WebRefusal or PilotRefusal)
+        {
+            return Results.NotFound();
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------

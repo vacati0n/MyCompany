@@ -1,0 +1,351 @@
+{
+  "schema": "framework.runtime/execution-metrics.v1",
+  "task_id": "run-6fa26c9657d3",
+  "workflow": "implement-feature v1.0.0",
+  "runtime_version": "0.11.1",
+  "computed_at": "2026-10-30T03:06:09Z",
+  "total_duration": {
+    "wall_clock_seconds": 255241.0,
+    "wall_clock": "70h54m01s",
+    "agent_active_seconds": 239026.0,
+    "agent_active": "66h23m46s"
+  },
+  "phases_executed": {
+    "declared": 6,
+    "completed": 6,
+    "blocked": 0
+  },
+  "agents_executed": {
+    "invocations": 7,
+    "distinct": 6,
+    "by_agent": {
+      "product-owner": 2,
+      "planner": 1,
+      "architect": 1,
+      "dev-1-implement": 1,
+      "dev-2-reviewer": 1,
+      "documentation": 1
+    }
+  },
+  "skills_executed": {
+    "required_reads": 39,
+    "not_triggered": 1
+  },
+  "parallel_groups": {
+    "count": 5,
+    "max_width": 2,
+    "groups": [
+      [
+        "scope-and-acceptance",
+        "execution-planning"
+      ],
+      [
+        "solution-design-and-risk-assessment"
+      ],
+      [
+        "implementation"
+      ],
+      [
+        "quality-review"
+      ],
+      [
+        "documentation-and-release-handoff"
+      ]
+    ]
+  },
+  "context_loads": {
+    "members_declared": 97,
+    "members_required": 47
+  },
+  "repeated_context_loads": {
+    "files": 11,
+    "by_path": {
+      "workflows/workflow-gate-matrix.md": 3,
+      "context/product-context.md": 7,
+      "context/technical-context.md": 7,
+      "context/release-context.md": 7,
+      "templates/scope-definition.md": 2,
+      "templates/technical-design.md": 3,
+      "templates/implementation-report.md": 3,
+      "skills/error-handling/error-handling-strategy.md": 2,
+      "skills/testing/testing-strategy.md": 2,
+      "skills/architecture/clean-architecture-checklist.md": 2,
+      "templates/review-package.md": 2
+    }
+  },
+  "validation_runs": {
+    "passed": 6,
+    "failed": 1
+  },
+  "gate_decisions": {
+    "decided": 6,
+    "auto_policy": 0,
+    "rejected": 0
+  },
+  "tokens_or_context_estimate": {
+    "basis": "4 bytes per token; bytes the dispatch asked the agent to read, per envelope",
+    "legacy_bytes": 2175531,
+    "progressive_bytes": 1505182,
+    "legacy_tokens": 543882,
+    "progressive_tokens": 376295,
+    "savings_pct": 30.8
+  },
+  "model_tiers": {
+    "by_tier": {
+      "light": {
+        "invocations": 2,
+        "estimated_bytes": 213206
+      },
+      "standard": {
+        "invocations": 2,
+        "estimated_bytes": 396648
+      },
+      "deep": {
+        "invocations": 3,
+        "estimated_bytes": 895328
+      },
+      "untiered": {
+        "invocations": 0,
+        "estimated_bytes": 0
+      }
+    },
+    "invocations_total": 7,
+    "estimated_bytes_total": 1505182,
+    "non_deep_share": 0.571
+  },
+  "lessons_hydrated_total": 3,
+  "per_phase": [
+    {
+      "phase": "scope-and-acceptance",
+      "agent": "product-owner",
+      "status": "completed",
+      "dispatches": 2,
+      "attempts_charged": 2,
+      "agent_active_seconds": 611.0,
+      "context_members_declared": 13,
+      "context_members_required": 5,
+      "skills": {
+        "required": 2,
+        "not_triggered": 1
+      },
+      "model_tier": "standard",
+      "context_estimate": {
+        "modules_full_bytes": 65474,
+        "modules_core_bytes": 33274,
+        "slice_all_bytes": 106610,
+        "slice_required_bytes": 12129,
+        "inputs_bytes": 11149,
+        "upstream_full_bytes": 0,
+        "upstream_read_first_bytes": 0,
+        "task_context_bytes": 78713,
+        "fixed_bytes": 54044,
+        "legacy_estimate_bytes": 237277,
+        "progressive_estimate_bytes": 189309,
+        "legacy_estimate_tokens": 59319,
+        "progressive_estimate_tokens": 47327,
+        "savings_pct": 20.2
+      },
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-01-001",
+          "lessons": 0
+        },
+        {
+          "invocation_id": "inv-6fa26c9657d3-01-002",
+          "lessons": 0
+        }
+      ]
+    },
+    {
+      "phase": "execution-planning",
+      "agent": "planner",
+      "status": "completed",
+      "dispatches": 1,
+      "attempts_charged": 1,
+      "agent_active_seconds": 19311.0,
+      "context_members_declared": 12,
+      "context_members_required": 7,
+      "skills": {
+        "required": 4,
+        "not_triggered": 0
+      },
+      "model_tier": "standard",
+      "context_estimate": {
+        "modules_full_bytes": 86607,
+        "modules_core_bytes": 40907,
+        "slice_all_bytes": 105708,
+        "slice_required_bytes": 37333,
+        "inputs_bytes": 5579,
+        "upstream_full_bytes": 0,
+        "upstream_read_first_bytes": 0,
+        "task_context_bytes": 78713,
+        "fixed_bytes": 44807,
+        "legacy_estimate_bytes": 242701,
+        "progressive_estimate_bytes": 207339,
+        "legacy_estimate_tokens": 60675,
+        "progressive_estimate_tokens": 51834,
+        "savings_pct": 14.6
+      },
+      "lessons_hydrated": 3,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-02-001",
+          "lessons": 3
+        }
+      ]
+    },
+    {
+      "phase": "solution-design-and-risk-assessment",
+      "agent": "architect",
+      "status": "completed",
+      "dispatches": 1,
+      "attempts_charged": 1,
+      "agent_active_seconds": 1572.0,
+      "context_members_declared": 17,
+      "context_members_required": 7,
+      "skills": {
+        "required": 7,
+        "not_triggered": 0
+      },
+      "model_tier": "deep",
+      "context_estimate": {
+        "modules_full_bytes": 110065,
+        "modules_core_bytes": 51183,
+        "slice_all_bytes": 177472,
+        "slice_required_bytes": 13360,
+        "inputs_bytes": 11149,
+        "upstream_full_bytes": 53590,
+        "upstream_read_first_bytes": 36016,
+        "task_context_bytes": 78713,
+        "fixed_bytes": 118297,
+        "legacy_estimate_bytes": 470573,
+        "progressive_estimate_bytes": 308718,
+        "legacy_estimate_tokens": 117643,
+        "progressive_estimate_tokens": 77179,
+        "savings_pct": 34.4
+      },
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-03-001",
+          "lessons": 0
+        }
+      ]
+    },
+    {
+      "phase": "implementation",
+      "agent": "dev-1-implement",
+      "status": "completed",
+      "dispatches": 1,
+      "attempts_charged": 1,
+      "agent_active_seconds": 216376.0,
+      "context_members_declared": 18,
+      "context_members_required": 9,
+      "skills": {
+        "required": 8,
+        "not_triggered": 0
+      },
+      "model_tier": "deep",
+      "context_estimate": {
+        "modules_full_bytes": 68729,
+        "modules_core_bytes": 32672,
+        "slice_all_bytes": 184720,
+        "slice_required_bytes": 22885,
+        "inputs_bytes": 11149,
+        "upstream_full_bytes": 69288,
+        "upstream_read_first_bytes": 28417,
+        "task_context_bytes": 78713,
+        "fixed_bytes": 134134,
+        "legacy_estimate_bytes": 468020,
+        "progressive_estimate_bytes": 307970,
+        "legacy_estimate_tokens": 117005,
+        "progressive_estimate_tokens": 76992,
+        "savings_pct": 34.2
+      },
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-04-001",
+          "lessons": 0
+        }
+      ]
+    },
+    {
+      "phase": "quality-review",
+      "agent": "dev-2-reviewer",
+      "status": "completed",
+      "dispatches": 1,
+      "attempts_charged": 1,
+      "agent_active_seconds": 774.0,
+      "context_members_declared": 19,
+      "context_members_required": 10,
+      "skills": {
+        "required": 10,
+        "not_triggered": 0
+      },
+      "model_tier": "deep",
+      "context_estimate": {
+        "modules_full_bytes": 74164,
+        "modules_core_bytes": 37865,
+        "slice_all_bytes": 189650,
+        "slice_required_bytes": 27815,
+        "inputs_bytes": 11149,
+        "upstream_full_bytes": 37474,
+        "upstream_read_first_bytes": 27715,
+        "task_context_bytes": 78713,
+        "fixed_bytes": 95383,
+        "legacy_estimate_bytes": 407820,
+        "progressive_estimate_bytes": 278640,
+        "legacy_estimate_tokens": 101955,
+        "progressive_estimate_tokens": 69660,
+        "savings_pct": 31.7
+      },
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-05-001",
+          "lessons": 0
+        }
+      ]
+    },
+    {
+      "phase": "documentation-and-release-handoff",
+      "agent": "documentation",
+      "status": "completed",
+      "dispatches": 1,
+      "attempts_charged": 1,
+      "agent_active_seconds": 382.0,
+      "context_members_declared": 18,
+      "context_members_required": 9,
+      "skills": {
+        "required": 8,
+        "not_triggered": 0
+      },
+      "model_tier": "light",
+      "context_estimate": {
+        "modules_full_bytes": 90740,
+        "modules_core_bytes": 45513,
+        "slice_all_bytes": 181536,
+        "slice_required_bytes": 19701,
+        "inputs_bytes": 0,
+        "upstream_full_bytes": 13300,
+        "upstream_read_first_bytes": 5715,
+        "task_context_bytes": 78713,
+        "fixed_bytes": 63564,
+        "legacy_estimate_bytes": 349140,
+        "progressive_estimate_bytes": 213206,
+        "legacy_estimate_tokens": 87285,
+        "progressive_estimate_tokens": 53301,
+        "savings_pct": 38.9
+      },
+      "lessons_hydrated": 0,
+      "lessons_hydrated_by_invocation": [
+        {
+          "invocation_id": "inv-6fa26c9657d3-06-001",
+          "lessons": 0
+        }
+      ]
+    }
+  ]
+}

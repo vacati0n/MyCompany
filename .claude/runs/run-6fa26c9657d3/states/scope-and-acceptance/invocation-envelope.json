@@ -1,0 +1,510 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-01-002",
+  "run_id": "run-6fa26c9657d3",
+  "work_item_id": "run-6fa26c9657d3::scope-and-acceptance",
+  "idempotency_key": "sha256:279c2cb3aad5dba9f39488fb4bb27411",
+  "state_id": "scope-and-acceptance",
+  "phase_index": 1,
+  "agent_id": "product-owner",
+  "agent_version": "1.0.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/product-owner.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/product-owner/manifest.yaml",
+    "load_order": [
+      "agents/product-owner/system.md",
+      "agents/product-owner/identity.md",
+      "agents/product-owner/reasoning.md",
+      "agents/product-owner/execution.md",
+      "agents/product-owner/output.md",
+      "agents/product-owner/quality.md",
+      "agents/product-owner/examples.md"
+    ],
+    "module_digests": {
+      "agents/product-owner/system.md": "sha256:06ca56c469b563af932fae089e35a114",
+      "agents/product-owner/identity.md": "sha256:f17c781abd5532e92690f7c246f8aec7",
+      "agents/product-owner/reasoning.md": "sha256:1bee4f54955be60084307c09ecc16f4c",
+      "agents/product-owner/execution.md": "sha256:1917cc318e6ebb9d07124140ca1c891d",
+      "agents/product-owner/output.md": "sha256:a06fe9c8a5e1edb7d68067aa0185fcf6",
+      "agents/product-owner/quality.md": "sha256:df317ff709194f86ca627e00fd774e75",
+      "agents/product-owner/examples.md": "sha256:fade2a9b555f9722d24e73ee27cd8af3"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/product-owner/system.md",
+        "agents/product-owner/reasoning.md",
+        "agents/product-owner/output.md",
+        "agents/product-owner/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/product-owner/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/product-owner/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/product-owner/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 33274,
+      "full_bytes": 65474
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "scope-definition",
+      "acceptance-authority"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S02",
+        "proficiency": "Primary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S07",
+        "proficiency": "Secondary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Advisory",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S02",
+        "registryIdentifier": "domain-modeling",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S07",
+        "registryIdentifier": "testing-strategy",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "not-triggered",
+      "area": "security",
+      "basis": "area security is not affected by this task; the skill stays resolved and is read only if the work reveals the domain",
+      "source": "agent-manifest (Advisory)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "feature-request",
+      "change-request",
+      "business-intent",
+      "acceptance-intent",
+      "business-constraints",
+      "architecture-context",
+      "prior-scope-definition",
+      "known-issues"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-18-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-18-feature-request.md",
+        "text": "# MC-18: \"Read from link\": the web app reads one public Shopee product page and fills the fact sheet\n\n- Source: `CEO-D-1313` (the CEO's own decision, 2026-10-27); local://research/ceo-decision-record.md#ceo-d-1313\n- Issue type: Feature   Priority: Highest\n- Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, network-egress, vietnamese\n- Routed as: /implement (implement-feature)\n- Builds on: MC-17 (`src/MediaCompany.Pilot.Web`, run `run-022d0492a75a`, commit 3e220c0) on MC-16 (`src/MediaCompany.Pilot`).\n  Neither is merged to `main`. Branch `claude/mc-18-shopee-read-link` is cut from `claude/mc-17-pilot-web-fffc59`.\n\n## Description\n\n### WHY\n\nThe CEO's words: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\" (I accept the risk and want it fully automatic.)\nToday step 1 of the MC-17 web app asks the operator to type every fact of the fact sheet by hand from the product page,\nand to save the three product images and the screenshot themselves. `CEO-D-1313` allows the tool to read the public\nproduct page itself, one product per click, and to fill the fact sheet and save the images.\n\n### WHAT THE OPERATOR DOES\n\n1. At step 1, the operator pastes an affiliate link or a product link and presses one button.\n2. The tool follows the link to the **public product page on shopee.vn**, reads that product's own name, price,\n   classification, specifications, description and images, fills the fact sheet form and saves the images into the\n   video's folder.\n3. Every filled field is marked as read from the page. The operator reviews each fact, and the MC-16 fact-sheet check\n   (banned terms, price spellings, use claims) runs exactly as for typed facts. Nothing is accepted without the\n   operator's review.\n4. If Shopee blocks the read, asks for sign-in, shows a CAPTCHA, or the page cannot be parsed, the tool stops and offers\n   **paste mode**: the operator copies the page's text from their own browser and pastes it; the tool parses the paste\n   and fills the same fields.\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 REUSE IT\n\n- MC-17's step 1 form, its live banned-term check, its image and screenshot steps, and its request guard.\n- MC-16's fact sheet check, which stays the authority on what a fact sheet may hold.\n- Installed on this machine: the .NET 10 SDK (`HttpClient`), and the headless browser the MC-17 tests already drive.\n\n### HARD CONSTRAINTS (from `CEO-D-1313`, unchanged)\n\n1. One product per operator click. No crawling of other pages, no category scan, no batch runs, no scheduled reads.\n2. No sign-in, no cookies or session of the CEO, and affiliate.shopee.vn is never opened.\n3. No CAPTCHA solving, no browser impersonation to evade anti-bot measures (no forged headers or signatures, no faked\n   user agent), no IP rotation, no proxy. A block, a sign-in wall or a CAPTCHA means stop and offer paste mode.\n4. Network egress only to shopee.vn hosts and only during the read step. The MC-16 toolchain stays at zero sockets and\n   video composition stays fully offline. The web app keeps listening on 127.0.0.1 only.\n5. Downloads are relaxed only for the product images of the product the operator supplied (`CEO-D-1303` relaxed per\n   `CEO-D-1313` item 3).\n6. Fetched facts pass the MC-16 fact-sheet check unchanged; the CEO reviews each fact and approves each video (`D-002`).\n7. Stop condition (`CEO-D-1313` item 6): the read step can be switched off in one place, leaving paste mode working.\n8. Download no package (no npm, NuGet or pip package, no CDN script) unless the CEO approves it by name. No generative\n   model, no speech recognition, no metered service.\n9. Agents never sign in, create accounts, contact sellers, buy or publish. Frozen MC-13 and MC-14 and the `mediacompany`\n   database are not touched.\n10. Tests run offline: product pages, blocked pages, sign-in walls and images are served by a code-generated local\n    fixture server, never shopee.vn. No media file is added to the repository. Agents do not read shopee.vn during\n    development unless the CEO allows it by name at the Scope Gate.\n\n### OPEN FOR THE SCOPE GATE\n\n- **Image hosts.** Shopee serves product images from hosts outside shopee.vn (for example `*.susercontent.com`). The\n  decision names \"m\u00e1y ch\u1ee7 shopee.vn\" only. The CEO decides whether the image CDN of the product is included.\n- **Short links.** Affiliate links are commonly `s.shopee.vn/...` redirects; the read follows redirects only within the\n  allowed hosts.\n- **Live check.** Whether an agent may read one real public product page once, on the CEO's named link, to show the step\n  working; otherwise the demo uses the local fixture and paste mode only.\n\n### DONE MEANS\n\n- MC-18 runs through every phase and gate of `implement-feature`; the CEO decides at the Scope and Design gates.\n- The step is shown working in the Browser pane against the local fixture, including a block that falls back to paste\n  mode.\n- Committed and pushed on `claude/mc-18-shopee-read-link`; the CEO gets the compare link.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no\nrepository file; an agent claiming a finding covers \"every\" case lists the cases; a `failure-envelope.json` of class\n`gate-approval-required` in a phase folder is stale once that phase's dispatch prompt exists (Finding 11).\n\n## Acceptance criteria\n\n_To be defined by the scope phase and approved at the Scope Gate._",
+        "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-18-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-18-business-intent.md",
+        "text": "# Business intent for MC-18 (the owner's request and decisions, verbatim)\n\n## The CEO's request, 2026-10-27, in chat (relayed by the MC-16 session, confirmed directly in the MC-17 session)\n\n\"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n. H\u00e3y so\u1ea1n quy\u1ebft \u0111\u1ecbnh CEO cho ph\u00e9p bot t\u1ef1 \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m qua link ti\u1ebfp th\u1ecb \u0111\u1ec3 t\u00f4i duy\u1ec7t.\"\nApproval of the draft: \"ch\u1ea5p nh\u1eadn nguy\u00ean v\u0103n\". Confirmed in the MC-17 session: \"X\u00e1c nh\u1eadn, l\u00e0m sau MC-17\".\n\n---\n\n## The approved text, Vietnamese, as the CEO approved it\n\n### CEO-D-1313 \u2014 Bot t\u1ef1 \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m Shopee \u0111\u1ec3 \u0111i\u1ec1n b\u1ea3ng th\u00f4ng tin\n\n**Quy\u1ebft \u0111\u1ecbnh c\u1ee7a CEO, 2026-10-27.** L\u1eddi CEO: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\"\n\n1. **\u0110\u01b0\u1ee3c ph\u00e9p:** khi CEO \u0111\u01b0a v\u00e0o m\u1ed9t link ti\u1ebfp th\u1ecb/link s\u1ea3n ph\u1ea9m, c\u00f4ng c\u1ee5 m\u1edf **trang s\u1ea3n ph\u1ea9m c\u00f4ng khai tr\u00ean\n   shopee.vn** m\u00e0 link \u0111\u00f3 tr\u1ecf t\u1edbi, l\u1ea5y t\u00ean, gi\u00e1, ph\u00e2n lo\u1ea1i, th\u00f4ng s\u1ed1, m\u00f4 t\u1ea3 v\u00e0 \u1ea3nh c\u1ee7a ch\u00ednh s\u1ea3n ph\u1ea9m \u0111\u00f3, r\u1ed3i t\u1ef1 \u0111i\u1ec1n\n   b\u1ea3ng th\u00f4ng tin v\u00e0 l\u01b0u \u1ea3nh v\u00e0o th\u01b0 m\u1ee5c video. M\u1ed7i l\u1ea7n **m\u1ed9t s\u1ea3n ph\u1ea9m, do CEO b\u1ea5m**; kh\u00f4ng t\u1ef1 d\u00f2 trang kh\u00e1c, kh\u00f4ng\n   qu\u00e9t danh m\u1ee5c, kh\u00f4ng ch\u1ea1y h\u00e0ng lo\u1ea1t.\n2. **V\u1eabn gi\u1eef:** kh\u00f4ng \u0111\u0103ng nh\u1eadp, kh\u00f4ng d\u00f9ng cookie/phi\u00ean c\u1ee7a CEO, kh\u00f4ng m\u1edf affiliate.shopee.vn (trang \u0111\u00f3 c\u1ea7n \u0111\u0103ng\n   nh\u1eadp). Kh\u00f4ng v\u01b0\u1ee3t CAPTCHA, kh\u00f4ng gi\u1ea3 tr\u00ecnh duy\u1ec7t \u0111\u1ec3 n\u00e9 ch\u1ed1ng bot, kh\u00f4ng \u0111\u1ed5i IP. N\u1ebfu Shopee ch\u1eb7n ho\u1eb7c \u0111\u00f2i \u0111\u0103ng nh\u1eadp\n   \u2192 d\u1eebng v\u00e0 chuy\u1ec3n sang c\u00e1ch b\u00e1n t\u1ef1 \u0111\u1ed9ng (CEO d\u00e1n n\u1ed9i dung trang v\u00e0o, c\u00f4ng c\u1ee5 \u0111i\u1ec1n).\n3. **Thay \u0111\u1ed5i:** quy \u0111\u1ecbnh \"kh\u00f4ng t\u1ea3i t\u00e0i s\u1ea3n n\u00e0o\" (CEO-D-1303) \u0111\u01b0\u1ee3c n\u1edbi **ri\u00eang** cho \u1ea3nh s\u1ea3n ph\u1ea9m CEO \u0111\u01b0a v\u00e0o; quy\n   \u0111\u1ecbnh ch\u1ec9 k\u1ebft n\u1ed1i n\u1ed9i b\u1ed9 (CEO-D-1308) \u0111\u01b0\u1ee3c n\u1edbi **ri\u00eang** cho b\u01b0\u1edbc \u0111\u1ecdc trang t\u1edbi m\u00e1y ch\u1ee7 shopee.vn. B\u01b0\u1edbc d\u1ef1ng video\n   v\u1eabn ho\u00e0n to\u00e0n ngo\u1ea1i tuy\u1ebfn.\n4. **Ki\u1ec3m tra gi\u1eef nguy\u00ean:** d\u1eef li\u1ec7u bot l\u1ea5y v\u1eabn qua ph\u00e9p ki\u1ec3m tra b\u1ea3ng th\u00f4ng tin c\u1ee7a MC-16 (t\u1eeb c\u1ea5m, c\u00e1ch vi\u1ebft gi\u00e1,\n   c\u00e2u t\u1ef1 nh\u1eadn \u0111\u00e3 d\u00f9ng), CEO v\u1eabn xem l\u1ea1i t\u1eebng d\u1eef ki\u1ec7n, v\u00e0 v\u1eabn duy\u1ec7t t\u1eebng video tr\u01b0\u1edbc khi \u0111\u0103ng (D-002).\n5. **R\u1ee7i ro CEO nh\u1eadn (D-018):** \u0111i\u1ec1u kho\u1ea3n Shopee (E-105) c\u1ea5m \u0111\u1ed1i t\u00e1c \"thu th\u1eadp b\u1ea5t k\u1ef3 th\u00f4ng tin n\u00e0o tr\u00ean S\u00e0n TM\u0110T\";\n   bot \u0111\u1ecdc trang c\u00f3 th\u1ec3 b\u1ecb coi l\u00e0 vi ph\u1ea1m \u2192 c\u00f3 th\u1ec3 b\u1ecb kh\u00f3a t\u00e0i kho\u1ea3n affiliate v\u00e0 m\u1ea5t hoa h\u1ed3ng; E-107 ph\u1ea1t t\u1edbi\n   10 tri\u1ec7u \u0111\u1ed3ng m\u1ed7i h\u00e0nh vi d\u00f9ng n\u1ed9i dung kh\u00f4ng \u0111\u01b0\u1ee3c ph\u00e9p.\n6. **\u0110i\u1ec1u ki\u1ec7n d\u1eebng:** Shopee tr\u1ea3 l\u1eddi Q-014 b\u1ea5t l\u1ee3i ho\u1eb7c g\u1eedi b\u1ea5t k\u1ef3 c\u1ea3nh b\u00e1o t\u00e0i kho\u1ea3n n\u00e0o \u2192 t\u1eaft bot ngay trong ng\u00e0y,\n   quay v\u1ec1 c\u00e1ch b\u00e1n t\u1ef1 \u0111\u1ed9ng. Q-014 v\u1eabn \u0111\u01b0\u1ee3c g\u1eedi.\n\n**Kh\u00f4ng \u0111\u1ed5i:** D-002, D-018; agent kh\u00f4ng t\u1ea1o t\u00e0i kho\u1ea3n, kh\u00f4ng li\u00ean h\u1ec7 ng\u01b0\u1eddi b\u00e1n, kh\u00f4ng mua, kh\u00f4ng \u0111\u0103ng.\n\n---\n\n## CEO-D-1313 \u2014 The bot reads the public Shopee product page to fill the fact sheet\n\n**The CEO's own decision, 2026-10-27.** The CEO's words: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\" (I accept\nthe risk and want it fully automatic.) The CEO approved the Vietnamese text verbatim (\"ch\u1ea5p nh\u1eadn nguy\u00ean v\u0103n\") in the\nMC-16 session and confirmed it directly in the MC-17 session, choosing to build it as a follow-up run after MC-17\ncloses. This entry is the English form.\n\n1. **Allowed:** when the CEO supplies an affiliate link or product link, the tool opens the **public product page on\n   shopee.vn** that the link points to. It takes that product's own name, price, classification, specifications,\n   description and images, then fills the fact sheet and saves the images into the video folder. **One product at a\n   time, on the CEO's click.** No crawling of other pages, no category scanning, no batch runs.\n2. **Kept:** no sign-in, no use of the CEO's cookies or session, and affiliate.shopee.vn is not opened (it requires\n   sign-in). No CAPTCHA solving, no browser impersonation to evade anti-bot measures, no IP rotation. If Shopee blocks\n   the page or asks for sign-in, the tool stops and falls back to the semi-automatic mode: the CEO pastes the page\n   content and the tool fills the sheet.\n3. **Changed:** the \"download no asset\" rule (`CEO-D-1303`) is relaxed **only** for the product images of the product\n   the CEO supplies. The local-connections-only rule (`CEO-D-1308`) is relaxed **only** for the page-reading step, to\n   shopee.vn hosts. Video composition stays fully offline.\n4. **Checks unchanged:** the data the bot takes still passes the MC-16 fact-sheet check (banned terms, price\n   spellings, use claims). The CEO still reviews each fact, and still approves each video before it is published\n   (`D-002`).\n5. **Risk the CEO carries (`D-018`):** Shopee's terms (E-105) forbid partners from \"collecting any information on the\n   e-commerce platform\". A bot reading pages may be judged a breach, which can mean the affiliate account is locked and\n   commission is lost. E-107 sets a fine of up to 10 million dong for each unauthorised use of content.\n6. **Stop condition:** if Shopee answers Q-014 unfavourably or sends any account warning, the bot is switched off the\n   same day and the tool returns to the semi-automatic mode. Q-014 is still sent.\n\n**Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.",
+        "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the business intent this agent bounds: a feature request for new functionality, a change request for a modification to delivered behaviour, or a business intent for an outcome stated without a proposed solution. Without one there is nothing to scope, and scoping anyway would mean inventing what the requester wants."
+  },
+  "prior_validation": {
+    "attempt": 1,
+    "report": "runs/run-6fa26c9657d3/states/scope-and-acceptance/validation-report.json",
+    "result": "fail",
+    "existing_artifacts": [
+      "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md"
+    ],
+    "failures": [
+      {
+        "id": "C3.2",
+        "severity": "Blocking",
+        "quality_ref": "domain-model/agent-specification.md",
+        "requirement": "No model, vendor, or provider named",
+        "detail": "found: ['claude']"
+      }
+    ]
+  },
+  "prior_rejection": null,
+  "upstream_artifacts": [],
+  "task_context": {
+    "path": "runs/run-6fa26c9657d3/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:2e0ee463f8fd4d44c0a5fba2f41bd14f",
+    "bytes": 3873,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database"
+      ],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "scope-and-acceptance",
+      "execution-planning"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {
+      "execution-planning": [
+        "scope-and-acceptance"
+      ]
+    },
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-27T04:22:35Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "required",
+        "read_reason": "this artifact names the gate it is evidence for and its owners"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/scope-definition.md",
+        "digest": "sha256:37cddf68baf5bb2a8de0f08cd49e23d7",
+        "supplies": "feature-request",
+        "bytes": 4173,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "domain-model/agent-specification.md",
+        "digest": "sha256:ce2f6da48f89ce2732a3a198a6513205",
+        "supplies": "acceptance-intent",
+        "bytes": 2277,
+        "read": "on-demand",
+        "read_reason": "the vocabulary and lifecycle the contracts are stated in; consult when a contract term is unclear"
+      }
+    ],
+    "context_digest": "sha256:8432aa0d2cb1bf16c655abffc4957991",
+    "input_digest": "sha256:a7733876abd63993a6781fa3a8d25170",
+    "inputs": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-18-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-18-feature-request.md",
+        "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-18-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-18-business-intent.md",
+        "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+      }
+    ],
+    "unnarrowed": [],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "templates/scope-definition.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "read_on_demand": [
+      "domain-model/agent-specification.md",
+      "workflows/implement-feature.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 106610,
+    "bytes_required": 12129,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:f90407234b5404dabfa6045a8ba138ed",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md",
+      "runs/run-6fa26c9657d3/states/scope-and-acceptance/result-envelope.json"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": false,
+      "purpose": "none; the boundary is derived from supplied inputs and the frozen context slice, and no part of it is established by executing anything",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "repository modification of any kind",
+        "any command whose effect is not recorded in the artifact"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution",
+      "external system, repository, or ticketing access",
+      "author or revise a technical design, structure, or technology decision",
+      "decompose the scope into tasks, waves, estimates, or a delivery sequence",
+      "write, modify, or review code, tests, migrations, or configuration",
+      "record the Scope Gate decision on this agent's own artifact",
+      "record a merge, readiness, or release decision",
+      "define the test strategy or execute validation",
+      "relax a stated regulatory, policy, or quality constraint to close the scope",
+      "record scope no supplied input supports",
+      "access external systems, ticket trackers, or stakeholders directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "decide which deliverables fall inside this change and which fall outside it",
+        "decide the relative priority of the in-scope items",
+        "decide the acceptance threshold each criterion states",
+        "decide when a stated expectation is too vague to be an acceptance criterion",
+        "decide when an adjacent request is a separate change rather than a widening of this one",
+        "record a scope decision together with the rationale that justifies it",
+        "record an unresolved ambiguity as an open question with a named owner",
+        "set the scope verdict the recorded question set supports"
+      ],
+      "prohibited": [
+        "author or revise a technical design, structure, or technology decision",
+        "decompose the scope into tasks, waves, estimates, or a delivery sequence",
+        "write, modify, or review code, tests, migrations, or configuration",
+        "record the Scope Gate decision on this agent's own artifact",
+        "record a merge, readiness, or release decision",
+        "define the test strategy or execute validation",
+        "relax a stated regulatory, policy, or quality constraint to close the scope",
+        "record scope no supplied input supports",
+        "access external systems, ticket trackers, or stakeholders directly"
+      ],
+      "repositoryWrites": {
+        "allowed": false,
+        "rationale": "This role produces one artifact and changes no repository source. Its writes are the artifact path and the result envelope path the invocation envelope names, and nothing else. A scope decision that edited the repository would be deciding the change it is supposed to bound.",
+        "scope": [
+          "runs/**/states/scope-and-acceptance/**"
+        ]
+      },
+      "commandExecution": {
+        "allowed": false,
+        "purpose": "none; the boundary is derived from supplied inputs and the frozen context slice, and no part of it is established by executing anything",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "repository modification of any kind",
+          "any command whose effect is not recorded in the artifact"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical supplied inputs and an identical context snapshot must produce the same in-scope item set, the same exclusion set, the same acceptance criterion set, the same scope decision set, the same open question set, and the same scope verdict.",
+      "identifierSchemes": {
+        "scopeItems": "S-<zero-padded-sequence>",
+        "exclusions": "X-<zero-padded-sequence>",
+        "acceptanceCriteria": "A-<zero-padded-sequence>",
+        "scopeDecisions": "D-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "orderingRule": "In-scope items are ordered by business priority; ties break toward the order the expectation appeared in the supplied inputs. Acceptance criteria are ordered by the scope item they bound, ties breaking toward derivation order. Exclusions, decisions, and questions follow the order the reasoning stage that produced them declares.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied inputs or repository context."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 2,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "scope-definition.md",
+    "artifact_path": "runs/run-6fa26c9657d3/states/scope-and-acceptance/artifacts/scope-definition.md",
+    "template_ref": "templates/scope-definition.md",
+    "contract_ref": "agents/product-owner/output.md",
+    "quality_ref": "agents/product-owner/quality.md",
+    "validator": "scope_definition_validator",
+    "result_envelope_path": "runs/run-6fa26c9657d3/states/scope-and-acceptance/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-27T04:22:35Z",
+  "model_tier": {
+    "tier": "standard",
+    "host_hint": "inherit",
+    "basis": "declared light for implement-feature/scope-and-acceptance in config/model-tier-policy.json",
+    "escalation": {
+      "from": "light",
+      "to": "standard",
+      "validator_rejections": 1,
+      "gate_rollbacks": 0,
+      "reason": "1 validator rejection(s) and 0 gate rejection(s) with rollback recorded for this phase; promoted from light to standard"
+    }
+  },
+  "context_budget": {
+    "modules_full_bytes": 65474,
+    "modules_core_bytes": 33274,
+    "slice_all_bytes": 106610,
+    "slice_required_bytes": 12129,
+    "inputs_bytes": 11067,
+    "upstream_full_bytes": 0,
+    "upstream_read_first_bytes": 0,
+    "task_context_bytes": 3873,
+    "fixed_bytes": 51782,
+    "legacy_estimate_bytes": 234933,
+    "progressive_estimate_bytes": 112125,
+    "legacy_estimate_tokens": 58733,
+    "progressive_estimate_tokens": 28031,
+    "savings_pct": 52.3
+  }
+}

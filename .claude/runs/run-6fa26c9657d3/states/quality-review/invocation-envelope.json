@@ -1,0 +1,729 @@
+{
+  "invocation_id": "inv-6fa26c9657d3-05-001",
+  "run_id": "run-6fa26c9657d3",
+  "work_item_id": "run-6fa26c9657d3::quality-review",
+  "idempotency_key": "sha256:eb36fc428f576f5cf88ec94b5b429b96",
+  "state_id": "quality-review",
+  "phase_index": 5,
+  "agent_id": "dev-2-reviewer",
+  "agent_version": "1.1.0",
+  "adapter": "host-subagent",
+  "dispatch_mode": "native",
+  "host_registration": "agents/dev-2-reviewer.agent.md",
+  "capability_bindings": {
+    "manifest": "agents/dev-2-reviewer/manifest.yaml",
+    "load_order": [
+      "agents/dev-2-reviewer/system.md",
+      "agents/dev-2-reviewer/identity.md",
+      "agents/dev-2-reviewer/reasoning.md",
+      "agents/dev-2-reviewer/execution.md",
+      "agents/dev-2-reviewer/output.md",
+      "agents/dev-2-reviewer/quality.md",
+      "agents/dev-2-reviewer/examples.md"
+    ],
+    "module_digests": {
+      "agents/dev-2-reviewer/system.md": "sha256:f1f2bbfb9fbf2d4068e7f55cad43fa42",
+      "agents/dev-2-reviewer/identity.md": "sha256:8168902b160985d5b81f36a1be905e66",
+      "agents/dev-2-reviewer/reasoning.md": "sha256:728cd3b6a63e6f84b3c15f51eb40c4de",
+      "agents/dev-2-reviewer/execution.md": "sha256:647dfae331aa3093d20df3731613112b",
+      "agents/dev-2-reviewer/output.md": "sha256:9d5f1de4a1e9e69edd5db3ee1d641c1f",
+      "agents/dev-2-reviewer/quality.md": "sha256:3584a1884e8da3ee4886ae5b6e77110e",
+      "agents/dev-2-reviewer/examples.md": "sha256:c2ef09a48bd41c0d5f8e2f1ce76a23db"
+    },
+    "load_profile": {
+      "mode": "progressive",
+      "policy_ref": "config/runtime.md#progressive-module-loading",
+      "core": [
+        "agents/dev-2-reviewer/system.md",
+        "agents/dev-2-reviewer/reasoning.md",
+        "agents/dev-2-reviewer/output.md",
+        "agents/dev-2-reviewer/quality.md"
+      ],
+      "on_demand": [
+        {
+          "path": "agents/dev-2-reviewer/identity.md",
+          "role": "agent-contract",
+          "load_when": "before deciding an error class, a refusal, a decision right, or an escalation; whenever the reasoning procedure or the quality contract refers to it; and whenever a supplied input asks for something the charter's boundary table does not settle"
+        },
+        {
+          "path": "agents/dev-2-reviewer/execution.md",
+          "role": "execution-lifecycle",
+          "load_when": "when the run leaves the direct Execution -> Completion path (Waiting, Delegation, Retry, or Failure), when a stage's exit condition is unclear, and before any handoff or gate question the charter does not settle"
+        },
+        {
+          "path": "agents/dev-2-reviewer/examples.md",
+          "role": "reference-examples",
+          "load_when": "only when the output shape is still ambiguous after the output contract has been read, or on a repair pass for a failed structural check"
+        }
+      ],
+      "core_bytes": 37865,
+      "full_bytes": 74164
+    },
+    "contract_checks": {
+      "manifest_identifier": true,
+      "manifest_version": true,
+      "manifest_status_active": true,
+      "load_order_resolves": true,
+      "contract_sections": {
+        "required": 12,
+        "present": 12,
+        "missing": []
+      },
+      "contract_version": "1.0.0",
+      "result": "pass"
+    },
+    "capabilities": [
+      "code-review",
+      "governance-enforcement",
+      "quality-verification"
+    ],
+    "agent_skills": [
+      {
+        "skillCode": "S07",
+        "proficiency": "Primary",
+        "registryIdentifier": "testing-strategy",
+        "specificationPath": "skills/testing/testing-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S09",
+        "proficiency": "Primary",
+        "registryIdentifier": "secure-engineering",
+        "specificationPath": "skills/security/secure-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S01",
+        "proficiency": "Secondary",
+        "registryIdentifier": "clean-architecture-checklist",
+        "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S02",
+        "proficiency": "Secondary",
+        "registryIdentifier": "domain-modeling",
+        "specificationPath": "skills/business/domain-modeling.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S03",
+        "proficiency": "Secondary",
+        "registryIdentifier": "engineering-playbook",
+        "specificationPath": "skills/dotnet/engineering-playbook.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S06",
+        "proficiency": "Secondary",
+        "registryIdentifier": "database-engineering",
+        "specificationPath": "skills/database/database-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S08",
+        "proficiency": "Secondary",
+        "registryIdentifier": "performance-engineering",
+        "specificationPath": "skills/performance/performance-engineering.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S10",
+        "proficiency": "Secondary",
+        "registryIdentifier": "git-collaboration",
+        "specificationPath": "skills/git/git-collaboration.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S11",
+        "proficiency": "Secondary",
+        "registryIdentifier": "observability-logging",
+        "specificationPath": "skills/logging/observability-logging.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      },
+      {
+        "skillCode": "S12",
+        "proficiency": "Secondary",
+        "registryIdentifier": "error-handling-strategy",
+        "specificationPath": "skills/error-handling/error-handling-strategy.md",
+        "status": "active",
+        "resolved": true,
+        "detail": "skillCode and specificationPath agree"
+      }
+    ],
+    "phase_skills": [
+      {
+        "skillCode": "S07",
+        "registryIdentifier": "testing-strategy",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S09",
+        "registryIdentifier": "secure-engineering",
+        "status": "active",
+        "resolved": true
+      },
+      {
+        "skillCode": "S08",
+        "registryIdentifier": "performance-engineering",
+        "status": "active",
+        "resolved": true
+      }
+    ]
+  },
+  "skill_dispatch": [
+    {
+      "skillCode": "S07",
+      "displayName": "Testing Strategy",
+      "specificationPath": "skills/testing/testing-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S09",
+      "displayName": "Security Engineering",
+      "specificationPath": "skills/security/secure-engineering.md",
+      "status": "required",
+      "area": "security",
+      "basis": "security is always read in review and validation phases",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S08",
+      "displayName": "Performance Engineering",
+      "specificationPath": "skills/performance/performance-engineering.md",
+      "status": "required",
+      "area": "performance",
+      "basis": "area performance triggered by 'performance' in artifact:execution-planning",
+      "source": "phase-mandatory"
+    },
+    {
+      "skillCode": "S01",
+      "displayName": "Architecture Foundations",
+      "specificationPath": "skills/architecture/clean-architecture-checklist.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S02",
+      "displayName": "Business Analysis and Domain Modeling",
+      "specificationPath": "skills/business/domain-modeling.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S03",
+      "displayName": ".NET Engineering",
+      "specificationPath": "skills/dotnet/engineering-playbook.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S06",
+      "displayName": "Database Engineering",
+      "specificationPath": "skills/database/database-engineering.md",
+      "status": "required",
+      "area": "database",
+      "basis": "area database triggered by 'database' in input:feature-request",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S10",
+      "displayName": "Git Collaboration",
+      "specificationPath": "skills/git/git-collaboration.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S11",
+      "displayName": "Logging and Observability",
+      "specificationPath": "skills/logging/observability-logging.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    },
+    {
+      "skillCode": "S12",
+      "displayName": "Error Handling",
+      "specificationPath": "skills/error-handling/error-handling-strategy.md",
+      "status": "required",
+      "basis": "domain-general skill",
+      "source": "agent-manifest (Secondary)"
+    }
+  ],
+  "input_contract": {
+    "accepted_types": [
+      "implementation-report",
+      "pull-request-diff",
+      "quality-scan-scope",
+      "technical-design",
+      "execution-plan",
+      "scope-definition",
+      "bug-analysis",
+      "architecture-decision-record",
+      "coding-standards",
+      "test-evidence",
+      "architecture-rules",
+      "security-criteria",
+      "standards-checklist",
+      "regression-targets",
+      "known-issues",
+      "feature-request",
+      "change-request",
+      "business-intent",
+      "architecture-context"
+    ],
+    "required_types": [],
+    "supplied": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-18-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-18-feature-request.md",
+        "text": "# MC-18: \"Read from link\": the web app reads one public Shopee product page and fills the fact sheet\n\n- Source: `CEO-D-1313` (the CEO's own decision, 2026-10-27); local://research/ceo-decision-record.md#ceo-d-1313\n- Issue type: Feature   Priority: Highest\n- Labels: affiliate, shopee-video, pilot, operator-ux, web-app, fact-sheet, network-egress, vietnamese\n- Routed as: /implement (implement-feature)\n- Builds on: MC-17 (`src/MediaCompany.Pilot.Web`, run `run-022d0492a75a`, commit 3e220c0) on MC-16 (`src/MediaCompany.Pilot`).\n  Neither is merged to `main`. Branch `claude/mc-18-shopee-read-link` is cut from `claude/mc-17-pilot-web-fffc59`.\n\n## Description\n\n### WHY\n\nThe CEO's words: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\" (I accept the risk and want it fully automatic.)\nToday step 1 of the MC-17 web app asks the operator to type every fact of the fact sheet by hand from the product page,\nand to save the three product images and the screenshot themselves. `CEO-D-1313` allows the tool to read the public\nproduct page itself, one product per click, and to fill the fact sheet and save the images.\n\n### WHAT THE OPERATOR DOES\n\n1. At step 1, the operator pastes an affiliate link or a product link and presses one button.\n2. The tool follows the link to the **public product page on shopee.vn**, reads that product's own name, price,\n   classification, specifications, description and images, fills the fact sheet form and saves the images into the\n   video's folder.\n3. Every filled field is marked as read from the page. The operator reviews each fact, and the MC-16 fact-sheet check\n   (banned terms, price spellings, use claims) runs exactly as for typed facts. Nothing is accepted without the\n   operator's review.\n4. If Shopee blocks the read, asks for sign-in, shows a CAPTCHA, or the page cannot be parsed, the tool stops and offers\n   **paste mode**: the operator copies the page's text from their own browser and pastes it; the tool parses the paste\n   and fills the same fields.\n\n### WHAT THE COMPANY ALREADY HOLDS \u2014 REUSE IT\n\n- MC-17's step 1 form, its live banned-term check, its image and screenshot steps, and its request guard.\n- MC-16's fact sheet check, which stays the authority on what a fact sheet may hold.\n- Installed on this machine: the .NET 10 SDK (`HttpClient`), and the headless browser the MC-17 tests already drive.\n\n### HARD CONSTRAINTS (from `CEO-D-1313`, unchanged)\n\n1. One product per operator click. No crawling of other pages, no category scan, no batch runs, no scheduled reads.\n2. No sign-in, no cookies or session of the CEO, and affiliate.shopee.vn is never opened.\n3. No CAPTCHA solving, no browser impersonation to evade anti-bot measures (no forged headers or signatures, no faked\n   user agent), no IP rotation, no proxy. A block, a sign-in wall or a CAPTCHA means stop and offer paste mode.\n4. Network egress only to shopee.vn hosts and only during the read step. The MC-16 toolchain stays at zero sockets and\n   video composition stays fully offline. The web app keeps listening on 127.0.0.1 only.\n5. Downloads are relaxed only for the product images of the product the operator supplied (`CEO-D-1303` relaxed per\n   `CEO-D-1313` item 3).\n6. Fetched facts pass the MC-16 fact-sheet check unchanged; the CEO reviews each fact and approves each video (`D-002`).\n7. Stop condition (`CEO-D-1313` item 6): the read step can be switched off in one place, leaving paste mode working.\n8. Download no package (no npm, NuGet or pip package, no CDN script) unless the CEO approves it by name. No generative\n   model, no speech recognition, no metered service.\n9. Agents never sign in, create accounts, contact sellers, buy or publish. Frozen MC-13 and MC-14 and the `mediacompany`\n   database are not touched.\n10. Tests run offline: product pages, blocked pages, sign-in walls and images are served by a code-generated local\n    fixture server, never shopee.vn. No media file is added to the repository. Agents do not read shopee.vn during\n    development unless the CEO allows it by name at the Scope Gate.\n\n### OPEN FOR THE SCOPE GATE\n\n- **Image hosts.** Shopee serves product images from hosts outside shopee.vn (for example `*.susercontent.com`). The\n  decision names \"m\u00e1y ch\u1ee7 shopee.vn\" only. The CEO decides whether the image CDN of the product is included.\n- **Short links.** Affiliate links are commonly `s.shopee.vn/...` redirects; the read follows redirects only within the\n  allowed hosts.\n- **Live check.** Whether an agent may read one real public product page once, on the CEO's named link, to show the step\n  working; otherwise the demo uses the local fixture and paste mode only.\n\n### DONE MEANS\n\n- MC-18 runs through every phase and gate of `implement-feature`; the CEO decides at the Scope and Design gates.\n- The step is shown working in the Browser pane against the local fixture, including a block that falls back to paste\n  mode.\n- Committed and pushed on `claude/mc-18-shopee-read-link`; the CEO gets the compare link.\n\n### FRAMEWORK DEFECTS TO BRIEF EVERY SUBAGENT ON\n\nAll in `research/framework-defects.md`. Every agent gets its own staging folder; a non-implementing role writes no\nrepository file; an agent claiming a finding covers \"every\" case lists the cases; a `failure-envelope.json` of class\n`gate-approval-required` in a phase folder is stale once that phase's dispatch prompt exists (Finding 11).\n\n## Acceptance criteria\n\n_To be defined by the scope phase and approved at the Scope Gate._",
+        "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-18-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-18-business-intent.md",
+        "text": "# Business intent for MC-18 (the owner's request and decisions, verbatim)\n\n## The CEO's request, 2026-10-27, in chat (relayed by the MC-16 session, confirmed directly in the MC-17 session)\n\n\"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n. H\u00e3y so\u1ea1n quy\u1ebft \u0111\u1ecbnh CEO cho ph\u00e9p bot t\u1ef1 \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m qua link ti\u1ebfp th\u1ecb \u0111\u1ec3 t\u00f4i duy\u1ec7t.\"\nApproval of the draft: \"ch\u1ea5p nh\u1eadn nguy\u00ean v\u0103n\". Confirmed in the MC-17 session: \"X\u00e1c nh\u1eadn, l\u00e0m sau MC-17\".\n\n---\n\n## The approved text, Vietnamese, as the CEO approved it\n\n### CEO-D-1313 \u2014 Bot t\u1ef1 \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m Shopee \u0111\u1ec3 \u0111i\u1ec1n b\u1ea3ng th\u00f4ng tin\n\n**Quy\u1ebft \u0111\u1ecbnh c\u1ee7a CEO, 2026-10-27.** L\u1eddi CEO: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\"\n\n1. **\u0110\u01b0\u1ee3c ph\u00e9p:** khi CEO \u0111\u01b0a v\u00e0o m\u1ed9t link ti\u1ebfp th\u1ecb/link s\u1ea3n ph\u1ea9m, c\u00f4ng c\u1ee5 m\u1edf **trang s\u1ea3n ph\u1ea9m c\u00f4ng khai tr\u00ean\n   shopee.vn** m\u00e0 link \u0111\u00f3 tr\u1ecf t\u1edbi, l\u1ea5y t\u00ean, gi\u00e1, ph\u00e2n lo\u1ea1i, th\u00f4ng s\u1ed1, m\u00f4 t\u1ea3 v\u00e0 \u1ea3nh c\u1ee7a ch\u00ednh s\u1ea3n ph\u1ea9m \u0111\u00f3, r\u1ed3i t\u1ef1 \u0111i\u1ec1n\n   b\u1ea3ng th\u00f4ng tin v\u00e0 l\u01b0u \u1ea3nh v\u00e0o th\u01b0 m\u1ee5c video. M\u1ed7i l\u1ea7n **m\u1ed9t s\u1ea3n ph\u1ea9m, do CEO b\u1ea5m**; kh\u00f4ng t\u1ef1 d\u00f2 trang kh\u00e1c, kh\u00f4ng\n   qu\u00e9t danh m\u1ee5c, kh\u00f4ng ch\u1ea1y h\u00e0ng lo\u1ea1t.\n2. **V\u1eabn gi\u1eef:** kh\u00f4ng \u0111\u0103ng nh\u1eadp, kh\u00f4ng d\u00f9ng cookie/phi\u00ean c\u1ee7a CEO, kh\u00f4ng m\u1edf affiliate.shopee.vn (trang \u0111\u00f3 c\u1ea7n \u0111\u0103ng\n   nh\u1eadp). Kh\u00f4ng v\u01b0\u1ee3t CAPTCHA, kh\u00f4ng gi\u1ea3 tr\u00ecnh duy\u1ec7t \u0111\u1ec3 n\u00e9 ch\u1ed1ng bot, kh\u00f4ng \u0111\u1ed5i IP. N\u1ebfu Shopee ch\u1eb7n ho\u1eb7c \u0111\u00f2i \u0111\u0103ng nh\u1eadp\n   \u2192 d\u1eebng v\u00e0 chuy\u1ec3n sang c\u00e1ch b\u00e1n t\u1ef1 \u0111\u1ed9ng (CEO d\u00e1n n\u1ed9i dung trang v\u00e0o, c\u00f4ng c\u1ee5 \u0111i\u1ec1n).\n3. **Thay \u0111\u1ed5i:** quy \u0111\u1ecbnh \"kh\u00f4ng t\u1ea3i t\u00e0i s\u1ea3n n\u00e0o\" (CEO-D-1303) \u0111\u01b0\u1ee3c n\u1edbi **ri\u00eang** cho \u1ea3nh s\u1ea3n ph\u1ea9m CEO \u0111\u01b0a v\u00e0o; quy\n   \u0111\u1ecbnh ch\u1ec9 k\u1ebft n\u1ed1i n\u1ed9i b\u1ed9 (CEO-D-1308) \u0111\u01b0\u1ee3c n\u1edbi **ri\u00eang** cho b\u01b0\u1edbc \u0111\u1ecdc trang t\u1edbi m\u00e1y ch\u1ee7 shopee.vn. B\u01b0\u1edbc d\u1ef1ng video\n   v\u1eabn ho\u00e0n to\u00e0n ngo\u1ea1i tuy\u1ebfn.\n4. **Ki\u1ec3m tra gi\u1eef nguy\u00ean:** d\u1eef li\u1ec7u bot l\u1ea5y v\u1eabn qua ph\u00e9p ki\u1ec3m tra b\u1ea3ng th\u00f4ng tin c\u1ee7a MC-16 (t\u1eeb c\u1ea5m, c\u00e1ch vi\u1ebft gi\u00e1,\n   c\u00e2u t\u1ef1 nh\u1eadn \u0111\u00e3 d\u00f9ng), CEO v\u1eabn xem l\u1ea1i t\u1eebng d\u1eef ki\u1ec7n, v\u00e0 v\u1eabn duy\u1ec7t t\u1eebng video tr\u01b0\u1edbc khi \u0111\u0103ng (D-002).\n5. **R\u1ee7i ro CEO nh\u1eadn (D-018):** \u0111i\u1ec1u kho\u1ea3n Shopee (E-105) c\u1ea5m \u0111\u1ed1i t\u00e1c \"thu th\u1eadp b\u1ea5t k\u1ef3 th\u00f4ng tin n\u00e0o tr\u00ean S\u00e0n TM\u0110T\";\n   bot \u0111\u1ecdc trang c\u00f3 th\u1ec3 b\u1ecb coi l\u00e0 vi ph\u1ea1m \u2192 c\u00f3 th\u1ec3 b\u1ecb kh\u00f3a t\u00e0i kho\u1ea3n affiliate v\u00e0 m\u1ea5t hoa h\u1ed3ng; E-107 ph\u1ea1t t\u1edbi\n   10 tri\u1ec7u \u0111\u1ed3ng m\u1ed7i h\u00e0nh vi d\u00f9ng n\u1ed9i dung kh\u00f4ng \u0111\u01b0\u1ee3c ph\u00e9p.\n6. **\u0110i\u1ec1u ki\u1ec7n d\u1eebng:** Shopee tr\u1ea3 l\u1eddi Q-014 b\u1ea5t l\u1ee3i ho\u1eb7c g\u1eedi b\u1ea5t k\u1ef3 c\u1ea3nh b\u00e1o t\u00e0i kho\u1ea3n n\u00e0o \u2192 t\u1eaft bot ngay trong ng\u00e0y,\n   quay v\u1ec1 c\u00e1ch b\u00e1n t\u1ef1 \u0111\u1ed9ng. Q-014 v\u1eabn \u0111\u01b0\u1ee3c g\u1eedi.\n\n**Kh\u00f4ng \u0111\u1ed5i:** D-002, D-018; agent kh\u00f4ng t\u1ea1o t\u00e0i kho\u1ea3n, kh\u00f4ng li\u00ean h\u1ec7 ng\u01b0\u1eddi b\u00e1n, kh\u00f4ng mua, kh\u00f4ng \u0111\u0103ng.\n\n---\n\n## CEO-D-1313 \u2014 The bot reads the public Shopee product page to fill the fact sheet\n\n**The CEO's own decision, 2026-10-27.** The CEO's words: \"T\u00f4i ch\u1ea5p nh\u1eadn r\u1ee7i ro v\u00e0 mu\u1ed1n t\u1ef1 \u0111\u1ed9ng ho\u00e0n to\u00e0n.\" (I accept\nthe risk and want it fully automatic.) The CEO approved the Vietnamese text verbatim (\"ch\u1ea5p nh\u1eadn nguy\u00ean v\u0103n\") in the\nMC-16 session and confirmed it directly in the MC-17 session, choosing to build it as a follow-up run after MC-17\ncloses. This entry is the English form.\n\n1. **Allowed:** when the CEO supplies an affiliate link or product link, the tool opens the **public product page on\n   shopee.vn** that the link points to. It takes that product's own name, price, classification, specifications,\n   description and images, then fills the fact sheet and saves the images into the video folder. **One product at a\n   time, on the CEO's click.** No crawling of other pages, no category scanning, no batch runs.\n2. **Kept:** no sign-in, no use of the CEO's cookies or session, and affiliate.shopee.vn is not opened (it requires\n   sign-in). No CAPTCHA solving, no browser impersonation to evade anti-bot measures, no IP rotation. If Shopee blocks\n   the page or asks for sign-in, the tool stops and falls back to the semi-automatic mode: the CEO pastes the page\n   content and the tool fills the sheet.\n3. **Changed:** the \"download no asset\" rule (`CEO-D-1303`) is relaxed **only** for the product images of the product\n   the CEO supplies. The local-connections-only rule (`CEO-D-1308`) is relaxed **only** for the page-reading step, to\n   shopee.vn hosts. Video composition stays fully offline.\n4. **Checks unchanged:** the data the bot takes still passes the MC-16 fact-sheet check (banned terms, price\n   spellings, use claims). The CEO still reviews each fact, and still approves each video before it is published\n   (`D-002`).\n5. **Risk the CEO carries (`D-018`):** Shopee's terms (E-105) forbid partners from \"collecting any information on the\n   e-commerce platform\". A bot reading pages may be judged a breach, which can mean the affiliate account is locked and\n   commission is lost. E-107 sets a fine of up to 10 million dong for each unauthorised use of content.\n6. **Stop condition:** if Shopee answers Q-014 unfavourably or sends any account warning, the bot is switched off the\n   same day and the tool returns to the semi-automatic mode. Q-014 is still sent.\n\n**Unchanged:** `D-002`, `D-018`. Agents create no account, contact no seller, buy nothing and publish nothing.",
+        "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+      },
+      {
+        "type": "implementation-report",
+        "reference": "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-18-shopee-read-link-27d13c/.claude/runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+        "text": "```yaml\nimplementationReport:\n  reportId: IR-2026-0035\n  changeReference: MC-18 read one public shopee.vn product link at step 1 of the MC-17 web app, run run-6fa26c9657d3, invocation inv-6fa26c9657d3-04-001\n  sourceInputs:\n    - type: feature-request\n      reference: runs/inputs/mc-18-feature-request.md\n    - type: business-intent\n      reference: runs/inputs/mc-18-business-intent.md\n    - type: technical-design\n      reference: runs/run-6fa26c9657d3/states/solution-design-and-risk-assessment/artifacts/technical-design.md\n  producedBy: dev-1-implement\n  agentVersion: 1.1.0\n  schemaVersion: 1.0.0\n  status: complete\n  workflowPhase: implementation\n  verificationStatus: verified\n  inputDigest: sha256:e5d9ef0959a883965e7e15bcc0f153ea\n  contextDigest: sha256:f19a60b2df50db05b4d00e11d9687b71\n```\n\n## Metadata\n\n- Report ID: IR-2026-0035\n- Change reference: MC-18 read one public shopee.vn product link at step 1 of the MC-17 web app, run run-6fa26c9657d3, invocation inv-6fa26c9657d3-04-001\n- Workflow phase: implementation\n- Status: complete\n- Verification status: verified\n- Review status: pending-review\n\n## Implementation Summary\n\n- Change intent: At step 1 the operator can now paste one shopee.vn product link (a product link, a short link or the link an affiliate link leads to) and press \"\u0110\u1ecdc trang\". The app follows the link to the public product page, fills the product name, classification, page address and read date, offers every specification as a candidate fact row, and saves the product's own images under names it chooses (anh-doc-01 onward) for the operator to pick up to three. Every value the read filled carries a mark (\"\u0110\u1ecdc t\u1eeb trang\") and a \"X\u00e1c nh\u1eadn\" button; the sheet is refused (fill-unconfirmed) until every mark is confirmed. When a read stops, or when the switch is off, the operator can paste the page text (\"D\u00e1n ch\u1eef c\u1ee7a trang s\u1ea3n ph\u1ea9m\"), which fills the same fields through the same parser with no connection, or type by hand as before. The read is behind an off switch, off by default, set in a new \"C\u00e0i \u0111\u1eb7t\" view. The CEO accepted the risk of a fully automatic read; the design keeps one product per click and a stop with a Vietnamese reason and the paste offer on every signal that the page refuses or cannot be read.\n- Approach taken: The read runs in the web app process behind the MC-17 guard, one read at a time app-wide, with a new HTTP stack per click that is disposed when the read ends (D-001). Five new files carry it: the link and hop rule (ReadLink.cs), the sender with the accepted headers, no cookie store, no proxy, no automatic redirect, a connect-time public-address check and the read log (ReadSender.cs), the shared text parser and the page reader (ProductText.cs), the fill record, its store, the confirmation rule and the switch (FillRecord.cs), and the read itself, which composes them and saves the images (ProductRead.cs). The fact sheet is still decided by the toolchain's own check, unchanged; the read only fills the form. The test seam is an internal transport (connect target and certificate check) passed only through an internal start path that the test assembly alone can see; the shipped entry point passes none and no argument, variable, file or route sets it (D-004). The test program gains a loopback TLS fixture with a self-signed certificate made in code, PNG fixtures drawn in code, 13 new cases and a fixture host mode. Necessity and reuse: rung 1, every new file implements a design decision the Design Gate accepted (D-001 to D-015), and nothing beyond them was built. Rung 2, the routes, the request guard, the workspace, the outcome display, the fact-sheet check, the banned-term check, the plain-name rule, the socket harness, the browser launch and the test runner are reused as they are; the read is added beside them. Rung 3, the network stack, JSON, TLS, the certificate for the fixture and the image signature checks are the .NET base class library. Rung 7, the five production files exist because no existing component reads a remote page, and the design separates sender, parser, reader and record so that paste and read share one parser and the sender alone holds network types; the three test files exist because the fixture, the host mode and the cases have no MC-17 counterpart. No package, script, font or framework dependency was added.\n- Design reference: technical-design.md decisions D-001 to D-015 and delivery steps P-001 to P-009 (P-010, the release note, follows this phase); success criteria SC-01 to SC-32; Scope Gate decision record entry 1314; Design Gate decision record entry 1315; decision record entry 1316 (no agent reads shopee.vn).\n- Out of scope: No live read was made by this agent, and no command in this phase contacted shopee.vn or any host off 127.0.0.1. Every read in this phase went to the loopback fixture (SC-33 stays with the orchestrator, who makes the single live read per decision record entry 1316). The orchestrator's Browser-pane record on the fixture host (SC-34) is the orchestrator's. The release note and compare link (P-010) follow this phase. src/MediaCompany.Pilot and its tests are byte-unchanged; MC-13 and MC-14 material and the company store database were not touched. Nothing was signed in to, bought, published or downloaded.\n\n## Change Set\n\n| ID | Path | Change Type | Purpose | Design Ref |\n|---|---|---|---|---|\n| C-001 | src/MediaCompany.Pilot.Web/MediaCompany.Pilot.Web.csproj | modified | Makes the app's internals visible to the test assembly only, so the transport seam and the internal start path stay out of the shipped surface; no package reference | D-004 |\n| C-002 | src/MediaCompany.Pilot.Web/Program.cs | modified | Splits start-up into the shipped entry point, which always passes no transport, and an internal start path that builds, starts and checks the 127.0.0.1 listener and returns the running app; the bound-address check and exit codes are unchanged | D-001; D-004; P-002 |\n| C-003 | src/MediaCompany.Pilot.Web/WebContext.cs | modified | Holds the internal transport (always null in the shipped app) and the app-wide read gate that refuses a second click while a read runs | D-001; D-004; D-014 |\n| C-004 | src/MediaCompany.Pilot.Web/Workspace.cs | modified | Adds the per-video fill record path and the per-video read-image folder in the web folder | D-007; D-009 |\n| C-005 | src/MediaCompany.Pilot.Web/Routes.cs | modified | New guarded routes: read-switch (get, set), read, paste, read-confirm and the read-image file route; the facts save refuses unconfirmed marks and copies the picked read images into the input folder; stops and refusals use the existing outcome shape with a code in square brackets | D-003; D-007; D-009; D-010; D-015; P-006 to P-008 |\n| C-006 | src/MediaCompany.Pilot.Web/ReadLink.cs | added | Link admission and hop rule: one link per field, https only (a link without scheme or with http is rewritten to https), no user info, port or IP literal, lower-case host without trailing dot, page hosts shopee.vn and its subdomains, affiliate host refused, sign-in paths stopped, at most five hops; the stop type with code, Vietnamese reason and next step | D-006; D-010; D-015; P-002 |\n| C-007 | src/MediaCompany.Pilot.Web/ReadSender.cs | added | Sender: one new handler per click, no cookie store, no proxy, no automatic redirect, headers Host, User-Agent and Accept only, connect-time refusal of loopback and private addresses, 30 s per request, 120 s per click, 5 MiB page and 40 MiB image bounds; stop codes for no answer, no connection and size; the read log doc-trang.log with time, host, path without query, status, bytes and stop code | D-002; D-006; D-010; D-011; D-014; P-003 |\n| C-008 | src/MediaCompany.Pilot.Web/ProductText.cs | added | The shared text parser used by both paste and read (name, classification, labelled specifications, price and description kept apart), the page reader for the structured product block and the declared images with a depth limit and a 20-image bound, and the captcha and sign-in-wall markers | D-005; D-008; D-010; D-013; P-004 |\n| C-009 | src/MediaCompany.Pilot.Web/FillRecord.cs | added | Fill record per video at form version 1 (source, admitted link, final address, read time, filled fields with confirmed flags, candidate rows, saved and skipped images), its store and confirmation, the save rule (fill-missing, fill-field-unknown, fill-unconfirmed), and the switch file doc-trang-san-pham.json that reads off when missing, unreadable or another version | D-003; D-007; D-008; D-013; P-006; P-007 |\n| C-010 | src/MediaCompany.Pilot.Web/ProductRead.cs | added | One read click: admits the link, follows hops under the rule, recognises the page stops (access refused, too many requests, server error, unexpected status, not HTML, no product), fetches only the declared own images from allowed image hosts with no redirect, checks each image's signature and names it anh-doc-NN | D-005; D-009; D-010; D-014; P-005; P-008 |\n| C-011 | src/MediaCompany.Pilot.Web/Pages/index.html | modified | The \"C\u00e0i \u0111\u1eb7t\" view with the \"B\u1eadt \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m\" switch; at step 1 the link field, the \"\u0110\u1ecdc trang\" button, the off note, the paste area, the candidate rows, the read-image picker and the list of images not fetched | D-003; D-009; D-013; P-008 |\n| C-012 | src/MediaCompany.Pilot.Web/Pages/app.js | modified | Page logic for the switch, the read and paste buttons, the marks with \"X\u00e1c nh\u1eadn\" on each filled field and used row, the picker limited to three that writes the images-used field, and the stop display with the paste offer; text set through textContent only; the last read, paste and save answers kept for the test driver | D-003; D-007; D-009; D-010; D-015 |\n| C-013 | src/MediaCompany.Pilot.Web/Pages/app.css | modified | Plain styling for the read box, the marks and the image picker; nothing fetched | D-007; D-009 |\n| C-014 | src/MediaCompany.Pilot.Web/Pages/test-driver.js | modified | A second test-mode driver that runs step 1 against the fixture: switch off and on, read, marks, operator-only typing, three picks, confirmations and the two saves, then paste on a second video; served only in test mode like the MC-17 driver | D-004; P-009 |\n| C-015 | tests/MediaCompany.Pilot.Web.Tests/ReadFixture.cs | added | Loopback TLS fixture with a self-signed certificate made in code, a silent listener, a closed port and a proxy listener that counts connections; the fixture site (good, short, chain, second, foreign-image, nine stop pages, eight banned-term pages, affiliate and disallowed links) and PNG images drawn in code | D-004; P-009 |\n| C-016 | tests/MediaCompany.Pilot.Web.Tests/ReadHost.cs | added | Starts the app through the internal start path with the fixture's transport, plus the fixture host mode of the test program (--fixture-host, default port 47900, switch on) that prints the fixture links and the paste text file | D-004; P-009 |\n| C-017 | tests/MediaCompany.Pilot.Web.Tests/ReadCases.cs | added | Program cases 050 to 062 | D-001 to D-015; P-009 |\n| C-018 | tests/MediaCompany.Pilot.Web.Tests/Runner.cs | modified | Dispatches --fixture-host to the host mode and registers the read cases after the MC-17 cases | D-004; P-009 |\n| C-019 | tests/MediaCompany.Pilot.Web.Tests/UnitCases.cs | modified | Program case 008's networking check now forbids proxy, cookie, listener and legacy request types anywhere in the app and allows the HTTP client and socket types only in ReadSender.cs | D-001; D-002 |\n| C-020 | tests/MediaCompany.Pilot.Web.Tests/BrowserCase.cs | modified | A launch helper for the digest-checked headless shell with the same isolation flags, used by program case 062; program case 030 is unchanged | P-009 |\n\n## Test Evidence\n\n| ID | Test | Type | Covers | Command | Result |\n|---|---|---|---|---|---|\n| T-001 | The web app and its test program build: 0 warnings, 0 errors | static | C-001, C-002, C-003, C-004, C-005, C-006, C-007, C-008, C-009, C-010, C-015, C-016, C-017, C-018, C-019, C-020 | dotnet build tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-002 | Program cases 001 to 008, including case 008 as changed: no package reference, no external address in the pages, no media file added, the toolchain never references the app, and the app's 321 type references hold networking types only from ReadSender.cs | unit | C-001, C-007, C-011, C-012, C-013, C-014, C-019 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-003 | MC-17 program cases 010 to 042 (28 cases: start-up, guard, setup, the seven steps, ledger refusals, browser recording and the whole-flow socket evidence) pass unchanged after the read was added | regression | C-002, C-003, C-004, C-005, C-011, C-012, C-013, C-014, C-018, C-020 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-004 | Program cases 050 and 060. Five disallowed links (example.com, xshopee.vn, shopee.vn.example.test, 203.0.113.7, shopee.co.id) give link-not-allowed with 0 connections; a hop to each gives hop-not-allowed with 1 request to shopee.vn and 0 to the refused host; an affiliate link gives link-affiliate with 0 connections and an affiliate hop gives hop-affiliate; two links (space, glued, new line), empty, http with a port, ftp, a user name and a sign-in path are refused with 0 connections. The transport type and the start path are internal and four argument forms that could name a fixture or transport are refused | integration | C-002, C-003, C-006, C-007, C-015, C-016, C-017 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-005 | Program cases 051, 052, 054 and 059. Good read: name, classification, page address and read date filled, candidates equal the page, five own images byte-equal, exactly six GET requests with headers Host, User-Agent and Accept, no cookie sent back, one source address. Short link: three hops, fields equal the full link's, page address without query. Chain: too-many-hops after six requests, nothing filled. An image on a host outside the image hosts gets no connection and is named, a non-image is skipped, and step 2 then accepts the uploads. Proxy variables set: 0 proxy connections; a second product needs a second click | integration | C-005, C-006, C-007, C-008, C-009, C-010, C-015, C-016, C-017 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-006 | Program case 053. Nine stops each end with their code, the Vietnamese reason, the paste offer and no later request: access-refused (403), too-many-requests (429), sign-in-redirect, sign-in-wall, captcha, no-product, server-error (503), no-connection (closed port, 2.2 s), no-answer (silent server, 30.2 s); a second click while a read runs is refused | integration | C-003, C-005, C-007, C-008, C-010, C-015, C-017 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-007 | Program cases 055, 056 and 058. An empty operator field is refused by name (header-field-missing). With N = 7 marks, no confirmation and N-1 confirmations give fill-unconfirmed and N are accepted; the picked read images are placed byte-equal in the input folder; price and description are never saved; step 2 reports none missing. Paste fills exactly what the read fills with 0 connections; empty and productless pastes are refused. Eight banned-term pages (classes a to g and a money amount): the save of the read values gives the typed save's code and line, 8 of 8; the live warning answered in 5 to 11 ms | integration | C-004, C-005, C-008, C-009, C-010, C-015, C-017 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-008 | Program case 057. The switch is off by default and a read is refused with 0 connections; paste and typed saves are accepted while off; a missing, garbage or other-version switch file reads off; on and off each survive a restart; the app folder holds the one switch file | integration | C-002, C-005, C-009, C-017 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-009 | Program case 061, socket tables of the fixture host as a child process: no read connection while off, during paste or 20 s idle; two links refused; one read goes only to the fixture (2 rows, both to the fixture port); one listener on 127.0.0.1, unchanged by the read; the toolchain's job members own 0 rows; the script verb is accepted on the read values; proxy 0; 814 samples | integration | C-002, C-007, C-016, C-017, C-018 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-010 | Program case 062, the digest-checked headless shell against the fixture: read part hidden and off note shown while off; switch turned on in \"C\u00e0i \u0111\u1eb7t\"; marks 7 of 7 with 0 read fields typed; 5 thumbnails shown, three picked and a fourth refused; 6 of 7 confirmations give fill-unconfirmed, 7 are accepted; the input folder holds the three picked images; paste on a second video gives 5 of 5 marks; browser 5 rows, all TCP on loopback. Full program run: 49 passed, 0 failed, 49 run in 243 s | end-to-end | C-005, C-009, C-011, C-012, C-013, C-014, C-017, C-020 | dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests | pass |\n| T-011 | Program case 061 alone with a 600 s idle period (MC18_IDLE_SECONDS=600): no outbound connection while a link sits in the field for 10 minutes; 19520 samples over 607 s, read rows only to the fixture port, toolchain members 0 rows, proxy 0; 1 passed, 0 failed | integration | C-007, C-016, C-017 | MC18_IDLE_SECONDS=600 dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests -- \"T\"-061 (the case filter, quoted in part so that it is not read as an identifier of this report) | pass |\n| T-012 | MC-16 pilot regression: 251 of 251, unchanged | regression | C-001, C-002 | dotnet test tests/MediaCompany.Pilot.Tests | pass |\n| T-013 | Toolchain unchanged: no diff under src/MediaCompany.Pilot or tests/MediaCompany.Pilot.Tests; the eight new files are source files only, no media file | static | C-001, C-015, C-016, C-017 | git diff --stat -- src/MediaCompany.Pilot tests/MediaCompany.Pilot.Tests; git status --porcelain | pass |\n| T-014 | Fixture host mode starts on 127.0.0.1:47900 with the switch on, prints its ready line, the fixture links and the paste text file, and is reachable only from the test program | integration | C-016, C-018 | dotnet run --project tests/MediaCompany.Pilot.Web.Tests -- --fixture-host | pass |\n\n## Verification Results\n\n- Verification method: The web app and its test program were built. The whole test program ran end to end: the MC-17 cases against the built app, and the read cases against the app started through the internal start path with the loopback TLS fixture as its only network. Every page, image and certificate was made by test code at run time. The socket-table harness watched the fixture host as a child process, idle for 20 s in the full run and for 600 s in a separate run. The browser case drove the real step-1 page in the digest-checked headless shell. The MC-16 pilot suite was re-run, and the toolchain folders were compared with the last commit.\n- Commands executed: `dotnet build tests/MediaCompany.Pilot.Web.Tests`; `dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests`; `MC18_IDLE_SECONDS=600 dotnet run --no-build --project tests/MediaCompany.Pilot.Web.Tests -- \"T\"-061 (the case filter, quoted in part so that it is not read as an identifier of this report)`; `dotnet test tests/MediaCompany.Pilot.Tests`; `git diff --stat -- src/MediaCompany.Pilot tests/MediaCompany.Pilot.Tests`; `git status --porcelain`; `dotnet run --project tests/MediaCompany.Pilot.Web.Tests -- --fixture-host`\n- Result summary: 14 evidence entries executed, 14 passed, 0 failed. Build: 0 warnings, 0 errors. Web test program: 49 of 49 (the 36 MC-17 cases plus program cases 050 to 062), 243 s; the MC-17 baseline before the change was 36 of 36. MC-16 pilot: 251 of 251. Toolchain diff: empty. The read cases' stop codes produced: access-refused, too-many-requests, sign-in-redirect, sign-in-wall, captcha, no-product, server-error, no-connection, no-answer, too-many-hops, link-not-allowed, hop-not-allowed, link-affiliate, hop-affiliate, fill-unconfirmed, read-busy. Connections off 127.0.0.1 in any run: 0.\n- Unverified areas: none\n\n## Deviations and Tradeoffs\n\n| ID | Deviation | Design element | Rationale | Escalation |\n|---|---|---|---|---|\n| V-001 | Program case 008, an MC-17 case, was changed rather than only added to: its check that the app has no HTTP client or socket type now forbids proxy, cookie, listener and legacy request types anywhere and allows the HTTP client and socket types only in ReadSender.cs (C-019) | SC-17 additions only; D-001 | The MC-17 assertion forbids exactly what D-001 requires the app to do now. Leaving it would fail; deleting it would lose the guard. Narrowing it to one file keeps the guard on the rest of the app | Raised to qa as an open question |\n| V-002 | The idle period of program case 061 is 20 s in the full run and is set by MC18_IDLE_SECONDS; the 10-minute idle check ran separately with 600 s (C-017) | SC-19 idle 10 minutes | Ten minutes in every full run would more than triple its length; the separate run gives the 10-minute evidence | not-required |\n| V-003 | The harness sample (program case 061) runs a read and then the script verb on the read values, not produce; produce under the harness stays covered by program case 042 over the whole MC-17 flow (C-017) | SC-26 sample run with a read and produce | The fixture host has no recording or clip; producing would need the whole MC-17 flow inside the harness case. The toolchain process the script verb starts is the same executable produce runs in | Raised to qa as an open question |\n| V-004 | test-driver.js gains a second driver for the read, and app.js keeps the last read, paste and save answers on the page object for it (C-012, C-014) | D-004 test seam | The driver tests the real page; like the MC-17 driver it is served only in test mode, and it holds no host name of its own | not-required |\n| V-005 | BrowserCase.cs gains a launch helper used by program case 062; program case 030 is unchanged (C-020) | SC-17 additions only | Both browser cases use one digest check and one set of isolation flags | not-required |\n\n## Boundary Compliance\n\n- Module boundaries preserved: The read lives in the web app only; src/MediaCompany.Pilot and tests/MediaCompany.Pilot.Tests have no diff (T-013), and the toolchain still does not reference the app (T-002). All network types in the app are confined to ReadSender.cs (T-002). The fact sheet is still decided by the toolchain's check, and banned terms by its held list (T-007). The transport seam and the start path that takes it are internal and visible only to the test assembly; the shipped entry point passes no transport (T-004).\n- Public interface changes: New loopback routes of the app: GET and POST /api/read-switch, POST /api/read, POST /api/paste, POST /api/read-confirm, GET /api/read-image; all go through the MC-17 guard, and the POST routes need the exact Origin and the per-start token. New app refusal and stop codes: link-empty, link-two-links, link-unreadable, link-not-allowed, hop-not-allowed, link-affiliate, hop-affiliate, hop-not-secure, too-many-hops, sign-in-redirect, captcha, sign-in-wall, no-answer, no-connection, address-not-public, read-time-over, page-too-large, image-too-large, access-refused, too-many-requests, server-error, status-unexpected, not-html, no-product, read-off, read-busy, paste-empty, paste-no-product, fill-missing, fill-field-unknown, fill-unconfirmed. The app's command-line options and exit codes are unchanged. The test program gains --fixture-host [--port N] [--switch on|off] [--root DIR]. The toolchain's verbs, exit codes and refusal codes are unchanged.\n- Data or migration impact: None in the company store. New files: doc-trang-san-pham.json (the switch) in the app folder; in the pilot folder's web folder, doc-<video>.json (the fill record per video), read-images/<video>/ (images waiting for the pick) and doc-trang.log (the read log). Picked images are copied into the video's input folder when the sheet is saved, as uploaded images were.\n- Declared side effects: The 20 files of the change set (C-001 to C-020), plus this artifact and the result envelope under runs/run-6fa26c9657d3/states/implementation/. Test runs wrote only to temporary folders under the system temp folder; build outputs went to bin and obj. No media file was added to the repository. No network connection off 127.0.0.1 was made.\n\n## Residual Risk\n\n| ID | Risk | Likelihood | Impact | Mitigation in place |\n|---|---|---|---|---|\n| R-001 | The real product page may show its product data only after the page's scripts run, so a plain read of its HTML may find no product | high | The read stops with no-product and the operator uses paste or types | The stop names the reason and offers paste; paste fills the same fields with no connection; the orchestrator's single live read will show which path the real page takes |\n| R-002 | Shopee may answer an automated read with 403, 429, a sign-in wall or a CAPTCHA | medium | No fill for that click | Each is recognised and stops the read with no further request, no retry and the paste offer (T-006) |\n| R-003 | The fixture's page structure (structured product block, labelled specifications, declared images) is a model of the real page, not a copy of it | medium | A real page could fill fewer fields or offer odd candidate rows | Every filled field and used row must be confirmed by the operator before the save (T-007, T-010); the toolchain's check still decides the sheet |\n| R-004 | The image-host rule accepts any host ending .susercontent.com | low | An image could come from a host of that suffix the page names | Only addresses the product block or page image tag declares are fetched, with no redirect, a PNG or JPEG signature check, a 40 MiB bound and 20 images at most (T-005) |\n| R-005 | The socket harness samples the tables and can miss a socket that opens and closes between samples | low | A brief connection could go unseen by the harness | The fixture records every connection and request it receives, the read log records every request, and the sender alone holds network types (T-002, T-005) |\n| R-006 | Anyone who can write the app folder can turn the switch on | low | Reads become possible without the operator using \"C\u00e0i \u0111\u1eb7t\" | A read still needs a pasted link and a click; the file is in the operator's own app folder; a garbled file reads off |\n\n## Handoff Notes\n\n- Reviewer focus areas: The host and hop rule in ReadLink.cs. The sender's handler settings in ReadSender.cs: no cookie store, no proxy, no automatic redirect, the connect-time address check and the header list. The image-host rule and the signature check in ProductRead.cs. The save rule in FillRecord.cs and its use in the facts route in Routes.cs. The internal start path in Program.cs and its InternalsVisibleTo in the project file. The Vietnamese stop messages and labels against the design's wording rule, which is an inspection item (SC-14). The single switch setting in code (SC-30). The changed program case 008 (V-001).\n- Follow-up work: The orchestrator makes the single live read (decision record entry 1316). Start the shipped app with `dotnet run --project src/MediaCompany.Pilot.Web` (http://127.0.0.1:47817) or the desktop shortcut; open \"C\u00e0i \u0111\u1eb7t\" and tick \"B\u1eadt \u0111\u1ecdc trang s\u1ea3n ph\u1ea9m\", which writes doc-trang-san-pham.json in the app folder; open the video, paste the link at step 1 and press \"\u0110\u1ecdc trang\"; untick the switch afterwards. For the Browser-pane record (SC-34), start the fixture host with `dotnet run --project tests/MediaCompany.Pilot.Web.Tests -- --fixture-host` (http://127.0.0.1:47900, switch on; options --port, --switch, --root) and use its printed links: good product https://shopee.vn/binh-giu-nhiet-mau-i.100.200, short link https://s.shopee.vn/mc18-ngan, blocked page https://shopee.vn/bi-chan-403, CAPTCHA page https://shopee.vn/xac-minh-mc18, second product https://shopee.vn/hop-com-mau-i.100.500. In that mode every one of these names is answered by the loopback fixture, never by the real host. The paste text file's path is printed by the host. The release note (P-010) is still to be written.\n- Documentation impact: The Vietnamese web-app operator guide from MC-17 should gain a section on \"C\u00e0i \u0111\u1eb7t\", \"\u0110\u1ecdc trang\", the marks and \"X\u00e1c nh\u1eadn\", the stop messages and paste mode; its owner decides. This report records no review verdict and no gate decision; the change set and the declared side effects name the same 20 files, and no external system was accessed.\n\n## Open Questions\n\n| ID | Question | Blocking | Owner | Affects |\n|---|---|---|---|---|\n| Q-001 | Is narrowing program case 008's networking check to \"network types only in ReadSender.cs\" accepted as the one change to an MC-17 case (V-001)? | non-blocking | qa | C-019 |\n| Q-002 | Is the harness sample with a read and the script verb, with produce covered by program case 042, accepted for SC-26 (V-003)? | non-blocking | qa | C-017 |",
+        "digest": "sha256:341e914df059771778b7c29be1914399",
+        "produced_by": "implementation"
+      }
+    ],
+    "minimum_satisfaction": "At least one accepted input must be present. It supplies the subject under review: an implementation report for a delivered change, a stable pull request diff for a review-pull-request run, or a quality-scan scope naming the repository boundary, exclusions, and risk threshold for a code-quality-scan run. Without one there is nothing under review, and reviewing anyway would mean assessing this agent's own choice of what to read."
+  },
+  "prior_validation": null,
+  "prior_rejection": null,
+  "upstream_artifacts": [
+    {
+      "type": "implementation-report",
+      "reference": "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+      "produced_by": "implementation",
+      "artifact": "implementation-report.md",
+      "bytes": 29211,
+      "sections": {
+        "read_first": [
+          "Implementation Summary",
+          "Change Set",
+          "Test Evidence",
+          "Verification Results",
+          "Deviations and Tradeoffs",
+          "Open Questions"
+        ],
+        "on_demand": [
+          "Boundary Compliance",
+          "Residual Risk",
+          "Handoff Notes"
+        ]
+      }
+    }
+  ],
+  "task_context": {
+    "path": "runs/run-6fa26c9657d3/task-context.yaml",
+    "schema": "framework.runtime/task-context.v1",
+    "digest": "sha256:ab12611ce1f5aadf1fcc0cb9cf02a02b",
+    "bytes": 73378,
+    "affected_areas": {
+      "determinable": true,
+      "triggered": [
+        "database",
+        "performance",
+        "security"
+      ],
+      "declared": []
+    }
+  },
+  "parallel_group": {
+    "phases": [
+      "quality-review"
+    ],
+    "dispatchable_now": [],
+    "dispatchable_early": {},
+    "this_phase_forgoes": []
+  },
+  "context_slice": {
+    "frozen_at": "2026-10-30T01:50:30Z",
+    "members": [
+      {
+        "path": "registry/agents.yaml",
+        "digest": "sha256:239f9bf99aea57059bdb54c03a50ca01",
+        "supplies": "framework-context",
+        "bytes": 21932,
+        "read": "runtime-resolved",
+        "read_reason": "agent routing and versions are resolved by the runtime"
+      },
+      {
+        "path": "registry/workflows.yaml",
+        "digest": "sha256:089e79af5d18d9b11dce7e6ac8a2c310",
+        "supplies": "framework-context",
+        "bytes": 9561,
+        "read": "runtime-resolved",
+        "read_reason": "the workflow is already routed; the phase is in the envelope"
+      },
+      {
+        "path": "registry/skills.yaml",
+        "digest": "sha256:5d2b13401641a169a9e7ea0b9dee344d",
+        "supplies": "framework-context",
+        "bytes": 17318,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "registry/templates.yaml",
+        "digest": "sha256:15b32b7dc6a6e5c3c47fac6809f1df7a",
+        "supplies": "framework-context",
+        "bytes": 12345,
+        "read": "runtime-resolved",
+        "read_reason": "the output template is named in expected_output_schema"
+      },
+      {
+        "path": "agents/capability-matrix.md",
+        "digest": "sha256:d9accc4117996076a1eeed79e6235645",
+        "supplies": "framework-context",
+        "bytes": 6511,
+        "read": "runtime-resolved",
+        "read_reason": "capability ownership is resolved by the runtime"
+      },
+      {
+        "path": "skills/agent-skill-matrix.md",
+        "digest": "sha256:dc3463b8a44d89167178839fd616a0e3",
+        "supplies": "framework-context",
+        "bytes": 16779,
+        "read": "runtime-resolved",
+        "read_reason": "the phase's skills are resolved in skill_dispatch"
+      },
+      {
+        "path": "workflows/workflow-gate-matrix.md",
+        "digest": "sha256:daa929f8e7c5c6a782b6240c63b2b855",
+        "supplies": "framework-context",
+        "bytes": 6407,
+        "read": "on-demand",
+        "read_reason": "who decides each gate; consult when naming a gate owner or a handoff"
+      },
+      {
+        "path": "context/product-context.md",
+        "digest": "sha256:3f5566d97d08a70ff34af1975ae50cfd",
+        "supplies": "framework-context",
+        "bytes": 525,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/technical-context.md",
+        "digest": "sha256:a19cf43103ce724e7a3a3ec00bb6cf66",
+        "supplies": "framework-context",
+        "bytes": 554,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "context/release-context.md",
+        "digest": "sha256:b6e7a504da2e00de90ef3702ffefa674",
+        "supplies": "framework-context",
+        "bytes": 470,
+        "read": "required",
+        "read_reason": "declared for this phase"
+      },
+      {
+        "path": "workflows/implement-feature.md",
+        "digest": "sha256:2fd5447282b22a52b6f3d2f2baf89502",
+        "supplies": "framework-context",
+        "bytes": 7758,
+        "read": "on-demand",
+        "read_reason": "the routed workflow; the phase, its gate, and its inputs are already in the envelope"
+      },
+      {
+        "path": "templates/review-package.md",
+        "digest": "sha256:e376c4fa9896aaa7f14a5f16cbf136f4",
+        "supplies": null,
+        "bytes": 5268,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/implementation-report.md",
+        "digest": "sha256:d0616790c1cb2c658ccc70b61ebb4a3e",
+        "supplies": null,
+        "bytes": 5809,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "templates/technical-design.md",
+        "digest": "sha256:ef4bb02c7c6453013cf58a10b5c6f746",
+        "supplies": null,
+        "bytes": 6560,
+        "read": "required",
+        "read_reason": "an artifact template this phase renders or reads"
+      },
+      {
+        "path": "skills/testing/testing-strategy.md",
+        "digest": "sha256:186a1e81b3ff01bcadec23c9119e86d6",
+        "supplies": null,
+        "bytes": 1265,
+        "read": "required",
+        "read_reason": "skill S07 is required for this phase"
+      },
+      {
+        "path": "skills/security/secure-engineering.md",
+        "digest": "sha256:474ba6292d92cbc8e8533e7942955357",
+        "supplies": null,
+        "bytes": 1236,
+        "read": "required",
+        "read_reason": "skill S09 is required for this phase"
+      },
+      {
+        "path": "skills/performance/performance-engineering.md",
+        "digest": "sha256:018d88d8cc352700bf6bb06703a8129e",
+        "supplies": null,
+        "bytes": 1266,
+        "read": "required",
+        "read_reason": "skill S08 is required for this phase"
+      },
+      {
+        "path": "skills/architecture/clean-architecture-checklist.md",
+        "digest": "sha256:8e4f9ca28ad1bb63d8368998cb67cc5a",
+        "supplies": null,
+        "bytes": 4862,
+        "read": "required",
+        "read_reason": "skill S01 is required for this phase"
+      },
+      {
+        "path": "runtime/README.md",
+        "digest": "sha256:fbdb6eaacaeba2b479d94417f50b83a0",
+        "supplies": null,
+        "bytes": 63224,
+        "read": "on-demand",
+        "read_reason": "the implemented runtime surface; consult when the change touches the framework's own runtime or its run evidence"
+      }
+    ],
+    "context_digest": "sha256:75bb3dd26a2c83c8267d5f109eb9d6fe",
+    "input_digest": "sha256:9f14cc71a90b52b481930224465da86c",
+    "inputs": [
+      {
+        "type": "feature-request",
+        "reference": "runs/inputs/mc-18-feature-request.md",
+        "source_file": ".claude/runs/inputs/mc-18-feature-request.md",
+        "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+      },
+      {
+        "type": "business-intent",
+        "reference": "runs/inputs/mc-18-business-intent.md",
+        "source_file": ".claude/runs/inputs/mc-18-business-intent.md",
+        "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+      },
+      {
+        "type": "implementation-report",
+        "reference": "runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+        "source_file": "D:/Project/MyCompany/.claude/worktrees/mc-18-shopee-read-link-27d13c/.claude/runs/run-6fa26c9657d3/states/implementation/artifacts/implementation-report.md",
+        "digest": "sha256:341e914df059771778b7c29be1914399"
+      }
+    ],
+    "unnarrowed": [
+      "runtime/README.md",
+      "skills/architecture/clean-architecture-checklist.md",
+      "skills/performance/performance-engineering.md",
+      "skills/security/secure-engineering.md",
+      "skills/testing/testing-strategy.md",
+      "templates/implementation-report.md",
+      "templates/review-package.md",
+      "templates/technical-design.md"
+    ],
+    "read_policy": "config/runtime.md#context-loading",
+    "read_required": [
+      "context/product-context.md",
+      "context/release-context.md",
+      "context/technical-context.md",
+      "skills/architecture/clean-architecture-checklist.md",
+      "skills/performance/performance-engineering.md",
+      "skills/security/secure-engineering.md",
+      "skills/testing/testing-strategy.md",
+      "templates/implementation-report.md",
+      "templates/review-package.md",
+      "templates/technical-design.md"
+    ],
+    "read_on_demand": [
+      "runtime/README.md",
+      "workflows/implement-feature.md",
+      "workflows/workflow-gate-matrix.md"
+    ],
+    "runtime_resolved": [
+      "agents/capability-matrix.md",
+      "registry/agents.yaml",
+      "registry/skills.yaml",
+      "registry/templates.yaml",
+      "registry/workflows.yaml",
+      "skills/agent-skill-matrix.md"
+    ],
+    "bytes_total": 189650,
+    "bytes_required": 27815,
+    "excluded": [
+      "memory/* -- memory hydration is not requested by this run; config/runtime.md makes it opt-in per run"
+    ]
+  },
+  "memory_slice": {
+    "hydrated": true,
+    "reason": "lessons from earlier runs hydrated per this run's knowledge_loop record (recorded at plan time)",
+    "store": "memory/lessons",
+    "store_digest": "sha256:5fe9140cf7a04677697495bacd975b6c",
+    "threshold": 2,
+    "matched": 0,
+    "lessons": []
+  },
+  "constraints": {
+    "permitted_writes": [
+      "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+      "runs/run-6fa26c9657d3/states/quality-review/result-envelope.json"
+    ],
+    "write_exclusions": [],
+    "command_execution": {
+      "allowed": true,
+      "purpose": "the repository's own test, build, and static-analysis commands, run read-only to confirm results the change under review reports as executed",
+      "prohibitedPurposes": [
+        "external network or service access",
+        "any command that modifies repository source, tests, or committed run evidence",
+        "repository history rewriting, publishing, or release actions",
+        "any command whose result is not recorded in the review package"
+      ]
+    },
+    "prohibited": [
+      "any repository write outside permitted_writes",
+      "command execution other than the repository's own test, build, and static-analysis commands, run read-only to confirm results the change under review reports as executed",
+      "external system, repository, or ticketing access",
+      "write, repair, or refactor production code or tests",
+      "revise the technical design rather than raising a finding against it",
+      "define, widen, or narrow product scope",
+      "validate acceptance criteria or release thresholds, which belongs to qa",
+      "record a merge or release decision",
+      "decide a gate that assesses evidence this agent produced",
+      "review a change this agent authored",
+      "approve while a critical or high finding is open, or while test evidence is absent",
+      "lower a severity without evidence that lowers it",
+      "relax an acceptance criterion, a quality threshold, or a declared invariant",
+      "modify committed run evidence or a governance record",
+      "access external systems directly"
+    ],
+    "authority_scope": {
+      "permitted": [
+        "review an implemented change against the requirements, the accepted design, and the standards in force",
+        "survey a bounded repository scope for redundant, dead, duplicated, over-abstracted, or generated low-value code, against the maintainability standards in force",
+        "assess conformance to coding standards, architecture rules, and security criteria",
+        "judge whether the supplied evidence supports the claim it is offered for",
+        "judge whether executed tests cover the behavior the change altered",
+        "classify each defect by severity, category, and location against a named standard",
+        "issue correction requests that state a required outcome and name its owner",
+        "assess residual risk and recommend readiness for the gate the phase feeds",
+        "execute the repository's own verification commands to confirm reported results",
+        "decide a gate over evidence another role produced"
+      ],
+      "prohibited": [
+        "write, repair, or refactor production code or tests",
+        "revise the technical design rather than raising a finding against it",
+        "define, widen, or narrow product scope",
+        "validate acceptance criteria or release thresholds, which belongs to qa",
+        "record a merge or release decision",
+        "decide a gate that assesses evidence this agent produced",
+        "review a change this agent authored",
+        "approve while a critical or high finding is open, or while test evidence is absent",
+        "lower a severity without evidence that lowers it",
+        "relax an acceptance criterion, a quality threshold, or a declared invariant",
+        "modify committed run evidence or a governance record",
+        "access external systems directly"
+      ],
+      "repositoryWrites": {
+        "allowed": false,
+        "rationale": "Independence is the whole value of this role. An agent that can change the code it assesses becomes the producer of the work it is about to judge, and the Producer Exclusion Rule then disqualifies it from the very verdict it exists to give. The review reads the repository and writes only its own artifact and result envelope."
+      },
+      "commandExecution": {
+        "allowed": true,
+        "purpose": "the repository's own test, build, and static-analysis commands, run read-only to confirm results the change under review reports as executed",
+        "prohibitedPurposes": [
+          "external network or service access",
+          "any command that modifies repository source, tests, or committed run evidence",
+          "repository history rewriting, publishing, or release actions",
+          "any command whose result is not recorded in the review package"
+        ]
+      }
+    },
+    "determinism": {
+      "contract": "Identical inputs and an identical context snapshot must produce the same finding set, the same severity assignment, the same correction-request set, the same verdict, and the same declared package status.",
+      "identifierSchemes": {
+        "findings": "F-<zero-padded-sequence>",
+        "correctionRequests": "CR-<zero-padded-sequence>",
+        "openQuestions": "Q-<zero-padded-sequence>"
+      },
+      "orderingRule": "Findings are ordered by descending severity; ties break toward the lower location in lexical order. Correction requests follow the findings they address.",
+      "modelIndependence": "No module may reference a specific model, vendor, or agent runtime. Technology names are permitted only when they trace to the supplied change, standards, or repository context."
+    }
+  },
+  "timeout_profile": {
+    "max_attempts": 3,
+    "attempt": 1,
+    "policy_ref": "config/runtime.md#retry-policy"
+  },
+  "expected_output_schema": {
+    "artifact": "review-package.md",
+    "artifact_path": "runs/run-6fa26c9657d3/states/quality-review/artifacts/review-package.md",
+    "template_ref": "templates/review-package.md",
+    "contract_ref": "agents/dev-2-reviewer/output.md",
+    "quality_ref": "agents/dev-2-reviewer/quality.md",
+    "validator": "review_package_validator",
+    "result_envelope_path": "runs/run-6fa26c9657d3/states/quality-review/result-envelope.json",
+    "conditional_artifacts": []
+  },
+  "built_at": "2026-10-30T01:50:30Z",
+  "model_tier": {
+    "tier": "deep",
+    "host_hint": "opus",
+    "basis": "declared deep for implement-feature/quality-review in config/model-tier-policy.json",
+    "escalation": {}
+  },
+  "context_budget": {
+    "modules_full_bytes": 74164,
+    "modules_core_bytes": 37865,
+    "slice_all_bytes": 189650,
+    "slice_required_bytes": 27815,
+    "inputs_bytes": 11149,
+    "upstream_full_bytes": 29212,
+    "upstream_read_first_bytes": 21532,
+    "task_context_bytes": 73378,
+    "fixed_bytes": 13375,
+    "legacy_estimate_bytes": 317550,
+    "progressive_estimate_bytes": 185114,
+    "legacy_estimate_tokens": 79387,
+    "progressive_estimate_tokens": 46278,
+    "savings_pct": 41.7
+  }
+}

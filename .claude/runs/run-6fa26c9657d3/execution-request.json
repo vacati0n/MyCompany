@@ -1,0 +1,37 @@
+{
+  "run_id": "run-6fa26c9657d3",
+  "correlation_id": "corr-6fa26c9657d3",
+  "command_id": "implement",
+  "workflow_id": "implement-feature",
+  "workflow_version": "1.0.0",
+  "intent": "feature",
+  "requester": "operator",
+  "priority": "standard",
+  "policy_profile": "framework-default",
+  "runtime_version": "0.11.1",
+  "phases": [
+    "scope-and-acceptance",
+    "execution-planning",
+    "solution-design-and-risk-assessment",
+    "implementation",
+    "quality-review",
+    "documentation-and-release-handoff"
+  ],
+  "inputs": [
+    {
+      "type": "feature-request",
+      "reference": "runs/inputs/mc-18-feature-request.md",
+      "digest": "sha256:3be564296ce7dfbb7c47644756a9d6c5"
+    },
+    {
+      "type": "business-intent",
+      "reference": "runs/inputs/mc-18-business-intent.md",
+      "digest": "sha256:9d45256f50d5ae9688f9ebe6b979310c"
+    }
+  ],
+  "submitted_at": "2026-10-27T04:12:08Z",
+  "knowledge_loop": {
+    "hydration": "on",
+    "basis": "hydration_default 'on' in config/knowledge-policy.json at plan time"
+  }
+}
